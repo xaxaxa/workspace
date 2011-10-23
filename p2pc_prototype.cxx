@@ -1,5 +1,5 @@
 namespace p2pc
-{
+{//p2p chat prototype
 	class client
 	{
 		const int clientlimit=50;//start rejecting clients at
