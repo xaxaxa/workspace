@@ -131,7 +131,7 @@ struct client
 				if(pwd==NULL)
 					databuf_append(Buffer((char*)"[error]",7));
 				else databuf_append(Buffer(pwd->pw_name,strlen(pwd->pw_name)));
-				
+				databuf_append(Buffer((char*)": ",2));
 				databuf_append(c->readbuf.SubBuffer(0,i));
 				list<client>::iterator it;
 				for(it=clients.begin();it!=clients.end();it++)
