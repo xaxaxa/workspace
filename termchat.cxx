@@ -11,6 +11,7 @@
 #include <list>
 #include <stdio.h>
 #include <sstream>
+#include <pwd.h>
 
 //using namespace boost;
 using namespace xaxaxa;
@@ -122,10 +123,15 @@ struct client
 			int i=s->EndRead();
 			if(i>0)
 			{
-				stringstream str;
-				str << c->uid << endl;
-				string s=str.str();
-				databuf_append(Buffer((char*)s.c_str(),s.length()));
+				//stringstream str;
+				//str << c->uid << endl;
+				//string s=str.str();
+				passwd *pwd;
+				pwd = getpwuid(c->uid);
+				if(pwd==NULL)
+					databuf_append(Buffer((char*)"[error]",7));
+				else databuf_append(Buffer(pwd->pw_name,strlen(pwd->pw_name)));
+				
 				databuf_append(c->readbuf.SubBuffer(0,i));
 				list<client>::iterator it;
 				for(it=clients.begin();it!=clients.end();it++)
