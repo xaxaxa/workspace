@@ -213,7 +213,7 @@ asdf:
 	int namelen=strlen(name);
 	char name1[strlen(name)+1];
 	memcpy(name1+1,name,namelen);
-	name1[0]='\n';
+	name1[0]='\0';
 	{
 		int tmp=fork();
 		if(tmp==0)
