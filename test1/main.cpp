@@ -395,7 +395,7 @@ FUNCTION_DECLWRAPPER(cb2,void,SocketManager* m,Socket sock)
 		char tmp[size];
 		ep.GetSockAddr((sockaddr*)tmp);
 		Buffer tmp1((void*)tmp,size);
-		map<int,shared_ptr<socketmux::item> >::iterator iter=asdfg->AddStream(shared_ptr<SocketStream>(new SocketStream(s)),&tmp1);
+		map<int,shared_ptr<socketmux::item> >::iterator iter=asdfg->AddStream(shared_ptr<Stream>(new SocketStream(s)),&tmp1);
 		shared_ptr<socketmux::item> it=(*iter).second;
 		it->BeginSend();
 		it->BeginRecv();
