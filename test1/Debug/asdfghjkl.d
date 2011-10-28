@@ -1,3 +1,3 @@
-asdfghjkl.d asdfghjkl.o: ../asdfghjkl.cpp ../asdfghjkl.h
+asdfghjkl.d: ../asdfghjkl.cpp ../asdfghjkl.h
 
 ../asdfghjkl.h:

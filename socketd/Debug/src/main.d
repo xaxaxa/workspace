@@ -1,4 +1,4 @@
-src/main.d src/main.o: ../src/main.cpp ../src/config.hpp \
+src/main.d: ../src/main.cpp ../src/config.hpp \
  /home/xaxaxa/workspace/cplib/headers/asyncsock.hpp \
  /home/xaxaxa/workspace/cplib/headers/cplib.hpp
 

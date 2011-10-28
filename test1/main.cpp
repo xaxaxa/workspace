@@ -1,6 +1,4 @@
 #include <iostream>
-
-#include <iostream>
 #include <cplib.hpp>
 #include <asyncsock.hpp>
 #include <asyncfile.hpp>

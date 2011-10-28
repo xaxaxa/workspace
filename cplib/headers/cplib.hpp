@@ -277,9 +277,9 @@ public:
 	{
 		buf=NULL;is_raw=true;length=0;
 	}
-	Buffer(char* buf, int length)
+	Buffer(void* buf, int length)
 	{
-		this->buf = buf;
+		this->buf = (char*)buf;
 		this->length = length;
 		this->is_raw=true;
 	}

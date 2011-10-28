@@ -23,16 +23,56 @@
 
 
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pcap.h> /* if this gives you an error try pcap/pcap.h */
+#include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netinet/if_ether.h>
+
+using namespace std;
+
+void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
 
 
 int main(int argc, char **argv)
 {
-	char[PCAP_ERRBUF_SIZE] errbuf;
-	pcap_t pc;
-	if(pc=pcap_create(argv[1],errbuf)==NULL)
-		perror(errbuf);
-	pcap_activate(pc);
+	char errbuf[PCAP_ERRBUF_SIZE];
+	pcap_t* cap;
+	if((cap=pcap_create(argv[1],errbuf))==NULL)
+	{
+		cerr << errbuf;
+		return 1;
+	}
+	pcap_set_promisc(cap,1);
+	pcap_set_timeout(cap,200);
+	int ret=pcap_activate(cap);
+	if(ret&PCAP_ERROR)
+	{
+		pcap_perror(cap,(char*)"error opening capture device");
+		return 1;
+	}
+	//capture
+	//pcap_pkthdr* packetheader;
+	//u_char* packetdata;
 	
+	/*while(true)
+	{
+		int ret=pcap_next_ex(cap,&packetheader,(const u_char**)&packetdata);
+		if(ret==-1)
+		{
+			pcap_perror(cap,(char*)"error in pcap_next_ex()");
+		}
+	}*/
+	pcap_loop(cap,-1,cb,NULL);
 	return 0;
+}
+void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes)
+{
+	if(header->caplen < header->len)
+		cerr << "warning: packet truncated from " << header->len << " to " << header->caplen << endl;
+	write(1,bytes,header->caplen);
 }
 

@@ -425,7 +425,7 @@ x:
 		{closed=true;Close();return;}
 		sending=false;
 		shared_ptr<item> it=*cur_item;
-		bm.Return(&(it->queue_in.GetPointer(s1w_i).b));
+		bm.Return(it->queue_in.GetPointer(s1w_i).b);
 		it->queue_in.EndDequeue(s1w_i);
 		it->update_status();
 		if(it->closed)it->Close();
@@ -438,7 +438,7 @@ x:
 		if(sending&&!sending_oob)
 		{
 			shared_ptr<item> it=*cur_item;
-			bm.Return(&(it->queue_in.GetPointer(s1w_i).b));
+			bm.Return(it->queue_in.GetPointer(s1w_i).b);
 			it->queue_in.EndDequeue(s1w_i);
 		}
 		items_o.clear();
@@ -560,7 +560,7 @@ x:
 		int i;
 		while((i=queue_in.BeginDequeue())>=0)
 		{
-			_owner->bm.Return(&(queue_in.GetPointer(i).b));
+			_owner->bm.Return(queue_in.GetPointer(i).b);
 			queue_in.EndDequeue(i);
 		}
 		while((i=queue_out.BeginDequeue())>=0)
