@@ -1,0 +1,2 @@
+g++ -Wall -lncurses -lpthread -lcplib -Icplib/headers/ -o "termchat" "termchat.cxx"
+
