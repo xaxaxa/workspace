@@ -12,6 +12,7 @@
 //#include <netinet/in.h>
 //#include <arpa/inet.h>
 #include <fcntl.h>
+#include <boost/function.hpp>
 
 using namespace std;
 namespace xaxaxa
@@ -83,6 +84,7 @@ namespace xaxaxa
 					FileStreamManager::__def_fsmanager=new FileStreamManager();
 				return FileStreamManager::__def_fsmanager;
 			}
+			//typedef boost::function<void (void*, FileStreamManager*, File)> Callback;
 			FUNCTION_DECLARE(Callback,void,FileStreamManager*,File);
 			int epollfd;
 			//arraylist<Socket> r,w,x;

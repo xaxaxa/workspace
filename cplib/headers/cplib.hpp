@@ -19,18 +19,51 @@
 #include <execinfo.h>
 #include <typeinfo>
 #include <boost/shared_array.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 //#include <map>
 
 //#define FUNCTION(RETVAL,...) struct{RETVAL(*f)(void*,__VA_ARGS__);void* obj;}
 //RETVAL(*)(__VA_ARGS__)
+
 #define FUNCTION_ISNULL(fn) ((fn).f==NULL)
-#define FUNCTION_DECLARE(NAME,RETVAL,...) struct NAME;struct NAME{RETVAL(*f)(void*,__VA_ARGS__);void* obj;inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj){this->f=f;this->obj=obj;}inline NAME(){f=NULL;}static NAME null;}
+#define FUNCTION_DECLARE(NAME,RETVAL,...) \
+	struct NAME;struct NAME{\
+	RETVAL(*f)(void*,__VA_ARGS__);\
+	void* obj;\
+	inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj)\
+	{this->f=f;\
+	this->obj=obj;}\
+	template<class T>inline NAME(RETVAL(T::*f)(__VA_ARGS__),void* obj)\
+	{this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
+	this->obj=obj;}\
+	inline NAME(){f=NULL;}\
+	static NAME null;}
+/*#define FUNCTION_DECLARE(NAME,RETVAL,...) \
+	struct NAME;\
+	struct NAME{\
+	boost::function<RETVAL (void*,__VA_ARGS__)> f;\
+	void* obj;\
+	template<class X>inline NAME(boost::function<RETVAL (X,__VA_ARGS__)> f,void* obj)\
+	{this->f=*(reinterpret_cast<boost::function<RETVAL (void*,__VA_ARGS__)>*>(&f));this->obj=obj;}\
+	inline NAME(){f=NULL;}\
+	static NAME null;}*/
 //#define FUNCTION_EXPORT(CLASS,NAME,FNAME,RETVAL,...) static RETVAL NAME(void* obj,__VA_ARGS__){return ((CLASS*)obj)->FNAME(__VA_ARGS__);}
 #define FUNCTION_DECLWRAPPER(NAME,RETVAL,...) static inline RETVAL NAME(void* obj,__VA_ARGS__)
 //#define FUNCTION_GET(TYPE,WRAPPER_NAME) {TYPE __func;__func.f=WRAPPER_NAME;__func.obj=this;}
 //#define FUNCTION_GETSTATIC(TYPE,WRAPPER_NAME) (TYPE __func,__func.f=WRAPPER_NAME,__func.obj=NULL)
 //#define FUNCTION_GET1(TYPE,OBJ,WRAPPER_NAME) {TYPE __func;__func.f=OBJ->WRAPPER_NAME;__func.obj=OBJ;}
 #define FUNCTION_CALL(FUNC,...) FUNCTION_ISNULL(FUNC)?throw Exception("attempting to call null function"):FUNC.f(FUNC.obj,__VA_ARGS__)
+
+/*#define FUNCTION_ISNULL(FUNC) (FUNC==NULL)
+#define FUNCTION_DECLARE(NAME,RETVAL,...) typedef boost::function<RETVAL (__VA_ARGS__)> NAME;
+#define FUNCTION_CALL(FUNC,...) FUNC(__VA_ARGS__)
+#define FUNCTION_DECLWRAPPER(NAME,RETVAL,...) static inline void NAME(void* obj,__VA_ARGS__)
+#define FUNCTION_BIND(FUNC,THIS) bind(FUNC,THIS,_1)
+*/
+
+
+
 
 using namespace std;
 
@@ -324,6 +357,7 @@ public:
 	virtual void Flush()=0;
 	virtual void Close()=0;
 
+	//typedef boost::function<void (void*,Stream*)> Callback;
 	FUNCTION_DECLARE(Callback,void,Stream*);
 	int __tmp;
 	virtual void BeginRead(Buffer buf, Callback cb)

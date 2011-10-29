@@ -26,8 +26,8 @@ using namespace boost;
 #define LISTENPORT 6969
 #endif
 
-#define __asdf
-#define __client
+//#define __asdf
+//#define __client
 using namespace std;
 using namespace xaxaxa;
 using namespace Sockets;
@@ -75,10 +75,6 @@ FUNCTION_DECLWRAPPER(procbuffer_n,void,shared_ptr<socketmux> s,shared_ptr<socket
 		*(((unsigned char*)b.buf)+i)=~*(((unsigned char*)b.buf)+i);
 	}*/
 }
-void call_func(asdf::function1 f)
-{
-	FUNCTION_CALL(f,543);
-}
 SocketManager *m=SocketManager::GetDefault();
 class client:public Object
 {
@@ -87,21 +83,11 @@ public:
 	Buffer buf1;
 	Buffer buf2;
 	Socket s2;
-	inline void s1_r(Socket s);
-	inline void s1_w(Socket s);
-	inline void s2_r(Socket s);
-	inline void s2_w(Socket s);
-	inline void cb3(Socket s);
-	FUNCTION_DECLWRAPPER(_s1_r,void,SocketManager* m,Socket sock)
-	{((client*)obj)->s1_r(sock);}
-	FUNCTION_DECLWRAPPER(_s1_w,void,SocketManager* m,Socket sock)
-	{((client*)obj)->s1_w(sock);}
-	FUNCTION_DECLWRAPPER(_s2_r,void,SocketManager* m,Socket sock)
-	{((client*)obj)->s2_r(sock);}
-	FUNCTION_DECLWRAPPER(_s2_w,void,SocketManager* m,Socket sock)
-	{((client*)obj)->s2_w(sock);}
-	FUNCTION_DECLWRAPPER(_cb3,void,SocketManager* m,Socket sock)
-	{((client*)obj)->cb3(sock);}
+	inline void s1_r(SocketManager* m, Socket s);
+	inline void s1_w(SocketManager* m, Socket s);
+	inline void s2_r(SocketManager* m, Socket s);
+	inline void s2_w(SocketManager* m, Socket s);
+	inline void cb3(SocketManager* m, Socket s);
 	client(Socket s):buf1(4096*4),buf2(4096*4),s2(AF_INET,SOCK_STREAM,0)
 	{
 		this->s1=s;
@@ -112,7 +98,12 @@ public:
 		inet_ntop(AF_INET,&(dstaddr.sin_addr),(char*)&tmp,dstlen);
 		IPEndPoint ep(dstaddr);
 		cout << tmp << ":" << ep.Port << endl;
-		m->BeginConnect(s2,&ep,SocketManager::Callback(_cb3,this));
+		void* asdfg=0;
+		//Object obj=asdfg;
+		//boost::function<void (client*, SocketManager*, Socket)> fn=&client::cb3;
+		//SocketManager::Callback(fn,this);
+		m->BeginConnect(s2,&ep,SocketManager::Callback(&client::cb3,this));
+		//m->BeginConnect(s2,&ep,(SocketManager::Callback)bind(&client::cb3, this, _1, _2));
 		//m.BeginRecv(s,buf,SocketManager::Callback(_cb1,this));
 	}
 	~client()
@@ -125,7 +116,7 @@ public:
 		s2.Close();
 	}
 };
-void client::s1_r(Socket s)
+void client::s1_r(SocketManager* m, Socket s)
 {
 	dbgprint("s1_r");
 	try
@@ -137,27 +128,27 @@ void client::s1_r(Socket s)
 			return;
 		}
 		//fwrite(buf.buf,i,1,stdout);
-		m->BeginSend(this->s2,buf1.SubBuffer(0,i),SocketManager::Callback(_s2_w,this));
+		m->BeginSend(this->s2,buf1.SubBuffer(0,i),SocketManager::Callback(&client::s2_w,this));
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		this->Release();
 	}
 }
-void client::s1_w(Socket s)
+void client::s1_w(SocketManager* m, Socket s)
 {
 	dbgprint("s1_w");
 	try
 	{
 		m->EndSend(s);
-		m->BeginRecv(this->s2,buf2,SocketManager::Callback(_s2_r,this));
+		m->BeginRecv(this->s2,buf2,SocketManager::Callback(&client::s2_r,this));
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		this->Release();
 	}
 }
-void client::s2_r(Socket s)
+void client::s2_r(SocketManager* m, Socket s)
 {
 	dbgprint("s2_r");
 	try
@@ -169,36 +160,36 @@ void client::s2_r(Socket s)
 			return;
 		}
 		//fwrite(buf.buf,i,1,stdout);
-		m->BeginSend(this->s1,buf2.SubBuffer(0,i),SocketManager::Callback(_s1_w,this));
+		m->BeginSend(this->s1,buf2.SubBuffer(0,i),SocketManager::Callback(&client::s1_w,this));
 		//m.BeginRecv(s,buf,SocketManager::Callback(cb1,this));
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		this->Release();
 	}
 }
-void client::s2_w(Socket s)
+void client::s2_w(SocketManager* m, Socket s)
 {
 	dbgprint("s2_w");
 	try
 	{
 		m->EndSend(s);
-		m->BeginRecv(this->s1,buf1,SocketManager::Callback(_s1_r,this));
+		m->BeginRecv(this->s1,buf1,SocketManager::Callback(&client::s1_r,this));
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		this->Release();
 	}
 }
-void client::cb3(Socket s)
+void client::cb3(SocketManager* m, Socket s)
 {
 	try
 	{
 		m->EndConnect(s);
-		m->BeginRecv(this->s1,buf1,SocketManager::Callback(_s1_r,this));
-		m->BeginRecv(this->s2,buf2,SocketManager::Callback(_s2_r,this));
+		m->BeginRecv(this->s1,buf1,SocketManager::Callback(&client::s1_r,this));
+		m->BeginRecv(this->s2,buf2,SocketManager::Callback(&client::s2_r,this));
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		this->Release();
 	}

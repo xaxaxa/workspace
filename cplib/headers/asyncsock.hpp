@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/un.h>
+#include <boost/function.hpp>
 #ifdef __debug_print123
 #define dbgprint(msg) cout << msg << endl
 #else
@@ -277,6 +278,7 @@ namespace xaxaxa
 					__def_sockmanager=new SocketManager();
 				return __def_sockmanager;
 			}
+			//typedef boost::function<void (SocketManager*, Socket)> Callback;
 			FUNCTION_DECLARE(Callback,void,SocketManager*,Socket);
 			int epollfd;
 			//arraylist<Socket> r,w,x;
@@ -393,6 +395,7 @@ namespace xaxaxa
 		class SOCKS5
 		{
 		public:
+			//typedef boost::function<void (Stream*, void*)> Callback;
 			FUNCTION_DECLARE(Callback,void,Stream*,void*);
 			struct tmp
 			{
