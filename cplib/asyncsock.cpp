@@ -85,8 +85,8 @@ namespace xaxaxa
 						{
 							if (__current_task.bits & 2)
 							{
-								int tmp = recv(s, __current_task.r_buf.buf,
-										__current_task.r_buf.length, 0);
+								int tmp = recv(s, __current_task.r_buf.Data,
+										__current_task.r_buf.Length, 0);
 								if (tmp < 0)
 								{
 									if (!__current_task.r_length) __current_task.r_errno
@@ -95,13 +95,13 @@ namespace xaxaxa
 								else if (tmp > 0)
 								{
 									__current_task.r_length += tmp;
-									if (tmp < __current_task.r_buf.length)
+									if (tmp < __current_task.r_buf.Length)
 									{
 										__current_task.new_events |= EPOLLIN;
 										__current_task.r_buf
 												= __current_task.r_buf.SubBuffer(
 														tmp,
-														__current_task.r_buf.length
+														__current_task.r_buf.Length
 																- tmp);
 										goto asdf;
 									}
@@ -121,8 +121,8 @@ namespace xaxaxa
 						{
 							if (__current_task.bits & 4)
 							{
-								int tmp = send(s, __current_task.w_buf.buf,
-										__current_task.w_buf.length, 0);
+								int tmp = send(s, __current_task.w_buf.Data,
+										__current_task.w_buf.Length, 0);
 								if (tmp < 0)
 								{
 									if (!__current_task.w_length) __current_task.w_errno
@@ -131,13 +131,13 @@ namespace xaxaxa
 								else if (tmp > 0)
 								{
 									__current_task.w_length += tmp;
-									if (tmp < __current_task.w_buf.length)
+									if (tmp < __current_task.w_buf.Length)
 									{
 										__current_task.new_events |= EPOLLOUT;
 										__current_task.w_buf
 												= __current_task.w_buf.SubBuffer(
 														tmp,
-														__current_task.w_buf.length
+														__current_task.w_buf.Length
 																- tmp);
 										goto asdf;
 									}
@@ -236,7 +236,7 @@ namespace xaxaxa
 			if (i->bits & 2) return i->r_length;
 			else
 			{
-				int tmp = recv(s._s, i->r_buf.buf, i->r_buf.length, 0);
+				int tmp = recv(s._s, i->r_buf.Data, i->r_buf.Length, 0);
 				if (tmp < 0) throw Exception(errno);
 				else
 					return tmp;
@@ -308,7 +308,7 @@ namespace xaxaxa
 			if (i->bits & 4) return i->w_length;
 			else
 			{
-				int tmp = send(s._s, i->w_buf.buf, i->w_buf.length, 0);
+				int tmp = send(s._s, i->w_buf.Data, i->w_buf.Length, 0);
 				if (tmp < 0) throw Exception(errno);
 				else
 					return tmp;
@@ -409,7 +409,7 @@ namespace xaxaxa
 		{
 			StringBuilder* sb=new StringBuilder(32);
 			char c[]="\x05\x01\x00\x05\x01\x00";
-			sb->Append(Buffer(c,6));
+			sb->Append(Buffer((Byte*)c,6));
 			int port;
 			tmp* tmp1=new tmp();
 			//tmp1->state=state;
@@ -487,7 +487,7 @@ namespace xaxaxa
 				if(i<=0)throw Exception("SOCKS error occured");
 				dbgprint("========SOCKS response read====== "<<i<<" bytes received");
 				tmp1->br+=i;
-				if(tmp1->br>=tmp1->b.length)
+				if(tmp1->br>=tmp1->b.Length)
 				{
 					FUNCTION_CALL(tmp1->cb,s,tmp1);
 					delete tmp1->sb;
@@ -497,7 +497,7 @@ namespace xaxaxa
 				else
 				{
 					//tmp1->b=tmp1->b.SubBuffer(tmp1->br,tmp1->b.length-tmp1->br,false);
-					s->BeginRead(tmp1->b.SubBuffer(tmp1->br,tmp1->b.length-tmp1->br),Stream::Callback(cb2,tmp1));
+					s->BeginRead(tmp1->b.SubBuffer(tmp1->br,tmp1->b.Length-tmp1->br),Stream::Callback(cb2,tmp1));
 				}
 			}
 			catch(Exception ex)

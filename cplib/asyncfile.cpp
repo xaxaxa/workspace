@@ -58,8 +58,8 @@ namespace xaxaxa
 						{
 							if (__current_task.bits & 2)
 							{
-								int tmp = read(s, __current_task.r_buf.buf,
-										__current_task.r_buf.length);
+								int tmp = read(s, __current_task.r_buf.Data,
+										__current_task.r_buf.Length);
 								if (tmp < 0)
 								{
 									if (!__current_task.r_length) __current_task.r_errno
@@ -68,13 +68,13 @@ namespace xaxaxa
 								else if (tmp > 0)
 								{
 									__current_task.r_length += tmp;
-									if (tmp < __current_task.r_buf.length)
+									if (tmp < __current_task.r_buf.Length)
 									{
 										__current_task.new_events |= EPOLLIN;
 										__current_task.r_buf
 												= __current_task.r_buf.SubBuffer(
 														tmp,
-														__current_task.r_buf.length
+														__current_task.r_buf.Length
 																- tmp);
 										goto asdf;
 									}
@@ -93,8 +93,8 @@ namespace xaxaxa
 						{
 							if (__current_task.bits & 4)
 							{
-								int tmp = write(s, __current_task.w_buf.buf,
-										__current_task.w_buf.length);
+								int tmp = write(s, __current_task.w_buf.Data,
+										__current_task.w_buf.Length);
 								if (tmp < 0)
 								{
 									if (!__current_task.w_length) __current_task.w_errno
@@ -103,13 +103,13 @@ namespace xaxaxa
 								else if (tmp > 0)
 								{
 									__current_task.w_length += tmp;
-									if (tmp < __current_task.w_buf.length)
+									if (tmp < __current_task.w_buf.Length)
 									{
 										__current_task.new_events |= EPOLLOUT;
 										__current_task.w_buf
 												= __current_task.w_buf.SubBuffer(
 														tmp,
-														__current_task.w_buf.length
+														__current_task.w_buf.Length
 																- tmp);
 										goto asdf;
 									}
@@ -205,7 +205,7 @@ namespace xaxaxa
 			if (i->bits & 2) return i->r_length;
 			else
 			{
-				int tmp = read(s._f, i->r_buf.buf, i->r_buf.length);
+				int tmp = read(s._f, i->r_buf.Data, i->r_buf.Length);
 				if (tmp < 0) throw Exception(errno);
 				else
 					return tmp;
@@ -276,7 +276,7 @@ namespace xaxaxa
 			if (i->bits & 4) return i->w_length;
 			else
 			{
-				int tmp = write(s._f, i->w_buf.buf, i->w_buf.length);
+				int tmp = write(s._f, i->w_buf.Data, i->w_buf.Length);
 				if (tmp < 0) throw Exception(errno);
 				else
 					return tmp;

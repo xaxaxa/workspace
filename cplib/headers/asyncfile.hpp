@@ -54,23 +54,23 @@ namespace xaxaxa
 				if(_f!=-1)close(_f);
 				_f=-1;
 			}
-			inline int Write(Buffer buf)
+			inline Int Write(Buffer buf)
 			{
-				int tmp=write(_f,buf.buf,buf.length);
+				Int tmp=write(_f,buf.Data,buf.Length);
 				if(tmp<0)throw Exception(errno);
 				else return tmp;
 			}
-			inline int Read(Buffer buf)
+			inline Int Read(Buffer buf)
 			{
-				int tmp=read(_f,buf.buf,buf.length);
+				Int tmp=read(_f,buf.Data,buf.Length);
 				if(tmp<0)throw Exception(errno);
 				else return tmp;
 			}
-			inline int GetFlags()
+			inline Int GetFlags()
 			{
 				return fcntl(_f,F_GETFL,0);
 			}
-			inline void SetFlags(int f)
+			inline void SetFlags(Int f)
 			{
 				if(fcntl(_f,F_SETFL,f)<0)throw Exception(errno,"could not set file flags");
 			}

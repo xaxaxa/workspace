@@ -182,7 +182,7 @@ x:
 		cmditem it;
 		it.c=cmd_close;
 		it.id=id;
-		it.data.length=0;
+		it.data.Length=0;
 		it.outgoing=outgoing;
 		//cmdqueue.Append(it);
 		__add_oobcmd(it);
@@ -194,7 +194,7 @@ x:
 		it.c=cmd_create;
 		it.id=id;
 		if(cmddata==NULL)
-			it.data.length=0;
+			it.data.Length=0;
 		else
 		{
 			it.data=*cmddata;
@@ -231,11 +231,11 @@ x:
 		__uint8_t asdf[9];
 		asdf[0]=(it.outgoing?(__uint8_t)(it.c+128):(__uint8_t)it.c);
 		*((int*)(asdf+1))=it.id;
-		*((int*)(asdf+5))=it.data.length;
+		*((int*)(asdf+5))=it.data.Length;
 		StringBuilder& sb=use_sb2?tmpsb2:tmpsb1;
 		sb.Append((char*)asdf,9);
 		__printcmd(asdf,"SEND COMMAND: ");
-		if(it.data.length>0)
+		if(it.data.Length>0)
 		{
 
 			sb.Append(it.data);
@@ -256,9 +256,9 @@ x:
 				return;
 			}
 			recv_br+=br;
-			if(recv_br<tmpbuf.length)
+			if(recv_br<tmpbuf.Length)
 			{
-				main->BeginRead(tmpbuf.SubBuffer(recv_br,tmpbuf.length-recv_br),Stream::Callback(_s1_r,this));
+				main->BeginRead(tmpbuf.SubBuffer(recv_br,tmpbuf.Length-recv_br),Stream::Callback(_s1_r,this));
 				return;
 			}
 		}catch(Exception ex){closed=true;Close();return;}
@@ -318,9 +318,9 @@ x:
 			if(br<=0)
 			{recvbuf.Release();closed=true;Close();return;}
 			recv_br+=br;
-			if(recv_br<recvbuf.length)
+			if(recv_br<recvbuf.Length)
 			{
-				main->BeginRead(recvbuf.SubBuffer(recv_br,recvbuf.length-recv_br),Stream::Callback(_s1_r2,this));
+				main->BeginRead(recvbuf.SubBuffer(recv_br,recvbuf.Length-recv_br),Stream::Callback(_s1_r2,this));
 				return;
 			}
 		}catch(Exception ex){recvbuf.Release();closed=true;Close();return;}
@@ -378,7 +378,7 @@ x:
 			{
 				b& tmp=it->queue_out.GetPointer(index);
 				tmp.b=recvbuf;
-				tmp.length=recvbuf.length;
+				tmp.length=recvbuf.Length;
 				it->queue_out.EndAppend(index);
 				BeginSend(it);
 				return;

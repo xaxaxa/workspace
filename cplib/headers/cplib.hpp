@@ -21,7 +21,8 @@
 #include <boost/shared_array.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-//#include <map>
+#include <map>
+#include <list>
 
 //#define FUNCTION(RETVAL,...) struct{RETVAL(*f)(void*,__VA_ARGS__);void* obj;}
 //RETVAL(*)(__VA_ARGS__)
@@ -29,16 +30,29 @@
 #define FUNCTION_ISNULL(fn) ((fn).f==NULL)
 #define FUNCTION_DECLARE(NAME,RETVAL,...) \
 	struct NAME;struct NAME{\
-	RETVAL(*f)(void*,__VA_ARGS__);\
-	void* obj;\
-	inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj)\
-	{this->f=f;\
-	this->obj=obj;}\
-	template<class T>inline NAME(RETVAL(T::*f)(__VA_ARGS__),void* obj)\
-	{this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
-	this->obj=obj;}\
-	inline NAME(){f=NULL;}\
-	static NAME null;}
+		RETVAL(*f)(void*,__VA_ARGS__);\
+		void* obj;\
+		inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj)\
+		{this->f=f;\
+		 this->obj=obj;}\
+		template<class T>inline NAME(RETVAL(T::*f)(__VA_ARGS__),void* obj)\
+		{this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
+		this->obj=obj;}\
+		inline NAME(){f=NULL;}\
+		static NAME null;\
+		bool operator==(const NAME& x) const\
+		{return (x.f==this->f) && ((x.f==NULL) || (x.obj==this->obj));}\
+		bool operator!=(const NAME& x) const\
+		{return !((*this)==x);}\
+		bool operator<(const NAME& X) const\
+		{if(f==X.f)return (f!=NULL)&&(obj<X.obj);return f>X.f;}\
+		bool operator>(const NAME& X) const\
+		{if(f==X.f)return (f!=NULL)&&(obj>X.obj);return f>X.f;}\
+		bool operator<=(const NAME& X) const\
+		{return !(*this>X);}\
+		bool operator>=(const NAME& X) const\
+		{return !(*this<X);}\
+	}
 /*#define FUNCTION_DECLARE(NAME,RETVAL,...) \
 	struct NAME;\
 	struct NAME{\
@@ -53,8 +67,10 @@
 //#define FUNCTION_GET(TYPE,WRAPPER_NAME) {TYPE __func;__func.f=WRAPPER_NAME;__func.obj=this;}
 //#define FUNCTION_GETSTATIC(TYPE,WRAPPER_NAME) (TYPE __func,__func.f=WRAPPER_NAME,__func.obj=NULL)
 //#define FUNCTION_GET1(TYPE,OBJ,WRAPPER_NAME) {TYPE __func;__func.f=OBJ->WRAPPER_NAME;__func.obj=OBJ;}
-#define FUNCTION_CALL(FUNC,...) FUNCTION_ISNULL(FUNC)?throw Exception("attempting to call null function"):FUNC.f(FUNC.obj,__VA_ARGS__)
+#define FUNCTION_CALL(FUNC,...) FUNCTION_ISNULL(FUNC)?throw Exception("attempting to call null function"):(FUNC).f((FUNC).obj,__VA_ARGS__)
 
+#define DELEGATE(RETVAL,NAME,...) FUNCTION_DECLARE(NAME,RETVAL,__VA_ARGS__)
+#define CALL FUNCTION_CALL
 /*#define FUNCTION_ISNULL(FUNC) (FUNC==NULL)
 #define FUNCTION_DECLARE(NAME,RETVAL,...) typedef boost::function<RETVAL (__VA_ARGS__)> NAME;
 #define FUNCTION_CALL(FUNC,...) FUNC(__VA_ARGS__)
@@ -62,6 +78,10 @@
 #define FUNCTION_BIND(FUNC,THIS) bind(FUNC,THIS,_1)
 */
 
+#ifndef WARNLEVEL
+#define WARNLEVEL 10
+#endif
+#define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL)cout << MSG << endl;
 
 
 
@@ -299,56 +319,137 @@ public:
 		}
 	}
 };*/
+typedef __uint8_t Byte;
+typedef __int8_t SByte;
+typedef __int16_t Short;
+typedef __uint16_t UShort;
+typedef __int32_t Int;
+typedef __uint32_t UInt;
+typedef __int64_t Long;
+typedef __uint64_t ULong;
+
 class Buffer
 {
 public:
-	boost::shared_array<char> pbuf;
-	char* buf;
-	bool is_raw;
-	int length;
+	boost::shared_array<Byte> pbuf;
+	Byte* Data;
+	bool IsRaw;
+	Int Length;
 	inline Buffer()
 	{
-		buf=NULL;is_raw=true;length=0;
+		Data=NULL;IsRaw=true;Length=0;
 	}
 	Buffer(void* buf, int length)
 	{
-		this->buf = (char*)buf;
-		this->length = length;
-		this->is_raw=true;
+		this->Data = (Byte*)buf;
+		this->Length = length;
+		this->IsRaw=true;
 	}
-	Buffer(char* buf, int length, boost::shared_array<char> orig)
+	Buffer(char* buf)
 	{
-		this->buf = buf;
-		this->length = length;
-		this->is_raw = false;
+		this->Data = (Byte*)buf;
+		this->Length = strlen(buf);
+		this->IsRaw=true;
+	}
+	Buffer(Byte* buf, int length)
+	{
+		this->Data = (Byte*)buf;
+		this->Length = length;
+		this->IsRaw=true;
+	}
+	Buffer(Byte* buf, int length, boost::shared_array<Byte> orig)
+	{
+		this->Data = buf;
+		this->Length = length;
+		this->IsRaw = false;
 		this->pbuf = orig;
 	}
 	Buffer(int length)
 	{
-		this->length=length;
+		this->Length=length;
 		if(length<=0)
 		{
-			this->buf=NULL;this->is_raw=true;
+			this->Data=NULL;this->IsRaw=true;
 			return;
 		}
-		this->buf = new char[length];
-		this->pbuf=boost::shared_array<char>(this->buf);
-		this->is_raw=false;
+		this->Data = new Byte[length];
+		this->pbuf=boost::shared_array<Byte>(this->Data);
+		this->IsRaw=false;
 	}
-	inline Buffer SubBuffer(int index, int length)
+	inline Buffer SubBuffer(int index, int length) const
 	{
-		if (index < 0 || length > this->length) throw Exception(
+		if (index < 0 || length > this->Length) throw Exception(
 				"SubBuffer() out of range");
-		if(is_raw)
-			return Buffer(buf+index,length);
-		else return Buffer(buf+index,length,pbuf);
+		if(IsRaw)
+			return Buffer(Data+index,length);
+		else return Buffer(Data+index,length,pbuf);
+	}
+	inline Buffer SubBuffer(int index) const
+	{
+		return SubBuffer(index,Length-index);
 	}
 	inline void Release()
 	{
-		if(is_raw)throw Exception("Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
+		if(IsRaw)throw Exception("Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
 		pbuf.reset();
 	}
 };
+
+template<class T> class __event: public Object
+{
+public:
+	map<T,void*> handlers;
+	typedef typename map<T,void*>::iterator iter;
+	inline void* newiter()
+	{
+		return new iter(handlers.begin());
+	}
+	inline void deleteiter(void* it)
+	{
+		iter* tmp=(iter*)it;
+		delete tmp;
+	}
+	inline bool isiterend(void* it)
+	{
+		iter& tmp=*((iter*)it);
+		return tmp==handlers.end();
+	}
+	inline void incrementiter(void* it)
+	{
+		iter& tmp=*((iter*)it);
+		tmp++;
+	}
+	inline T getitervalue(void* it)
+	{
+		iter& tmp=*((iter*)it);
+		return (*tmp).first;
+	}
+	inline void addhandler(T delegate)
+	{
+		handlers.insert(pair<T,void*>(delegate,NULL));
+	}
+	inline void removehandler(T delegate)
+	{
+		handlers.erase(delegate);
+	}
+	inline void operator+=(T delegate)
+	{
+		addhandler(delegate);
+	}
+	inline void operator-=(T delegate)
+	{
+		removehandler(delegate);
+	}
+};
+#define EVENT(DEL) __event<DEL>
+
+#define RAISEEVENT(NAME,...) \
+		{void* gjfdjdsghddjh;\
+		for(gjfdjdsghddjh=(NAME).newiter();!((NAME).isiterend(gjfdjdsghddjh));(NAME).incrementiter(gjfdjdsghddjh))\
+		{CALL((NAME).getitervalue(gjfdjdsghddjh),__VA_ARGS__);}\
+		(NAME).deleteiter(gjfdjdsghddjh);}
+#define ADDHANDLER(NAME,DEL) (NAME).addhandler(DEL)
+#define REMOVEHANDLER(NAME,DEL) (NAME).removehandler(DEL)
 class Stream: public Object
 {
 public:
@@ -425,13 +526,13 @@ public:
 	StreamReader(Stream* s, int buffersize = 4096);
 	~StreamReader();
 	virtual int Read(Buffer buf);
-	virtual int Read(StringBuilder *buf, int length);
-	virtual int Read(StringBuilder *buf, const char* delimitors,
+	virtual int Read(StringBuilder& buf, int length);
+	virtual int Read(StringBuilder& buf, const char* delimitors,
 			int delimitor_count);
 	//virtual int read(Stream *buf,int length);
-	virtual int Read(Stream *buf, const char* delimitors,
+	virtual int Read(Stream& buf, const char* delimitors,
 			int delimitor_count);
-	virtual int ReadLine(StringBuilder *buf);
+	virtual int ReadLine(StringBuilder& buf);
 
 	virtual void Write(Buffer buf);
 	virtual void Flush();

@@ -49,17 +49,17 @@ public:
 inline void invert(Buffer* b)
 {
 	int i;
-	for(i=0;i<b->length;i++)
+	for(i=0;i<b->Length;i++)
 	{
-		*(((unsigned char*)b->buf)+i)=~*(((unsigned char*)b->buf)+i);
+		*(((unsigned char*)b->Data)+i)=~*(((unsigned char*)b->Data)+i);
 	}
 }
 inline void rotate(const Buffer& b, __uint8_t x)
 {
 	int i;
-	for(i=0;i<b.length;i++)
+	for(i=0;i<b.Length;i++)
 	{
-		*(((__uint8_t*)b.buf)+i)=(*(((__uint8_t*)b.buf)+i))+x;
+		*(((__uint8_t*)b.Data)+i)=(*(((__uint8_t*)b.Data)+i))+x;
 	}
 }
 FUNCTION_DECLWRAPPER(procbuffer,void,JoinStream* s,Buffer* b)
@@ -100,7 +100,7 @@ public:
 		cout << tmp << ":" << ep.Port << endl;
 		void* asdfg=0;
 		//Object obj=asdfg;
-		//boost::function<void (client*, SocketManager*, Socket)> fn=&client::cb3;
+		boost::function<void (client*, SocketManager*, Socket)> fn=&client::cb3;
 		//SocketManager::Callback(fn,this);
 		m->BeginConnect(s2,&ep,SocketManager::Callback(&client::cb3,this));
 		//m->BeginConnect(s2,&ep,(SocketManager::Callback)bind(&client::cb3, this, _1, _2));
@@ -359,12 +359,12 @@ FUNCTION_DECLWRAPPER(srvc_cb,void,SocketManager* m,Socket sock)
 	item->BeginRecv();
 	item->BeginSend();
 }
-FUNCTION_DECLWRAPPER(handle_request,void,socketmux* asdfg,Buffer* buf,shared_ptr<socketmux::item>& it)
+FUNCTION_DECLWRAPPER(handle_request,void,socketmux* asdfg,Buffer* Data,shared_ptr<socketmux::item>& it)
 {
 	//shared_ptr<socketmux::item> item=(*iter).second;
 	it->dorecv=false;
 	it->dosend=false;
-	sockaddr* addr=(sockaddr*)buf->buf;
+	sockaddr* addr=(sockaddr*)Data->Data;
 	Sockets::EndPoint* ep=Sockets::EndPoint::FromSockAddr(addr);
 	Socket s(addr->sa_family,SOCK_STREAM,0);
 	it->s=shared_ptr<SocketStream>(new SocketStream(s));

@@ -49,11 +49,11 @@ FileStream::~FileStream()
 }
 int FileStream::Read(Buffer buf)
 {
-	return fread(buf.buf,1,buf.length,f);
+	return fread(buf.Data,1,buf.Length,f);
 }
 void FileStream::Write(Buffer buf)
 {
-	fwrite(buf.buf,1,buf.length,f);
+	fwrite(buf.Data,1,buf.Length,f);
 }
 void FileStream::Flush()
 {
@@ -78,22 +78,22 @@ int StreamReader::Read(Buffer buf)
 	if(buf_length>0)
 	{
 		int tmp=buf_length;
-		if(buf.length<tmp)tmp=buf.length;
-		memcpy(buf.buf,((char*)this->buf)+buf_index,tmp);
-		buf.buf=((char*)buf.buf)+tmp;
-		buf.length-=tmp;
+		if(buf.Length<tmp)tmp=buf.Length;
+		memcpy(buf.Data,((char*)this->buf)+buf_index,tmp);
+		buf.Data+=tmp;
+		buf.Length-=tmp;
 		buf_index+=tmp;
 		buf_length-=tmp;
 		br+=tmp;
 	}
-	if(buf.length>0)
+	if(buf.Length>0)
 	{
-		Buffer tmpb(buf.buf,buf.length);
+		Buffer tmpb(buf.Data,buf.Length);
 		br+=s->Read(tmpb);
 	}
 	return br;
 }
-int StreamReader::Read(StringBuilder *buf,int length)
+int StreamReader::Read(StringBuilder& buf,int length)
 {
 	int br=0;
 	if(buf_length>0)
@@ -101,7 +101,7 @@ int StreamReader::Read(StringBuilder *buf,int length)
 		int tmp=buf_length;
 		if(length<tmp)tmp=length;
 		Buffer tmpb((char*)this->buf+buf_index,tmp);
-		buf->Append(tmpb);
+		buf.Append(tmpb);
 		length-=tmp;
 		buf_index+=tmp;
 		buf_length-=tmp;
@@ -109,15 +109,15 @@ int StreamReader::Read(StringBuilder *buf,int length)
 	}
 	if(length>0)
 	{
-		buf->EnsureCapacity(buf->Length+length);
-		Buffer tmpb((char*)(buf->buf)+buf->Length,length);
+		buf.EnsureCapacity(buf.Length+length);
+		Buffer tmpb((char*)(buf.buf)+buf.Length,length);
 		int tmp=s->Read(tmpb);
-		buf->Length+=tmp;
+		buf.Length+=tmp;
 		br+=tmp;
 	}
 	return br;
 }
-int StreamReader::Read(StringBuilder *buf,const char* delimitors,int delimitor_count)
+int StreamReader::Read(StringBuilder& buf,const char* delimitors,int delimitor_count)
 {
 	int br=0;
 	while(1)
@@ -138,7 +138,7 @@ int StreamReader::Read(StringBuilder *buf,const char* delimitors,int delimitor_c
 				{
 					int tmp=i-buf_index;
 					Buffer tmpb((char*)this->buf+buf_index,tmp);
-					buf->Append(tmpb);
+					buf.Append(tmpb);
 					br+=tmp;
 					tmp++;
 					while(tmp<buf_length)
@@ -156,12 +156,12 @@ int StreamReader::Read(StringBuilder *buf,const char* delimitors,int delimitor_c
 				}
 		}
 		Buffer tmpb((char*)this->buf+buf_index,buf_length);
-		buf->Append(tmpb);
+		buf.Append(tmpb);
 		br+=buf_length;
 		buf_length=0;
 	}
 }
-int StreamReader::Read(Stream *buf,const char* delimitors,int delimitor_count)
+int StreamReader::Read(Stream& buf,const char* delimitors,int delimitor_count)
 {
 	int br=0;
 	while(1)
@@ -182,7 +182,7 @@ int StreamReader::Read(Stream *buf,const char* delimitors,int delimitor_count)
 				{
 					int tmp=i-buf_index;
 					Buffer tmpb((char*)this->buf+buf_index,tmp);
-					buf->Write(tmpb);
+					buf.Write(tmpb);
 					br+=tmp;
 					tmp++;
 					while(tmp<buf_length)
@@ -200,12 +200,12 @@ int StreamReader::Read(Stream *buf,const char* delimitors,int delimitor_count)
 				}
 		}
 		Buffer tmpb((char*)this->buf+buf_index,buf_length);
-		buf->Write(tmpb);
+		buf.Write(tmpb);
 		br+=buf_length;
 		buf_length=0;
 	}
 }
-int StreamReader::ReadLine(StringBuilder *buf)
+int StreamReader::ReadLine(StringBuilder& buf)
 {
 	return Read(buf,"\x0A\x0D",2);
 }
@@ -236,9 +236,9 @@ StringBuilder::~StringBuilder()
 void StringBuilder::Append(Buffer buf)
 {
 	//int tmp=this->Length;
-	this->EnsureCapacity(this->Length+buf.length);
-	memcpy((char*)this->buf+this->Length,buf.buf,buf.length);
-	this->Length+=buf.length;
+	this->EnsureCapacity(this->Length+buf.Length);
+	memcpy((char*)this->buf+this->Length,buf.Data,buf.Length);
+	this->Length+=buf.Length;
 }
 void StringBuilder::Append(STRING buf)
 {
@@ -275,8 +275,8 @@ void StringBuilder::EnsureCapacity(int c)
 }
 int StringBuilder::CompareTo(Buffer buf)
 {
-	if(buf.length<=0 || this->Length<=0)return -1;
-	return memcmp(this->buf,buf.buf,buf.length<this->Length?buf.length:this->Length);
+	if(buf.Length<=0 || this->Length<=0)return -1;
+	return memcmp(this->buf,buf.Data,buf.Length<this->Length?buf.Length:this->Length);
 }
 int StringBuilder::CompareTo(const StringBuilder* sb)
 {

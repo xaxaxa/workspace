@@ -183,10 +183,10 @@ namespace xaxaxa
 				if(_s!=-1)close(_s);
 				_s=-1;
 			}
-			inline int Send(Buffer buf,int flags=0)
+			inline int Send(Buffer buf,Int flags=0)
 			{
 			retry:
-				int tmp=send(_s,buf.buf,buf.length,flags);
+				Int tmp=send(_s,buf.Data,buf.Length,flags);
 				if(tmp<0)
 				{
 					if(errno==4)goto retry;
@@ -194,10 +194,10 @@ namespace xaxaxa
 				}
 				else return tmp;
 			}
-			inline int Recv(Buffer buf,int flags=0)
+			inline int Recv(Buffer buf,Int flags=0)
 			{
 			retry:
-				int tmp=recv(_s,buf.buf,buf.length,flags);
+				Int tmp=recv(_s,buf.Data,buf.Length,flags);
 				if(tmp<0)
 				{
 					if(errno==4)goto retry;
@@ -205,7 +205,7 @@ namespace xaxaxa
 				}
 				else return tmp;
 			}
-			inline Socket Accept(int flags=0)
+			inline Socket Accept(Int flags=0)
 			{
 			retry:
 				SOCKET s=accept4(_s,NULL,NULL,flags);
@@ -219,23 +219,23 @@ namespace xaxaxa
 			inline void Connect(sockaddr *addr,int addr_size=0)
 			{
 			retry:
-				int tmp=connect(_s,addr,(addr_size==0?sizeof(sockaddr):addr_size));
+				Int tmp=connect(_s,addr,(addr_size==0?sizeof(sockaddr):addr_size));
 				if(tmp!=0 && errno!=115)
 				{
 					if(errno==4)goto retry;
 					throw Exception(errno);
 				}
 			}
-			inline void Bind(sockaddr *addr,int addr_size=0)
+			inline void Bind(sockaddr *addr,Int addr_size=0)
 			{
-				if(bind(_s,addr,(addr_size==0?sizeof(sockaddr):addr_size))!=0)throw Exception(errno);
+				if(::bind(_s,addr,(Int)(addr_size==0?sizeof(sockaddr):addr_size))!=0)throw Exception(errno);
 			}
 			inline void Bind(EndPoint *ep)
 			{
-				int size=ep->GetSockAddrSize();
+				Int size=ep->GetSockAddrSize();
 				uint8_t tmp[size];
 				ep->GetSockAddr((sockaddr*)tmp);
-				if(bind(_s,(sockaddr*)tmp,size)!=0)throw Exception(errno);
+				if(::bind(_s,(sockaddr*)tmp,size)!=0)throw Exception(errno);
 			}
 			inline void Connect(EndPoint *ep)
 			{
