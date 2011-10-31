@@ -38,8 +38,8 @@ using namespace net;
 
 void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
 void cb1(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
-void cb2(void* user, protocols::protoint& p, const void* hdr, protoid proto, const Buffer& data);
-void cb3(void* user, protocols::protoint& p, const void* hdr, protoid proto, const Buffer& data);
+void cb2(void* user, const packet& p);
+void cb3(void* user, const packet& p);
 protostack pstack;
 int linktype;
 protocols::protoint* p_int;
@@ -112,22 +112,24 @@ void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes)
 	//from pcap
 	chkpacket(header,bytes);
 	//write(1,bytes,header->caplen);
-	pstack.processPacket(0x0800,Buffer((void*)bytes,header->caplen));
+	packet p={NULL,0x0800,NULL,Buffer((void*)bytes,header->caplen),NULL};
+	pstack.processPacket(p);
 }
 void cb1(u_char *user, const pcap_pkthdr *header, const u_char *bytes)
 {
 	//from pcap
 	chkpacket(header,bytes);
-	p_int->putdata(Buffer((void*)bytes,header->caplen));
+	packet p={NULL,linktype,NULL,Buffer((void*)bytes,header->caplen),NULL};
+	p_int->putdata(p);
 }
-void cb2(void* user, protocols::protoint& p, const void* hdr, protoid proto, const Buffer& data)
+void cb2(void* user, const packet& p)
 {
 	//from datalink processor
-	pstack.processPacket(proto,data);
+	pstack.processPacket(p);
 }
 
-void cb3(void* user, protocols::protoint& p, const void* hdr, protoid proto, const Buffer& data)
+void cb3(void* user, const packet& p)
 {
 	//from protocol stack
-	write(1,data.Data,data.Length);
+	write(1,p.data.Data,p.data.Length);
 }
