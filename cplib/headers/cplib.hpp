@@ -81,7 +81,7 @@
 #ifndef WARNLEVEL
 #define WARNLEVEL 10
 #endif
-#define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL)cout << MSG << endl;
+#define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL)cerr << MSG << endl;
 
 
 
