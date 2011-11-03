@@ -194,6 +194,18 @@ public:
 
 	}
 };
+class NotSupportedException: public Exception
+{
+public:
+	inline NotSupportedException(): Exception()
+	{
+		//this();
+	}
+	inline NotSupportedException(std::string message): Exception(message)
+	{
+
+	}
+};
 struct STRING
 {
 	char* c;

@@ -21,7 +21,7 @@
  * 
  */
 
-
+#define WARNLEVEL 9
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>

@@ -68,12 +68,12 @@ int min(int a, int b)
 }
 void databuf_append(const Buffer& b)
 {
-	//memcpy(databuf.buf+(databuf_position&databuf_mask),b.buf,b.length);
+	//memcpy(databuf.Data+(databuf_position&databuf_mask),b.Data,b.Length);
 	int pos=(int)(databuf_position&databuf_mask);
-	memcpy(databuf.buf+pos,b.buf,min(b.length,databuf.length-pos));
-	if(b.length>databuf.length-pos)
-		memcpy(databuf.buf,b.buf+(databuf.length-pos),b.length-(databuf.length-pos));
-	databuf_position+=b.length;
+	memcpy(databuf.Data+pos,b.Data,min(b.Length,databuf.Length-pos));
+	if(b.Length>databuf.Length-pos)
+		memcpy(databuf.Data,b.Data+(databuf.Length-pos),b.Length-(databuf.Length-pos));
+	databuf_position+=b.Length;
 }
 struct client
 {
@@ -107,12 +107,12 @@ struct client
 	void beginwrite()
 	{
 		if(writing)return;
-		if(write_pos<databuf_position-databuf.length) //the client was too slow; data have to be discarded
-			write_pos=databuf_position-databuf.length;
+		if(write_pos<databuf_position-databuf.Length) //the client was too slow; data have to be discarded
+			write_pos=databuf_position-databuf.Length;
 		if(write_pos>=databuf_position)return; //there's no data to be written
 		writing=true;
 		int pos=(int)(write_pos&databuf_mask);
-		written_bytes=min(databuf.length-pos,databuf_position-write_pos);
+		written_bytes=min(databuf.Length-pos,databuf_position-write_pos);
 		stream->BeginWrite(databuf.SubBuffer(pos,written_bytes),Stream::Callback(cb_write,this));
 	}
 	FUNCTION_DECLWRAPPER(cb_read,void,Stream* s)
@@ -188,9 +188,9 @@ FUNCTION_DECLWRAPPER(cb_accept,void,SocketManager* m,Socket sock)
 	list<client>::iterator iter=clients.insert(clients.end(),c);
 	
 	ucred credentials;
-	socklen_t ucred_length = sizeof(ucred);
+	socklen_t ucred_Length = sizeof(ucred);
 	/* fill in the user data structure */
-	if(getsockopt(s._s, SOL_SOCKET, SO_PEERCRED, &credentials, &ucred_length))
+	if(getsockopt(s._s, SOL_SOCKET, SO_PEERCRED, &credentials, &ucred_Length))
 	{
 		printf("could obtain credentials from unix domain socket");
 		(*(iter)).uid=-1;
@@ -272,11 +272,11 @@ asdf:
 	{
 		while(1)
 		{
-			int br=sock.Recv(buf.SubBuffer(0,buf.length-1));
-			((char*)buf.buf)[br]='\0';
-			//cerr << (char*)buf.buf;
-			//wprintw(win,"%s",buf.buf);
-			waddnstr(win,buf.buf,br);
+			int br=sock.Recv(buf.SubBuffer(0,buf.Length-1));
+			((char*)buf.Data)[br]='\0';
+			//cerr << (char*)buf.Data;
+			//wprintw(win,"%s",buf.Data);
+			waddnstr(win,(char*)buf.Data,br);
 			wrefresh(win);
 			//move(h-1,0);
 			//refresh();
@@ -333,10 +333,10 @@ void* guithread(void* v)
 			l++;
 			//wscrl(win,1);
 			//wprintw(win,"%s",s.c_str());
-			Buffer b((char*)(s.c_str()),s.length());
+			Buffer b((char*)(s.c_str()),s.Length());
 			int bs=0;
-			while(bs<b.length)
-				bs+=sock.Send(b.SubBuffer(bs,b.length-bs));
+			while(bs<b.Length)
+				bs+=sock.Send(b.SubBuffer(bs,b.Length-bs));
 			//mvwprintw(win,LINES-2,0,s.c_str());
 			//wrefresh(win);
 			a=0;
@@ -359,11 +359,11 @@ void* guithread(void* v)
 		int len=strlen(str);
 		if(len<=0)continue;
 		Buffer b((char*)str,len);
-		str[b.length]='\n';
-		b.length++;
+		str[b.Length]='\n';
+		b.Length++;
 		int bs=0;
-		while(bs<b.length)
-			bs+=sock.Send(b.SubBuffer(bs,b.length-bs));
+		while(bs<b.Length)
+			bs+=sock.Send(b.SubBuffer(bs,b.Length-bs));
 		clrtoeol();
 	}
 	
