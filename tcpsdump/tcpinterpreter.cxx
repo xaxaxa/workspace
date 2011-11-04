@@ -329,8 +329,8 @@ namespace net
 					WARN(5,"Invalid TCP packet");
 					return;
 				}
-				UInt doff=h->doff*4;
-				if((doff<sizeof(tcphdr)) || doff>b.Length)
+				Int doff=h->doff*4;
+				if((doff<(Int)sizeof(tcphdr)) || doff>b.Length)
 				{
 					WARN(5,"Invalid TCP packet");
 					return;
@@ -340,7 +340,7 @@ namespace net
 				while(true)
 				{
 					if(pack==NULL || pack->protocol==NULL)
-					{WARN(7,"could not find src address and dst address for tcp packet");return;}
+					{WARN(6,"could not find src address and dst address for tcp packet");return;}
 					if((addrlen=pack->protocol->getAddrSize())>0)break;
 				}
 				//Byte tmpbuf[sizeof(tcpconn)+(addrlen*2)];

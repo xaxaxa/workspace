@@ -21,7 +21,7 @@
  * 
  */
 
-#define WARNLEVEL 9
+#define WARNLEVEL 6
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 			p_int=NULL;
 	}
 	cerr << "linktype is "<<linktype<<endl;
-	
+	setuid(getuid()); //drop root privileges
 	if(p_int==NULL)
 	{
 		pcap_loop(cap,-1,cb,NULL);
@@ -131,16 +131,18 @@ void cb2(void* user, const packet& p)
 	//from datalink processor
 	pstack.processPacket(p);
 }
+Int newfilen=0;
 char* getNewFile()
 {
 	struct stat st;
-	Int tmp=0;
+	//Int tmp=newfilen;
 	char* fn=new char[16];
 	do
 	{
-		tmp++;
-		sprintf(fn,"s%05i",tmp);
+		newfilen++;
+		sprintf(fn,"s%06i",newfilen);
 	} while(stat(fn,&st)==0);
+	//newfilen=tmp;
 	return fn;
 }
 map<connection_ptr,int> files;
