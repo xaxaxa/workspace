@@ -307,6 +307,7 @@ namespace net
 								{
 									const Buffer& b1=(tmp.seq==this->seq)?tmp.data:tmp.data.SubBuffer((tmp.seq+tmp.data.Length)-this->seq);
 									CALL(dataout,*this,b1);
+									this->seq=tmp.seq+tmp.data.Length;
 								}
 								items.erase(it); it=items.begin();
 							} else it++;
