@@ -44,7 +44,7 @@ namespace net
 	struct packet;
 	struct connection
 	{
-		virtual Byte largerThan(const connection& x) const=0;
+		virtual SByte largerThan(const connection& x) const=0;
 		/*virtual bool operator==(const connection& x) const=0;
 		virtual bool operator!=(const connection& x) const=0;
 		virtual bool operator>(const connection& x) const=0;
@@ -57,13 +57,13 @@ namespace net
 	{
 		boost::shared_ptr<connection> ptr;
 		inline bool operator==(const connection_ptr& x) const
-		{return this->ptr->largerThan(*(x.ptr))==0;}
+		{WARN(10,"oper = called");return this->ptr->largerThan(*(x.ptr))==0;}
 		inline bool operator!=(const connection_ptr& x) const
 		{return !(*this==x);}
 		inline bool operator>(const connection_ptr& x) const
-		{return this->ptr->largerThan(*(x.ptr))>0;}
+		{WARN(10,"oper > called");return this->ptr->largerThan(*(x.ptr))>0;}
 		inline bool operator<(const connection_ptr& x) const
-		{return this->ptr->largerThan(*(x.ptr))<0;}
+		{WARN(10,"oper < called: "<<(int)(this->ptr->largerThan(*(x.ptr))));return this->ptr->largerThan(*(x.ptr))<0;}
 		inline bool operator<=(const connection_ptr& x) const
 		{return !(*this>x);}
 		inline bool operator>=(const connection_ptr& x) const
@@ -86,11 +86,8 @@ namespace net
 			{throw NotSupportedException();}
 			
 			//for connection oriented protocols only
-			//CID=Connection IDentifier: a sequence of bytes that identifies the connection
-			virtual void* getCID(const packet& p) const
-			{return 0;}
-			virtual Byte compareCID(void* v1, void* v2) const
-			{throw NotSupportedException();}
+			virtual bool getConnection(const packet& p, connection_ptr& ptr_out) const
+			{return false;}
 		};
 	}
 	struct packet	//contains a *parsed* packet; raw packets should be represented by xaxaxa::Buffer
@@ -154,12 +151,13 @@ namespace net
 			{
 				const Buffer& b=p.data;
 				iphdr* h=(iphdr*)b.Data;
-				if(b.Length<1 || b.Length<h->ihl)
+				Int hdrlen;
+				if(b.Length<1 || b.Length<(hdrlen=h->ihl*4))
 				{
 					WARN(5,"Invalid IP packet");
 					return;
 				}
-				RAISEEVENT(dataout,{this,(protoid)(h->protocol),h,b.SubBuffer(h->ihl),(packet*)&p});
+				RAISEEVENT(dataout,{this,(protoid)(h->protocol),h,b.SubBuffer(hdrlen),(packet*)&p});
 			}
 			virtual string identify(){return "Internet Protocol";}
 			virtual Byte getAddrSize() const
@@ -203,8 +201,8 @@ namespace net
 				UShort srcport;
 				UShort dstport;
 				bool isRaw;
-				#define __GET_SRCADDR(x,addrlen) (*((Byte(*)[addrlen])x))
-				#define __GET_DSTADDR(x,addrlen) (*((Byte(*)[addrlen])(((Byte*)(x))+addrlen)))
+				#define __GET_SRCADDR(x,addrlen) (*((Byte(&)[addrlen])x))
+				#define __GET_DSTADDR(x,addrlen) (*((Byte(&)[addrlen])(((Byte*)(x))+addrlen)))
 				tcpconn():isRaw(false){}
 				tcpconn(Byte addrlen, Byte* src, Byte* dst, bool raw=false):isRaw(raw)
 				{
@@ -221,50 +219,56 @@ namespace net
 						memcpy(addr+addrlen,dst,addrlen);
 					}
 				}
-				virtual Byte largerThan(const connection& x) const
+				virtual SByte largerThan(const connection& x) const
 				{
 					const tcpconn& x2=dynamic_cast<const tcpconn&>(x);
-					if(addrlen>x2.addrlen)return 1;
-					if(addrlen<x2.addrlen)return -1;
+					if(addrlen>x2.addrlen)return 5;
+					if(addrlen<x2.addrlen)return -5;
+					
+					if(srcport>x2.srcport)return 2;
+					if(srcport<x2.srcport)return -2;
+					if(dstport>x2.dstport)return 1;
+					if(dstport<x2.dstport)return -1;
+					return 0;
 					const Byte* saddr=isRaw?srcaddr:((Byte*)this->address.get());
 					const Byte* saddr2=x2.isRaw?x2.srcaddr:((Byte*)x2.address.get());
 					const Byte* daddr=isRaw?dstaddr:(saddr+addrlen);
 					const Byte* daddr2=x2.isRaw?x2.dstaddr:(saddr2+x2.addrlen);
 					//Byte (&srcaddr)[addrlen]=*((Byte(*)[addrlen])dataaddr);
-					if(__GET_SRCADDR(saddr,addrlen)>__GET_SRCADDR(saddr2,addrlen))return 1;
-					if(__GET_SRCADDR(saddr,addrlen)<__GET_SRCADDR(saddr2,addrlen))return -1;
-					if(__GET_SRCADDR(daddr,addrlen)>__GET_SRCADDR(daddr2,addrlen))return 1;
-					if(__GET_SRCADDR(daddr,addrlen)<__GET_SRCADDR(daddr2,addrlen))return -1;
-					
+					/*if(__GET_SRCADDR(saddr,addrlen)>__GET_SRCADDR(saddr2,addrlen))return 4;
+					if(__GET_SRCADDR(saddr,addrlen)<__GET_SRCADDR(saddr2,addrlen))return -4;
+					if(__GET_SRCADDR(daddr,addrlen)>__GET_SRCADDR(daddr2,addrlen))return 3;
+					if(__GET_SRCADDR(daddr,addrlen)<__GET_SRCADDR(daddr2,addrlen))return -3;*/
+					int tmp;
+					if((tmp=memcmp(saddr,saddr2,addrlen))!=0)return tmp;
+					if((tmp=memcmp(daddr,daddr2,addrlen))!=0)return tmp;
 					/*
 					if(srcaddr<tmp.srcaddr)return -1;
 					if(dstaddr>tmp.dstaddr)return 1;
 					if(dstaddr<tmp.dstaddr)return -1;*/
-					if(srcport>x2.srcport)return 1;
-					if(srcport<x2.srcport)return -1;
-					if(dstport>x2.dstport)return 1;
-					if(dstport<x2.dstport)return -1;
-					WARN(9,"tcpconn::largerThan returned zero");
+					
+					WARN(10,"tcpconn::largerThan returned zero");
 					return 0;
 				}
-				/*virtual bool operator==(const tcpconn_ptr& x) const
-				{return this->ptr->largerThan(*(x.ptr))==0;}
-				virtual bool operator!=(const tcpconn_ptr& x) const
+				virtual bool operator==(const tcpconn& x) const
+				{WARN(9,"op= called");return this->largerThan(x)==0;}
+				virtual bool operator!=(const tcpconn& x) const
 				{return !(*this==x);}
-				virtual bool operator>(const tcpconn_ptr& x) const
-				{return this->ptr->largerThan(*(x.ptr))>0;}
-				virtual bool operator<(const tcpconn_ptr& x) const
-				{return this->ptr->largerThan(*(x.ptr))<0;}
-				virtual bool operator<=(const tcpconn_ptr& x) const
+				virtual bool operator>(const tcpconn& x) const
+				{return this->largerThan(x)>0;}
+				virtual bool operator<(const tcpconn& x) const
+				{return this->largerThan(x)<0;}
+				virtual bool operator<=(const tcpconn& x) const
 				{return !(*this>x);}
-				virtual bool operator>=(const tcpconn_ptr& x) const
-				{return !(*this<x);}*/
+				virtual bool operator>=(const tcpconn& x) const
+				{return !(*this<x);}
 			};
 			class tcpbuffer
 			{
 			public:
 				DELEGATE(void, datadelegate, tcpbuffer& src, const Buffer& b);
 				datadelegate dataout;
+				connection_ptr conn;
 				struct item
 				{
 					ULong seq;
@@ -325,6 +329,12 @@ namespace net
 					WARN(5,"Invalid TCP packet");
 					return;
 				}
+				UInt doff=h->doff*4;
+				if((doff<sizeof(tcphdr)) || doff>b.Length)
+				{
+					WARN(5,"Invalid TCP packet");
+					return;
+				}
 				packet* pack=p.parent;
 				int addrlen;
 				while(true)
@@ -339,27 +349,37 @@ namespace net
 				tcpconn* con=new tcpconn(addrlen,srcaddr,dstaddr,false);//malloc(sizeof(tcpconn)+(addrlen*2));
 				//memcpy(con+1,srcaddr,addrlen);
 				//memcpy(((Byte*)con+1)+addrlen,dstaddr,addrlen);
-				con->srcport=h->source;
-				con->dstport=h->dest;
+				con->srcport=ntohs(h->source);
+				con->dstport=ntohs(h->dest);
 				connection_ptr cptr={boost::shared_ptr<connection>(con)};
 				iter it=connections.find(cptr);
+				tcpbuffer* tcpbufp;
 				if(it==connections.end())
 				{
 					tcpconn* con1=new tcpconn(addrlen,srcaddr,dstaddr);//(tcpconn*)malloc(sizeof(tcpconn)+(addrlen*2));
 					//memcpy(con1,con,sizeof(tmpbuf));
-					con1->srcport=h->source;
-					con1->dstport=h->dest;
+					con1->srcport=con->srcport;
+					con1->dstport=con->dstport;
+					WARN(9,"added new connection; sport="<<con->srcport<<"; dport="<<con->dstport);
 					cptr.ptr=boost::shared_ptr<connection>(con1);
-					WARN(9,"added new connection");
+					tcpbufp=&connections[cptr];
+					tcpbufp->conn=cptr;
 				} else 
 				{
-					WARN(9,"found existing connection; sport="<<h->source<<"; dport="<<h->dest);
+					WARN(9,"found existing connection; sport="<<con->srcport<<"; dport="<<con->dstport);
+					tcpbufp=&connections[cptr];
 				}
-				tcpbuffer& tcpbuf=connections[cptr];
+				tcpbuffer& tcpbuf=*tcpbufp;
 				if(FUNCTION_ISNULL(tcpbuf.dataout))tcpbuf.dataout=tcpbuffer::datadelegate(&tcp::tcpbuf_cb,this);
-				tcpbuf.processData(h->seq,b);
+				tcpbuf.processData(h->seq,b.SubBuffer(doff));
 				//RAISEEVENT(dataout,{this,noproto,h,b.SubBuffer(h->doff*4),(packet*)&p});
 				//CALL(dataout,NULL,b);
+			}
+			virtual bool getConnection(const packet& p, connection_ptr& ptr_out) const
+			{
+				tcpbuffer* b=(tcpbuffer*)p.header;
+				ptr_out=b->conn;
+				return true;
 			}
 			virtual string identify(){return "Transmission Control Protocol";}
 		};

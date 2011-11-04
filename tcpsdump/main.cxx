@@ -32,6 +32,10 @@
 #include <arpa/inet.h>
 #include <netinet/if_ether.h>
 #include "tcpinterpreter.cxx"
+#include <map>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace net;
@@ -127,9 +131,43 @@ void cb2(void* user, const packet& p)
 	//from datalink processor
 	pstack.processPacket(p);
 }
-
+char* getNewFile()
+{
+	struct stat st;
+	Int tmp=0;
+	char* fn=new char[16];
+	do
+	{
+		tmp++;
+		sprintf(fn,"s%05i",tmp);
+	} while(stat(fn,&st)==0);
+	return fn;
+}
+map<connection_ptr,int> files;
+typedef map<connection_ptr,int>::iterator files_iter;
 void cb3(void* user, const packet& p)
 {
 	//from protocol stack
-	write(1,p.data.Data,p.data.Length);
+	
+	//get connection
+	connection_ptr conn;
+	const packet* pack=&p;
+	while(true)
+	{
+		if(pack->protocol->getConnection(p,conn))break;
+		pack=pack->parent;
+		if(pack==NULL)return;
+	}
+	//write(1,p.data.Data,p.data.Length);
+	files_iter it=files.find(conn);
+	int file;
+	if(it==files.end())
+	{
+		char* fn;
+		fn=getNewFile();
+		file=open(fn,O_CREAT|O_WRONLY|O_TRUNC,0666);
+		files[conn]=file;
+		delete[] fn;
+	} else file=(*it).second;
+	write(file,p.data.Data,p.data.Length);
 }

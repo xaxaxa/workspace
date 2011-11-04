@@ -1,0 +1,13 @@
+GET /icons/unknown.gif HTTP/1.1
+Host: 192.168.11.12
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Accept: image/png,image/*;q=0.8,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip, deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Connection: keep-alive
+Referer: http://192.168.11.12/
+If-Modified-Since: Sat, 20 Nov 2004 20:16:24 GMT
+If-None-Match: "4c2c3c-f5-3e9564c23b600"
+Cache-Control: max-age=0
+
