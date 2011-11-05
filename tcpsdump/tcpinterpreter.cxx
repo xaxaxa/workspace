@@ -284,6 +284,7 @@ namespace net
 				void processData(ULong seq, const Buffer& datain)
 				{
 					if(!initseq)this->seq=seq;
+					initseq=true;
 					if(seq>this->seq)
 					{
 						item tmp;
@@ -291,27 +292,46 @@ namespace net
 						tmp.data=Buffer(datain.Length);
 						memcpy(tmp.data.Data,datain.Data,datain.Length);
 						items.push_back(tmp);
+						WARN(6,"seq>this->seq; this->seq=" << this->seq << "; seq=" << seq);
 					}
 					else if((seq+datain.Length)>this->seq)
 					{
-						const Buffer& b=(seq==this->seq)?datain:datain.SubBuffer((seq+datain.Length)-this->seq);
+						WARN(7,"(seq+datain.Length)>this->seq; this->seq=" << this->seq << "; seq=" << seq);
+						const Buffer b=(seq==this->seq)?datain:datain.SubBuffer(this->seq-seq);
 						CALL(dataout,*this,b);
 						this->seq=seq+datain.Length;
 						list<item>::iterator it=items.begin();
-						while(it!=items.end())
+						bool asdf;
+						if(it==items.end())return;
+						WARN(6,"detected data in queue after receiving a contigious packet");
+						do
 						{
-							item& tmp=*it;
-							if((tmp.seq<=this->seq))
+							asdf=false;
+							while(it!=items.end())
 							{
-								if((tmp.seq+tmp.data.Length)>this->seq)
+								item& tmp=*it;
+								if((tmp.seq<=this->seq))
 								{
-									const Buffer& b1=(tmp.seq==this->seq)?tmp.data:tmp.data.SubBuffer((tmp.seq+tmp.data.Length)-this->seq);
-									CALL(dataout,*this,b1);
-									this->seq=tmp.seq+tmp.data.Length;
-								}
-								items.erase(it); it=items.begin();
-							} else it++;
-						}
+									if((tmp.seq+tmp.data.Length)>this->seq)
+									{
+										const Buffer b1=(tmp.seq==this->seq)?tmp.data:tmp.data.SubBuffer(this->seq-tmp.seq);
+										CALL(dataout,*this,b1);
+										this->seq=tmp.seq+tmp.data.Length;
+										WARN(6,"caught up to seq="<<this->seq<<"; tmp.data.Length="<<tmp.data.Length);
+									}
+									items.erase(it); it=items.begin();
+									asdf=true;
+								} else it++;
+							}
+						} while(asdf);
+					}
+					else if(datain.Length==0)
+					{
+						this->seq++;
+					}
+					else
+					{
+						WARN(6,"retransmission detected; this->seq=" << this->seq << "; seq=" << seq << "; datain.Length=" << datain.Length);
 					}
 				}
 			};
@@ -361,18 +381,19 @@ namespace net
 					//memcpy(con1,con,sizeof(tmpbuf));
 					con1->srcport=con->srcport;
 					con1->dstport=con->dstport;
-					WARN(9,"added new connection; sport="<<con->srcport<<"; dport="<<con->dstport);
+					WARN(9,"added new connection; sport="<<con->srcport<<"; dport="<<con->dstport<<"; seq="<<ntohl(h->seq));
 					cptr.ptr=boost::shared_ptr<connection>(con1);
 					tcpbufp=&connections[cptr];
 					tcpbufp->conn=cptr;
 				} else 
 				{
-					WARN(9,"found existing connection; sport="<<con->srcport<<"; dport="<<con->dstport);
-					tcpbufp=&connections[cptr];
+					WARN(9,"found existing connection; sport="<<con->srcport<<"; dport="<<con->dstport<<"; seq="<<ntohl(h->seq));
+					tcpbufp=&(connections[cptr]);
+					if(tcpbufp->conn!=cptr) WARN(5,"INTERNAL ERROR POSSIBLE DATA CORRUPTION: connections[cptr].conn != cptr");
 				}
 				tcpbuffer& tcpbuf=*tcpbufp;
 				if(FUNCTION_ISNULL(tcpbuf.dataout))tcpbuf.dataout=tcpbuffer::datadelegate(&tcp::tcpbuf_cb,this);
-				tcpbuf.processData(h->seq,b.SubBuffer(doff));
+				if(!(h->syn))tcpbuf.processData(ntohl(h->seq),b.SubBuffer(doff));
 				//RAISEEVENT(dataout,{this,noproto,h,b.SubBuffer(h->doff*4),(packet*)&p});
 				//CALL(dataout,NULL,b);
 			}
