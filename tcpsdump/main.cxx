@@ -36,7 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#include <sstream>
 using namespace std;
 using namespace net;
 
@@ -57,7 +57,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	pcap_set_promisc(cap,1);
-	pcap_set_timeout(cap,200);
+	pcap_set_timeout(cap,500);
+	pcap_set_buffer_size(cap,1024*1024*16);
 	int ret=pcap_activate(cap);
 	if(ret&PCAP_ERROR)
 	{
@@ -145,6 +146,7 @@ char* getNewFile()
 	//newfilen=tmp;
 	return fn;
 }
+
 map<connection_ptr,int> files;
 typedef map<connection_ptr,int>::iterator files_iter;
 void cb3(void* user, const packet& p)
@@ -165,11 +167,16 @@ void cb3(void* user, const packet& p)
 	int file;
 	if(it==files.end())
 	{
-		char* fn;
-		fn=getNewFile();
-		file=open(fn,O_CREAT|O_WRONLY|O_TRUNC,0666);
+		//char* fn;
+		//fn=getNewFile();
+		Byte* src; Byte* dst;
+		p.protocol->getAddr(p,src,dst);
+		stringstream s;
+		s << "s_" << p.protocol->getAddressString(p,src) << ":" << p.protocol->getSrcPort(p)
+		<< "-" << p.protocol->getAddressString(p,dst) << ":" << p.protocol->getDstPort(p);
+		file=open(s.str().c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666);
 		files[conn]=file;
-		delete[] fn;
+		//delete[] fn;
 	} else file=(*it).second;
 	write(file,p.data.Data,p.data.Length);
 }
