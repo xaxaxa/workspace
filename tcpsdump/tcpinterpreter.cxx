@@ -318,7 +318,8 @@ namespace net
 				{
 					ULong seq;
 					Buffer data;
-					bool syn_or_fin;
+					Byte seq_padding1;
+					Byte seq_padding2;
 				};
 				list<item> items;
 				ULong seq;//the expected sequence number of next packet
@@ -327,27 +328,25 @@ namespace net
 				{
 					
 				}
-				void processData(ULong seq, const Buffer& datain, bool syn_or_fin)
+				void processData(ULong seq, const Buffer& datain, Byte seq_padding1, Byte seq_padding2)
 				{
-					if(!initseq)this->seq=seq;
+					if(!initseq)this->seq=seq-seq_padding1;
 					initseq=true;
 					
-					if(seq>this->seq)
+					if((seq-seq_padding1)>this->seq)
 					{
 						WARN(6,"seq>this->seq; this->seq=" << this->seq << "; seq=" << seq);
 						if(datain.Length<=0)return;
-						item tmp;
-						tmp.seq=seq;
-						tmp.data=Buffer(datain.Length);
-						tmp.syn_or_fin=syn_or_fin;
+						item tmp{seq,Buffer(datain.Length),seq_padding1,seq_padding2};
 						memcpy(tmp.data.Data,datain.Data,datain.Length);
 						items.push_back(tmp);
 					}
-					else if((seq+datain.Length+(syn_or_fin?1:0))>this->seq)
+					else if((seq+datain.Length+seq_padding2)>this->seq)
 					{
 						WARN(7,"(seq+datain.Length)>this->seq; this->seq=" << this->seq << "; seq=" << seq);
-						const Buffer b=(seq==this->seq)?datain:datain.SubBuffer(this->seq-seq);
-						this->seq=seq+datain.Length+(syn_or_fin?1:0);
+						//this->seq+=seq_padding1;
+						const Buffer b=(seq==this->seq)?datain:datain.SubBuffer(this->seq+seq_padding1-seq);
+						this->seq=seq+datain.Length+seq_padding2;
 						if(datain.Length>0)CALL(dataout,*this,b);
 						list<item>::iterator it=items.begin();
 						bool asdf;
@@ -359,13 +358,13 @@ namespace net
 							while(it!=items.end())
 							{
 								item& tmp=*it;
-								if((tmp.seq<=this->seq))
+								if(((tmp.seq-tmp.seq_padding1)<=this->seq))
 								{
-									if((tmp.seq+tmp.data.Length+(tmp.syn_or_fin?1:0))>this->seq)
+									if((tmp.seq+tmp.data.Length+tmp.seq_padding2)>this->seq)
 									{
-										const Buffer b1=(tmp.seq==this->seq)?tmp.data:tmp.data.SubBuffer(this->seq-tmp.seq);
+										const Buffer b1=(tmp.seq==this->seq)?tmp.data:tmp.data.SubBuffer(this->seq+tmp.seq_padding1-tmp.seq);
 										CALL(dataout,*this,b1);
-										this->seq=tmp.seq+tmp.data.Length+(tmp.syn_or_fin?1:0);
+										this->seq=tmp.seq+tmp.data.Length+tmp.seq_padding2;
 										WARN(6,"caught up to seq="<<this->seq<<"; tmp.data.Length="<<tmp.data.Length);
 									}
 									items.erase(it); it=items.begin();
@@ -446,7 +445,7 @@ namespace net
 				tcpbuffer& tcpbuf=*tcpbufp;
 				if(FUNCTION_ISNULL(tcpbuf.dataout))tcpbuf.dataout=tcpbuffer::datadelegate(&tcp::tcpbuf_cb,this);
 				//tcpbuf.processData(h->syn?ntohl(h->seq)+1:ntohl(h->seq),b.SubBuffer(doff));
-				tcpbuf.processData(ntohl(h->seq),b.SubBuffer(doff),h->syn||h->fin);
+				tcpbuf.processData(ntohl(h->seq),b.SubBuffer(doff),h->psh?1:0,(h->syn||h->fin)?1:0);
 				//RAISEEVENT(dataout,{this,noproto,h,b.SubBuffer(h->doff*4),(packet*)&p});
 				//CALL(dataout,NULL,b);
 			}
