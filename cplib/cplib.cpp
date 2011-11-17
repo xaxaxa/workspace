@@ -49,19 +49,19 @@ FileStream::~FileStream()
 }
 int FileStream::Read(Buffer buf)
 {
-	return fread(buf.Data,1,buf.Length,f);
+	return ::fread(buf.Data,1,buf.Length,f);
 }
 void FileStream::Write(Buffer buf)
 {
-	fwrite(buf.Data,1,buf.Length,f);
+	::fwrite(buf.Data,1,buf.Length,f);
 }
 void FileStream::Flush()
 {
-	fflush(f);
+	::fflush(f);
 }
 void FileStream::Close()
 {
-	fclose(f);
+	::fclose(f);
 }
 
 ///////////////////////////////////////////////////////////

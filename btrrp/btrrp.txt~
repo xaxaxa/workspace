@@ -1,0 +1,41 @@
+BTRRP - b-tree routing protocol
+by: xaxaxa
+
+description:
+this is a routing protocol designed for wireless mesh networks. it addresses the problem of scalability and is a completely de-centralized protocol. each node only has a small amount of information about the network(a node does NOT know about all the other nodes like most mesh protocols). each node only knows its neighbors(nodes that it can contact directly).
+
+the network is made up of "compartments". each compartment can either (1) contain exactly 1 node, or (2) contain exactly 2 child compartments. the child compartments behave in the same way. each compartment has a local ID, which is a one bit "address" that identifies it in its parent compartment. for example:
+
+|-------------------compartment(id=0)-------------------|
+| |---compartment(id=0)---|   |---compartment(id=1)---| |
+| |        [node a]       |   |        [node b]       | |
+| |_______________________|   |_______________________| |
+|_______________________________________________________| figure 1: example network
+
+in the above example, the subcompartment on the left has a local ID of 0, and the one on the right has a local ID of 1. the node within it is identified by the ID of its compartment. the node in compartment 0(node a) can address the node in compartment 1(node b) by a relative ID of something like "../1", just like in a filesystem. the outer compartment in this example is considered the "root" compartment; however, there is no fixed root compartment. the next section will explain this.
+
+
+section 2: new nodes and absolute ID's
+when a new node joins, it has several options. since each compartment can only have 2 child compartments, the new node can't just insert itself into a compartment. the new node will need to do the following:
+1. select a neighbor. this could be any neighbor, but it's probably better to select the one with the strongest signal strength.
+2. become that neighbor's "peer". this is done by converting that node's compartment(refer to figure 1) from a "single node" compartment into a compartment that hosts 2 child compartments. suppose a node wants to join the network in figure 1, and it chooses to become node b's peer. the network will look something like this:
+
+|-------------------compartment(id=0)-------------------|
+| |---compartment(id=0)---|   |---compartment(id=1)---| |
+| |                       |   |                       | |
+| |                       |   | |-compartment(id=0)-| | |
+| |                       |   | |     [node b]      | | |
+| |       [node a]        |   | |___________________| | |
+| |                       |   |                       | |
+| |                       |   | |-compartment(id=1)-| | |
+| |                       |   | |     [node c]      | | |
+| |                       |   | |___________________| | |
+| |_______________________|   |_______________________| |
+|_______________________________________________________| figure 2
+
+
+
+
+
+
+

@@ -43,7 +43,7 @@ all: test1
 test1: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -s -L"/home/user1/workspace/cplib/Release" -o"test1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -s -L"/home/xaxaxa/workspace/cplib/Release" -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
