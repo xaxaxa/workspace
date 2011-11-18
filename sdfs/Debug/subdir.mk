@@ -4,26 +4,26 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../asyncfile.cpp \
-../asyncsock.cpp \
-../cplib.cpp 
+../CacheManager.cpp \
+../IStorage.cpp \
+../StorageManager.cpp 
 
 OBJS += \
-./asyncfile.o \
-./asyncsock.o \
-./cplib.o 
+./CacheManager.o \
+./IStorage.o \
+./StorageManager.o 
 
 CPP_DEPS += \
-./asyncfile.d \
-./asyncsock.d \
-./cplib.d 
+./CacheManager.d \
+./IStorage.d \
+./StorageManager.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

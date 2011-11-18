@@ -1,1 +1,1 @@
-src/test.d: ../src/test.cpp
+src/test.d src/test.o: ../src/test.cpp

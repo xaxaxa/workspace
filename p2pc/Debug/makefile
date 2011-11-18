@@ -43,7 +43,7 @@ all: p2pc
 p2pc: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "p2pc" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++  -o"p2pc" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
