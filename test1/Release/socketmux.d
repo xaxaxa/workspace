@@ -1,6 +1,6 @@
 socketmux.d socketmux.o: ../socketmux.cpp ../socketmux.h \
- /home/xaxaxa/workspace/cplib/headers/cplib.hpp
+ /home/user1/workspace/cplib/headers/cplib.hpp
 
 ../socketmux.h:
 
-/home/xaxaxa/workspace/cplib/headers/cplib.hpp:
+/home/user1/workspace/cplib/headers/cplib.hpp:
