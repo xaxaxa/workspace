@@ -40,7 +40,7 @@ endif
 all: test1
 
 dependents:
-	-cd /home/user1/workspace/cplib/Debug && $(MAKE) clean all
+	-cd /home/user1/workspace/cplib/Debug && $(MAKE) all
 
 # Tool invocations
 test1: $(OBJS) $(USER_OBJS) /home/user1/workspace/cplib/Debug/libtest1.so

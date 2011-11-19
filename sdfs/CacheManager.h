@@ -9,12 +9,14 @@
 #define CACHEMANAGER_H_
 #include <map>
 #include <cplib/cplib.hpp>
+using namespace xaxaxa;
 namespace sdfs {
 template<typename t>struct CacheItem
 {
 	t Item;
 	Byte refcount;
-	Byte priority;
+	//Byte priority;
+	bool initialized;
 	bool dirty;
 };
 template<typename t>struct CacheItemPtr
@@ -47,17 +49,20 @@ template<typename t>struct CacheItemPtr
 	   // by convention, always return *this
 	   return *this;
 	}
-}
+};
+
 template<typename tkey, typename tvalue>class CacheManager {
 public:
 	typedef std::map<tkey,CacheItem<tvalue> > Map;
 	typedef Map::iterator Iter;
 	Map items;
+	std::list<Iter> items_l;
 	int MaxItems,NewItems;
 	CacheManager();
 	virtual ~CacheManager();
-	bool GetItem(tkey k);
-	void AddItem(tkey k, tvalue v);
+	CacheItemPtr<tvalue> GetItem(const tkey& k);
+	//void AddItem(const tkey& k, const tvalue& v);
+	void Purge(int i);//purge i items from the cache
 
 };
 
