@@ -4,4 +4,4 @@
 
 USER_OBJS :=
 
-LIBS :=
+LIBS := -lfuse -lcplib
