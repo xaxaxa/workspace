@@ -49,8 +49,8 @@ public:
 		CallbackType type;
 		//ChunkData& data;
 	};
-	DELEGATE(void,StorageCallback,const CallbackInfo&);
-	StorageCallback Callback;
+	DELEGATE(void,Callback,const CallbackInfo&);
+	Callback Callback;
 	set<CID> Chunks;
 	IStorage();
 	virtual ~IStorage();

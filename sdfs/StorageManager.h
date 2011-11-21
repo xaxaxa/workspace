@@ -8,6 +8,7 @@
 #ifndef STORAGEMANAGER_H_
 #define STORAGEMANAGER_H_
 #include <string>
+#include <map>
 #include <sys/types.h>
 #include <time.h>
 #include <cplib/cplib.hpp>
@@ -145,11 +146,15 @@ namespace sdfs
 	class StorageManager
 	{
 	public:
+		typedef unsigned long ReqID;
+		DELEGATE(void,Callback,ReqID);
 		ArrayList<IStorage*> stores;
 		StorageManager();
 		virtual ~StorageManager();
 		CacheManager<CID,ChunkData> cache;
-
+		multimap<CID,ReqID> curReqs;
+		ReqID fs_stat(CID id, struct stat& st);
+		ReqID fs_exists(CID id, bool& b);
 	};
 
 }
