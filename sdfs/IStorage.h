@@ -8,22 +8,35 @@
 #ifndef ISTORAGE_H_
 #define ISTORAGE_H_
 #include <string>
+#include <cplib/cplib.hpp>
+
 using namespace std;
-
+using namespace xaxaxa;
 namespace sdfs {
-typedef string CID;
+typedef ULong CID;
 
-class Chunk
+
+struct ChunkData
 {
-	CID id;
-	int size;
+	void* data;
+	UInt size;
+	ChunkData():data(NULL)
+	{};
+	~ChunkData()
+	{
+		if(data!=NULL)free(data);
+	}
 };
+
+
+DELEGATE(void,StorageCallback,int);
 class IStorage {
 public:
+
 	IStorage();
 	virtual ~IStorage();
-	virtual Chunk GetChunk(CID id)=0;
-
+	//virtual Chunk GetChunk(CID id)=0;
+	virtual void BeginGetChunk(CID id, ChunkData& dataout)=0;
 };
 
 }

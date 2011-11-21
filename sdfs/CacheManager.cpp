@@ -7,16 +7,4 @@
 
 #include "CacheManager.h"
 
-namespace sdfs {
 
-template<typename tkey, typename tvalue> inline sdfs::CacheManager<tkey,tvalue>::CacheManager()
-{
-}
-
-
-
-template<typename tkey, typename tvalue> inline sdfs::CacheManager<tkey,tvalue>::~CacheManager()
-{
-}
-
-}

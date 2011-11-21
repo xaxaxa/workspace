@@ -28,6 +28,8 @@ namespace xaxaxa
 				return new IPEndPoint(*((sockaddr_in*)addr));
 			case AF_INET6:
 				return new IPv6EndPoint(*((sockaddr_in6*)addr));
+			default:
+				return NULL;
 			}
 		}
 		const int pollcount = 32;
