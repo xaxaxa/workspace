@@ -10,11 +10,13 @@
 #include <string>
 #include <sys/types.h>
 #include <time.h>
+#include <cplib/cplib.hpp>
 #include "IStorage.h"
 #include "CacheManager.h"
 #define FUSE_USE_VERSION 27
 #include <fuse/fuse_lowlevel.h>
 using namespace std;
+using namespace xaxaxa;
 #define SDFS_PACK_ID(chunkid,blockindex) (((CID)(chunkid)&0x000000FFFFFFFFFF)|((CID)(blockindex)<<(64-24)))
 #define SDFS_UNPACK_ID_CID(id) ((id)&0x000000FFFFFFFFFF)
 #define SDFS_UNPACK_ID_BLOCKINDEX(id) ((UInt)(((id)&0xFFFFFF0000000000)>>(64-24)))
@@ -143,11 +145,10 @@ namespace sdfs
 	class StorageManager
 	{
 	public:
-
+		ArrayList<IStorage*> stores;
 		StorageManager();
 		virtual ~StorageManager();
-		CID AllocChunk();
-		void AllocChunk(CID id);
+		CacheManager<CID,ChunkData> cache;
 
 	};
 

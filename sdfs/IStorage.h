@@ -8,6 +8,8 @@
 #ifndef ISTORAGE_H_
 #define ISTORAGE_H_
 #include <string>
+#include <set>
+#include <map>
 #include <cplib/cplib.hpp>
 
 using namespace std;
@@ -27,16 +29,34 @@ struct ChunkData
 		if(data!=NULL)free(data);
 	}
 };
+typedef int ReqID;
+class IStorage;
 
 
-DELEGATE(void,StorageCallback,int);
 class IStorage {
 public:
-
+	enum class CallbackType:Byte
+	{
+		nop=0,
+		init,
+		getchunk
+	};
+	struct CallbackInfo
+	{
+		IStorage& source;
+		Exception& ex;
+		CID cid;
+		CallbackType type;
+		//ChunkData& data;
+	};
+	DELEGATE(void,StorageCallback,const CallbackInfo&);
+	StorageCallback Callback;
+	set<CID> Chunks;
 	IStorage();
 	virtual ~IStorage();
 	//virtual Chunk GetChunk(CID id)=0;
 	virtual void BeginGetChunk(CID id, ChunkData& dataout)=0;
+	virtual void Init(const map<string,string>& config)=0;
 };
 
 }

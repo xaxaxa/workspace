@@ -93,7 +93,7 @@ namespace sdfs
 		typename std::list<Iter> items_l;
 		typename std::set<tkey> items_dirty;
 		//typename std::list<tkey> items_canpurge;
-		int MaxItems, NewItems;
+		size_t MaxItems;
 		CacheManager();
 		virtual ~CacheManager();
 		CacheItemPtr<tkey, tvalue> GetItem(const tkey& k);
@@ -119,12 +119,16 @@ namespace sdfs
 		if (it == items.end())
 		{
 			CacheItem<tvalue> tmp;
-			tmp.refcount = 0;
+			tmp.refcount = 1;
 			tmp.flags = 0;
 			//tmp.initialized = false;
 			//tmp.dirty = false;
 			//tmp.asdfasdf = true;
 			it = items.insert(std::pair<tkey, CacheItem<tvalue> >(k, tmp)).first;
+			items_l.push_back(it);
+			if(items_l.size()>MaxItems)
+				Purge(MaxItems-items_l.size());
+			(*it).second.refcount=0;
 			return CacheItemPtr<tkey, tvalue>(this, it);
 		}
 		else
@@ -145,7 +149,7 @@ namespace sdfs
 			if ((*x).second.canpurge())
 			{
 				items.erase(x);
-				items_dirty.erase(x);
+				items_dirty.erase((*x).first);
 				items_l.erase(it);
 				i++;
 			}
