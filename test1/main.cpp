@@ -106,7 +106,7 @@ public:
 		//m->BeginConnect(s2,&ep,(SocketManager::Callback)bind(&client::cb3, this, _1, _2));
 		//m.BeginRecv(s,buf,SocketManager::Callback(_cb1,this));
 	}
-	~client()
+	virtual ~client()
 	{
 		//buf1.Release();
 		//buf2.Release();
@@ -215,7 +215,7 @@ static void socks_cb(void* obj, Stream* s, void* v)
 	{
 		SOCKS5::socks_endconnect(v);
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		tmp->j->Close();
 		delete tmp;
@@ -234,7 +234,7 @@ FUNCTION_DECLWRAPPER(cb_connect,void,SocketManager* m,Socket sock)
 		m->EndConnect(sock);
 		dbgprint("connected");
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		tmp->s1.Close();
 		tmp->s2.Close();
@@ -262,7 +262,7 @@ j->ProcessBuffer2=j->ProcessBuffer1;
 		SOCKS5::socks_connect(j->s2,&(tmp->ep),SOCKS5::Callback(socks_cb,tmp),SOCKS5::Callback(socks_cb1,tmp));
 #endif
 	}
-	catch(Exception ex)
+	catch(Exception& ex)
 	{
 		if(tmp->j!=NULL) tmp->j->Close();
 		delete tmp;
@@ -302,7 +302,7 @@ IPEndPoint ep(IPAddress("127.0.0.1"),22);
 	IPEndPoint ep2(IPAddress("127.0.0.1"),9999);
 	m->BeginConnect(s2,&ep2,SocketManager::Callback(cb_connect,tmp));
 #endif
-	}catch(Exception ex)
+	}catch(Exception& ex)
 	{
 		s.Close();
 		s2.Close();

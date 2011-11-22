@@ -114,10 +114,6 @@ public:
 		cout<<"destruct<"<<typeid(*this).name()<<">; "<<__objs_get()<<" objects total"<<endl;
 #endif
 	}
-	virtual void asdf()
-	{
-
-	}
 	inline void Retain()
 	{
 		RetainCount++;
@@ -496,7 +492,7 @@ class StringBuilder: public Stream
 {
 public:
 	StringBuilder(int initsize = 4096);
-	~StringBuilder();
+	virtual ~StringBuilder();
 	void *buf;
 	int Capacity;
 	int Length;
@@ -521,7 +517,7 @@ class FileStream: public Stream
 public:
 	FILE *f;
 	FileStream(FILE *f);
-	~FileStream();
+	virtual ~FileStream();
 	virtual int Read(Buffer buf);
 	virtual void Write(Buffer buf);
 	virtual void Flush();
@@ -536,7 +532,7 @@ public:
 	int buf_index;
 	int buf_length;
 	StreamReader(Stream* s, int buffersize = 4096);
-	~StreamReader();
+	virtual ~StreamReader();
 	virtual int Read(Buffer buf);
 	virtual int Read(StringBuilder& buf, int length);
 	virtual int Read(StringBuilder& buf, const char* delimitors,
@@ -613,7 +609,7 @@ template<class T> class ArrayList: public Object
 {
 public:
 	ArrayList(int initsize = 32);
-	~ArrayList();
+	virtual ~ArrayList();
 	T* array;
 	int Length;
 	int Capacity;

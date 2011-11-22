@@ -1,0 +1,14 @@
+{
+  "name": "asdfghjkl",
+  "description": "Pithy description (132 characters or less, no HTML)",
+  "version": "0.0.0.0",
+  "icons": {
+    "128": "icon_128.png"
+  },
+  "app": {
+    "urls": [],
+    "launch": {
+      "local_path": "w.htm"
+    }
+  }
+}

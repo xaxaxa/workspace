@@ -28,6 +28,8 @@ namespace xaxaxa
 				return new IPEndPoint(*((sockaddr_in*)addr));
 			case AF_INET6:
 				return new IPv6EndPoint(*((sockaddr_in6*)addr));
+			default:
+				return NULL;
 			}
 		}
 		const int pollcount = 32;
@@ -69,7 +71,7 @@ namespace xaxaxa
 					 this->info.erase(s);
 					 continue;
 					 }*/
-					bool hup=ev.events & EPOLLHUP || ev.events & EPOLLERR;
+					bool hup=(ev.events & EPOLLHUP) || (ev.events & EPOLLERR);
 					__current_task.new_events = __current_task.events
 							& (~ev.events);
 					if (hup)__current_task.new_events=0;
@@ -449,7 +451,7 @@ namespace xaxaxa
 				STRING tmp=sb->ToString();
 				s->BeginWrite(Buffer(tmp.c,tmp.length),Stream::Callback(cb1,tmp1));
 			}
-			catch(Exception ex)
+			catch(Exception& ex)
 			{
 				tmp1->ex=ex;
 				FUNCTION_CALL(tmp1->cb,s,tmp1);
@@ -469,7 +471,7 @@ namespace xaxaxa
 				dbgprint("========SOCKS request sent======");
 				s->BeginRead(tmp1->b,Stream::Callback(cb2,tmp1));
 			}
-			catch(Exception ex)
+			catch(Exception& ex)
 			{
 				tmp1->ex=ex;
 				FUNCTION_CALL(tmp1->cb,s,tmp1);
@@ -500,7 +502,7 @@ namespace xaxaxa
 					s->BeginRead(tmp1->b.SubBuffer(tmp1->br,tmp1->b.Length-tmp1->br),Stream::Callback(cb2,tmp1));
 				}
 			}
-			catch(Exception ex)
+			catch(Exception& ex)
 			{
 				tmp1->ex=ex;
 				FUNCTION_CALL(tmp1->cb,s,tmp1);

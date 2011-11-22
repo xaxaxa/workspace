@@ -7,15 +7,16 @@
 
 #include "StorageManager.h"
 
-namespace sdfs {
+namespace sdfs
+{
+	StorageManager::StorageManager()
+	{
+		// TODO Auto-generated constructor stub
 
-StorageManager::StorageManager() {
-	// TODO Auto-generated constructor stub
-
-}
-
-StorageManager::~StorageManager() {
-	// TODO Auto-generated destructor stub
-}
+	}
+	StorageManager::~StorageManager()
+	{
+		// TODO Auto-generated destructor stub
+	}
 
 }

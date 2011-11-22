@@ -18,7 +18,7 @@ namespace xaxaxa
 			__current_task.s = -1;
 			this->epollfd = epoll_create(pollcount);
 			dbgprint("socketmanager " << this->epollfd << " created");
-			if (epollfd < 0) perror("epoll_create");
+			if (epollfd < 0) ::perror("epoll_create");
 		}
 		FileStreamManager::~FileStreamManager()
 		{
