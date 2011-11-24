@@ -9,6 +9,7 @@
 #define STORAGEMANAGER_H_
 #include <string>
 #include <map>
+#include <vector>
 #include <sys/types.h>
 #include <time.h>
 #include <cplib/cplib.hpp>
@@ -143,18 +144,79 @@ namespace sdfs
 			return Block { Data, 0 };
 		}
 	};
+	struct CBlock
+	{
+		virtual UInt CalcSize()
+		{
+			return sizeof(Block::hdr);
+		}
+	};
+	struct CBlock_dirindex:public CBlock
+	{
+		struct dirent
+		{
+			struct Block::dirent;
+			string name;
+			UInt CalcSize()
+			{
+				return sizeof(Block::dirent)+name.length();
+			}
+		};
+		vector<dirent> Entries;
+		virtual UInt CalcSize()
+		{
+			UInt result=CBlock::CalcSize();
+			int i;
+			for(i=0;i<Entries.size();i++)
+				result+=Entries[i].CalcSize();
+			return result;
+		}
+	};
+	struct CChunk
+	{
+		vector<CBlock*> Blocks;
+		UInt CalcSize()
+		{
+			int i;
+			UInt result=0;
+			for(i=0;i<Blocks.size();i++)
+			{
+				result+=Blocks[i].CalcSize();
+			}
+		}
+	};
 	class StorageManager
 	{
 	public:
+		enum ReqType
+		{
+			stat=1,
+			exists,
+			read,
+			write
+		};
+		struct ReqInfo
+		{
+			ReqID id;
+			void* dataout;
+			string name;
+			UInt length;
+			ReqType t;
+		};
 		typedef unsigned long ReqID;
 		DELEGATE(void,Callback,ReqID);
 		ArrayList<IStorage*> stores;
 		StorageManager();
 		virtual ~StorageManager();
+
 		CacheManager<CID,ChunkData> cache;
+		map<ReqID,ReqInfo> curReqInfos;
 		multimap<CID,ReqID> curReqs;
 		ReqID fs_stat(CID id, struct stat& st);
 		ReqID fs_exists(CID id, bool& b);
+		ReqID fs_lookup(CID parent, string name);
+		ReqID fs_read(CID id, void* buf, UInt length);
+		ReqID fs_write(CID id, void* buf, UInt length);
 	};
 
 }

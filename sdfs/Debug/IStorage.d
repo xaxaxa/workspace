@@ -1,3 +1,3 @@
-IStorage.d: ../IStorage.cpp ../IStorage.h
+IStorage.d IStorage.o: ../IStorage.cpp ../IStorage.h
 
 ../IStorage.h:

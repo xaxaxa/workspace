@@ -1,3 +1,3 @@
-CacheManager.d: ../CacheManager.cpp ../CacheManager.h
+CacheManager.d CacheManager.o: ../CacheManager.cpp ../CacheManager.h
 
 ../CacheManager.h:

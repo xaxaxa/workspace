@@ -40,13 +40,13 @@ endif
 all: test1
 
 dependents:
-	-cd /home/xaxaxa/workspace/cplib/Debug && $(MAKE) all
+	-cd /home/user1/workspace/cplib/Debug && $(MAKE) all
 
 # Tool invocations
-test1: $(OBJS) $(USER_OBJS) /home/xaxaxa/workspace/cplib/Debug/libcplib.so
+test1: $(OBJS) $(USER_OBJS) /home/user1/workspace/cplib/Debug/libtest1.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/home/xaxaxa/workspace/cplib/Debug" -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/user1/workspace/cplib/Debug" -pg -p -o"test1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -57,6 +57,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/xaxaxa/workspace/cplib/Debug/libcplib.so:
+/home/user1/workspace/cplib/Debug/libtest1.so:
 
 -include ../makefile.targets

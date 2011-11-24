@@ -27,5 +27,6 @@ int main(int argc, char** argv)
 	cout << "cid=" << cid << endl;
 	UInt bindex=SDFS_UNPACK_ID_BLOCKINDEX(tmp);
 	cout << "bindex=" << bindex << endl;
+	cout << "sizeof(StorageManager)=" << sizeof(StorageManager) << endl;
 	return 0;
 }

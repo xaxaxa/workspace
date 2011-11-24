@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 	inodes[1]->parent=1;
 	file tmp;
 	tmp.name="aaaaa";
-	tmp.data="fuck";
+	tmp.data="jgldfjlg";
 	addinode(1,2,&tmp);
 	file tmp1;
 	tmp1.name="xxx";
