@@ -9,6 +9,7 @@
 #define STORAGEMANAGER_H_
 #include <string>
 #include <map>
+#include <vector>
 #include <sys/types.h>
 #include <time.h>
 #include <cplib/cplib.hpp>
@@ -41,7 +42,7 @@ namespace sdfs
 :		Byte
 		{
 			none=0,
-			dirindex,	//directory index
+			dirindex, //directory index
 			//	0            |(sizeof(dirent)+namelen)|	                                  (block.length)
 			//	__________________________________________________________________________
 			//	| indexhdr | dirent:[....namelen][name] |         more entries...         |
@@ -82,7 +83,7 @@ namespace sdfs
 		struct indexhdr
 		{
 			CID parent;
-			UInt entryoffset;	//offset of the parent dirent from the block
+			UInt entryoffset; //offset of the parent dirent from the block
 		};
 		struct inodehdr
 		{
@@ -98,7 +99,7 @@ namespace sdfs
 		{
 			struct inodehdr;
 			CID indexblock;
-			CID firstblock;		//NULL if it's a directory
+			CID firstblock; //NULL if it's a directory
 			Byte namelen;
 		};
 		struct indexent
@@ -143,18 +144,131 @@ namespace sdfs
 			return Block { Data, 0 };
 		}
 	};
+	///////////////////////////////
+	struct CBlock
+	{
+		virtual UInt CalcSize()
+		{
+			return sizeof(Block::hdr);
+		}
+		virtual ~CBlock()
+		{
+		}
+	};
+	struct CBlock_dirindex: public CBlock
+	{
+		struct dirent
+		{
+			Block::dirent hdr;
+			string name;
+			UInt CalcSize()
+			{
+				return sizeof(Block::dirent) + name.length();
+			}
+		};
+		Block::indexhdr hdr;
+		vector<dirent> Entries;
+		virtual UInt CalcSize()
+		{
+			UInt result = CBlock::CalcSize() + sizeof(hdr);
+			size_t i;
+			for (i = 0; i < Entries.size(); i++)
+				result += Entries[i].CalcSize();
+			return result;
+		}
+	};
+	struct CBlock_fileindex: public CBlock
+	{
+		struct fileent
+		{
+			Block::indexent hdr;
+			UInt CalcSize()
+			{
+				return sizeof(Block::dirent);
+			}
+		};
+		Block::indexhdr hdr;
+		vector<fileent> Entries;
+		virtual UInt CalcSize()
+		{
+			UInt result = CBlock::CalcSize() + sizeof(hdr);
+			size_t i;
+			for (i = 0; i < Entries.size(); i++)
+				result += Entries[i].CalcSize();
+			return result;
+		}
+	};
+	struct CBlock_filedata: public CBlock
+	{
+		Buffer Data;
+		virtual UInt CalcSize()
+		{
+			return CBlock::CalcSize() + (UInt) Data.Length;
+		}
+	};
+	struct CBlock_xattrlist: public CBlock
+	{
+		map<string, string> Items;
+		virtual UInt CalcSize()
+		{
+			UInt result = CBlock::CalcSize();
+			map<string, string>::iterator it;
+			for (it = Items.begin(); it != Items.end(); it++)
+				result += (sizeof(Block::xattrent)) + (*it).first.length() + (*it).second.length();
+			return result;
+		}
+	};
+	struct CChunk
+	{
+		vector<CBlock*> Blocks;
+		UInt CalcSize()
+		{
+			size_t i;
+			UInt result = 0;
+			for (i = 0; i < Blocks.size(); i++)
+			{
+				result += Blocks[i]->CalcSize();
+			}
+			return result;
+		}
+		~CChunk()
+		{
+			size_t i;
+			for (i = 0; i < Blocks.size(); i++)
+				delete Blocks[i];
+		}
+	};
 	class StorageManager
 	{
 	public:
-		typedef unsigned long ReqID;
-		DELEGATE(void,Callback,ReqID);
+		enum ReqType
+		{
+			stat = 1, exists, read, write
+		};
+		struct ReqInfo
+		{
+			ReqID id;
+			void* dataout;
+			string name;
+			UInt length;
+			ReqType t;
+		};
+		high speed stream ciphers
+		typedef unsigned long ReqID;DELEGATE(void,Callback,ReqID);
 		ArrayList<IStorage*> stores;
 		StorageManager();
 		virtual ~StorageManager();
-		CacheManager<CID,ChunkData> cache;
-		multimap<CID,ReqID> curReqs;
+
+		CacheManager<CID, CChunk> cache;
+		map<ReqID, ReqInfo> curReqInfos;
+		multimap<CID, ReqID> curReqs;
+		map<CID, ChunkData> buffers;
+		void ParseChunk(const ChunkData& data, CChunk& c);
 		ReqID fs_stat(CID id, struct stat& st);
 		ReqID fs_exists(CID id, bool& b);
+		ReqID fs_lookup(CID parent, string name);
+		ReqID fs_read(CID id, void* buf, UInt length);
+		ReqID fs_write(CID id, void* buf, UInt length);
 	};
 
 }

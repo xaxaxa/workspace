@@ -19,4 +19,7 @@ namespace sdfs
 		// TODO Auto-generated destructor stub
 	}
 
+    void StorageManager::ParseChunk(const ChunkData & data, CChunk & c)
+    {}
+
 }

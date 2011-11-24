@@ -14,50 +14,54 @@
 
 using namespace std;
 using namespace xaxaxa;
-namespace sdfs {
-typedef ULong CID;
-
-
-struct ChunkData
+namespace sdfs
 {
-	void* data;
-	UInt size;
-	ChunkData():data(NULL)
-	{};
-	~ChunkData()
-	{
-		if(data!=NULL)free(data);
-	}
-};
-typedef int ReqID;
-class IStorage;
+	typedef ULong CID;
 
+	struct ChunkData
+	{
+		void* data;
+		UInt size;
+		ChunkData() :
+				data(NULL)
+		{
+		}
+		;
+		~ChunkData()
+		{
+			if (data != NULL) free(data);
+		}
+	};
+	typedef int ReqID;
+	class IStorage;
 
-class IStorage {
-public:
-	enum class CallbackType:Byte
+	class IStorage
 	{
-		nop=0,
-		init,
-		getchunk
+	public:
+		enum class CallbackType
+:		Byte
+		{
+			nop=0,
+			init,
+			getchunk
+		};
+		struct CallbackInfo
+		{
+			IStorage& source;
+			bool success;
+			CID cid;
+			CallbackType type;
+			//ChunkData& data;
+		};
+		DELEGATE(void,Callback,const CallbackInfo&);
+		Callback Callback;
+		set<CID> Chunks;
+		IStorage();
+		virtual ~IStorage();
+		//virtual Chunk GetChunk(CID id)=0;
+		virtual void BeginGetChunk(CID id, ChunkData& dataout)=0;
+		virtual void Init(const map<string,string>& config)=0;
 	};
-	struct CallbackInfo
-	{
-		IStorage& source;
-		Exception& ex;
-		CID cid;
-		CallbackType type;
-		//ChunkData& data;
-	};
-	DELEGATE(void,Callback,const CallbackInfo&);
-	Callback Callback;
-	set<CID> Chunks;
-	IStorage();
-	virtual ~IStorage();
-	//virtual Chunk GetChunk(CID id)=0;
-	virtual void BeginGetChunk(CID id, ChunkData& dataout)=0;
-	virtual void Init(const map<string,string>& config)=0;
-};
 
 }
 

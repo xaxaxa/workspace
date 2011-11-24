@@ -1,6 +1,6 @@
 IStorage.d: ../IStorage.cpp ../IStorage.h \
- /home/s-wang_cary/include/cplib/cplib.hpp
+ /home/s-wang_cary/local/include/cplib/cplib.hpp
 
 ../IStorage.h:
 
-/home/s-wang_cary/include/cplib/cplib.hpp:
+/home/s-wang_cary/local/include/cplib/cplib.hpp:

@@ -37,26 +37,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: test1
-
-dependents:
-	-cd /home/s-wang_cary/workspace/cplib/Debug && $(MAKE) all
+all: sdfs
 
 # Tool invocations
-test1: $(OBJS) $(USER_OBJS) /home/s-wang_cary/workspace/cplib/Debug/libcplib.so
+sdfs: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/home/s-wang_cary/workspace/cplib/Debug" -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++  -o "sdfs" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) test1
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) sdfs
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/s-wang_cary/workspace/cplib/Debug/libcplib.so:
 
 -include ../makefile.targets
