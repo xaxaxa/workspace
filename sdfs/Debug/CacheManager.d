@@ -1,6 +1,3 @@
-CacheManager.d: ../CacheManager.cpp ../CacheManager.h \
- /home/s-wang_cary/local/include/cplib/cplib.hpp
+CacheManager.d: ../CacheManager.cpp ../CacheManager.h
 
 ../CacheManager.h:
-
-/home/s-wang_cary/local/include/cplib/cplib.hpp:

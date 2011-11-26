@@ -29,7 +29,15 @@ typedef UInt FILELEN_T;
 #endif
 namespace sdfs
 {
-
+	struct Block;
+	struct Chunk
+	{
+		ChunkData Data;
+		inline Block FirstBlock();
+		inline Chunk()=default;
+		inline Chunk(const ChunkData& d):Data(d)
+		{}
+	};
 	struct Block
 	{
 		//block structure
@@ -73,9 +81,9 @@ namespace sdfs
 
 		struct hdr//block header
 		{
-			UInt size;
-			BlockType type;
-			void* getdata()
+			UInt Size;
+			BlockType Type;
+			void* GetData()
 			{
 				return (void*)(this+1);
 			}
@@ -113,22 +121,36 @@ namespace sdfs
 			Byte namelen;
 			UShort valuelen;
 		};
-		CacheItemPtr<CID, ChunkData> Data;
+		ChunkData Data;
 		UInt offset;
+		inline Block()=default;
+		inline Block(const ChunkData& d, UInt o):Data(d),offset(o)
+		{
+			if(d.Length<(o+sizeof(hdr)) || ((hdr*)d.Data)->Size>(d.Length-sizeof(hdr)-o)) throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
+		}
+		inline Block(const ChunkData& d):Data(d),offset(0)
+		{
+			if(d.Length<sizeof(hdr) || ((hdr*)d.Data)->Size>(d.Length-sizeof(hdr))) throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
+		}
+		inline Block(const Chunk& c)
+		{
+			if(c.Data.Length<sizeof(hdr) || ((hdr*)c.Data.Data)->Size>(c.Data.Length-sizeof(hdr))) throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
+		}
+
 		inline hdr* RawData()
 		{
-			return (hdr*) (((Byte*) (Data.Item->Item.data)) + offset);
+			return (hdr*) (((Byte*) (Data.Data)) + offset);
 		}
 		inline bool Next()
 		{
 			hdr* tmp = RawData();
-			if (((offset + tmp->size + sizeof(hdr)) <= (Data.Item->Item.size)))
+			if (((offset + tmp->Size + sizeof(hdr)) <= (Data.Length)))
 			{
-				offset += tmp->size;
-				if (offset + RawData()->size > (Data.Item->Item.size))
+				offset += tmp->Size;
+				if (offset + RawData()->Size > (Data.Length))
 				{
 					//throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
-					offset -= tmp->size;
+					offset -= tmp->Size;
 					return false;
 				}
 				return true;
@@ -136,14 +158,10 @@ namespace sdfs
 			return false;
 		}
 	};
-	struct Chunk
+	Block Chunk::FirstBlock()
 	{
-		CacheItemPtr<CID, ChunkData> Data;
-		inline Block FirstBlock()
-		{
-			return Block { Data, 0 };
-		}
-	};
+		return Data;
+	}
 	///////////////////////////////
 	struct CBlock
 	{
@@ -160,20 +178,25 @@ namespace sdfs
 		struct dirent
 		{
 			Block::dirent hdr;
-			string name;
-			UInt CalcSize()
+			//string name;
+			inline dirent(const Block::dirent& d) :
+					hdr(d)
 			{
-				return sizeof(Block::dirent) + name.length();
+			}
+			inline UInt CalcSize()
+			{
+				return sizeof(Block::dirent) + hdr.namelen;
 			}
 		};
 		Block::indexhdr hdr;
-		vector<dirent> Entries;
+		//vector<dirent> Entries;
+		map<string, dirent> Entries;
 		virtual UInt CalcSize()
 		{
 			UInt result = CBlock::CalcSize() + sizeof(hdr);
-			size_t i;
-			for (i = 0; i < Entries.size(); i++)
-				result += Entries[i].CalcSize();
+			//decltype(Entries.begin()) it;
+			for (auto it = Entries.begin(); it != Entries.end(); it++)
+				result += (*it).second.CalcSize();
 			return result;
 		}
 	};
@@ -182,20 +205,35 @@ namespace sdfs
 		struct fileent
 		{
 			Block::indexent hdr;
-			UInt CalcSize()
+			inline fileent(Block::indexent e) :
+					hdr(e)
 			{
-				return sizeof(Block::dirent);
+			}
+			inline UInt CalcSize()
+			{
+				return sizeof(Block::indexent);
 			}
 		};
 		Block::indexhdr hdr;
-		vector<fileent> Entries;
+		//vector<fileent> Entries;
+		map<FILELEN_T, fileent> Entries;
 		virtual UInt CalcSize()
 		{
 			UInt result = CBlock::CalcSize() + sizeof(hdr);
-			size_t i;
-			for (i = 0; i < Entries.size(); i++)
-				result += Entries[i].CalcSize();
+			//size_t i;
+			//for (i = 0; i < Entries.size(); i++)
+			//for (auto it = Entries.begin(); it != Entries.end(); it++)
+			//	result += (*it).second.CalcSize();
+			result += sizeof(Block::indexent) * Entries.size();
 			return result;
+		}
+		inline pair<fileent&, bool> GetFileBlock(FILELEN_T offset)
+		{
+			auto it = Entries.equal_range(offset).first;
+			if (it == Entries.end()
+					|| offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
+				return pair<fileent&, bool> { *((fileent*) NULL), false };
+			return pair<fileent&, bool> { (*it).second, true };
 		}
 	};
 	struct CBlock_filedata: public CBlock
@@ -214,7 +252,8 @@ namespace sdfs
 			UInt result = CBlock::CalcSize();
 			map<string, string>::iterator it;
 			for (it = Items.begin(); it != Items.end(); it++)
-				result += (sizeof(Block::xattrent)) + (*it).first.length() + (*it).second.length();
+				result += (sizeof(Block::xattrent)) + (*it).first.length()
+						+ (*it).second.length();
 			return result;
 		}
 	};
@@ -253,7 +292,7 @@ namespace sdfs
 			UInt length;
 			ReqType t;
 		};
-		high speed stream ciphers
+
 		typedef unsigned long ReqID;DELEGATE(void,Callback,ReqID);
 		ArrayList<IStorage*> stores;
 		StorageManager();
@@ -262,7 +301,7 @@ namespace sdfs
 		CacheManager<CID, CChunk> cache;
 		map<ReqID, ReqInfo> curReqInfos;
 		multimap<CID, ReqID> curReqs;
-		map<CID, ChunkData> buffers;
+		//map<CID, ChunkData> buffers;
 		void ParseChunk(const ChunkData& data, CChunk& c);
 		ReqID fs_stat(CID id, struct stat& st);
 		ReqID fs_exists(CID id, bool& b);

@@ -20,18 +20,19 @@ namespace sdfs
 
 	struct ChunkData
 	{
-		void* data;
-		UInt size;
+		void* Data;
+		UInt Length;
 		ChunkData() :
-				data(NULL)
+				Data(NULL),Length(0)
 		{
 		}
-		;
+		/*
 		~ChunkData()
 		{
 			if (data != NULL) free(data);
-		}
+		}*/
 	};
+	//typedef Buffer ChunkData;
 	typedef int ReqID;
 	class IStorage;
 
@@ -43,7 +44,7 @@ namespace sdfs
 		{
 			nop=0,
 			init,
-			getchunk
+			chunk
 		};
 		struct CallbackInfo
 		{
@@ -51,15 +52,18 @@ namespace sdfs
 			bool success;
 			CID cid;
 			CallbackType type;
+			Buffer b;
 			//ChunkData& data;
 		};
 		DELEGATE(void,Callback,const CallbackInfo&);
 		Callback Callback;
 		set<CID> Chunks;
+
 		IStorage();
 		virtual ~IStorage();
 		//virtual Chunk GetChunk(CID id)=0;
-		virtual void BeginGetChunk(CID id, ChunkData& dataout)=0;
+		virtual void BeginGetChunk(CID id)=0;
+		virtual void BeginRemoveChunk(CID id)=0;
 		virtual void Init(const map<string,string>& config)=0;
 	};
 

@@ -689,8 +689,8 @@ public:
 template<class T> class CircularQueue: public Object
 {
 public:
-#define __intwrap1(var,max) if((var)>=(max))(var)-=(max);
-#define __intwrap(var,max) ((var)>=(max)?(var)-(max):(var))
+#define __intwrap1(var,max) var%=(max);
+#define __intwrap(var,max) ((var)%(max))
 	T* array;
 	int size;
 	int __wrap;
