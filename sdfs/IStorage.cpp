@@ -7,15 +7,17 @@
 
 #include "IStorage.h"
 
-namespace sdfs {
+namespace sdfs
+{
 
-IStorage::IStorage() {
-	// TODO Auto-generated constructor stub
+	IStorage::IStorage() :
+			Initialized(false), Priority(1)
+	{
 
-}
+	}
 
-IStorage::~IStorage() {
-	// TODO Auto-generated destructor stub
-}
+	IStorage::~IStorage()
+	{
+	}
 
 }

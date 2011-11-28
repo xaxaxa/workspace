@@ -22,15 +22,11 @@ namespace sdfs
 	{
 		void* Data;
 		UInt Length;
-		ChunkData() :
-				Data(NULL),Length(0)
-		{
-		}
 		/*
-		~ChunkData()
-		{
-			if (data != NULL) free(data);
-		}*/
+		 ~ChunkData()
+		 {
+		 if (data != NULL) free(data);
+		 }*/
 	};
 	//typedef Buffer ChunkData;
 	typedef int ReqID;
@@ -56,9 +52,10 @@ namespace sdfs
 			//ChunkData& data;
 		};
 		DELEGATE(void,Callback,const CallbackInfo&);
-		Callback Callback;
+		Callback CB;
 		set<CID> Chunks;
-
+		bool Initialized;
+		int Priority;
 		IStorage();
 		virtual ~IStorage();
 		//virtual Chunk GetChunk(CID id)=0;

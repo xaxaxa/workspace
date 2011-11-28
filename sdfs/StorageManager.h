@@ -15,6 +15,7 @@
 #include <cplib/cplib.hpp>
 #include "IStorage.h"
 #include "CacheManager.h"
+#include <boost/random.hpp>
 #define FUSE_USE_VERSION 27
 #include <fuse/fuse_lowlevel.h>
 using namespace std;
@@ -41,10 +42,10 @@ namespace sdfs
 	struct Block
 	{
 		//block structure
-		//	0       32			(length)
-		//	_____________________
-		//	|length	|data        |
-		//	|_______|____________|
+		//	0       32	 40         	(length)
+		//	_____________________________
+		//	|length	|type|     data      |
+		//	|_______|____|_______________|
 		//length includes the size of the length field(32 bits)
 		enum class BlockType
 :		Byte
@@ -165,6 +166,12 @@ namespace sdfs
 	///////////////////////////////
 	struct CBlock
 	{
+		CBlock* Next;
+		CBlock* Prev;
+		CBlock() :
+				Next(NULL), Prev(NULL)
+		{
+		}
 		virtual UInt CalcSize()
 		{
 			return sizeof(Block::hdr);
@@ -259,22 +266,72 @@ namespace sdfs
 	};
 	struct CChunk
 	{
-		vector<CBlock*> Blocks;
+		//vector<CBlock*> Blocks;
+		CBlock* FirstBlock;
+		CBlock* LastBlock;
+		CChunk() :
+				FirstBlock(NULL), LastBlock(NULL)
+		{
+		}
 		UInt CalcSize()
 		{
-			size_t i;
+			//size_t i;
 			UInt result = 0;
-			for (i = 0; i < Blocks.size(); i++)
+			CBlock* b = FirstBlock;
+			while (b != NULL)
 			{
-				result += Blocks[i]->CalcSize();
+				result += b->CalcSize();
+				b = b->Next;
 			}
 			return result;
 		}
 		~CChunk()
 		{
-			size_t i;
-			for (i = 0; i < Blocks.size(); i++)
-				delete Blocks[i];
+			CBlock* b = FirstBlock;
+			while (b != NULL)
+			{
+				CBlock* next = b->Next;
+				delete b;
+				b = next;
+			}
+		}
+		void InsertBlock(CBlock* b, CBlock* before = NULL)//ownership of b is transferred to this object
+		{
+			if (FirstBlock == NULL)
+			{
+				FirstBlock = LastBlock = b;
+				b->Next = b->Prev = NULL;
+				return;
+			}
+			if (before == NULL)
+			{
+				LastBlock->Next = b;
+				b->Prev = LastBlock;
+				b->Next = NULL;
+				LastBlock = b;
+			}
+			else
+			{
+				CBlock* tmp = before->Prev;
+				if (tmp == NULL)
+					b->Prev = NULL;
+				else
+				{
+					b->Prev = tmp;
+					tmp->Next = b;
+				}
+				before->Prev = b;
+				b->Next = before;
+				if (before == FirstBlock) FirstBlock = b;
+			}
+		}
+		void RemoveBlock(CBlock* b)
+		{
+			if (b->Prev) b->Prev->Next = b->Next;
+			if (b->Next) b->Next->Prev = b->Prev;
+			if (b == FirstBlock) FirstBlock = b->Next;
+			if (b == LastBlock) LastBlock = b->Prev;
+			delete b;
 		}
 	};
 	class StorageManager
@@ -292,9 +349,9 @@ namespace sdfs
 			UInt length;
 			ReqType t;
 		};
-
+		boost::mt19937 rng;
 		typedef unsigned long ReqID;DELEGATE(void,Callback,ReqID);
-		ArrayList<IStorage*> stores;
+		vector<IStorage*> Stores;
 		StorageManager();
 		virtual ~StorageManager();
 
@@ -308,6 +365,9 @@ namespace sdfs
 		ReqID fs_lookup(CID parent, string name);
 		ReqID fs_read(CID id, void* buf, UInt length);
 		ReqID fs_write(CID id, void* buf, UInt length);
+	protected:
+		inline void requestChunk(CID id);
+		void cb(const IStorage::CallbackInfo& inf);
 	};
 
 }
