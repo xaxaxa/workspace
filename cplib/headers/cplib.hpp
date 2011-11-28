@@ -408,7 +408,7 @@ template<class T> class __event: public Object
 public:
 	map<T,void*> handlers;
 	typedef typename map<T,void*>::iterator iter;
-	inline void* newiter()
+	/*inline void* newiter()
 	{
 		return new iter(handlers.begin());
 	}
@@ -431,7 +431,7 @@ public:
 	{
 		iter& tmp=*((iter*)it);
 		return (*tmp).first;
-	}
+	}*/
 	inline void addhandler(T delegate)
 	{
 		handlers.insert(pair<T,void*>(delegate,NULL));
@@ -452,10 +452,9 @@ public:
 #define EVENT(DEL) __event<DEL>
 
 #define RAISEEVENT(NAME,...) \
-		{void* gjfdjdsghddjh;\
-		for(gjfdjdsghddjh=(NAME).newiter();!((NAME).isiterend(gjfdjdsghddjh));(NAME).incrementiter(gjfdjdsghddjh))\
-		{CALL((NAME).getitervalue(gjfdjdsghddjh),__VA_ARGS__);}\
-		(NAME).deleteiter(gjfdjdsghddjh);}
+		{typename decltype(NAME)::iter gjfdjdsghddjh;\
+		for(gjfdjdsghddjh=(NAME).handlers.begin();gjfdjdsghddjh!=(NAME).handlers.end();gjfdjdsghddjh++)\
+		{CALL(*gjfdjdsghddjh,__VA_ARGS__);}}
 #define ADDHANDLER(NAME,DEL) (NAME).addhandler(DEL)
 #define REMOVEHANDLER(NAME,DEL) (NAME).removehandler(DEL)
 class Stream: public Object

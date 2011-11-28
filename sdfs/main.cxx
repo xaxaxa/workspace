@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 	cout << "cid=" << cid << endl;
 	UInt bindex = SDFS_UNPACK_ID_BLOCKINDEX(tmp);
 	cout << "bindex=" << bindex << endl;
-	cout << "sizeof(StorageManager)=" << sizeof(StorageManager) << endl;
+	cout << "sizeof(StorageManager)=" << sizeof(StorageManager<>) << endl;
 	test1();
 	return 0;
 }
@@ -44,7 +44,7 @@ void test1()
 		sb.Append(b.SubBuffer(0, br));
 	}
 	ChunkData cd { sb.buf, (UInt)sb.Length };
-	StorageManager m;
+	StorageManager<> m;
 	CChunk c;
 	m.ParseChunk(cd, c);
 	throw Exception("breakpoint");
