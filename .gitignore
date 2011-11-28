@@ -1,2 +1,5 @@
+/.metadata
 *.o
 *.so
+a.out
+*~
