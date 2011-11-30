@@ -335,7 +335,7 @@ namespace sdfs
 	template<class ReqID = ULong> class StorageManager
 	{
 	public:
-		enum class ReqType
+		enum class ReqState
 :		Byte
 		{
 			stat = 1, exists, read, write
@@ -346,7 +346,7 @@ namespace sdfs
 			void* dataout;
 			string name;
 			UInt length;
-			ReqType t;
+			ReqState s;
 		};
 		boost::mt19937 rng;
 		//typedef unsigned long ReqID;
@@ -526,6 +526,15 @@ namespace sdfs
 	template<class ReqID> void StorageManager<ReqID>::cb(const IStorage::CallbackInfo & inf)
 	{
 
+	}
+	template<class ReqID> inline bool StorageManager<ReqID>::tryGetChunk(CID id,
+			const ReqInfo & inf, CChunk *& c_out)
+	{
+		auto ptr = cache.GetItem(id);
+		if(ptr.Item->Initialized())
+		{
+
+		}
 	}
 }
 

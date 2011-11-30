@@ -17,20 +17,28 @@ namespace sdfs
 	template<typename tkey, typename tvalue> class CacheManager;
 	struct CacheFlags
 	{
-		static const Byte flags_initialized = 1;
-		static const Byte flags_dirty = 2;
+		static const Byte Initialized = 1;
+		static const Byte Dirty = 2;
 	};
 	template<typename t> struct CacheItem
 	{
 		t Item;
 		Byte refcount;
 		Byte flags;
+		inline bool Initialized()
+		{
+			return flags & CacheFlags::Initialized;
+		}
+		inline bool Dirty()
+		{
+			return flags & CacheFlags::Dirty;
+		}
 		//Byte priority;
 		//bool initialized;
 		//bool dirty;
-		inline bool canpurge()
+		inline bool CanPurge()
 		{
-			return (refcount <= 0) && !(flags & CacheFlags::flags_dirty);
+			return (refcount <= 0) && !Dirty();
 		}
 	};
 	template<typename k, typename v> struct CacheItemPtr
@@ -40,9 +48,9 @@ namespace sdfs
 		CacheManager<k, v>* m;
 		typename CacheManager<k, v>::Iter it;
 		//typename CacheManager<k, v>::ListIter it1;
-		inline CacheItem<v>* get()
+		inline v* Get()
 		{
-			return Item;
+			return Item->Item;
 		}
 		inline CacheItemPtr(const CacheItemPtr<k, v>& x)
 		{
@@ -52,8 +60,7 @@ namespace sdfs
 			m = x.m;
 			it = x.it;
 		}
-		inline CacheItemPtr(CacheManager<k, v>* m
-				, typename CacheManager<k, v>::Iter it)
+		inline CacheItemPtr(CacheManager<k, v>* m , typename CacheManager<k, v>::Iter it)
 		{
 			Item = &(*it).second;
 			Item->refcount++;
@@ -126,9 +133,8 @@ namespace sdfs
 			//tmp.asdfasdf = true;
 			it = items.insert(std::pair<tkey, CacheItem<tvalue> >(k, tmp)).first;
 			items_l.push_back(it);
-			if(items_l.size()>MaxItems)
-				Purge(MaxItems-items_l.size());
-			(*it).second.refcount=0;
+			if (items_l.size() > MaxItems) Purge(MaxItems - items_l.size());
+			(*it).second.refcount = 0;
 			return CacheItemPtr<tkey, tvalue>(this, it);
 		}
 		else
@@ -171,7 +177,7 @@ namespace sdfs
 		switch (t)
 		{
 			case NotifyType::dirty:
-				if ((*it).second.flags & CacheFlags::flags_dirty)
+				if ((*it).second.flags & CacheFlags::Dirty)
 					items_dirty.insert((*it).first);
 				else
 					items_dirty.erase((*it).first);
@@ -192,12 +198,12 @@ namespace sdfs
 template<typename k, typename v>
 inline void sdfs::CacheItemPtr<k, v>::SetDirty(bool dirty)
 {
-	if (((Item->flags & CacheFlags::flags_dirty) != 0) ^ dirty)
+	if (((Item->flags & CacheFlags::Dirty) != 0) ^ dirty)
 	{
 		if (dirty)
-			Item->flags |= CacheFlags::flags_dirty;
+			Item->flags |= CacheFlags::Dirty;
 		else
-			Item->flags &= ~CacheFlags::flags_dirty;
+			Item->flags &= ~CacheFlags::Dirty;
 		if (m) m->NotifyItem(it, NotifyType::dirty);
 	}
 }
