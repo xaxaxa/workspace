@@ -237,7 +237,8 @@ namespace sdfs
 		inline pair<fileent&, bool> GetFileBlock(FILELEN_T offset)
 		{
 			auto it = Entries.equal_range(offset).first;
-			if (it == Entries.end() || offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
+			if (it == Entries.end()
+					|| offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
 				return pair<fileent&, bool> { *((fileent*) NULL), false };
 			return pair<fileent&, bool> { (*it).second, true };
 		}
@@ -258,7 +259,8 @@ namespace sdfs
 			UInt result = CBlock::CalcSize();
 			map<string, string>::iterator it;
 			for (it = Items.begin(); it != Items.end(); it++)
-				result += (sizeof(Block::xattrent)) + (*it).first.length() + (*it).second.length();
+				result += (sizeof(Block::xattrent)) + (*it).first.length()
+						+ (*it).second.length();
 			return result;
 		}
 	};
@@ -332,7 +334,7 @@ namespace sdfs
 			delete b;
 		}
 	};
-	template<class ReqID = ULong> class StorageManager
+	template<class ReqID = ULong, class LockObj = MutexLock> class StorageManager
 	{
 	public:
 		enum class ReqState
@@ -349,6 +351,8 @@ namespace sdfs
 			ReqState s;
 		};
 		boost::mt19937 rng;
+		LockObj l;
+		typedef sdfs::Lock<LockObj> Lock;
 		//typedef unsigned long ReqID;
 		DELEGATE(void,Callback,ReqID);
 		EVENT(Callback) CB;
@@ -357,8 +361,10 @@ namespace sdfs
 		virtual ~StorageManager();
 
 		CacheManager<CID, CChunk> cache;
+		typedef CacheManager<CID, CChunk>::Ptr ChunkPtr;
 		//map<ReqID, ReqInfo> curReqInfos;
 		multimap<CID, ReqInfo> curReqs;
+		typedef multimap<CID, ReqInfo>::iterator reqIter;
 		//map<CID, ChunkData> buffers;
 		void ParseChunk(const ChunkData& data, CChunk& c);
 		void fs_stat(const ReqID& rid, CID id, struct stat& st);
@@ -369,23 +375,25 @@ namespace sdfs
 	protected:
 		inline void requestChunk(CID id);
 		void cb(const IStorage::CallbackInfo& inf);
-		bool tryGetChunk(CID id, const ReqInfo& inf, CChunk*& c_out);
-		//returns true if retrieved synchornously; false if the operation is pending
+		bool tryGetChunk(CID id, const ReqInfo& inf, ChunkPtr& c_out);
+		//returns true if retrieved synchronously; false if the operation is pending
 	};
-	template<class ReqID> StorageManager<ReqID>::StorageManager()
+	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::StorageManager()
 	{
 		size_t i;
 		for (i = 0; i < Stores.size(); i++)
 		{
-			Stores[i]->CB = IStorage::Callback(&sdfs::StorageManager<ReqID>::cb, this);
+			Stores[i]->CB = IStorage::Callback(&sdfs::StorageManager<ReqID>::cb,
+					this);
 		}
 	}
-	template<class ReqID> StorageManager<ReqID>::~StorageManager()
+	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::~StorageManager()
 	{
 		// TODO Auto-generated destructor stub
 	}
 
-	template<class ReqID> void StorageManager<ReqID>::ParseChunk(const ChunkData & data, CChunk & c)
+	template<class ReqID, class LockObj> void StorageManager<ReqID, LockObj>::ParseChunk(
+			const ChunkData & data, CChunk & c)
 	{
 		Chunk ch = data;
 		Block b = ch;
@@ -428,8 +436,9 @@ namespace sdfs
 							continue;
 						}
 						string s(name, de->namelen);
-						tmp->Entries.insert(std::pair<string, CBlock_dirindex::dirent> { s,
-								CBlock_dirindex::dirent(*de) });
+						tmp->Entries.insert(
+								std::pair<string, CBlock_dirindex::dirent> { s,
+										CBlock_dirindex::dirent(*de) });
 						de = (Block::dirent*) (name + de->namelen);
 					}
 					break;
@@ -449,7 +458,8 @@ namespace sdfs
 					while ((void*) (e + 1) <= (blockend))
 					{
 						tmp->Entries.insert(
-								std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset, *e });
+								std::pair<FILELEN_T, CBlock_fileindex::fileent> {
+										e->offset, *e });
 						e++;
 					}
 					break;
@@ -496,13 +506,15 @@ namespace sdfs
 		while (b.Next());
 	}
 
-	template<class ReqID> inline void StorageManager<ReqID>::requestChunk(CID id)
+	template<class ReqID, class LockObj> inline void StorageManager<ReqID, LockObj>::requestChunk(
+			CID id)
 	{
 		size_t i;
 		vector<IStorage*> tmp;
 		for (i = 0; i < Stores.size(); i++)
 		{
-			if (Stores[i]->Initialized && (Stores[i]->Chunks.find(id) != Stores[i]->Chunks.end()))
+			if (Stores[i]->Initialized
+					&& (Stores[i]->Chunks.find(id) != Stores[i]->Chunks.end()))
 			{
 				tmp.push_back(Stores[i]);
 			}
@@ -517,24 +529,33 @@ namespace sdfs
 		}
 		{
 			boost::uniform_int<> r(0, tmp.size());
-			boost::variate_generator<decltype(rng), boost::uniform_int<> > dice(rng, r);
+			boost::variate_generator<decltype(rng), boost::uniform_int<> > dice(rng,
+					r);
 			stor = tmp[dice()];
 		}
 		aaaaa: stor->BeginGetChunk(id);
 	}
 
-	template<class ReqID> void StorageManager<ReqID>::cb(const IStorage::CallbackInfo & inf)
+	template<class ReqID, class LockObj> void StorageManager<ReqID, LockObj>::cb(
+			const IStorage::CallbackInfo & inf)
 	{
 
 	}
-	template<class ReqID> inline bool StorageManager<ReqID>::tryGetChunk(CID id,
-			const ReqInfo & inf, CChunk *& c_out)
+	template<class ReqID, class LockObj> inline bool StorageManager<ReqID, LockObj>::tryGetChunk(
+			CID id, const ReqInfo & inf, ChunkPtr& c_out)
 	{
-		auto ptr = cache.GetItem(id);
-		if(ptr.Item->Initialized())
+		Lock lck(l);
+		ChunkPtr ptr = cache.GetItem(id);
+		if (ptr.Item->Initialized())
 		{
-
+			c_out = ptr;
+			return true;
 		}
+		auto it = this->curReqs.find(id);
+		bool requested = it != curReqs.end();
+		curReqs.insert( { id, inf });
+		if (!requested) requestChunk(id);
+
 	}
 }
 

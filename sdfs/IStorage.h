@@ -35,6 +35,7 @@ namespace sdfs
 	class IStorage
 	{
 	public:
+		//typedef ULong State;
 		enum class CallbackType
 :		Byte
 		{
@@ -49,6 +50,7 @@ namespace sdfs
 			CID cid;
 			CallbackType type;
 			Buffer b;
+			//State state;
 			//ChunkData& data;
 		};
 		DELEGATE(void,Callback,const CallbackInfo&);

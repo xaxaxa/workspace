@@ -73,13 +73,13 @@ namespace sdfs
 		{
 			reset();
 		}
-		inline CacheItemPtr<k, v>& operator=(const CacheItemPtr<k, v>& other)
+		inline CacheItemPtr<k, v>& operator=(CacheItemPtr<k, v>&& other)
 		{
 			if (this == &other) return *this; // protect against invalid self-assignment
-			other.Item = Item;
+			Item = other.Item;
 			other.destruct = false;
-			other.m = m;
-			other.it = it;
+			m = other.m;
+			it = other.it;
 			// by convention, always return *this
 			return *this;
 		}
@@ -97,13 +97,14 @@ namespace sdfs
 		typedef typename Map::iterator Iter;
 		typedef typename std::list<tkey>::iterator ListIter;
 		Map items;
+		typedef CacheItemPtr<tkey, tvalue> Ptr;
 		typename std::list<Iter> items_l;
 		typename std::set<tkey> items_dirty;
 		//typename std::list<tkey> items_canpurge;
 		size_t MaxItems;
 		CacheManager();
 		virtual ~CacheManager();
-		CacheItemPtr<tkey, tvalue> GetItem(const tkey& k);
+		Ptr GetItem(const tkey& k);
 		//void AddItem(const tkey& k, const tvalue& v);
 		void Purge(int n); //purge n items from the cache
 		void NotifyItem(Iter it, NotifyType t); //update item info
@@ -152,7 +153,7 @@ namespace sdfs
 		{
 			//purge the item
 			Iter& x(*it);
-			if ((*x).second.canpurge())
+			if ((*x).second.CanPurge())
 			{
 				items.erase(x);
 				items_dirty.erase((*x).first);
