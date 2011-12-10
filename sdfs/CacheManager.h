@@ -48,9 +48,16 @@ namespace sdfs
 		CacheManager<k, v>* m;
 		typename CacheManager<k, v>::Iter it;
 		//typename CacheManager<k, v>::ListIter it1;
-		inline v* Get()
+		inline v& Get()
 		{
 			return Item->Item;
+		}
+		inline CacheItemPtr(CacheItemPtr<k, v>& x)
+		{
+			Item = x.Item;
+			x.Item = NULL;
+			m = x.m;
+			it = x.it;
 		}
 		inline CacheItemPtr(const CacheItemPtr<k, v>& x)
 		{
@@ -60,7 +67,8 @@ namespace sdfs
 			m = x.m;
 			it = x.it;
 		}
-		inline CacheItemPtr(CacheManager<k, v>* m , typename CacheManager<k, v>::Iter it)
+		inline CacheItemPtr(CacheManager<k, v>* m
+				, typename CacheManager<k, v>::Iter it)
 		{
 			Item = &(*it).second;
 			Item->refcount++;
@@ -68,16 +76,22 @@ namespace sdfs
 			this->m = m;
 			this->it = it;
 		}
+		inline CacheItemPtr<k, v> Clone()
+		{
+			Item->refcount++;
+			return CacheItemPtr<k, v> { Item, true, m, it };
+		}
 		inline void reset();
 		inline ~CacheItemPtr()
 		{
 			reset();
 		}
-		inline CacheItemPtr<k, v>& operator=(CacheItemPtr<k, v>&& other)
+		inline CacheItemPtr<k, v>& operator=(CacheItemPtr<k, v>& other)
 		{
 			if (this == &other) return *this; // protect against invalid self-assignment
 			Item = other.Item;
-			other.destruct = false;
+			//other.destruct = false;
+			other.Item = NULL;
 			m = other.m;
 			it = other.it;
 			// by convention, always return *this
@@ -108,7 +122,8 @@ namespace sdfs
 		//void AddItem(const tkey& k, const tvalue& v);
 		void Purge(int n); //purge n items from the cache
 		void NotifyItem(Iter it, NotifyType t); //update item info
-	};
+	}
+	;
 
 	template<typename k, typename v> void CacheItemPtr<k, v>::reset()
 	{

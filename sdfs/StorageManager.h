@@ -15,6 +15,7 @@
 #include <cplib/cplib.hpp>
 #include "IStorage.h"
 #include "CacheManager.h"
+#include "Lock.h"
 #include <boost/random.hpp>
 #define FUSE_USE_VERSION 27
 #include <fuse/fuse_lowlevel.h>
@@ -236,11 +237,18 @@ namespace sdfs
 		}
 		inline pair<fileent&, bool> GetFileBlock(FILELEN_T offset)
 		{
-			auto it = Entries.equal_range(offset).first;
+			const pair<fileent&, bool> nullret = { *((fileent*) NULL), false };
+			auto it = Entries.lower_bound(offset);
+			if ((it == Entries.end()) || ((*it).second.hdr.offset > offset))
+			{
+				if (it == Entries.begin()) return nullret;
+				it--;
+			}
 			if (it == Entries.end()
 					|| offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
-				return pair<fileent&, bool> { *((fileent*) NULL), false };
+				return nullret;
 			return pair<fileent&, bool> { (*it).second, true };
+			//return_null: return pair<fileent&, bool> { *((fileent*) NULL), false };
 		}
 	};
 	struct CBlock_filedata: public CBlock
@@ -333,15 +341,30 @@ namespace sdfs
 			if (b == LastBlock) LastBlock = b->Prev;
 			delete b;
 		}
+		void Clear()
+		{
+			CBlock* b = FirstBlock;
+			while (b != NULL)
+			{
+				CBlock* next = b->Next;
+				delete b;
+				b = next;
+			}
+			FirstBlock = LastBlock = NULL;
+		}
 	};
-	template<class ReqID = ULong, class LockObj = MutexLock> class StorageManager
+	template<typename ReqID = ULong, typename LockObj = MutexLock> class StorageManager
 	{
 	public:
-		enum class ReqState
-:		Byte
-		{
-			stat = 1, exists, read, write
-		};
+		/*enum class ReqState
+		 :		Byte
+		 {
+		 stat = 1, exists, read, write
+		 };*/
+		CacheManager<CID, CChunk> cache;
+		typedef CacheManager<CID, CChunk>::Ptr ChunkPtr;
+		struct ReqInfo;DELEGATE(void, ReqState, ReqInfo&, CID, ChunkPtr);
+		//typedef void(*ReqState)(ReqInfo& inf);
 		struct ReqInfo
 		{
 			ReqID id;
@@ -354,29 +377,42 @@ namespace sdfs
 		LockObj l;
 		typedef sdfs::Lock<LockObj> Lock;
 		//typedef unsigned long ReqID;
-		DELEGATE(void,Callback,ReqID);
-		EVENT(Callback) CB;
+		DELEGATE(void,Callback,ReqID);EVENT(Callback) CB;
 		vector<IStorage*> Stores;
 		StorageManager();
 		virtual ~StorageManager();
 
-		CacheManager<CID, CChunk> cache;
-		typedef CacheManager<CID, CChunk>::Ptr ChunkPtr;
 		//map<ReqID, ReqInfo> curReqInfos;
 		multimap<CID, ReqInfo> curReqs;
-		typedef multimap<CID, ReqInfo>::iterator reqIter;
+		typedef typename multimap<CID, ReqInfo>::iterator reqIter;
 		//map<CID, ChunkData> buffers;
 		void ParseChunk(const ChunkData& data, CChunk& c);
-		void fs_stat(const ReqID& rid, CID id, struct stat& st);
+
+	protected:
+		inline void requestChunk(CID id);
+		void cb(const IStorage::CallbackInfo& inf);
+		void beginGetChunk(CID id, const ReqInfo& inf);
+		//begins the chunk request and invokes the correct function based on the ReqState
+		//when the operation completes. cache is queried first.
+
+		//callbacks.
+		void stat_cb1(ReqInfo& inf, CID cid, ChunkPtr cptr)
+		{
+
+		}
+	public:
+		//filesystem methods.
+		void fs_stat(const ReqID& rid, CID id, struct stat& st)
+		{
+			ReqInfo inf;
+			inf.dataout = &st;
+			inf.s = ReqState(&stat_cb1, this);
+			beginGetChunk(id, inf);
+		}
 		void fs_exists(const ReqID& rid, CID id, bool& b);
 		void fs_lookup(const ReqID& rid, CID parent, string name);
 		void fs_read(const ReqID& rid, CID id, void* buf, UInt length);
 		void fs_write(const ReqID& rid, CID id, void* buf, UInt length);
-	protected:
-		inline void requestChunk(CID id);
-		void cb(const IStorage::CallbackInfo& inf);
-		bool tryGetChunk(CID id, const ReqInfo& inf, ChunkPtr& c_out);
-		//returns true if retrieved synchronously; false if the operation is pending
 	};
 	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::StorageManager()
 	{
@@ -539,17 +575,28 @@ namespace sdfs
 	template<class ReqID, class LockObj> void StorageManager<ReqID, LockObj>::cb(
 			const IStorage::CallbackInfo & inf)
 	{
-
+		Lock lck(l);
+		//put into cache
+		ChunkPtr ptr = cache.GetItem(inf.cid);
+		ptr.Item->flags |= CacheFlags::Initialized;
+		ptr.Get().Clear();
+		ParseChunk( { inf.b.Data, inf.b.Length }, ptr.Get());
+		auto range = curReqs.equal_range(inf.cid);
+		for (decltype(range.first) it(range.first); it != range.second; it++)
+		{
+			ReqInfo& inf1((*it).second);
+			CALL(inf1.s, inf1, inf.cid, ptr);
+		}
 	}
-	template<class ReqID, class LockObj> inline bool StorageManager<ReqID, LockObj>::tryGetChunk(
-			CID id, const ReqInfo & inf, ChunkPtr& c_out)
+	template<class ReqID, class LockObj> inline void StorageManager<ReqID, LockObj>::beginGetChunk(
+			CID id, const ReqInfo & inf)
 	{
 		Lock lck(l);
 		ChunkPtr ptr = cache.GetItem(id);
 		if (ptr.Item->Initialized())
 		{
-			c_out = ptr;
-			return true;
+			CALL(inf.s, inf, id, ptr);
+			return;
 		}
 		auto it = this->curReqs.find(id);
 		bool requested = it != curReqs.end();

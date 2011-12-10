@@ -35,14 +35,15 @@ namespace sdfs
 	};
 	template<typename l = MutexLock> struct Lock
 	{
-		typename l _lock;
-		inline Lock()
+		l _lock;
+		inline Lock(l lck) :
+				_lock(lck)
 		{
-			l.Lock();
+			lck.Lock();
 		}
 		inline ~Lock()
 		{
-			l.Unlock();
+			_lock.Unlock();
 		}
 	};
 } /* namespace sdfs */
