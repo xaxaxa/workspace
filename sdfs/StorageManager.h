@@ -2,7 +2,20 @@
  * StorageManager.h
  *
  *  Created on: 2011-11-15
- *      Author: user1
+ *      Author: xaxaxa
+ *
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 //TODO: block ID handling
@@ -50,8 +63,11 @@ namespace sdfs
 		//	| id |type|length|    data      |
 		//	|____|____|______|______________|
 		//length includes the size of the length field(32 bits)
-		//if id is zero, the length field is omitted and it is assumed that
+		//***IMPORTANT***: if id is zero, the length field is omitted and it is assumed that
 		//the block fills the chunk. this is for space optimization reasons.
+		//However, when the chunk is parsed into memory, it's assigned an ID of 1.
+		//StorageManager::SerializeChunk() should check if a chunk contains only one
+		//block and if it does, apply this optimization.
 		enum class BlockType
 :		Byte
 		{
@@ -502,7 +518,19 @@ namespace sdfs
 		{
 			struct stat* st = (struct stat*) inf.dataout;
 			CBlock* bl = cptr.Get().GetBlock(inf.bid);
-
+			Block::indexhdr* ihdr;
+			switch (bl->Type)
+			{
+				case Block::BlockType::dirindex:
+					ihdr = &((CBlock_dirindex*) bl)->hdr;
+					break;
+				case Block::BlockType::fileindex:
+					ihdr = &((CBlock_fileindex*) bl)->hdr;
+					break;
+				default:
+					Reply(inf.id, -ENOENT);
+					return;
+			}
 		}
 	public:
 		//filesystem methods.
@@ -694,6 +722,7 @@ namespace sdfs
 			ReqInfo& inf1((*it).second);
 			CALL(inf1.s, inf1, inf.cid, ptr);
 		}
+		curReqs.erase(inf.cid);
 	}
 	template<class ReqID, class LockObj> inline void StorageManager<ReqID, LockObj>::beginGetChunk(
 			CID id, const ReqInfo & inf)
