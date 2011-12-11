@@ -62,6 +62,7 @@ namespace sdfs
 		virtual ~IStorage();
 		//virtual Chunk GetChunk(CID id)=0;
 		virtual void BeginGetChunk(CID id)=0;
+		virtual void BeginPutChunk(CID id, Buffer b)=0;
 		virtual void BeginRemoveChunk(CID id)=0;
 		virtual void Init(const map<string,string>& config)=0;
 	};

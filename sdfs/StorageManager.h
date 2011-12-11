@@ -5,6 +5,7 @@
  *      Author: user1
  */
 
+//TODO: block ID handling
 #ifndef STORAGEMANAGER_H_
 #define STORAGEMANAGER_H_
 #include <string>
@@ -21,9 +22,9 @@
 #include <fuse/fuse_lowlevel.h>
 using namespace std;
 using namespace xaxaxa;
-#define SDFS_PACK_ID(chunkid,blockindex) (((CID)(chunkid)&0x000000FFFFFFFFFF)|((CID)(blockindex)<<(64-24)))
-#define SDFS_UNPACK_ID_CID(id) ((id)&0x000000FFFFFFFFFF)
-#define SDFS_UNPACK_ID_BLOCKINDEX(id) ((UInt)(((id)&0xFFFFFF0000000000)>>(64-24)))
+#define SDFS_PACK_ID(chunkid,blockindex) (((CID)(chunkid)&0x0000FFFFFFFFFFFF)|((CID)(blockindex)<<(64-16)))
+#define SDFS_UNPACK_ID_CID(id) ((id)&0x0000FFFFFFFFFFFF)
+#define SDFS_UNPACK_ID_BLOCKINDEX(id) ((UInt)(((id)&0xFFFF000000000000)>>(64-16)))
 #ifdef _64BITFILELENGTH
 typedef ULong FILELEN_T;
 #else
@@ -32,6 +33,7 @@ typedef UInt FILELEN_T;
 namespace sdfs
 {
 	struct Block;
+	typedef UShort BlockID;
 	struct Chunk
 	{
 		ChunkData Data;
@@ -43,11 +45,13 @@ namespace sdfs
 	struct Block
 	{
 		//block structure
-		//	0       32	 40         	(length)
-		//	_____________________________
-		//	|length	|type|     data      |
-		//	|_______|____|_______________|
+		//	0    16   24     56         	(length)
+		//	________________________________
+		//	| id |type|length|    data      |
+		//	|____|____|______|______________|
 		//length includes the size of the length field(32 bits)
+		//if id is zero, the length field is omitted and it is assumed that
+		//the block fills the chunk. this is for space optimization reasons.
 		enum class BlockType
 :		Byte
 		{
@@ -81,13 +85,16 @@ namespace sdfs
 		//is entirely contained within its parent's directory index.
 		//the "inode number" of a file is the block ID of its index.
 
-		struct hdr//block header
+		//block header
+		struct blockhdr
 		{
-			UInt Size;
+			BlockID ID;
 			BlockType Type;
-			void* GetData()
+			UInt Size;
+			static const int minsize=sizeof(BlockID)+sizeof(BlockType);	//constexpr
+			inline void* GetData()
 			{
-				return (void*)(this+1);
+				return (ID==0)?(void*)(((Byte*)this)+sizeof(ID)+sizeof(Type)):(void*)(this+1);
 			}
 		};
 		struct indexhdr
@@ -125,28 +132,40 @@ namespace sdfs
 		};
 		ChunkData Data;
 		UInt offset;
+		inline blockhdr* RawData()
+		{
+			return (blockhdr*) (((Byte*) (Data.Data)) + offset);
+		}
+		inline UInt GetSize()
+		{
+			blockhdr* tmp=RawData();
+			return tmp->ID==0?(Data.Length-blockhdr::minsize):tmp->Size;
+		}
+		inline bool CheckBounds()
+		{
+			if(Data.Length>=(offset+sizeof(BlockID)+sizeof(BlockType)) && RawData()->ID==0)return true;
+			if(Data.Length<(offset+sizeof(blockhdr)) || RawData()->Size>(Data.Length-offset-sizeof(blockhdr)))return false;
+			return true;
+		}
 		inline Block()=default;
 		inline Block(const ChunkData& d, UInt o):Data(d),offset(o)
 		{
-			if(d.Length<(o+sizeof(hdr)) || ((hdr*)d.Data)->Size>(d.Length-sizeof(hdr)-o)) throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
+			if(!CheckBounds())throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
 		}
 		inline Block(const ChunkData& d):Data(d),offset(0)
 		{
-			if(d.Length<sizeof(hdr) || ((hdr*)d.Data)->Size>(d.Length-sizeof(hdr))) throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
+			if(!CheckBounds())throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
 		}
-		inline Block(const Chunk& c)
-		{
-			if(c.Data.Length<sizeof(hdr) || ((hdr*)c.Data.Data)->Size>(c.Data.Length-sizeof(hdr))) throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
-		}
+		/*inline Block(const Chunk& c):Block(c.Data)
+		 {
+		 if(!CheckBounds())throw OutOfRangeException("FATAL ERROR: corrupt chunk detected");
+		 }*/
 
-		inline hdr* RawData()
-		{
-			return (hdr*) (((Byte*) (Data.Data)) + offset);
-		}
 		inline bool Next()
 		{
-			hdr* tmp = RawData();
-			if (((offset + tmp->Size + sizeof(hdr)) <= (Data.Length)))
+			blockhdr* tmp = RawData();
+			if(tmp->ID==0)return false;
+			if (((offset + tmp->Size + sizeof(blockhdr)) <= (Data.Length)))
 			{
 				offset += tmp->Size;
 				if (offset + RawData()->Size > (Data.Length))
@@ -167,15 +186,16 @@ namespace sdfs
 	///////////////////////////////
 	struct CBlock
 	{
-		CBlock* Next;
-		CBlock* Prev;
-		CBlock() :
-				Next(NULL), Prev(NULL)
+		//CBlock* Next;
+		//CBlock* Prev;
+		BlockID ID;
+		Block::BlockType Type;
+		CBlock()
 		{
 		}
 		virtual UInt CalcSize()
 		{
-			return sizeof(Block::hdr);
+			return ID == 0 ? Block::blockhdr::minsize : sizeof(Block::blockhdr);
 		}
 		virtual ~CBlock()
 		{
@@ -275,82 +295,157 @@ namespace sdfs
 	struct CChunk
 	{
 		//vector<CBlock*> Blocks;
-		CBlock* FirstBlock;
-		CBlock* LastBlock;
-		CChunk() :
-				FirstBlock(NULL), LastBlock(NULL)
+		/*CBlock* FirstBlock;
+		 CBlock* LastBlock;*/
+		map<BlockID, CBlock*> Blocks;
+		bool contig_id;		//whether the block ID's are verified to be contiguous.
+		CChunk()
 		{
 		}
 		UInt CalcSize()
 		{
 			//size_t i;
 			UInt result = 0;
-			CBlock* b = FirstBlock;
-			while (b != NULL)
+			/*CBlock* b = FirstBlock;
+			 while (b != NULL)
+			 {
+			 result += b->CalcSize();
+			 b = b->Next;
+			 }*/
+			for (auto it = Blocks.begin(); it != Blocks.end(); it++)
 			{
-				result += b->CalcSize();
-				b = b->Next;
+				result += (*it).second->CalcSize();
 			}
 			return result;
 		}
 		~CChunk()
 		{
-			CBlock* b = FirstBlock;
-			while (b != NULL)
+			/*CBlock* b = FirstBlock;
+			 while (b != NULL)
+			 {
+			 CBlock* next = b->Next;
+			 delete b;
+			 b = next;
+			 }*/
+			for (auto it = Blocks.begin(); it != Blocks.end(); it++)
 			{
-				CBlock* next = b->Next;
-				delete b;
-				b = next;
+				delete (*it).second;
 			}
 		}
-		void InsertBlock(CBlock* b, CBlock* before = NULL) //ownership of b is transferred to this object
+		/*void InsertBlock(CBlock* b, CBlock* before = NULL) //ownership of b is transferred to this object
+		 {
+		 if (FirstBlock == NULL)
+		 {
+		 FirstBlock = LastBlock = b;
+		 b->Next = b->Prev = NULL;
+		 return;
+		 }
+		 if (before == NULL)
+		 {
+		 LastBlock->Next = b;
+		 b->Prev = LastBlock;
+		 b->Next = NULL;
+		 LastBlock = b;
+		 }
+		 else
+		 {
+		 CBlock* tmp = before->Prev;
+		 if (tmp == NULL)
+		 b->Prev = NULL;
+		 else
+		 {
+		 b->Prev = tmp;
+		 tmp->Next = b;
+		 }
+		 before->Prev = b;
+		 b->Next = before;
+		 if (before == FirstBlock) FirstBlock = b;
+		 }
+		 }
+		 void RemoveBlock(CBlock* b)
+		 {
+		 if (b->Prev) b->Prev->Next = b->Next;
+		 if (b->Next) b->Next->Prev = b->Prev;
+		 if (b == FirstBlock) FirstBlock = b->Next;
+		 if (b == LastBlock) LastBlock = b->Prev;
+		 delete b;
+		 }
+		 void Clear()
+		 {
+		 CBlock* b = FirstBlock;
+		 while (b != NULL)
+		 {
+		 CBlock* next = b->Next;
+		 delete b;
+		 b = next;
+		 }
+		 FirstBlock = LastBlock = NULL;
+		 }*/
+		BlockID GetNextID()
 		{
-			if (FirstBlock == NULL)
+			auto it = Blocks.begin();
+			if (it == Blocks.end())
 			{
-				FirstBlock = LastBlock = b;
-				b->Next = b->Prev = NULL;
-				return;
+				contig_id = true;
+				return 1;
 			}
-			if (before == NULL)
+			if (contig_id)
 			{
-				LastBlock->Next = b;
-				b->Prev = LastBlock;
-				b->Next = NULL;
-				LastBlock = b;
+				auto it = Blocks.end();
+				it--;
+				return (*it).first + 1;
 			}
-			else
+			BlockID prev_id = (*it).first;
+			it++;
+			if (it == Blocks.end())
 			{
-				CBlock* tmp = before->Prev;
-				if (tmp == NULL)
-					b->Prev = NULL;
-				else
+				contig_id = true;
+				return prev_id + 1;
+			}
+			BlockID id;
+			do
+			{
+				id = (*it).first;
+				if (id > (prev_id + 1))
 				{
-					b->Prev = tmp;
-					tmp->Next = b;
+					return prev_id + 1;
 				}
-				before->Prev = b;
-				b->Next = before;
-				if (before == FirstBlock) FirstBlock = b;
+
+				prev_id = id;
+				it++;
 			}
+			while (it != Blocks.end());
+			contig_id = true;
+			id++;
+			if (id == 0) id = 1;		//in case of integer wrap-around
+			return id;
 		}
-		void RemoveBlock(CBlock* b)
+		BlockID InsertBlock(CBlock* b) //ownership of b is transferred to this object
 		{
-			if (b->Prev) b->Prev->Next = b->Next;
-			if (b->Next) b->Next->Prev = b->Prev;
-			if (b == FirstBlock) FirstBlock = b->Next;
-			if (b == LastBlock) LastBlock = b->Prev;
-			delete b;
+			BlockID id = b->ID == 0 ? GetNextID() : b->ID;
+			Blocks.insert( { id, b });
+			return id;
+		}
+		CBlock* GetBlock(BlockID id)
+		{
+			auto it = Blocks.find(id);
+			if (it == Blocks.end()) return NULL;
+			return (*it).second;
+		}
+		void RemoveBlock(BlockID id)
+		{
+			auto it = Blocks.find(id);
+			if (it == Blocks.end()) return;
+			delete (*it).second;
+			Blocks.erase(it);
 		}
 		void Clear()
 		{
-			CBlock* b = FirstBlock;
-			while (b != NULL)
+			for (auto it = Blocks.begin(); it != Blocks.end(); it++)
 			{
-				CBlock* next = b->Next;
-				delete b;
-				b = next;
+				delete (*it).second;
 			}
-			FirstBlock = LastBlock = NULL;
+			Blocks.clear();
 		}
 	};
 	template<typename ReqID = ULong, typename LockObj = MutexLock> class StorageManager
@@ -369,15 +464,22 @@ namespace sdfs
 		{
 			ReqID id;
 			void* dataout;
-			string name;
+			//string name;
 			UInt length;
 			ReqState s;
+			BlockID bid;
 		};
 		boost::mt19937 rng;
 		LockObj l;
 		typedef sdfs::Lock<LockObj> Lock;
 		//typedef unsigned long ReqID;
-		DELEGATE(void,Callback,ReqID);EVENT(Callback) CB;
+		DELEGATE(void,Callback,ReqID,int);EVENT(Callback) CB;
+		void Reply(ReqID rid, int retv);
+		//retv: return value. negative if error occured.
+		//positive or zero if successful.
+		//for read() and write(), returns bytes read/written.
+		//otherwise, returns zero.
+
 		vector<IStorage*> Stores;
 		StorageManager();
 		virtual ~StorageManager();
@@ -396,8 +498,10 @@ namespace sdfs
 		//when the operation completes. cache is queried first.
 
 		//callbacks.
-		void stat_cb1(ReqInfo& inf, CID cid, ChunkPtr cptr)
+		void stat_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
+			struct stat* st = (struct stat*) inf.dataout;
+			CBlock* bl = cptr.Get().GetBlock(inf.bid);
 
 		}
 	public:
@@ -407,7 +511,8 @@ namespace sdfs
 			ReqInfo inf;
 			inf.dataout = &st;
 			inf.s = ReqState(&stat_cb1, this);
-			beginGetChunk(id, inf);
+			inf.bid = SDFS_UNPACK_ID_BLOCKINDEX(id);
+			beginGetChunk(SDFS_UNPACK_ID_CID(id), inf);
 		}
 		void fs_exists(const ReqID& rid, CID id, bool& b);
 		void fs_lookup(const ReqID& rid, CID parent, string name);
@@ -432,7 +537,7 @@ namespace sdfs
 			const ChunkData & data, CChunk & c)
 	{
 		Chunk ch = data;
-		Block b = ch;
+		Block b = ch.FirstBlock();
 		//void* chunkend = ((Byte*) data.Data) + data.Length;
 
 		const Byte warnlevel = 3;
@@ -440,10 +545,10 @@ namespace sdfs
 		do
 		{
 			CBlock* bl;
-			Block::hdr* h = b.RawData();
+			Block::blockhdr* h = b.RawData();
 
 			void* blockdata = h->GetData();
-			void* blockend = ((Byte*) blockdata) + h->Size;
+			void* blockend = ((Byte*) blockdata) + b.GetSize();
 			/*if (blockend > chunkend)
 			 {
 			 WARN(warnlevel, errmsg);
@@ -504,8 +609,8 @@ namespace sdfs
 				{
 					CBlock_filedata* tmp;
 					bl = tmp = new CBlock_filedata();
-					tmp->Data = Buffer(h->Size);
-					memcpy(tmp->Data.Data, blockdata, h->Size);
+					tmp->Data = Buffer(b.GetSize());
+					memcpy(tmp->Data.Data, blockdata, b.GetSize());
 					break;
 				}
 				case Block::BlockType::xattr:
@@ -537,6 +642,8 @@ namespace sdfs
 				default:
 					continue;
 			}
+			bl->ID = h->ID;
+			bl->Type = h->Type;
 			c.InsertBlock(bl);
 		}
 		while (b.Next());

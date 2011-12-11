@@ -52,13 +52,14 @@ namespace sdfs
 		{
 			return Item->Item;
 		}
-		inline CacheItemPtr(CacheItemPtr<k, v>& x)
+		/*inline CacheItemPtr(CacheItemPtr<k, v>& x)
 		{
 			Item = x.Item;
-			x.Item = NULL;
+			if (x.destruct) x.Item = NULL;
+			destruct = x.destruct;
 			m = x.m;
 			it = x.it;
-		}
+		}*/
 		inline CacheItemPtr(const CacheItemPtr<k, v>& x)
 		{
 			Item = x.Item;
@@ -76,24 +77,41 @@ namespace sdfs
 			this->m = m;
 			this->it = it;
 		}
-		inline CacheItemPtr<k, v> Clone()
+		/*inline CacheItemPtr<k, v> Clone()
 		{
 			Item->refcount++;
 			return CacheItemPtr<k, v> { Item, true, m, it };
 		}
-		inline void reset();
+		inline CacheItemPtr<k, v> CloneWeak()
+		{
+			return CacheItemPtr<k, v> { Item, false, m, it };
+		}*/
+		inline void Reset();
 		inline ~CacheItemPtr()
 		{
-			reset();
+			Reset();
 		}
-		inline CacheItemPtr<k, v>& operator=(CacheItemPtr<k, v>& other)
+		/*inline CacheItemPtr<k, v>& operator=(CacheItemPtr<k, v>& other)
 		{
 			if (this == &other) return *this; // protect against invalid self-assignment
 			Item = other.Item;
 			//other.destruct = false;
-			other.Item = NULL;
+			if (other.destruct) other.Item = NULL;
+			destruct = other.destruct;
 			m = other.m;
 			it = other.it;
+			// by convention, always return *this
+			return *this;
+		}*/
+		inline CacheItemPtr<k, v>& operator=(const CacheItemPtr<k, v>& other)
+		{
+			if (this == &other) return *this; // protect against invalid self-assignment
+			Item = other.Item;
+			//other.destruct = false;
+			//other.Item = NULL;
+			m = other.m;
+			it = other.it;
+			destruct = true;
 			// by convention, always return *this
 			return *this;
 		}
@@ -125,7 +143,7 @@ namespace sdfs
 	}
 	;
 
-	template<typename k, typename v> void CacheItemPtr<k, v>::reset()
+	template<typename k, typename v> void CacheItemPtr<k, v>::Reset()
 	{
 		if (destruct && Item)
 		{

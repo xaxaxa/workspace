@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lfuse -lcplib
+LIBS := -lfuse -lpthread -lcplib
 
