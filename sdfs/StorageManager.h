@@ -479,11 +479,32 @@ namespace sdfs
 		struct ReqInfo
 		{
 			ReqID id;
-			void* dataout;
-			//string name;
-			UInt length;
 			ReqState s;
-			BlockID bid;
+			union
+			{
+				struct
+				{
+					struct stat* st;
+					BlockID bid;
+				} stat_info;
+				struct
+				{
+					struct stat* st;
+					UInt parentoffset;
+				} stat_info2;
+				struct
+				{
+					void* dataout;
+					UInt length;
+				} rw_info;
+				struct
+				{
+					void* name;
+					Byte namelen;
+				} lookup_info;
+			};
+			//string name;
+			bool success;
 		};
 		boost::mt19937 rng;
 		LockObj l;
@@ -509,15 +530,20 @@ namespace sdfs
 	protected:
 		inline void requestChunk(CID id);
 		void cb(const IStorage::CallbackInfo& inf);
-		void beginGetChunk(CID id, const ReqInfo& inf);
+		inline void beginGetChunk(CID id, const ReqInfo& inf);
 		//begins the chunk request and invokes the correct function based on the ReqState
 		//when the operation completes. cache is queried first.
 
 		//callbacks.
 		void stat_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
-			struct stat* st = (struct stat*) inf.dataout;
-			CBlock* bl = cptr.Get().GetBlock(inf.bid);
+			if (!inf.success)
+			{
+				Reply(inf.id, -ENOENT);
+				return;
+			}
+			//struct stat* st = (struct stat*) inf.dataout;
+			CBlock* bl = cptr.Get().GetBlock(inf.stat_info.bid);
 			Block::indexhdr* ihdr;
 			switch (bl->Type)
 			{
@@ -531,15 +557,16 @@ namespace sdfs
 					Reply(inf.id, -ENOENT);
 					return;
 			}
+			inf.stat_info2.parentoffset = ihdr->entryoffset;
 		}
 	public:
 		//filesystem methods.
 		void fs_stat(const ReqID& rid, CID id, struct stat& st)
 		{
 			ReqInfo inf;
-			inf.dataout = &st;
+			inf.stat_info.st = &st;
 			inf.s = ReqState(&stat_cb1, this);
-			inf.bid = SDFS_UNPACK_ID_BLOCKINDEX(id);
+			inf.stat_info.bid = SDFS_UNPACK_ID_BLOCKINDEX(id);
 			beginGetChunk(SDFS_UNPACK_ID_CID(id), inf);
 		}
 		void fs_exists(const ReqID& rid, CID id, bool& b);
@@ -712,14 +739,27 @@ namespace sdfs
 	{
 		Lock lck(l);
 		//put into cache
+
+		auto range = curReqs.equal_range(inf.cid);
+
+		if (!inf.success)
+		{
+			for (decltype(range.first) it(range.first); it != range.second; it++)
+			{
+				ReqInfo& inf1((*it).second);
+				inf1.success = false;
+				CALL(inf1.s, inf1, inf.cid, ChunkPtr());
+			}
+			curReqs.erase(inf.cid);
+		}
 		ChunkPtr ptr = cache.GetItem(inf.cid);
 		ptr.Item->flags |= CacheFlags::Initialized;
 		ptr.Get().Clear();
 		ParseChunk( { inf.b.Data, inf.b.Length }, ptr.Get());
-		auto range = curReqs.equal_range(inf.cid);
 		for (decltype(range.first) it(range.first); it != range.second; it++)
 		{
 			ReqInfo& inf1((*it).second);
+			inf1.success = true;
 			CALL(inf1.s, inf1, inf.cid, ptr);
 		}
 		curReqs.erase(inf.cid);
@@ -728,8 +768,8 @@ namespace sdfs
 			CID id, const ReqInfo & inf)
 	{
 		Lock lck(l);
-		ChunkPtr ptr = cache.GetItem(id);
-		if (ptr.Item->Initialized())
+		ChunkPtr ptr;
+		if (cache.GetItem(id, ptr))
 		{
 			CALL(inf.s, inf, id, ptr);
 			return;

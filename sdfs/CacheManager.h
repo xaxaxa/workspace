@@ -4,18 +4,18 @@
  *  Created on: 2011-11-16
  *      Author: xaxaxa
  *
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef CACHEMANAGER_H_
@@ -65,14 +65,18 @@ namespace sdfs
 		{
 			return Item->Item;
 		}
-		/*inline CacheItemPtr(CacheItemPtr<k, v>& x)
+		inline CacheItemPtr() :
+				Item(NULL)
 		{
-			Item = x.Item;
-			if (x.destruct) x.Item = NULL;
-			destruct = x.destruct;
-			m = x.m;
-			it = x.it;
-		}*/
+		}
+		/*inline CacheItemPtr(CacheItemPtr<k, v>& x)
+		 {
+		 Item = x.Item;
+		 if (x.destruct) x.Item = NULL;
+		 destruct = x.destruct;
+		 m = x.m;
+		 it = x.it;
+		 }*/
 		inline CacheItemPtr(const CacheItemPtr<k, v>& x)
 		{
 			Item = x.Item;
@@ -91,34 +95,35 @@ namespace sdfs
 			this->it = it;
 		}
 		/*inline CacheItemPtr<k, v> Clone()
-		{
-			Item->refcount++;
-			return CacheItemPtr<k, v> { Item, true, m, it };
-		}
-		inline CacheItemPtr<k, v> CloneWeak()
-		{
-			return CacheItemPtr<k, v> { Item, false, m, it };
-		}*/
+		 {
+		 Item->refcount++;
+		 return CacheItemPtr<k, v> { Item, true, m, it };
+		 }
+		 inline CacheItemPtr<k, v> CloneWeak()
+		 {
+		 return CacheItemPtr<k, v> { Item, false, m, it };
+		 }*/
 		inline void Reset();
 		inline ~CacheItemPtr()
 		{
 			Reset();
 		}
 		/*inline CacheItemPtr<k, v>& operator=(CacheItemPtr<k, v>& other)
-		{
-			if (this == &other) return *this; // protect against invalid self-assignment
-			Item = other.Item;
-			//other.destruct = false;
-			if (other.destruct) other.Item = NULL;
-			destruct = other.destruct;
-			m = other.m;
-			it = other.it;
-			// by convention, always return *this
-			return *this;
-		}*/
+		 {
+		 if (this == &other) return *this; // protect against invalid self-assignment
+		 Item = other.Item;
+		 //other.destruct = false;
+		 if (other.destruct) other.Item = NULL;
+		 destruct = other.destruct;
+		 m = other.m;
+		 it = other.it;
+		 // by convention, always return *this
+		 return *this;
+		 }*/
 		inline CacheItemPtr<k, v>& operator=(const CacheItemPtr<k, v>& other)
 		{
 			if (this == &other) return *this; // protect against invalid self-assignment
+			Reset();
 			Item = other.Item;
 			//other.destruct = false;
 			//other.Item = NULL;
@@ -150,6 +155,7 @@ namespace sdfs
 		CacheManager();
 		virtual ~CacheManager();
 		Ptr GetItem(const tkey& k);
+		bool GetItem(const tkey& k, Ptr& p);
 		//void AddItem(const tkey& k, const tvalue& v);
 		void Purge(int n); //purge n items from the cache
 		void NotifyItem(Iter it, NotifyType t); //update item info
@@ -187,6 +193,18 @@ namespace sdfs
 		else
 		{
 			return CacheItemPtr<tkey, tvalue>(this, it);
+		}
+	}
+	template<typename tkey, typename tvalue>
+	bool CacheManager<tkey, tvalue>::GetItem(const tkey & k, Ptr& p)
+	{
+		Iter it = items.find(k);
+		if (it == items.end())
+			return false;
+		else
+		{
+			p = CacheItemPtr<tkey, tvalue>(this, it);
+			return true;
 		}
 	}
 
