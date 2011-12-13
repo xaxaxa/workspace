@@ -74,6 +74,11 @@ namespace sdfs
 		IStorage();
 		virtual ~IStorage();
 		//virtual Chunk GetChunk(CID id)=0;
+		inline bool HasChunk(CID id)
+		{
+			auto it=Chunks.find(id);
+			return !(it==Chunks.end());
+		}
 		virtual void BeginGetChunk(CID id)=0;
 		virtual void BeginPutChunk(CID id, Buffer b)=0;
 		virtual void BeginRemoveChunk(CID id)=0;

@@ -499,6 +499,10 @@ namespace sdfs
 					CID cid;
 					BlockID dir_bid;
 				} stat_info;
+				struct
+				{
+					BlockID bid;
+				} exists_info;
 				/*struct
 				 {
 				 struct stat* st;
@@ -513,6 +517,7 @@ namespace sdfs
 				{
 					void* name;
 					Byte namelen;
+					BlockID parent_bid;
 				} lookup_info;
 			};
 			//string name;
@@ -546,14 +551,16 @@ namespace sdfs
 		//begins the chunk request and invokes the correct function based on the ReqState
 		//when the operation completes. cache is queried first.
 
+		inline bool reply_on_failure(ReqInfo& inf)
+		{
+			if (inf.success) return false;
+			Reply(inf.id, -ENOENT);
+			return true;
+		}
 		//callbacks.
 		void stat_cb2(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
-			if (!inf.success)
-			{
-				Reply(inf.id, -ENOENT);
-				return;
-			}
+			if (reply_on_failure(inf)) return;
 			CBlock* bl = cptr.Get().GetBlock(inf.stat_info.dir_bid);
 			if (bl->Type != Block::BlockType::dirindex)
 			{
@@ -575,11 +582,7 @@ namespace sdfs
 		}
 		void stat_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
-			if (!inf.success)
-			{
-				Reply(inf.id, -ENOENT);
-				return;
-			}
+			if (reply_on_failure(inf)) return;
 			//struct stat* st = (struct stat*) inf.dataout;
 			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.stat_info.cid));
 			Block::indexhdr* ihdr;
@@ -600,18 +603,59 @@ namespace sdfs
 			beginGetChunk(SDFS_UNPACK_ID_CID(ihdr->parent), inf);
 			//inf.stat_info2.parentoffset = ihdr->entryoffset;
 		}
+		void exists_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
+		{
+			if (reply_on_failure(inf)) return;
+			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.exists_info.bid));
+			Reply(inf.id, bl == NULL ? -ENOENT : 1);
+		}
+		void lookup_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
+		{
+			if (reply_on_failure(inf)) return;
+			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.lookup_info.parent_bid));
+			if (bl == NULL || bl->Type != Block::BlockType::dirindex)
+			{
+				Reply(inf.id, -ENOENT);
+				return;
+			}
+			auto dir = (CBlock_dirindex*) bl;
+			string name((char*) inf.lookup_info.name, inf.lookup_info.namelen);
+			CBlock_dirindex::dirent* entry = dir->GetEntry(name);
+			if (entry == NULL)
+				Reply(inf.id, -ENOENT);
+			else Reply(inf.id, entry->hdr.indexblock);
+		}
 	public:
 		//filesystem methods.
 		void fs_stat(const ReqID& rid, CID id, struct stat& st)
 		{
 			ReqInfo inf;
+			inf.id = rid;
 			inf.stat_info.st = &st;
 			inf.s = ReqState(&stat_cb1, this);
 			inf.stat_info.cid = id;
 			beginGetChunk(SDFS_UNPACK_ID_CID(id), inf);
 		}
-		void fs_exists(const ReqID& rid, CID id, bool& b);
-		void fs_lookup(const ReqID& rid, CID parent, string name);
+		void fs_exists(const ReqID& rid, CID id, bool& b)
+		{
+			ReqInfo inf;
+			inf.id = rid;
+			inf.s = ReqState(&exists_cb1, this);
+			inf.exists_info.bid = SDFS_UNPACK_ID_BLOCKINDEX(id);
+			beginGetChunk(SDFS_UNPACK_ID_CID(id), inf);
+		}
+		void fs_lookup(const ReqID& rid, CID parent, string name)
+		{
+			ReqInfo inf;
+			inf.id = rid;
+			inf.s = ReqState(&lookup_cb1, this);
+			//inf.lookup_info
+			inf.lookup_info.parent_bid = SDFS_UNPACK_ID_BLOCKINDEX(parent);
+			inf.lookup_info.namelen = name.length();
+			inf.lookup_info.name = new Byte[inf.lookup_info.namelen];
+			memcpy(inf.lookup_info.name, name.data(), inf.lookup_info.namelen);
+			beginGetChunk(SDFS_UNPACK_ID_CID(parent), inf);
+		}
 		void fs_read(const ReqID& rid, CID id, void* buf, UInt length);
 		void fs_write(const ReqID& rid, CID id, void* buf, UInt length);
 	};
@@ -693,8 +737,8 @@ namespace sdfs
 					Block::indexent* e = (Block::indexent*) (ihdr + 1);
 					while ((void*) (e + 1) <= (blockend))
 					{
-						tmp->Entries.insert(
-								std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset, *e });
+						tmp->Entries.insert(std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset,
+								*e });
 						e++;
 					}
 					break;
