@@ -18,7 +18,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//TODO: block ID handling
 #ifndef STORAGEMANAGER_H_
 #define STORAGEMANAGER_H_
 #include <string>
@@ -107,7 +106,7 @@ namespace sdfs
 			BlockID ID;
 			BlockType Type;
 			UInt Size;
-			static const int minsize=sizeof(BlockID)+sizeof(BlockType);	//constexpr
+			static const int minsize=sizeof(BlockID)+sizeof(BlockType); //constexpr
 			inline void* GetData()
 			{
 				return (ID==0)?(void*)(((Byte*)this)+sizeof(ID)+sizeof(Type)):(void*)(this+1);
@@ -116,7 +115,8 @@ namespace sdfs
 		struct indexhdr
 		{
 			CID parent;
-			UInt entryoffset; //offset of the parent dirent from the block
+			//UInt entryoffset; //offset of the parent dirent from the block
+			//entry offset removed: the parent will be searched for the inode #.
 		};
 		struct inodehdr
 		{
@@ -130,7 +130,7 @@ namespace sdfs
 		};
 		struct dirent
 		{
-			struct inodehdr;
+			inodehdr inode;
 			CID indexblock;
 			CID firstblock; //NULL if it's a directory
 			Byte namelen;
@@ -234,7 +234,20 @@ namespace sdfs
 		};
 		Block::indexhdr hdr;
 		//vector<dirent> Entries;
-		map<string, dirent> Entries;
+		map<CID, dirent> Entries;
+		map<string, CID> Index;
+		inline dirent* GetEntry(CID child)
+		{
+			auto it = Entries.find(child);
+			if (it == Entries.end()) return NULL;
+			return &(*it).second;
+		}
+		inline dirent* GetEntry(string name)
+		{
+			auto it = Index.find(name);
+			if (it == Index.end()) return NULL;
+			return GetEntry((*it).second);
+		}
 		virtual UInt CalcSize()
 		{
 			UInt result = CBlock::CalcSize() + sizeof(hdr);
@@ -280,8 +293,7 @@ namespace sdfs
 				if (it == Entries.begin()) return nullret;
 				it--;
 			}
-			if (it == Entries.end()
-					|| offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
+			if (it == Entries.end() || offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
 				return nullret;
 			return pair<fileent&, bool> { (*it).second, true };
 			//return_null: return pair<fileent&, bool> { *((fileent*) NULL), false };
@@ -303,8 +315,7 @@ namespace sdfs
 			UInt result = CBlock::CalcSize();
 			map<string, string>::iterator it;
 			for (it = Items.begin(); it != Items.end(); it++)
-				result += (sizeof(Block::xattrent)) + (*it).first.length()
-						+ (*it).second.length();
+				result += (sizeof(Block::xattrent)) + (*it).first.length() + (*it).second.length();
 			return result;
 		}
 	};
@@ -314,7 +325,7 @@ namespace sdfs
 		/*CBlock* FirstBlock;
 		 CBlock* LastBlock;*/
 		map<BlockID, CBlock*> Blocks;
-		bool contig_id;		//whether the block ID's are verified to be contiguous.
+		bool contig_id; //whether the block ID's are verified to be contiguous.
 		CChunk()
 		{
 		}
@@ -433,22 +444,22 @@ namespace sdfs
 			while (it != Blocks.end());
 			contig_id = true;
 			id++;
-			if (id == 0) id = 1;		//in case of integer wrap-around
+			if (id == 0) id = 1; //in case of integer wrap-around
 			return id;
 		}
-		BlockID InsertBlock(CBlock* b) //ownership of b is transferred to this object
+		inline BlockID InsertBlock(CBlock* b) //ownership of b is transferred to this object
 		{
 			BlockID id = b->ID == 0 ? GetNextID() : b->ID;
 			Blocks.insert( { id, b });
 			return id;
 		}
-		CBlock* GetBlock(BlockID id)
+		inline CBlock* GetBlock(BlockID id)
 		{
 			auto it = Blocks.find(id);
 			if (it == Blocks.end()) return NULL;
 			return (*it).second;
 		}
-		void RemoveBlock(BlockID id)
+		inline void RemoveBlock(BlockID id)
 		{
 			auto it = Blocks.find(id);
 			if (it == Blocks.end()) return;
@@ -485,13 +496,14 @@ namespace sdfs
 				struct
 				{
 					struct stat* st;
-					BlockID bid;
+					CID cid;
+					BlockID dir_bid;
 				} stat_info;
-				struct
-				{
-					struct stat* st;
-					UInt parentoffset;
-				} stat_info2;
+				/*struct
+				 {
+				 struct stat* st;
+				 UInt parentoffset;
+				 } stat_info2;*/
 				struct
 				{
 					void* dataout;
@@ -535,6 +547,32 @@ namespace sdfs
 		//when the operation completes. cache is queried first.
 
 		//callbacks.
+		void stat_cb2(ReqInfo& inf, CID id, ChunkPtr cptr)
+		{
+			if (!inf.success)
+			{
+				Reply(inf.id, -ENOENT);
+				return;
+			}
+			CBlock* bl = cptr.Get().GetBlock(inf.stat_info.dir_bid);
+			if (bl->Type != Block::BlockType::dirindex)
+			{
+				Reply(inf.id, -ENOENT);
+				return;
+			}
+			CBlock_dirindex* dir = (CBlock_dirindex*) bl;
+			Block::inodehdr* inode = dir->GetEntry(inf.stat_info.cid)->hdr.inode;
+			struct stat* st = (struct stat*) inf.stat_info.st;
+			memset(st, 0, sizeof(st));
+			st->st_atim = inode->s_atime;
+			st->st_ctim = inode->s_ctime;
+			st->st_mtim = inode->s_mtime;
+			st->st_gid = inode->s_gid;
+			st->st_uid = inode->s_uid;
+			st->st_mode = inode->s_mode;
+			st->st_size = inode->s_size;
+			Reply(inf.id, 0);
+		}
 		void stat_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
 			if (!inf.success)
@@ -543,7 +581,7 @@ namespace sdfs
 				return;
 			}
 			//struct stat* st = (struct stat*) inf.dataout;
-			CBlock* bl = cptr.Get().GetBlock(inf.stat_info.bid);
+			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.stat_info.cid));
 			Block::indexhdr* ihdr;
 			switch (bl->Type)
 			{
@@ -557,7 +595,10 @@ namespace sdfs
 					Reply(inf.id, -ENOENT);
 					return;
 			}
-			inf.stat_info2.parentoffset = ihdr->entryoffset;
+			inf.s = ReqState(&stat_cb2, this);
+			inf.stat_info.dir_bid = SDFS_UNPACK_ID_BLOCKINDEX(ihdr->parent);
+			beginGetChunk(SDFS_UNPACK_ID_CID(ihdr->parent), inf);
+			//inf.stat_info2.parentoffset = ihdr->entryoffset;
 		}
 	public:
 		//filesystem methods.
@@ -566,7 +607,7 @@ namespace sdfs
 			ReqInfo inf;
 			inf.stat_info.st = &st;
 			inf.s = ReqState(&stat_cb1, this);
-			inf.stat_info.bid = SDFS_UNPACK_ID_BLOCKINDEX(id);
+			inf.stat_info.cid = id;
 			beginGetChunk(SDFS_UNPACK_ID_CID(id), inf);
 		}
 		void fs_exists(const ReqID& rid, CID id, bool& b);
@@ -579,8 +620,7 @@ namespace sdfs
 		size_t i;
 		for (i = 0; i < Stores.size(); i++)
 		{
-			Stores[i]->CB = IStorage::Callback(&sdfs::StorageManager<ReqID>::cb,
-					this);
+			Stores[i]->CB = IStorage::Callback(&sdfs::StorageManager<ReqID>::cb, this);
 		}
 	}
 	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::~StorageManager()
@@ -632,9 +672,9 @@ namespace sdfs
 							continue;
 						}
 						string s(name, de->namelen);
-						tmp->Entries.insert(
-								std::pair<string, CBlock_dirindex::dirent> { s,
-										CBlock_dirindex::dirent(*de) });
+						tmp->Entries.insert(pair<CID, CBlock_dirindex::dirent> { de->indexblock,
+								CBlock_dirindex::dirent(*de) });
+						tmp->Index.insert(pair<string, CID> { s, de->indexblock });
 						de = (Block::dirent*) (name + de->namelen);
 					}
 					break;
@@ -654,8 +694,7 @@ namespace sdfs
 					while ((void*) (e + 1) <= (blockend))
 					{
 						tmp->Entries.insert(
-								std::pair<FILELEN_T, CBlock_fileindex::fileent> {
-										e->offset, *e });
+								std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset, *e });
 						e++;
 					}
 					break;
@@ -711,15 +750,25 @@ namespace sdfs
 		vector<IStorage*> tmp;
 		for (i = 0; i < Stores.size(); i++)
 		{
-			if (Stores[i]->Initialized
-					&& (Stores[i]->Chunks.find(id) != Stores[i]->Chunks.end()))
+			if (Stores[i]->Initialized && (Stores[i]->Chunks.find(id) != Stores[i]->Chunks.end()))
 			{
 				tmp.push_back(Stores[i]);
 			}
 		}
 		IStorage* stor;
 		size_t s = tmp.size();
-		if (s <= 0) return;
+		if (s <= 0)
+		{
+			auto range = curReqs.equal_range(id);
+
+			for (decltype(range.first) it(range.first); it != range.second; it++)
+			{
+				ReqInfo& inf1((*it).second);
+				inf1.success = false;
+				CALL(inf1.s, inf1, id, ChunkPtr());
+			}
+			curReqs.erase(id);
+		}
 		if (s == 1)
 		{
 			stor = tmp[0];
@@ -727,8 +776,7 @@ namespace sdfs
 		}
 		{
 			boost::uniform_int<> r(0, tmp.size());
-			boost::variate_generator<decltype(rng), boost::uniform_int<> > dice(rng,
-					r);
+			boost::variate_generator<decltype(rng), boost::uniform_int<> > dice(rng, r);
 			stor = tmp[dice()];
 		}
 		aaaaa: stor->BeginGetChunk(id);
@@ -778,7 +826,6 @@ namespace sdfs
 		bool requested = it != curReqs.end();
 		curReqs.insert( { id, inf });
 		if (!requested) requestChunk(id);
-
 	}
 }
 

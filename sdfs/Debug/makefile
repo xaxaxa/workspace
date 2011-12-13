@@ -9,9 +9,6 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
--include cplib/subdir.mk
--include cplib/Release/subdir.mk
--include cplib/Debug/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
