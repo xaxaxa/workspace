@@ -209,9 +209,9 @@ namespace sdfs
 		CBlock()
 		{
 		}
-		virtual UInt CalcSize()
+		virtual UInt CalcSize(bool onlyblock)
 		{
-			return ID == 0 ? Block::blockhdr::minsize : sizeof(Block::blockhdr);
+			return onlyblock ? Block::blockhdr::minsize : sizeof(Block::blockhdr);
 		}
 		virtual ~CBlock()
 		{
@@ -248,9 +248,9 @@ namespace sdfs
 			if (it == Index.end()) return NULL;
 			return GetEntry((*it).second);
 		}
-		virtual UInt CalcSize()
+		virtual UInt CalcSize(bool onlyblock)
 		{
-			UInt result = CBlock::CalcSize() + sizeof(hdr);
+			UInt result = CBlock::CalcSize(onlyblock) + sizeof(hdr);
 			//decltype(Entries.begin()) it;
 			for (auto it = Entries.begin(); it != Entries.end(); it++)
 				result += (*it).second.CalcSize();
@@ -274,9 +274,9 @@ namespace sdfs
 		Block::indexhdr hdr;
 		//vector<fileent> Entries;
 		map<FILELEN_T, fileent> Entries;
-		virtual UInt CalcSize()
+		virtual UInt CalcSize(bool onlyblock)
 		{
-			UInt result = CBlock::CalcSize() + sizeof(hdr);
+			UInt result = CBlock::CalcSize(onlyblock) + sizeof(hdr);
 			//size_t i;
 			//for (i = 0; i < Entries.size(); i++)
 			//for (auto it = Entries.begin(); it != Entries.end(); it++)
@@ -302,17 +302,17 @@ namespace sdfs
 	struct CBlock_filedata: public CBlock
 	{
 		Buffer Data;
-		virtual UInt CalcSize()
+		virtual UInt CalcSize(bool onlyblock)
 		{
-			return CBlock::CalcSize() + (UInt) Data.Length;
+			return CBlock::CalcSize(onlyblock) + (UInt) Data.Length;
 		}
 	};
 	struct CBlock_xattrlist: public CBlock
 	{
 		map<string, string> Items;
-		virtual UInt CalcSize()
+		virtual UInt CalcSize(bool onlyblock)
 		{
-			UInt result = CBlock::CalcSize();
+			UInt result = CBlock::CalcSize(onlyblock);
 			map<string, string>::iterator it;
 			for (it = Items.begin(); it != Items.end(); it++)
 				result += (sizeof(Block::xattrent)) + (*it).first.length() + (*it).second.length();
@@ -339,9 +339,10 @@ namespace sdfs
 			 result += b->CalcSize();
 			 b = b->Next;
 			 }*/
+			bool b = Blocks.size() == 1;
 			for (auto it = Blocks.begin(); it != Blocks.end(); it++)
 			{
-				result += (*it).second->CalcSize();
+				result += (*it).second->CalcSize(b);
 			}
 			return result;
 		}
@@ -535,6 +536,7 @@ namespace sdfs
 		//otherwise, returns zero.
 
 		vector<IStorage*> Stores;
+		multimap<CID, IStorage*> temp_ignore;
 		StorageManager();
 		virtual ~StorageManager();
 
@@ -544,8 +546,16 @@ namespace sdfs
 		//map<CID, ChunkData> buffers;
 		void ParseChunk(const ChunkData& data, CChunk& c);
 
+		const double fillfactor=0.9;//maximum amount that a chunk can be filled until no more file data
+		//can be stored in it. metadata can still be stored in it though.
+
+		ChunkPtr GetUnfilledChunk(UInt minSpace)
+		{
+			//if(minSpace==0)minspace=(int)();
+
+		}
 	protected:
-		inline void requestChunk(CID id);
+		inline bool requestChunk(CID id);
 		void cb(const IStorage::CallbackInfo& inf);
 		inline void beginGetChunk(CID id, const ReqInfo& inf);
 		//begins the chunk request and invokes the correct function based on the ReqState
@@ -623,7 +633,8 @@ namespace sdfs
 			CBlock_dirindex::dirent* entry = dir->GetEntry(name);
 			if (entry == NULL)
 				Reply(inf.id, -ENOENT);
-			else Reply(inf.id, entry->hdr.indexblock);
+			else
+				Reply(inf.id, entry->hdr.indexblock);
 		}
 	public:
 		//filesystem methods.
@@ -737,8 +748,8 @@ namespace sdfs
 					Block::indexent* e = (Block::indexent*) (ihdr + 1);
 					while ((void*) (e + 1) <= (blockend))
 					{
-						tmp->Entries.insert(std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset,
-								*e });
+						tmp->Entries.insert(
+								std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset, *e });
 						e++;
 					}
 					break;
@@ -787,32 +798,24 @@ namespace sdfs
 		while (b.Next());
 	}
 
-	template<class ReqID, class LockObj> inline void StorageManager<ReqID, LockObj>::requestChunk(
+	template<class ReqID, class LockObj> inline bool StorageManager<ReqID, LockObj>::requestChunk(
 			CID id)
 	{
 		size_t i;
 		vector<IStorage*> tmp;
 		for (i = 0; i < Stores.size(); i++)
 		{
-			if (Stores[i]->Initialized && (Stores[i]->Chunks.find(id) != Stores[i]->Chunks.end()))
+			if (Stores[i]->Initialized && Stores[i]->HasChunk(id))
 			{
+				auto range1 = temp_ignore.equal_range(id);
+				for (decltype(range1.first) it(range1.first); it != range1.second; it++)
+					if ((*it).second == Stores[i]) continue;
 				tmp.push_back(Stores[i]);
 			}
 		}
 		IStorage* stor;
 		size_t s = tmp.size();
-		if (s <= 0)
-		{
-			auto range = curReqs.equal_range(id);
-
-			for (decltype(range.first) it(range.first); it != range.second; it++)
-			{
-				ReqInfo& inf1((*it).second);
-				inf1.success = false;
-				CALL(inf1.s, inf1, id, ChunkPtr());
-			}
-			curReqs.erase(id);
-		}
+		if (s <= 0) return false;
 		if (s == 1)
 		{
 			stor = tmp[0];
@@ -824,18 +827,19 @@ namespace sdfs
 			stor = tmp[dice()];
 		}
 		aaaaa: stor->BeginGetChunk(id);
+		return true;
 	}
 
 	template<class ReqID, class LockObj> void StorageManager<ReqID, LockObj>::cb(
 			const IStorage::CallbackInfo & inf)
 	{
 		Lock lck(l);
-		//put into cache
-
 		auto range = curReqs.equal_range(inf.cid);
 
 		if (!inf.success)
 		{
+			temp_ignore.insert(pair<CID, IStorage*> { inf.cid, &inf.source });
+			if (requestChunk(inf.cid)) return;
 			for (decltype(range.first) it(range.first); it != range.second; it++)
 			{
 				ReqInfo& inf1((*it).second);
@@ -844,6 +848,8 @@ namespace sdfs
 			}
 			curReqs.erase(inf.cid);
 		}
+
+		//put into cache
 		ChunkPtr ptr = cache.GetItem(inf.cid);
 		ptr.Item->flags |= CacheFlags::Initialized;
 		ptr.Get().Clear();
@@ -868,8 +874,16 @@ namespace sdfs
 		}
 		auto it = this->curReqs.find(id);
 		bool requested = it != curReqs.end();
-		curReqs.insert( { id, inf });
-		if (!requested) requestChunk(id);
+		if (!requested)
+		{
+			if (requestChunk(id))
+				curReqs.insert( { id, inf });
+			else
+			{
+				inf.success = false;
+				CALL(inf.s, inf, id, ChunkPtr());
+			}
+		}
 	}
 }
 

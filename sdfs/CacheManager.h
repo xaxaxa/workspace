@@ -85,8 +85,7 @@ namespace sdfs
 			m = x.m;
 			it = x.it;
 		}
-		inline CacheItemPtr(CacheManager<k, v>* m
-				, typename CacheManager<k, v>::Iter it)
+		inline CacheItemPtr(CacheManager<k, v>* m , typename CacheManager<k, v>::Iter it)
 		{
 			Item = &(*it).second;
 			Item->refcount++;
@@ -134,6 +133,10 @@ namespace sdfs
 			return *this;
 		}
 		inline void SetDirty(bool dirty);
+		inline bool IsNull()
+		{
+			return Item == NULL;
+		}
 	};
 	enum class NotifyType
 :	Byte
