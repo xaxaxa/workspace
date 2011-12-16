@@ -547,12 +547,12 @@ namespace sdfs
 		void ParseChunk(const ChunkData& data, CChunk& c);
 
 		const double fillfactor=0.9;//maximum amount that a chunk can be filled until no more file data
-		//can be stored in it. metadata can still be stored in it though.
+		//can be stored in it(to avoid excessive fragmentation). metadata can still be stored in it though.
 
 		ChunkPtr GetUnfilledChunk(UInt minSpace)
 		{
 			//if(minSpace==0)minspace=(int)();
-
+			Lock lck(l);
 		}
 	protected:
 		inline bool requestChunk(CID id);
