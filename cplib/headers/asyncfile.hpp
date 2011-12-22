@@ -19,7 +19,7 @@ namespace xaxaxa
 	namespace IO
 	{
 		typedef int FILESTREAM;
-#define CreateFile open
+		#define CreateFile open
 		struct File
 		{
 			FILESTREAM _f;
@@ -33,6 +33,8 @@ namespace xaxaxa
 			inline File()
 			{
 			}
+			virtual inline ~File()
+			{}
 			inline File(const char *path, int flags)
 			{
 				_f = CreateFile(path,flags);
@@ -56,14 +58,14 @@ namespace xaxaxa
 				//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 				//this->autoClose=autoClose;
 			}
-			inline void Close()
+			inline virtual void Close()
 			{
 				//throw Exception();
 				dbgprint("file " << _f << " closed");
 				if (_f != -1) close(_f);
 				_f = -1;
 			}
-			inline Int Write(Buffer buf)
+			inline virtual Int Write(Buffer buf)
 			{
 				Int tmp = write(_f, buf.Data, buf.Length);
 				if (tmp < 0)
@@ -71,7 +73,7 @@ namespace xaxaxa
 				else
 					return tmp;
 			}
-			inline Int Read(Buffer buf)
+			inline virtual Int Read(Buffer buf)
 			{
 				Int tmp = read(_f, buf.Data, buf.Length);
 				if (tmp < 0)
@@ -79,6 +81,8 @@ namespace xaxaxa
 				else
 					return tmp;
 			}
+			virtual void Flush()
+			{}
 			inline Int GetFlags()
 			{
 				return fcntl(_f, F_GETFL, 0);

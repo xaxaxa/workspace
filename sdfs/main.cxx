@@ -51,7 +51,7 @@ void test1()
 {
 	StringBuilder sb;
 	Buffer b(4096);
-	File f("chunk1", 0);
+	File f("/home/xaxaxa/chunk1", 0);
 	while (int br = f.Read(b))
 	{
 		sb.Append(b.SubBuffer(0, br));
@@ -60,6 +60,6 @@ void test1()
 	StorageManager<> m;
 	CChunk c;
 	m.ParseChunk(cd, c);
-	throw Exception("breakpoint");
+	//throw Exception("breakpoint");
 }
 

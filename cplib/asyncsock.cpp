@@ -4,16 +4,6 @@
 #include <sys/socket.h>
 #include <errno.h>
 //#define dbgprint(msg) cout << msg
-/*
- * TODO
- *
- * BUG:
- *
- * SIGPIPE on send() and recv()
- *
- *
- *
- */
 namespace xaxaxa
 {
 	namespace Sockets

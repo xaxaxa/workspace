@@ -293,7 +293,8 @@ namespace sdfs
 				if (it == Entries.begin()) return nullret;
 				it--;
 			}
-			if (it == Entries.end() || offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
+			if (it == Entries.end()
+					|| offset >= (*it).second.hdr.offset + (*it).second.hdr.len)
 				return nullret;
 			return pair<fileent&, bool> { (*it).second, true };
 			//return_null: return pair<fileent&, bool> { *((fileent*) NULL), false };
@@ -315,7 +316,8 @@ namespace sdfs
 			UInt result = CBlock::CalcSize(onlyblock);
 			map<string, string>::iterator it;
 			for (it = Items.begin(); it != Items.end(); it++)
-				result += (sizeof(Block::xattrent)) + (*it).first.length() + (*it).second.length();
+				result += (sizeof(Block::xattrent)) + (*it).first.length()
+						+ (*it).second.length();
 			return result;
 		}
 	};
@@ -545,14 +547,15 @@ namespace sdfs
 		typedef typename multimap<CID, ReqInfo>::iterator reqIter;
 		//map<CID, ChunkData> buffers;
 		void ParseChunk(const ChunkData& data, CChunk& c);
-
-		const double fillfactor=0.9;//maximum amount that a chunk can be filled until no more file data
+		UInt avgChunkSize;
+		double fillfactor;//maximum amount that a chunk can be filled until no more file data
 		//can be stored in it(to avoid excessive fragmentation). metadata can still be stored in it though.
 
-		ChunkPtr GetUnfilledChunk(UInt minSpace)
+		ChunkPtr GetUnfilledChunk(UInt minSpace, UInt maxSpace)
 		{
-			//if(minSpace==0)minspace=(int)();
+			if (minSpace == 0) minSpace = (int) ((1.0 - fillfactor) * avgChunkSize);
 			Lock lck(l);
+
 		}
 	protected:
 		inline bool requestChunk(CID id);
@@ -594,7 +597,8 @@ namespace sdfs
 		{
 			if (reply_on_failure(inf)) return;
 			//struct stat* st = (struct stat*) inf.dataout;
-			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.stat_info.cid));
+			CBlock* bl = cptr.Get().GetBlock(
+					SDFS_UNPACK_ID_BLOCKINDEX(inf.stat_info.cid));
 			Block::indexhdr* ihdr;
 			switch (bl->Type)
 			{
@@ -616,13 +620,15 @@ namespace sdfs
 		void exists_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
 			if (reply_on_failure(inf)) return;
-			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.exists_info.bid));
+			CBlock* bl = cptr.Get().GetBlock(
+					SDFS_UNPACK_ID_BLOCKINDEX(inf.exists_info.bid));
 			Reply(inf.id, bl == NULL ? -ENOENT : 1);
 		}
 		void lookup_cb1(ReqInfo& inf, CID id, ChunkPtr cptr)
 		{
 			if (reply_on_failure(inf)) return;
-			CBlock* bl = cptr.Get().GetBlock(SDFS_UNPACK_ID_BLOCKINDEX(inf.lookup_info.parent_bid));
+			CBlock* bl = cptr.Get().GetBlock(
+					SDFS_UNPACK_ID_BLOCKINDEX(inf.lookup_info.parent_bid));
 			if (bl == NULL || bl->Type != Block::BlockType::dirindex)
 			{
 				Reply(inf.id, -ENOENT);
@@ -670,12 +676,15 @@ namespace sdfs
 		void fs_read(const ReqID& rid, CID id, void* buf, UInt length);
 		void fs_write(const ReqID& rid, CID id, void* buf, UInt length);
 	};
-	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::StorageManager()
+	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::StorageManager() :
+			fillfactor(0.6)
 	{
+		avgChunkSize = 1024 * 1024;
 		size_t i;
 		for (i = 0; i < Stores.size(); i++)
 		{
-			Stores[i]->CB = IStorage::Callback(&sdfs::StorageManager<ReqID>::cb, this);
+			Stores[i]->CB = IStorage::Callback(&sdfs::StorageManager<ReqID>::cb,
+					this);
 		}
 	}
 	template<class ReqID, class LockObj> StorageManager<ReqID, LockObj>::~StorageManager()
@@ -727,8 +736,9 @@ namespace sdfs
 							continue;
 						}
 						string s(name, de->namelen);
-						tmp->Entries.insert(pair<CID, CBlock_dirindex::dirent> { de->indexblock,
-								CBlock_dirindex::dirent(*de) });
+						tmp->Entries.insert(
+								pair<CID, CBlock_dirindex::dirent> { de->indexblock,
+										CBlock_dirindex::dirent(*de) });
 						tmp->Index.insert(pair<string, CID> { s, de->indexblock });
 						de = (Block::dirent*) (name + de->namelen);
 					}
@@ -749,7 +759,8 @@ namespace sdfs
 					while ((void*) (e + 1) <= (blockend))
 					{
 						tmp->Entries.insert(
-								std::pair<FILELEN_T, CBlock_fileindex::fileent> { e->offset, *e });
+								std::pair<FILELEN_T, CBlock_fileindex::fileent> {
+										e->offset, *e });
 						e++;
 					}
 					break;
@@ -808,7 +819,8 @@ namespace sdfs
 			if (Stores[i]->Initialized && Stores[i]->HasChunk(id))
 			{
 				auto range1 = temp_ignore.equal_range(id);
-				for (decltype(range1.first) it(range1.first); it != range1.second; it++)
+				for (decltype(range1.first) it(range1.first); it != range1.second;
+						it++)
 					if ((*it).second == Stores[i]) continue;
 				tmp.push_back(Stores[i]);
 			}
@@ -823,7 +835,8 @@ namespace sdfs
 		}
 		{
 			boost::uniform_int<> r(0, tmp.size());
-			boost::variate_generator<decltype(rng), boost::uniform_int<> > dice(rng, r);
+			boost::variate_generator<decltype(rng), boost::uniform_int<> > dice(rng,
+					r);
 			stor = tmp[dice()];
 		}
 		aaaaa: stor->BeginGetChunk(id);

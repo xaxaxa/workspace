@@ -3,6 +3,9 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+O_SRCS += \
+../cplib.o 
+
 CPP_SRCS += \
 ../asyncfile.cpp \
 ../asyncsock.cpp \

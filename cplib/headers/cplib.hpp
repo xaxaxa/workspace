@@ -37,6 +37,8 @@
 #include <boost/bind.hpp>
 #include <map>
 #include <list>
+#include <set>
+#include <errno.h>
 
 //#define FUNCTION(RETVAL,...) struct{RETVAL(*f)(void*,__VA_ARGS__);void* obj;}
 //RETVAL(*)(__VA_ARGS__)
@@ -227,7 +229,14 @@ struct STRING
 	}
 	STRING(char* c)
 	{
-		STRING(c,strlen(c));
+		//STRING(c,strlen(c));
+		this->c=c;
+		length=strlen(c);
+	}
+	STRING(const char* c)
+	{
+		this->c=(char*)c;
+		length=strlen(c);
 	}
 	STRING()
 	{}
@@ -420,8 +429,8 @@ public:
 template<class T> class __event: public Object
 {
 public:
-	map<T,void*> handlers;
-	typedef typename map<T,void*>::iterator iter;
+	set<T> handlers;
+	typedef typename set<T>::iterator iter;
 	/*inline void* newiter()
 	{
 		return new iter(handlers.begin());
@@ -448,7 +457,7 @@ public:
 	}*/
 	inline void addhandler(T delegate)
 	{
-		handlers.insert(pair<T,void*>(delegate,NULL));
+		handlers.insert(delegate);
 	}
 	inline void removehandler(T delegate)
 	{
@@ -466,15 +475,15 @@ public:
 #define EVENT(DEL) __event<DEL>
 
 #define RAISEEVENT(NAME,...) \
-		{typename decltype(NAME)::iter gjfdjdsghddjh;\
-		for(gjfdjdsghddjh=(NAME).handlers.begin();gjfdjdsghddjh!=(NAME).handlers.end();gjfdjdsghddjh++)\
-		{CALL(*gjfdjdsghddjh,__VA_ARGS__);}}
+		{\
+		for(auto gjfdjdsghddjh=(NAME).handlers.begin();gjfdjdsghddjh!=(NAME).handlers.end();gjfdjdsghddjh++)\
+		{CALL((*gjfdjdsghddjh),__VA_ARGS__);}}
 #define ADDHANDLER(NAME,DEL) (NAME).addhandler(DEL)
 #define REMOVEHANDLER(NAME,DEL) (NAME).removehandler(DEL)
 class Stream: public Object
 {
 public:
-	virtual int Read(Buffer buf)=0;
+	virtual Int Read(Buffer buf)=0;
 	virtual void Write(Buffer buf)=0;
 	virtual void Flush()=0;
 	virtual void Close()=0;
@@ -492,7 +501,7 @@ public:
 		Write(buf);
 		FUNCTION_CALL(cb,this);
 	}
-	virtual int EndRead()
+	virtual Int EndRead()
 	{
 		return __tmp;
 	}
@@ -500,6 +509,19 @@ public:
 	{
 
 	}
+};
+class NullStream: public Stream
+{
+	virtual Int Read(Buffer buf)
+	{
+		return 0;
+	}
+	virtual void Write(Buffer buf)
+	{}
+	virtual void Flush()
+	{}
+	virtual void Close()
+	{}
 };
 class StringBuilder: public Stream
 {
@@ -536,6 +558,7 @@ public:
 	virtual void Flush();
 	virtual void Close();
 };
+
 class StreamReader: public Stream
 {
 public:
@@ -544,15 +567,21 @@ public:
 	int buf_size;
 	int buf_index;
 	int buf_length;
-	StreamReader(Stream* s, int buffersize = 4096);
+	StreamReader(Stream& s, int buffersize = 4096);
 	virtual ~StreamReader();
 	virtual int Read(Buffer buf);
 	virtual int Read(StringBuilder& buf, int length);
 	virtual int Read(StringBuilder& buf, const char* delimitors,
 			int delimitor_count);
 	//virtual int read(Stream *buf,int length);
+
+	//skips over any extra delimitors
 	virtual int Read(Stream& buf, const char* delimitors,
 			int delimitor_count);
+	//looks for delimitors in the order they are specified.
+	//delimitors should NOT be null terminated
+	virtual int Read(Stream& buf, const STRING* delimitors,
+				int delimitor_count);
 	virtual int ReadLine(StringBuilder& buf);
 
 	virtual void Write(Buffer buf);
