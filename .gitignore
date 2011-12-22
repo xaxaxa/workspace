@@ -1,5 +1,6 @@
 /.metadata
 *.o
+*.gch
 *.so
 a.out
 *~
