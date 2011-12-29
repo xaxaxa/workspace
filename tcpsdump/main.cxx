@@ -21,7 +21,7 @@
  * 
  */
 
-#define WARNLEVEL 6
+#define WARNLEVEL 3
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,8 +37,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sstream>
+#include <cplib/cplib.hpp>
+#include <pthread.h>
+#include <time.h>
+
 using namespace std;
 using namespace net;
+using namespace xaxaxa;
 
 void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
 void cb1(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
@@ -47,10 +52,12 @@ void cb3(void* user, const packet& p);
 protostack pstack;
 int linktype;
 protocols::protoint* p_int;
+pcap_t* cap;
+EventQueue<Buffer> q;
+void* processorThread(void* v);
 int main(int argc, char **argv)
 {
 	char errbuf[PCAP_ERRBUF_SIZE];
-	pcap_t* cap;
 	if((cap=pcap_create(argv[1],errbuf))==NULL)
 	{
 		cerr << errbuf;
@@ -59,7 +66,7 @@ int main(int argc, char **argv)
 	pcap_set_promisc(cap,1);
 	pcap_set_timeout(cap,500);
 	pcap_set_snaplen(cap,65535);
-	pcap_set_buffer_size(cap,1024*1024*32);
+	pcap_set_buffer_size(cap,1024*1024*8);
 	int ret=pcap_activate(cap);
 	if(ret&PCAP_ERROR)
 	{
@@ -84,27 +91,26 @@ int main(int argc, char **argv)
 	{
 		case DLT_EN10MB:
 		case DLT_IEEE802:
+			WARN(6,"selected protocols::ether as initial protocol interpreter");
 			p_int=new protocols::ether();
 			break;
 		case DLT_LINUX_SLL:
+			WARN(6,"selected protocols::sll as initial protocol interpreter");
 			p_int=new protocols::sll();
 			break;
 		case DLT_RAW:
 		default:
+			WARN(6,"selected protocols::ip as initial protocol interpreter");
 			p_int=NULL;
 	}
 	cerr << "linktype is "<<linktype<<endl;
 	setuid(getuid()); //drop root privileges
-	if(p_int==NULL)
-	{
-		pcap_loop(cap,-1,cb,NULL);
-	}
-	else
-	{
-		p_int->dataout+=protocols::protoint::datadelegate(&cb2,NULL);
-		pcap_loop(cap,-1,cb1,NULL);
-	}
 	
+	if(p_int!=NULL)
+		p_int->dataout+=protocols::protoint::datadelegate(&cb2,NULL);
+	pthread_t thr;
+	pthread_create(&thr,NULL,processorThread,NULL);
+	pcap_loop(cap,-1,cb,NULL);
 	
 	return 0;
 }
@@ -113,21 +119,65 @@ void chkpacket(const pcap_pkthdr *header, const u_char *bytes)
 	if(header->caplen < header->len)
 		cerr << "warning: packet truncated from " << header->len << " to " << header->caplen << endl;
 }
+UInt pktrecv=0;
+UInt pktdrp1=0;
+UInt pktdrp2=0;
+void chkdrop()
+{
+	pcap_stat st;
+	if(pcap_stats(cap,&st)==0)
+	{
+		if(st.ps_drop>pktdrp1 || st.ps_ifdrop>pktdrp2)
+		{
+			WARN(1,"PACKET DROP DETECTED: kernel="<<st.ps_drop-pktdrp1<<" interface="<<st.ps_ifdrop-pktdrp2<<" received="<<st.ps_recv-pktrecv<<"; TOTAL: kernel="<<st.ps_drop<<" interface="<<st.ps_ifdrop<<" received="<<st.ps_recv);
+			pktdrp1=st.ps_drop;pktdrp2=st.ps_ifdrop;pktrecv=st.ps_recv;
+		}
+	}
+}
 void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes)
 {
 	//from pcap
 	chkpacket(header,bytes);
 	//write(1,bytes,header->caplen);
-	packet p={NULL,0x0800,NULL,Buffer((void*)bytes,header->caplen),NULL};
-	pstack.processPacket(p);
+	//packet p={NULL,0x0800,NULL,Buffer((void*)bytes,header->caplen),NULL};
+	//pstack.processPacket(p);
+	Buffer tmpb(header->caplen);
+	memcpy(tmpb.Data,bytes,tmpb.Length);
+	q.Append(tmpb);
 }
-void cb1(u_char *user, const pcap_pkthdr *header, const u_char *bytes)
+
+void processPacket(Buffer b)
 {
-	//from pcap
-	chkpacket(header,bytes);
-	packet p={NULL,linktype,NULL,Buffer((void*)bytes,header->caplen),NULL};
-	p_int->putdata(p);
+	if(p_int==NULL)
+	{
+		packet p={NULL,0x0800,NULL,b,NULL};
+		pstack.processPacket(p);
+	}
+	else
+	{
+		packet p={NULL,linktype,NULL,b,NULL};
+		p_int->putdata(p);
+	}
 }
+void* processorThread(void* v)
+{
+	time_t t=time(NULL);
+	WARN(2,"started I/O thread");
+	while(true)
+	{
+		Buffer b=q.Dequeue();
+		//WARN(3,"I/O thread received packet");
+		processPacket(b);
+		time_t tmp=time(NULL);
+		if(tmp>t)
+		{
+			chkdrop();
+			t=tmp;
+		}
+	}
+	return NULL;
+}
+
 void cb2(void* user, const packet& p)
 {
 	//from datalink processor
@@ -161,7 +211,7 @@ void cb3(void* user, const packet& p)
 	{
 		if(pack->protocol->getConnection(p,conn))break;
 		pack=pack->parent;
-		if(pack==NULL)return;
+		if(pack==NULL || pack->protocol==NULL)return;
 	}
 	//write(1,p.data.Data,p.data.Length);
 	files_iter it=files.find(conn);

@@ -29,31 +29,56 @@ using namespace std;
 using namespace xaxaxa;
 int main(int argc, char **argv)
 {
-	string ifile,ofile;
 	if(argc<2)
 	{
-		cout << "rmhttphdr - remove HTTP headers from file." << endl << "usage: rmhttphdr SRCFILE [DSTFILE]" << endl << "if dstfile is omitted the source file will be overwritten." << endl;
+		cout << "rmhttphdr - remove HTTP headers from file." << endl << "usage: rmhttphdr [-o DSTFILE] SRCFILE1 [SRCFILE2 ... SRCFILEN]" << endl << "if dstfile is omitted the source file will be overwritten." << endl;
 		return 0;
 	}
-	ifile=string(argv[1]);
-	if(argc>=3)ofile=string(argv[2]);
-	else ofile=ifile;
-	
-	FileStream fs1(fopen(ifile.c_str(),"rb"));
-	StreamReader sr(fs1);
-	NullStream ns;
-	int tmp1;
-	while((tmp1=sr.Read(ns,new STRING[2]{"\r\n","\n"},2))>0);
-	if(tmp1<0)
+	Stream* out=NULL;
+	const char* outfile=NULL;
+	vector<const char*> files;
+	for(int i=1;i<argc;i++)
 	{
-		cerr << ifile << ": could not find http header or there's no content" << endl;
-		return 1;
+		if(strcmp(argv[i],"-o")==0)
+		{
+			if(argc<=++i)
+				out=new FileStream(fdopen(1,"ab"));
+			else outfile=argv[i];
+			continue;
+		}
+		files.push_back(argv[i]);
 	}
-	int br;
-	Buffer b(4096);
-	unlink(ofile.c_str());
-	FileStream fs2(fopen(ofile.c_str(),"wb"));
-	while((br=sr.Read(b))>0)fs2.Write(b.SubBuffer(0,br));
-	return 0;
+	
+	int ret=0;
+	for(unsigned int i=0;i<files.size();i++)
+	{
+		FileStream fs1(fopen(files[i],"rb"));
+		StreamReader sr(fs1);
+		NullStream ns;
+		int tmp1;
+		while((tmp1=sr.Read(ns,new STRING[2]{"\r\n","\n"},2))>0);
+		if(tmp1<0)
+		{
+			cerr << files[i] << ": could not find http header or there's no content" << endl;
+			ret=1;
+			continue;
+		}
+		int br;
+		Buffer b(4096);
+		if(outfile!=NULL)
+		{
+			unlink(outfile);
+			out=new FileStream(fopen(outfile,"wb"));
+			outfile=NULL;
+		}
+		Stream* out1=out;
+		if(out1==NULL)
+		{
+			unlink(files[i]);
+			out1=new FileStream(fopen(files[i],"wb"));
+		}
+		while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
+	}
+	return ret;
 }
 

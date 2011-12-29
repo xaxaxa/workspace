@@ -28,7 +28,7 @@
 #include <cplib/cplib.hpp>
 #include "IStorage.h"
 #include "CacheManager.h"
-#include "Lock.h"
+#include <cplib/lock.hpp>
 #include <boost/random.hpp>
 #define FUSE_USE_VERSION 27
 #include <fuse/fuse_lowlevel.h>
@@ -528,7 +528,7 @@ namespace sdfs
 		};
 		boost::mt19937 rng;
 		LockObj l;
-		typedef sdfs::Lock<LockObj> Lock;
+		typedef xaxaxa::Lock<LockObj> Lock;
 		//typedef unsigned long ReqID;
 		DELEGATE(void,Callback,ReqID,int);EVENT(Callback) CB;
 		void Reply(ReqID rid, int retv);
