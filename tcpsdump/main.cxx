@@ -141,8 +141,9 @@ void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes)
 	//write(1,bytes,header->caplen);
 	//packet p={NULL,0x0800,NULL,Buffer((void*)bytes,header->caplen),NULL};
 	//pstack.processPacket(p);
-	Buffer tmpb(header->caplen);
-	memcpy(tmpb.Data,bytes,tmpb.Length);
+	void* mem=malloc(header->caplen);
+	Buffer tmpb(mem,header->caplen);
+	memcpy(mem,bytes,header->caplen);
 	q.Append(tmpb);
 }
 
@@ -174,6 +175,7 @@ void* processorThread(void* v)
 			chkdrop();
 			t=tmp;
 		}
+		free(b.Data);
 	}
 	return NULL;
 }
