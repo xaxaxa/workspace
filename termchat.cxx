@@ -164,7 +164,7 @@ struct client
 		{
 			writing=false;
 			written_bytes=0;
-			write_pos=databuf_position-512;//send 512 bytes of conversation history
+			write_pos=databuf_position-1024*4;//send 4K bytes of conversation history
 			if(write_pos<0)write_pos=0;
 			stream->BeginRead(readbuf,Stream::Callback(cb_read,this));
 			beginwrite();
