@@ -350,7 +350,9 @@ namespace xaxaxa
 			}
 			virtual void Write(Buffer buf)
 			{
-				socket.Send(buf,0);
+				int bw=0;
+				int off=0;
+				while(off<buf.Length && (bw=socket.Send(buf.SubBuffer(off)))>0)off+=bw;
 			}
 			virtual void Flush()
 			{

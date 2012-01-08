@@ -37,9 +37,8 @@ namespace xaxaxa
 		return __Buffer_bytes_allocated;
 	}
 #endif
-	FileStream::FileStream(FILE* f)
+	FileStream::FileStream(File f):f(f)
 	{
-		this->f = f;
 	}
 	FileStream::~FileStream()
 	{
@@ -47,26 +46,21 @@ namespace xaxaxa
 	}
 	int FileStream::Read(Buffer buf)
 	{
-		return ::fread(buf.Data, 1, buf.Length, f);
+		return f.Read(buf);
 	}
 	void FileStream::Write(Buffer buf)
 	{
-		int written = 0;
-		while (written < buf.Length)
-		{
-			int br = ::fwrite(((Byte*) buf.Data) + written, 1, buf.Length - written,
-					f);
-			if (br <= 0) throw Exception(errno);
-			written += br;
-		}
+		int bw=0;
+		int off=0;
+		while(off<buf.Length && (bw=f.Write(buf.SubBuffer(off)))>0)off+=bw;
 	}
 	void FileStream::Flush()
 	{
-		::fflush(f);
+		//::fflush(f);
 	}
 	void FileStream::Close()
 	{
-		::fclose(f);
+		f.Close();
 	}
 
 ///////////////////////////////////////////////////////////
@@ -86,11 +80,12 @@ namespace xaxaxa
 	int StreamReader::Read(Buffer buf)
 	{
 		int br = 0;
-		if (buf_length > 0)
+		
+		int tmp = buf_length;
+		if (buf.Length < tmp) tmp = buf.Length;
+		if(tmp>0)
 		{
-			int tmp = buf_length;
-			if (buf.Length < tmp) tmp = buf.Length;
-			memcpy(buf.Data, ((char*) this->buf) + buf_index, tmp);
+			memcpy(buf.Data, ((Byte*) this->buf) + buf_index, tmp);
 			buf.Data += tmp;
 			buf.Length -= tmp;
 			buf_index += tmp;
@@ -98,10 +93,7 @@ namespace xaxaxa
 			br += tmp;
 		}
 		if (buf.Length > 0)
-		{
-			Buffer tmpb(buf.Data, buf.Length);
-			br += s->Read(tmpb);
-		}
+			br += s->Read(buf);
 		return br;
 	}
 	int StreamReader::Read(StringBuilder& buf, int length)

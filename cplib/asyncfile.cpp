@@ -36,7 +36,7 @@ namespace xaxaxa
 				for (int a = 0; a < tmp; a++)
 				{
 					epoll_event ev = events[a];
-					FILESTREAM s = ev.data.fd;
+					FILEDES s = ev.data.fd;
 					dbgprint("s=" << s);
 					__current_task = this->info[s];
 					/*if(!(__current_task.bits&1))

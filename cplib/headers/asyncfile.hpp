@@ -18,81 +18,6 @@ namespace xaxaxa
 {
 	namespace IO
 	{
-		typedef int FILESTREAM;
-		#define CreateFile open
-		struct File
-		{
-			FILESTREAM _f;
-			/*bool autoClose;
-			 inline Socket NoDestruct()
-			 {
-			 Socket s=*this;
-			 s.autoClose=false;
-			 return s;
-			 }*/
-			inline File()
-			{
-			}
-			virtual inline ~File()
-			{}
-			inline File(const char *path, int flags)
-			{
-				_f = CreateFile(path,flags);
-				//int set = 1;
-				//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-				dbgprint("file " << _f << " created");
-				//this->autoClose=autoClose;
-			}
-			inline File(const char *path, int flags, mode_t mode)
-			{
-				_f = CreateFile(path,flags,mode);
-				//int set = 1;
-				//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-				dbgprint("file " << _f << " created");
-				//this->autoClose=autoClose;
-			}
-			inline File(FILESTREAM f)
-			{
-				_f = f;
-				//int set = 1;
-				//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-				//this->autoClose=autoClose;
-			}
-			inline virtual void Close()
-			{
-				//throw Exception();
-				dbgprint("file " << _f << " closed");
-				if (_f != -1) close(_f);
-				_f = -1;
-			}
-			inline virtual Int Write(Buffer buf)
-			{
-				Int tmp = write(_f, buf.Data, buf.Length);
-				if (tmp < 0)
-					throw Exception(errno);
-				else
-					return tmp;
-			}
-			inline virtual Int Read(Buffer buf)
-			{
-				Int tmp = read(_f, buf.Data, buf.Length);
-				if (tmp < 0)
-					throw Exception(errno);
-				else
-					return tmp;
-			}
-			virtual void Flush()
-			{}
-			inline Int GetFlags()
-			{
-				return fcntl(_f, F_GETFL, 0);
-			}
-			inline void SetFlags(Int f)
-			{
-				if (fcntl(_f, F_SETFL, f) < 0)
-					throw Exception(errno, "could not set file flags");
-			}
-		};
 		class FileStreamManager: public Object
 		{
 		public:
@@ -120,7 +45,7 @@ namespace xaxaxa
 			{
 				//bool initialized;
 				int bits;			//1: init; 2: read_fill; 4: write_fill;
-				FILESTREAM s;
+				FILEDES s;
 				Callback cb_recv, cb_send;
 				__uint32_t events;
 				__uint32_t new_events;
@@ -133,7 +58,7 @@ namespace xaxaxa
 				}
 				//bool inLoop;//reserved; do not modify
 			};
-			map<FILESTREAM, taskInfo> info;
+			map<FILEDES, taskInfo> info;
 			FileStreamManager();
 			~FileStreamManager();
 			virtual void EventLoop();

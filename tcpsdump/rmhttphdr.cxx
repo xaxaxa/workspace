@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 		if(strcmp(argv[i],"-o")==0)
 		{
 			if(argc<=++i)
-				out=new FileStream(fdopen(1,"ab"));
+				out=new FileStream(1);
 			else outfile=argv[i];
 			continue;
 		}
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	int ret=0;
 	for(unsigned int i=0;i<files.size();i++)
 	{
-		FileStream fs1(fopen(files[i],"rb"));
+		FileStream fs1(File(files[i],O_RDONLY));
 		StreamReader sr(fs1);
 		NullStream ns;
 		int tmp1;
@@ -68,14 +68,14 @@ int main(int argc, char **argv)
 		if(outfile!=NULL)
 		{
 			unlink(outfile);
-			out=new FileStream(fopen(outfile,"wb"));
+			out=new FileStream(File(outfile,O_WRONLY));
 			outfile=NULL;
 		}
 		Stream* out1=out;
 		if(out1==NULL)
 		{
 			unlink(files[i]);
-			out1=new FileStream(fopen(files[i],"wb"));
+			out1=new FileStream(File(files[i],O_WRONLY));
 		}
 		while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
 	}
