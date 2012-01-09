@@ -1,0 +1,17 @@
+#!/bin/bash
+day=$1;
+if [ -z "$day" ]; then day="$(date +%A)"; fi;
+u="http://crista-http.lbdns-streamguys.com/RadioPlus/KWPZ/PlayList.php?day=$day";
+echo "$u";
+s=0;
+inc=20;
+
+while true; do
+	fn="$(date +%Y-%m-%d)_${day}_${s}.htm";
+	echo "getting start=${s} for ${day}; file=$fn";
+	wget -q "$u&sr=$s" -O "$fn";
+	if [ ! -e "$fn" ]; then break; fi;
+	if ! grep -q "Expand" "$fn"; then break; fi;
+#	sleep 1;
+	: $((s = $s + $inc));
+done;

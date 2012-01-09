@@ -1,0 +1,59 @@
+#!/usr/bin/python
+import time;
+import os;
+from datetime import *;
+daysofweek=["Monday","Tuesday","Wednsday","Thursday","Friday","Saturday","Sunday"];
+def getfn(date,dayofweek,offset):
+	return "%(y)04d-%(m)02d-%(d)02d_%(w)s_%(o)d.htm" \
+	%{"y":date.year,"m":date.month,"d":date.day,"w":daysofweek[dayofweek],"o":offset};
+
+def checkfile(date,dayofweek,offset): #check if the listing exists
+	fn=getfn(date,dayofweek,offset);
+	#print "checking",fn
+	return os.path.exists(fn);
+
+def findall(date):
+	#finds all files that contains the listing for (date).
+	res=[];
+	w=date.weekday();
+	delta=timedelta(1);#1 day
+	for i in xrange(0,7): #the listing is seen for 7 days
+		if(checkfile(date,w,0)):
+			res.append(date);
+		date=date+delta;
+	return res;
+
+def dodownload(weekday):
+	wd=daysofweek[weekday];
+	print " --> downloading "+wd;
+	(fd1,fd2)=os.pipe();
+	if os.fork()==0: #child
+		os.dup2(fd2,1); #stdout
+		os.dup2(fd2,2); #stderr
+		os.execl("get","get",wd);
+		exit(1);
+	os.close(fd2);
+	while True:
+		s=os.read(fd1,4096);
+		if(len(s)<=0):break;
+		print " -->",s,;
+	os.close(fd1);
+	
+#local timezone must be the same as station's timezone!
+d=date.today();
+delta=timedelta(1);#1 day
+#print getfn(today,3,123);
+for i in xrange(0,7):
+	items=findall(d);
+	state=0;#0: not found; 1: found but incomplete; 2: found and complete;
+	for it in items:
+		if it==d: #the listing is downloaded on the same day as the list's date
+			if state<1: state=1;
+		elif state<2: state=2;
+	print str(d)+":",;
+	if state==0: print "not found";
+	elif state==1: print "found but may be incomplete";
+	else: print "found";
+	if state<1:
+		dodownload(d.weekday());
+	d=d-delta;
