@@ -6,7 +6,7 @@ echo "$u";
 s=0;
 inc=20;
 
-while true; do
+while [ 1 ]; do
 	fn="$(date +%Y-%m-%d)_${day}_${s}.htm";
 	echo "getting start=${s} for ${day}; file=$fn";
 	wget -q "$u&sr=$s" -O "$fn";
