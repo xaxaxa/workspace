@@ -69,14 +69,14 @@ int main(int argc, char **argv)
 		if(outfile!=NULL)
 		{
 			unlink(outfile);
-			out=new FileStream(File(outfile,O_WRONLY));
+			out=new FileStream(File(outfile,O_WRONLY|O_CREAT));
 			outfile=NULL;
 		}
 		Stream* out1=out;
 		if(out1==NULL)
 		{
 			unlink(files[i]);
-			out1=new FileStream(File(files[i],O_WRONLY));
+			out1=new FileStream(File(files[i],O_WRONLY|O_CREAT));
 		}
 		while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
 	}
