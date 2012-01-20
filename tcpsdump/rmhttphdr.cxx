@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 				out1=new FileStream(File(files[i],O_WRONLY|O_CREAT));
 			}
 			while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
-		}catch{ret=1;}
+		}catch(Exception& ex){ret=1;}
 	}
 	return ret;
 }
