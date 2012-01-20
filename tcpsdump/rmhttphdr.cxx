@@ -53,32 +53,35 @@ int main(int argc, char **argv)
 	STRING delim[3]{"\r\n","\n","\r"};
 	for(unsigned int i=0;i<files.size();i++)
 	{
-		FileStream fs1(File(files[i],O_RDONLY));
-		StreamReader sr(fs1);
-		NullStream ns;
-		int tmp1;
-		while((tmp1=sr.Read(ns,delim,3))>0);
-		if(tmp1<0)
+		try
 		{
-			cerr << files[i] << ": could not find http header or there's no content" << endl;
-			ret=1;
-			continue;
-		}
-		int br;
-		Buffer b(4096);
-		if(outfile!=NULL)
-		{
-			unlink(outfile);
-			out=new FileStream(File(outfile,O_WRONLY|O_CREAT));
-			outfile=NULL;
-		}
-		Stream* out1=out;
-		if(out1==NULL)
-		{
-			unlink(files[i]);
-			out1=new FileStream(File(files[i],O_WRONLY|O_CREAT));
-		}
-		while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
+			FileStream fs1(File(files[i],O_RDONLY));
+			StreamReader sr(fs1);
+			NullStream ns;
+			int tmp1;
+			while((tmp1=sr.Read(ns,delim,3))>0);
+			if(tmp1<0)
+			{
+				cerr << files[i] << ": could not find http header or there's no content" << endl;
+				ret=1;
+				continue;
+			}
+			int br;
+			Buffer b(4096);
+			if(outfile!=NULL)
+			{
+				unlink(outfile);
+				out=new FileStream(File(outfile,O_WRONLY|O_CREAT));
+				outfile=NULL;
+			}
+			Stream* out1=out;
+			if(out1==NULL)
+			{
+				unlink(files[i]);
+				out1=new FileStream(File(files[i],O_WRONLY|O_CREAT));
+			}
+			while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
+		}catch{ret=1;}
 	}
 	return ret;
 }
