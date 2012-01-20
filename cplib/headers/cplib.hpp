@@ -571,6 +571,7 @@ namespace xaxaxa
 		inline File(const char *path, int flags)
 		{
 			_f = CreateFile(path,flags);
+			if(_f<0)throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -579,6 +580,7 @@ namespace xaxaxa
 		inline File(const char *path, int flags, mode_t mode)
 		{
 			_f = CreateFile(path,flags,mode);
+			if(_f<0)throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
