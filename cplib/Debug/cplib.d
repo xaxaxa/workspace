@@ -1,4 +1,4 @@
-cplib.d: ../cplib.cpp ../headers/cplib.hpp ../headers/lock.hpp
+cplib.d cplib.o: ../cplib.cpp ../headers/cplib.hpp ../headers/lock.hpp
 
 ../headers/cplib.hpp:
 
