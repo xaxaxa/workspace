@@ -838,11 +838,11 @@ namespace xaxaxa
 			}
 		}
 	};
-	template<class T> class CircularQueue: public Object
-	{
-	public:
 #define __intwrap1(var,max) var%=(max);
 #define __intwrap(var,max) ((var)%(max))
+	/*template<class T> class CircularQueue: public Object
+	{
+	public:
 		T* array;
 		int size;
 		int __wrap;
@@ -912,6 +912,87 @@ namespace xaxaxa
 			return tmp;
 		}
 		void EndDequeue(int i)
+		{
+			if (i == s1)
+			{
+				do
+				{
+					s1++;
+					__intwrap1(s1, __wrap);
+				}
+				while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
+			}
+			else b.Set(__intwrap(i,size), false);
+		}
+	};*/
+	template<class T> class CircularQueue: public Object
+	{
+	public:
+		T* array;
+		Int size;
+		Int objsize;
+		Int __wrap;
+		Int s1, s2, e1, e2;
+		BitArray b;
+		CircularQueue(Int size, Int objsize=1) :
+				b(size),size(size),objsize(objsize),__wrap(size*2),
+				s1(0),s2(0),e1(0),e2(0)
+		{
+			array = new T[size*objsize];
+		}
+		~CircularQueue()
+		{
+			delete[] array;
+		}
+		inline int __getlength(Int i1, Int i2, Int wrap)
+		{
+			return (i2 < i1 ? i2 + wrap : i2) - i1;
+		}
+		inline T& GetPointer(Int i)
+		{
+			__intwrap1(i, size);
+			if (i >= size || i < 0)
+				throw new OutOfRangeException("CircularQueue::GetPointer() out of range");
+			return array[i*objsize]; //__intwrap(i,size);
+		}
+		inline bool CanAppend()
+		{
+			return __getlength(s1, e2, __wrap) < size;
+		}
+		int BeginAppend()
+		{
+			if (__getlength(s1, e2, __wrap) >= size) return -1;
+			int tmp = e2++;
+			__intwrap1(e2, __wrap);
+			b.Set(__intwrap(tmp,size), true);
+			return tmp;
+		}
+		void EndAppend(Int i)
+		{
+			if (i == e1)
+			{
+				do
+				{
+					e1++;
+					__intwrap1(e1, __wrap);
+				}
+				while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
+			}
+			else b.Set(__intwrap(i,size), false);
+		}
+		inline bool CanDequeue()
+		{
+			return __getlength(s2, e1, __wrap) > 0;
+		}
+		Int BeginDequeue()
+		{
+			if (__getlength(s2, e1, __wrap) <= 0) return -1;
+			Int tmp = s2++;
+			__intwrap1(s2, __wrap);
+			b.Set(__intwrap(tmp,size), true);
+			return tmp;
+		}
+		void EndDequeue(Int i)
 		{
 			if (i == s1)
 			{
