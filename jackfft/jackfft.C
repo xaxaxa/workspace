@@ -2,6 +2,7 @@
 #include <jack/jack.h>
 #include <memory.h>
 #include <vector>
+#include <string>
 #include <sstream>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -9,6 +10,7 @@
 #include <gtkmm.h>
 #include <gdk/gdk.h>
 #include "eqcontrol.C"
+#include <cplib/cplib.hpp>
 
 using namespace std;
 vector<jack_port_t *> inputs;
@@ -73,34 +75,39 @@ double scale_value(double x)
 	double tmp = x - 1.0;
 	if(tmp<0)
 		return 1.0/(-tmp*19.0+1.0);
-	else return tmp*20.0;
+	else return tmp*19.0+1.0;
 }
-bool on_motion_notify(GdkEventMotion* evt)
+/*
+ * y=1/(-19x+1)
+ * y(-19x+1)=1
+ * -19x+1=1/y
+ * -19x=1/y-1
+ * x=-(1/y-1)/19
+ * */
+double scale_value_r(double x)
 {
-	//cout << "on_motion_notify" << endl;
-	if(pb_size<=0)pb_size=pb->get_allocation().get_width();
-	UInt ind=evt->x/pb_size;
-	//cout << pb_size << endl;
-	if(ind>=freqs)return true;
-	Int h=gdk_window_get_height(evt->window);
-	pb[ind].set_fraction((float)(h-evt->y)/h);
+	//return x*x;
+	//cout << x << endl;
+	if(x>1.0)x=(x-1.0)/19.0;
+	else x=(-((1/x)-1.0)/19.0);
+	
+	if(std::isnan(x))return 1.0;
+	//else if(x>1.0)return 2.0;
+	//else if(x<-1.0)return 0.0;
+	else return x+1.0;
+}
+#define EQ_POINTS 500
+EQControl* c;
+void update_fft()
+{
 	for(UInt i=0;i<CHANNELS;i++)
 	{
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
 		UInt complexsize = (UInt)(f->BufferSize / 2) + 1;
-		//complexsize /= 5;
-		UInt min_index=scale_freq((double)ind/freqs)*complexsize;
-		UInt max_index=scale_freq((double)(ind+1)/freqs)*complexsize;
-		//cout << "min_index="<<min_index<<endl;
-		//cout << "max_index="<<max_index<<endl;
-		for(UInt n=min_index;n<max_index;n++)
-		{
-			f->coefficients[n]=scale_value((double)(h-evt->y)/h*2);
-		}
+		for(UInt n=0;n<complexsize;n++)
+			f->coefficients[n]=scale_value(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
 	}
-	return true;
 }
-#define EQ_POINTS 300
 void on_change(void* user, UInt i1, UInt i2)
 {
 	EQControl* c=(EQControl*)user;
@@ -125,12 +132,65 @@ void on_change(void* user, UInt i1, UInt i2)
 		}
 	}
 }
+string fname=".default.jfft";
+void save()
+{
+	try
+	{
+		FileStream fs(File(fname.c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666));
+		struct
+		{
+			UInt freq; double val;
+		} buf;
+		Buffer b(&buf,sizeof(buf));
+		for(UInt i=0;i<EQ_POINTS;i++)
+		{
+			buf.freq=i*(srate/2)/EQ_POINTS;
+			buf.val=scale_value(c->GetPoint(i)*2.0);
+			//cout << buf.val << endl;
+			fs.Write(b);
+		}
+	}
+	catch(Exception& ex)
+	{
+	}
+}
+void load()
+{
+	try
+	{
+		FileStream fs(File(fname.c_str(),O_RDONLY));
+		struct
+		{
+			UInt freq; double val;
+		} buf;
+		Buffer b(&buf,sizeof(buf));
+		UInt i1=0;
+		double last_v=0.5;
+		while(fs.Read(b)>=b.Length)
+		{
+			UInt i2=(UInt)round((double)buf.freq*EQ_POINTS/(srate/2));
+			if(i2>EQ_POINTS)break;
+			for(UInt i=i1;i<i2;i++)
+				c->data[i]=scale_value_r(last_v*(i2-i)/(i2-i1)+buf.val*(i-i1)/(i2-i1))/2.0;
+			i1=i2;
+			last_v=buf.val;
+		}
+		for(UInt i=i1;i<EQ_POINTS;i++)
+			c->data[i]=scale_value_r(last_v)/2.0;
+		c->queue_draw();
+		update_fft();
+	}
+	catch(Exception& ex)
+	{
+	}
+}
 int main (int argc, char *argv[])
 {
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(8192*2, 8, 8, 4);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(8192, 8, 8, 2);
 	
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();
@@ -197,10 +257,16 @@ int main (int argc, char *argv[])
 	//Gtk::Grid* g;
 	//Gtk::EventBox* eb;
 	Gtk::Viewport* v;
+	Gtk::Button* bt;
 	b->get_widget("window1",w);
 	b->get_widget("viewport1",v);
-	EQControl* c=new EQControl(EQ_POINTS);
+	c=new EQControl(EQ_POINTS);
 	c->Change+=EQControl::ChangeDelegate(&on_change,c);
+	
+	b->get_widget("b_save",bt);
+	bt->signal_clicked().connect(&save);
+	b->get_widget("b_load",bt);
+	bt->signal_clicked().connect(&load);
 	v->add(*c);
 	c->set_hexpand(true);
 	c->set_vexpand(true);
@@ -226,7 +292,7 @@ int main (int argc, char *argv[])
 		p->show();
 		//if(i==0)pb_size=p->get_allocation().get_width();
 	}*/
-	
+	load();
 	kit.run(*w);
 	
 	jack_client_close (client);
