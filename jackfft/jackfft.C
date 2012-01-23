@@ -235,7 +235,7 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(8192, 8, 8, 2);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(8192, 8, 8, 4);
 	
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();

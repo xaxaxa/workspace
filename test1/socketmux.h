@@ -11,13 +11,14 @@
 #include <cplib.hpp>
 #include <map>
 #include <list>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
+//#include <boost/shared_ptr.hpp>
+//#include <boost/weak_ptr.hpp>
+//#include <boost/enable_shared_from_this.hpp>
+#include <memory>
 
 using namespace std;
-using namespace boost;
-
+//using namespace boost;
+//using boost::shared_ptr;
 namespace xaxaxa
 {
 class socketmux: public xaxaxa::Object, public enable_shared_from_this<socketmux> {

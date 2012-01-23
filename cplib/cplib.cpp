@@ -37,12 +37,16 @@ namespace xaxaxa
 		return __Buffer_bytes_allocated;
 	}
 #endif
+	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2)
+	{
+		return (Stream::Cap)((Byte)c1|(Byte)c2);
+	}
 	FileStream::FileStream(File f):f(f)
 	{
 	}
 	FileStream::~FileStream()
 	{
-		Close();
+		//Close();
 	}
 	int FileStream::Read(Buffer buf)
 	{

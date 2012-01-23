@@ -65,6 +65,8 @@ namespace xaxaxa
 			{
 				gc->move_to(x,h-1);
 				double y=h-round(GetPoint((double)x*datalen/w)*h);
+				if(y>h)y=h;
+				else if(y<0)y=0;
 				gc->line_to(x,y);
 				gc->set_source_rgb(0,0,0);
 				gc->stroke();

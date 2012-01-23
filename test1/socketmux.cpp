@@ -127,7 +127,7 @@ x:
 	}
 	void socketmux::update_status()
 	{
-		bool nretain=sending||receiving&&!closed;
+		bool nretain=(sending||receiving)&&(!closed);
 		if(nretain==retain)return;
 		if(nretain&&!retain)
 		{
@@ -160,13 +160,13 @@ x:
 		it->wptr=it;
 
 		//it.queue=new xaxaxa::CircularQueue<b>(64);
-		dbgprint("penissssssssssss");
-		pair<int,shared_ptr<item> > p=make_pair<int,shared_ptr<item> >(it->id,it);
-		dbgprint("xxxxxxxxxxxxxxxxxxxx");
+		//dbgprint("penissssssssssss");
+		//pair<int,shared_ptr<item> > p=;
+		//dbgprint("xxxxxxxxxxxxxxxxxxxx");
 
 		//return map<int,socketmux::item>::iterator();
 
-		pair<map<int,shared_ptr<item> >::iterator,bool> ret=items_o.insert(p);
+		pair<map<int,shared_ptr<item> >::iterator,bool> ret=items_o.insert({it->id,it});
 		dbgprint("zxcvbnmzxcvbnm");
 		if(ret.second)
 		{
@@ -352,7 +352,7 @@ x:
 			it->owner=shared_from_this();
 			it->wptr=it;
 			//it.queue=new xaxaxa::CircularQueue<b>(64);
-			pair<map<int,shared_ptr<item> >::iterator,bool> ret=items_i.insert(make_pair<int,shared_ptr<item> >(id,it));
+			pair<map<int,shared_ptr<item> >::iterator,bool> ret=items_i.insert({id,it});
 			if(ret.second)
 			{
 				FUNCTION_CALL(ConnectionRequest,this,&recvbuf,(*(ret.first)).second);

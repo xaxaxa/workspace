@@ -516,7 +516,7 @@ namespace xaxaxa
 		virtual Long Position(){return 0;}
 		virtual void Length(Long newlen=-1){}//set or get length
 		virtual Cap Capabilities(){return Cap::None;}
-
+		//bool AutoClose;
 		//typedef boost::function<void (void*,Stream*)> Callback;
 		FUNCTION_DECLARE(Callback,void,Stream*);
 		int __tmp;
@@ -538,11 +538,13 @@ namespace xaxaxa
 		{
 
 		}
+		Stream(){}
+		virtual ~Stream()
+		{
+			//if(AutoClose)Close();
+		}
 	};
-	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2)
-	{
-		return (Stream::Cap)((Byte)c1|(Byte)c2);
-	}
+	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2);
 	class NullStream: public Stream
 	{
 		virtual Cap Capabilities(){return Cap::Read | Cap::Write | Cap::Close;}

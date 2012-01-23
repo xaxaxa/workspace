@@ -66,7 +66,7 @@ FUNCTION_DECLWRAPPER(procbuffer,void,JoinStream* s,Buffer* b)
 {
 	invert(b);
 }
-FUNCTION_DECLWRAPPER(procbuffer_n,void,shared_ptr<socketmux> s,shared_ptr<socketmux::item> it,bool direction_out,const Buffer& b)
+FUNCTION_DECLWRAPPER(procbuffer_n,void,boost::shared_ptr<socketmux> s,boost::shared_ptr<socketmux::item> it,bool direction_out,const Buffer& b)
 {
 	rotate(b,direction_out?-69:69);
 	/*int i;

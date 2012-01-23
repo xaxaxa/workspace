@@ -56,6 +56,7 @@ int main(int argc, char **argv)
 		try
 		{
 			FileStream fs1(File(files[i],O_RDONLY));
+			//fs1.AutoClose=true;
 			StreamReader sr(fs1);
 			NullStream ns;
 			int tmp1;
@@ -72,6 +73,7 @@ int main(int argc, char **argv)
 			{
 				unlink(outfile);
 				out=new FileStream(File(outfile,O_WRONLY|O_CREAT,0666));
+				//out->AutoClose=true;
 				outfile=NULL;
 			}
 			Stream* out1=out;
@@ -79,8 +81,15 @@ int main(int argc, char **argv)
 			{
 				unlink(files[i]);
 				out1=new FileStream(File(files[i],O_WRONLY|O_CREAT,0666));
+				//out1->AutoClose=true;
 			}
 			while((br=sr.Read(b))>0)out1->Write(b.SubBuffer(0,br));
+			if(out1!=out)
+			{
+				out1->Close();
+				delete out1;
+			}
+			fs1.Close();
 		}catch(Exception& ex){ret=1;}
 	}
 	return ret;
