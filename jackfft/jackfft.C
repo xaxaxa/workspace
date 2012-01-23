@@ -58,16 +58,33 @@ void jack_shutdown (void *arg)
 {
 	exit (1);
 }
-UInt pb_size=0;
-Gtk::ProgressBar* pb;
-UInt freqs = 50;
-double scale_freq(double x)
+//UInt pb_size=0;
+//Gtk::ProgressBar* pb;
+//UInt freqs = 50;
+inline double scale_freq(double x)
 {
-	return x*x;
+	x=pow(2,x*10);
+	x=x-1;
+	if(x<0)return 0;
+	return x/1024;
 }
-double scale_freq_r(double x)
+/*
+ * y=5x^2
+ * 
+ * y=((x*2)^2)/4
+ * 4y=(2x)^2
+ * sqrt(4y)=2x
+ * sqrt(4y)/2=x
+ * */
+inline double scale_freq_r(double x)
 {
-	return sqrt(x);
+	//cout << x << " " << log2(x*256) << endl;
+	x=x*1024+1;
+	//if(x<1.0)return 0;
+	x=log2(x)/10;
+	//if(::isinf(x)||::isnan(x))return 0;
+	//cout << x << endl;
+	return x<0?-x:x;
 }
 double scale_value(double x)
 {
@@ -96,8 +113,11 @@ double scale_value_r(double x)
 	//else if(x<-1.0)return 0.0;
 	else return x+1.0;
 }
-#define EQ_POINTS 500
+#define EQ_POINTS 1500
 EQControl* c;
+Glib::RefPtr<Gtk::Builder> b;
+string fname=".default.jfft";
+
 void update_fft()
 {
 	for(UInt i=0;i<CHANNELS;i++)
@@ -116,10 +136,10 @@ void on_change(void* user, UInt i1, UInt i2)
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
 		UInt complexsize = (UInt)(f->BufferSize / 2) + 1;
 		//complexsize /= 5;
-		UInt min_index=scale_freq((double)i1/EQ_POINTS)*complexsize;
-		UInt max_index=scale_freq((double)i2/EQ_POINTS)*complexsize;
-		//cout << "min_index="<<min_index<<endl;
-		//cout << "max_index="<<max_index<<endl;
+		UInt min_index=floor(scale_freq((double)i1/EQ_POINTS)*(double)complexsize);
+		UInt max_index=ceil(scale_freq((double)i2/EQ_POINTS)*(double)complexsize);
+		//cout << "i1="<<i1<<"; i2="<<i2<<"; scale_freq="<<scale_freq((double)i1/EQ_POINTS)<<endl;
+		//cout << "min_index="<<min_index<<"; max_index="<<max_index<<endl;
 		UInt max_n=floor(max_index);
 		if(max_n>complexsize)max_n=complexsize;
 		for(UInt n=min_index;n<max_n;n++)
@@ -132,7 +152,15 @@ void on_change(void* user, UInt i1, UInt i2)
 		}
 	}
 }
-string fname=".default.jfft";
+void on_mousemove(void* user, double i)
+{
+	EQControl* c=(EQControl*)user;
+	double freq=scale_freq(i/c->datalen)*srate/2.0;
+	Gtk::Label* l;
+	b->get_widget("label1",l);
+	l->set_text(CONCAT((UInt)freq<<" Hz").c_str());
+}
+
 void save()
 {
 	try
@@ -140,12 +168,12 @@ void save()
 		FileStream fs(File(fname.c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666));
 		struct
 		{
-			UInt freq; double val;
+			double freq; double val;
 		} buf;
 		Buffer b(&buf,sizeof(buf));
 		for(UInt i=0;i<EQ_POINTS;i++)
 		{
-			buf.freq=i*(srate/2)/EQ_POINTS;
+			buf.freq=scale_freq((double)i/EQ_POINTS)*srate/2;
 			buf.val=scale_value(c->GetPoint(i)*2.0);
 			//cout << buf.val << endl;
 			fs.Write(b);
@@ -162,14 +190,16 @@ void load()
 		FileStream fs(File(fname.c_str(),O_RDONLY));
 		struct
 		{
-			UInt freq; double val;
+			double freq; double val;
 		} buf;
 		Buffer b(&buf,sizeof(buf));
 		UInt i1=0;
 		double last_v=0.5;
 		while(fs.Read(b)>=b.Length)
 		{
-			UInt i2=(UInt)round((double)buf.freq*EQ_POINTS/(srate/2));
+			//cout << buf.freq << endl;
+			UInt i2=(UInt)round(scale_freq_r((double)buf.freq/(srate/2))*EQ_POINTS);
+			//cout << i2 << endl;
 			if(i2>EQ_POINTS)break;
 			for(UInt i=i1;i<i2;i++)
 				c->data[i]=scale_value_r(last_v*(i2-i)/(i2-i1)+buf.val*(i-i1)/(i2-i1))/2.0;
@@ -184,6 +214,21 @@ void load()
 	catch(Exception& ex)
 	{
 	}
+}
+
+void saveas()
+{
+	Gtk::FileChooserDialog* d;
+	b->get_widget("filechooserdialog1",d);
+	Gtk::Window* w;
+	b->get_widget("window1",w);
+	cout << w << endl;
+	d->set_transient_for(*w);
+	if(d->run()==RESPONSE_OK)
+	{
+		
+	}
+	d->hide();
 }
 int main (int argc, char *argv[])
 {
@@ -229,7 +274,7 @@ int main (int argc, char *argv[])
 	jack_client_t *client;
 	jack_set_error_function (error);
 	JackStatus st;
-	if ((client = jack_client_open ("client1",JackNoStartServer,&st)) == 0) {
+	if ((client = jack_client_open ("jackfft",JackNoStartServer,&st)) == 0) {
 		fprintf (stderr, "could not connect to server: status %i\n",st);
 		return 1;
 	}
@@ -251,7 +296,7 @@ int main (int argc, char *argv[])
 	}
 //aaaaa:
 	Gtk::Main kit(argc, argv);
-	Glib::RefPtr<Gtk::Builder> b;
+	
 	b = Gtk::Builder::create_from_file("a.glade");
 	Gtk::Window* w;
 	//Gtk::Grid* g;
@@ -262,11 +307,21 @@ int main (int argc, char *argv[])
 	b->get_widget("viewport1",v);
 	c=new EQControl(EQ_POINTS);
 	c->Change+=EQControl::ChangeDelegate(&on_change,c);
+	c->MouseMove+=EQControl::MouseDelegate(&on_mousemove,c);
 	
 	b->get_widget("b_save",bt);
 	bt->signal_clicked().connect(&save);
-	b->get_widget("b_load",bt);
+	b->get_widget("b_saveas",bt);
+	bt->signal_clicked().connect(&saveas);
+	b->get_widget("b_open",bt);
 	bt->signal_clicked().connect(&load);
+	
+	Gtk::FileChooserDialog* d;
+	b->get_widget("filechooserdialog1",d);
+	//d->signal_response().connect(&on_response);
+	d->add_button(Stock::CANCEL,RESPONSE_CANCEL);
+	d->add_button(Stock::OPEN,RESPONSE_OK);
+	
 	v->add(*c);
 	c->set_hexpand(true);
 	c->set_vexpand(true);

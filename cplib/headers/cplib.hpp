@@ -43,6 +43,7 @@
 #include "lock.hpp"
 #include <sys/types.h>
 #include <fcntl.h>
+#include <unistd.h>
 //#define FUNCTION(RETVAL,...) struct{RETVAL(*f)(void*,__VA_ARGS__);void* obj;}
 //RETVAL(*)(__VA_ARGS__)
 
@@ -492,10 +493,29 @@ namespace xaxaxa
 	class Stream: public Object
 	{
 	public:
+		enum class Cap:Byte
+		{
+			None=0,
+			Read=1, Write=2, ReadWrite=Read|Write, Flush=4, Close=8,
+			Seek=16, Length=32,
+			All=0xFF
+		};
+		
+		enum class SeekFrom
+		{
+			Nop=0,
+			Begin=SEEK_SET,
+			End=SEEK_END,
+			Current=SEEK_CUR
+		};
 		virtual Int Read(Buffer buf)=0;
 		virtual void Write(Buffer buf)=0;
 		virtual void Flush()=0;
 		virtual void Close()=0;
+		virtual void Seek(Long n, SeekFrom from){}
+		virtual Long Position(){return 0;}
+		virtual void Length(Long newlen=-1){}//set or get length
+		virtual Cap Capabilities(){return Cap::None;}
 
 		//typedef boost::function<void (void*,Stream*)> Callback;
 		FUNCTION_DECLARE(Callback,void,Stream*);
@@ -519,8 +539,13 @@ namespace xaxaxa
 
 		}
 	};
+	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2)
+	{
+		return (Stream::Cap)((Byte)c1|(Byte)c2);
+	}
 	class NullStream: public Stream
 	{
+		virtual Cap Capabilities(){return Cap::Read | Cap::Write | Cap::Close;}
 		virtual Int Read(Buffer buf)
 		{
 			return 0;
@@ -605,16 +630,20 @@ namespace xaxaxa
 			Int tmp = write(_f, buf.Data, buf.Length);
 			if (tmp < 0)
 				throw Exception(errno);
-			else
-				return tmp;
+			return tmp;
 		}
 		inline virtual Int Read(Buffer buf)
 		{
 			Int tmp = read(_f, buf.Data, buf.Length);
 			if (tmp < 0)
 				throw Exception(errno);
-			else
-				return tmp;
+			return tmp;
+		}
+		inline virtual off_t Seek(off_t offset, int whence)
+		{
+			off_t tmp=lseek(_f, offset, whence);
+			if(tmp==(off_t)-1)throw Exception(errno);
+			return tmp;
 		}
 		virtual void Flush()
 		{}
@@ -638,8 +667,130 @@ namespace xaxaxa
 		virtual void Write(Buffer buf);
 		virtual void Flush();
 		virtual void Close();
+		virtual Long Position()
+		{
+			return f.Seek(0, SEEK_CUR);
+		}
+		virtual void Seek(Long n, SeekFrom from)
+		{
+			f.Seek(n, (int)from);
+		}
+		virtual Cap Capabilities(){return Cap::All;}
 	};
-
+#ifdef _GIOMM_INPUTSTREAM_H
+	class GIOStream: public Stream
+	{
+	public:
+		Glib::RefPtr<Glib::Object> f;
+		/*enum class T:Byte
+		{
+			I=1,O=2,IO=I|O
+		};
+		T t;*/
+		Cap c;
+		void CheckCaps()
+		{
+			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
+			if(s)
+				c|=Cap::Seek;
+			else c&=~Cap::Seek;
+		}
+		GIOStream(Glib::RefPtr<Gio::IOStream> f):f(f),c(Cap::ReadWrite)){CheckCaps();}
+		GIOStream(Glib::RefPtr<Gio::InputStream> f):f(f),c(Cap::Read){CheckCaps();}
+		GIOStream(Glib::RefPtr<Gio::OutputStream> f):f(f),c(Cap::Write){CheckCaps();}
+		virtual ~GIOStream(){}
+		virtual int Read(Buffer buf)
+		{
+			if(!(c&Cap::Read))throw NotSupportedException();
+			Glib::RefPtr<Gio::InputStream> s;
+			if(c&Cap::Write)
+			{
+				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
+				s=f.get_input_stream();
+			}else s=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
+			return s.read(buf.Data,buf.Length);
+		}
+		virtual void Write(Buffer buf)
+		{
+			if(!(c&Cap::Write))throw NotSupportedException();
+			Glib::RefPtr<Gio::OutputStream> s;
+			if(c&Cap::Read)
+			{
+				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
+				s=f.get_output_stream();
+			}else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
+			gsize tmp;
+			if(!s.write_all(buf.Data,buf.Length,&tmp))
+			{
+				throw Exception("GIO error");
+			}
+			//return s.write(buf.Data,buf.Length);
+		}
+		virtual void Flush()
+		{
+			if(!(c&Cap::Write))throw NotSupportedException();
+			Glib::RefPtr<Gio::OutputStream> s;
+			if(c&Cap::Read)
+			{
+				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
+				s=f.get_output_stream();
+			}else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
+			s.flush();
+		}
+		virtual void Close()
+		{
+			if(c&Cap::ReadWrite)
+			{
+				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
+				f.close();
+			}
+			else if(c&Cap::Read)
+			{
+				Glib::RefPtr<Gio::InputStream> f=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
+				f.close();
+			}
+			else if(c&Cap::Write)
+			{
+				Glib::RefPtr<Gio::OutputStream> f=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
+				f.close();
+			}
+		}
+		virtual Long Position()
+		{
+			if(!(c&Cap::Seek))throw NotSupportedException();
+			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_static(f);
+			return s.tell();
+		}
+		virtual void Seek(Long n, SeekFrom from)
+		{
+			if(!(c&Cap::Seek))throw NotSupportedException();
+			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_static(f);
+			Glib::SeekType t;
+			switch(from)
+			{
+				case SeekFrom::Begin:
+					t=SEEK_TYPE_SET; break;
+				case SeekFrom::End:
+					t=SEEK_TYPE_END; break;
+				case SeekFrom::Current:
+					t=SEEK_TYPE_CUR; break;
+				default: return;
+			}
+			s->seek(n, t);
+		}
+		virtual void Length(Long newlen=-1)
+		{
+			if(newlen>=0) //truncate
+			{
+				if(!(c&Cap::Seek))throw NotSupportedException();
+				Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_static(f);
+				s.truncate(newlen);
+			}
+			else throw NotSupportedException();
+		}
+		virtual Cap Capabilities(){return c;}
+	};
+#endif
 	class StreamReader: public Stream
 	{
 	public:

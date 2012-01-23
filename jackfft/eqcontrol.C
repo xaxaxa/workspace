@@ -38,8 +38,11 @@ namespace xaxaxa
 		UInt datalen;
 		Int last_i;
 		double last_v;
+		bool d;
 		DELEGATE(void,ChangeDelegate,UInt,UInt);
+		DELEGATE(void,MouseDelegate,double);
 		EVENT(ChangeDelegate) Change;
+		EVENT(MouseDelegate) MouseMove;
 		inline double GetPoint(double pos)
 		{
 			if(pos>=datalen)return data[datalen-1];
@@ -82,8 +85,12 @@ namespace xaxaxa
 		{
 			if(event->y<0)event->y=0;
 			if(event->x<0)event->x=0;
-			//cout << "on_motion_notify_event" << endl;
 			UInt w=get_allocation().get_width();
+			RAISEEVENT(MouseMove,(double)event->x*datalen/w);
+			if(!d)return true;
+			
+			//cout << "on_motion_notify_event" << endl;
+			
 			UInt h=get_allocation().get_height();
 			
 			double v=(double)(h-event->y)/h;
@@ -124,12 +131,18 @@ namespace xaxaxa
 			RAISEEVENT(Change,i1,i2);
 			return true;
 		}
-		virtual bool on_button_release_event(GdkEventButton* event)
+		virtual bool on_button_press_event(GdkEventButton* event)
 		{
+			d=true;
 			last_i=-1;
 			return true;
 		}
-		EQControl(UInt datalen): Gtk::DrawingArea(), datalen(datalen), last_i(-1), last_v(-1.0)
+		virtual bool on_button_release_event(GdkEventButton* event)
+		{
+			d=false;
+			return true;
+		}
+		EQControl(UInt datalen): Gtk::DrawingArea(), datalen(datalen), last_i(-1), last_v(-1.0), d(false)
 		{
 			//signal_draw().connect(sigc::mem_fun(this,&EQControl::onDraw));
 			//signal_motion_notify_event().connect(sigc::mem_fun(this,&EQControl::on_motion_notify_event));
@@ -139,7 +152,7 @@ namespace xaxaxa
 			set_app_paintable(true);
 			set_double_buffered(false);
 			set_redraw_on_allocate(true);
-			set_events(get_events()|/*POINTER_MOTION_MASK|*/BUTTON_MOTION_MASK|BUTTON_PRESS_MASK|BUTTON_RELEASE_MASK);
+			set_events(get_events()|POINTER_MOTION_MASK|BUTTON_MOTION_MASK|BUTTON_PRESS_MASK|BUTTON_RELEASE_MASK);
 		}
 	};
 }
