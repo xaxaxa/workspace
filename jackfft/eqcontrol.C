@@ -22,6 +22,7 @@
  */
 #include <cplib/cplib.hpp>
 #include <gtkmm.h>
+#include <gtkmm/drawingarea.h>
 #include <gdk/gdk.h>
 #include <iostream>
 #include <math.h>
@@ -54,7 +55,7 @@ namespace xaxaxa
 		}
 		virtual bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& gc)
 		{
-			Gtk::DrawingArea::on_draw(gc);
+			//Gtk::DrawingArea::on_draw(gc);
 			
 			UInt w=get_allocation().get_width();
 			UInt h=get_allocation().get_height();
