@@ -1,7 +1,6 @@
-PKG_CONFIG=`pkg-config --libs --cflags gtkmm-2.4`
-all: jackfft jackfftc
+PKG_CONFIG=`pkg-config --cflags --libs gtkmm-3.0 glibmm-2.4 gdkmm-3.0`
 jackfft:
-	g++ $(PKG_CONFIG) jackfft.C -o jackfft --std=c++0x -lcplib -ljack -lfftw
+	g++ jackfft.C -o jackfft --std=c++0x -lcplib -ljack -lfftw3 $(PKG_CONFIG)
 jackfftc:
 	g++ jackfftc.C -o jackfftc --std=c++0x -lcplib -ljack -lfftw3
 
