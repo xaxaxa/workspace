@@ -4,4 +4,6 @@ jackfft:
 	g++ $(PKG_CONFIG) jackfft.C -o jackfft --std=c++0x -lcplib -ljack -lfftw
 jackfftc:
 	g++ jackfftc.C -o jackfftc --std=c++0x -lcplib -ljack -lfftw3
+clean:
+	rm -f jackfft jackfftc
 
