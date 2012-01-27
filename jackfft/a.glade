@@ -6,6 +6,8 @@
     <property name="can_focus">False</property>
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
+    <property name="action">save</property>
+    <property name="do_overwrite_confirmation">True</property>
     <property name="local_only">False</property>
     <child internal-child="vbox">
       <object class="GtkBox" id="filechooserdialog-vbox1">

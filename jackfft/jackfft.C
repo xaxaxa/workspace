@@ -1,3 +1,26 @@
+/*
+ * untitled.cxx
+ * 
+ * Copyright 2012  <xaxaxa@xaxaxa-mac>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
+ * 
+ */
+#define cplib_glib_wrappers
 #include <iostream>
 #include <jack/jack.h>
 #include <memory.h>
@@ -161,11 +184,10 @@ void on_mousemove(void* user, double i)
 	l->set_text(CONCAT((UInt)freq<<" Hz").c_str());
 }
 
-void save()
+void do_save(Stream& fs)
 {
 	try
 	{
-		FileStream fs(File(fname.c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666));
 		struct
 		{
 			double freq; double val;
@@ -182,6 +204,12 @@ void save()
 	catch(Exception& ex)
 	{
 	}
+}
+void save()
+{
+	FileStream fs(File(fname.c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666));
+	do_save(fs);
+	fs.Close();
 }
 void load()
 {
@@ -226,7 +254,9 @@ void saveas()
 	d->set_transient_for(*w);
 	if(d->run()==RESPONSE_OK)
 	{
-		
+		GIOGenericStream s=Glib::RefPtr<Gio::OutputStream>::cast_dynamic(d->get_file()->replace());
+		do_save(s);
+		s.Close();
 	}
 	d->hide();
 }

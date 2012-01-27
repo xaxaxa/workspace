@@ -44,6 +44,10 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef cplib_glib_wrappers
+	#include <glibmm.h>
+	#include <giomm.h>
+#endif
 //#define FUNCTION(RETVAL,...) struct{RETVAL(*f)(void*,__VA_ARGS__);void* obj;}
 //RETVAL(*)(__VA_ARGS__)
 
@@ -545,6 +549,8 @@ namespace xaxaxa
 		}
 	};
 	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2);
+	Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2);
+	Stream::Cap operator~(Stream::Cap c);
 	class NullStream: public Stream
 	{
 		virtual Cap Capabilities(){return Cap::Read | Cap::Write | Cap::Close;}
@@ -679,11 +685,12 @@ namespace xaxaxa
 		}
 		virtual Cap Capabilities(){return Cap::All;}
 	};
-#ifdef _GIOMM_INPUTSTREAM_H
-	class GIOStream: public Stream
+#ifdef cplib_glib_wrappers
+	class GIOGenericStream: public Stream
 	{
 	public:
 		Glib::RefPtr<Glib::Object> f;
+		//Glib::RefPtr<Glib::Interface> i;
 		/*enum class T:Byte
 		{
 			I=1,O=2,IO=I|O
@@ -694,35 +701,35 @@ namespace xaxaxa
 		{
 			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
 			if(s)
-				c|=Cap::Seek;
-			else c&=~Cap::Seek;
+				c=c|Cap::Seek;
+			else c=c&(~Cap::Seek);
 		}
-		GIOStream(Glib::RefPtr<Gio::IOStream> f):f(f),c(Cap::ReadWrite)){CheckCaps();}
-		GIOStream(Glib::RefPtr<Gio::InputStream> f):f(f),c(Cap::Read){CheckCaps();}
-		GIOStream(Glib::RefPtr<Gio::OutputStream> f):f(f),c(Cap::Write){CheckCaps();}
-		virtual ~GIOStream(){}
+		GIOGenericStream(Glib::RefPtr<Gio::IOStream> f):f(f),c(Cap::ReadWrite){CheckCaps();}
+		GIOGenericStream(Glib::RefPtr<Gio::InputStream> f):f(f),c(Cap::Read){CheckCaps();}
+		GIOGenericStream(Glib::RefPtr<Gio::OutputStream> f):f(f),c(Cap::Write){CheckCaps();}
+		virtual ~GIOGenericStream(){}
 		virtual int Read(Buffer buf)
 		{
-			if(!(c&Cap::Read))throw NotSupportedException();
+			if((c&Cap::Read)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::InputStream> s;
-			if(c&Cap::Write)
+			if((c&Cap::Write)!=Cap::None)
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
-				s=f.get_input_stream();
+				s=f->get_input_stream();
 			}else s=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
-			return s.read(buf.Data,buf.Length);
+			return s->read(buf.Data,buf.Length);
 		}
 		virtual void Write(Buffer buf)
 		{
-			if(!(c&Cap::Write))throw NotSupportedException();
+			if((c&Cap::Write)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::OutputStream> s;
-			if(c&Cap::Read)
+			if((c&Cap::Read)!=Cap::None)
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
-				s=f.get_output_stream();
+				s=f->get_output_stream();
 			}else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
 			gsize tmp;
-			if(!s.write_all(buf.Data,buf.Length,&tmp))
+			if(!s->write_all(buf.Data,buf.Length,tmp))
 			{
 				throw Exception("GIO error");
 			}
@@ -730,52 +737,53 @@ namespace xaxaxa
 		}
 		virtual void Flush()
 		{
-			if(!(c&Cap::Write))throw NotSupportedException();
+			if((c&Cap::Write)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::OutputStream> s;
-			if(c&Cap::Read)
+			if((c&Cap::Read)!=Cap::None)
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
-				s=f.get_output_stream();
+				s=f->get_output_stream();
 			}else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
-			s.flush();
+			s->flush();
 		}
 		virtual void Close()
 		{
-			if(c&Cap::ReadWrite)
+			if((c&Cap::ReadWrite)==Cap::ReadWrite)
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
-				f.close();
+				f->close();
+				//WARN(2,"sssssss");
 			}
-			else if(c&Cap::Read)
+			else if((c&Cap::Read)!=Cap::None)
 			{
 				Glib::RefPtr<Gio::InputStream> f=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
-				f.close();
+				f->close();
 			}
-			else if(c&Cap::Write)
+			else if((c&Cap::Write)!=Cap::None)
 			{
 				Glib::RefPtr<Gio::OutputStream> f=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
-				f.close();
+				f->close();
 			}
 		}
 		virtual Long Position()
 		{
-			if(!(c&Cap::Seek))throw NotSupportedException();
-			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_static(f);
-			return s.tell();
+			if((c&Cap::Seek)==Cap::None)throw NotSupportedException();
+			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
+			return s->tell();
 		}
 		virtual void Seek(Long n, SeekFrom from)
 		{
-			if(!(c&Cap::Seek))throw NotSupportedException();
-			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_static(f);
+			if((c&Cap::Seek)==Cap::None)throw NotSupportedException();
+			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
 			Glib::SeekType t;
 			switch(from)
 			{
 				case SeekFrom::Begin:
-					t=SEEK_TYPE_SET; break;
+					t=Glib::SEEK_TYPE_SET; break;
 				case SeekFrom::End:
-					t=SEEK_TYPE_END; break;
+					t=Glib::SEEK_TYPE_END; break;
 				case SeekFrom::Current:
-					t=SEEK_TYPE_CUR; break;
+					t=Glib::SEEK_TYPE_CUR; break;
 				default: return;
 			}
 			s->seek(n, t);
@@ -784,9 +792,9 @@ namespace xaxaxa
 		{
 			if(newlen>=0) //truncate
 			{
-				if(!(c&Cap::Seek))throw NotSupportedException();
-				Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_static(f);
-				s.truncate(newlen);
+				if((c&Cap::Seek)==Cap::None)throw NotSupportedException();
+				Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
+				s->truncate(newlen);
 			}
 			else throw NotSupportedException();
 		}

@@ -41,6 +41,14 @@ namespace xaxaxa
 	{
 		return (Stream::Cap)((Byte)c1|(Byte)c2);
 	}
+	Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2)
+	{
+		return (Stream::Cap)((Byte)c1&(Byte)c2);
+	}
+	Stream::Cap operator~(Stream::Cap c)
+	{
+		return (Stream::Cap)(~(Byte)c);
+	}
 	FileStream::FileStream(File f):f(f)
 	{
 	}
