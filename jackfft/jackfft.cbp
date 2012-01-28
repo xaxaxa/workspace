@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="jackfft" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="jackfft">
+				<Option output="jackfft" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="jackfftc">
+				<Option output="jackfft" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+			</Target>
+			<Target title="ctrltest">
+				<Option output="ctrltest" prefix_auto="1" extension_auto="1" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="`pkg-config --cflags gtkmm-3.0 glibmm-2.4 gdkmm-3.0 jack fftw3` --std=c++0x" />
+		</Compiler>
+		<Linker>
+			<Add option="`pkg-config --libs gtkmm-3.0 glibmm-2.4 gdkmm-3.0 jack fftw3`" />
+			<Add library="cplib" />
+		</Linker>
+		<Unit filename="ctrltest.C">
+			<Option compilerVar="CC" />
+			<Option target="ctrltest" />
+		</Unit>
+		<Unit filename="fftfilter.C">
+			<Option compilerVar="CC" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="filter.H">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="jackfft.C">
+			<Option compilerVar="CC" />
+			<Option target="jackfft" />
+		</Unit>
+		<Unit filename="jackfftc.C">
+			<Option compilerVar="CC" />
+			<Option target="jackfftc" />
+		</Unit>
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<lib_finder disable_auto="1" />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

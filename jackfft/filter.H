@@ -133,7 +133,43 @@ namespace xaxaxa
 		Int curBuffer_in, nextBuffer_in, curBuffer_out, nextBuffer_out;
 		UInt BufferSize, OutBuffers, InBuffers;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
-		virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
+		
+		FLOATTYPE* tmpbuffer;
+		virtual void alloc_buffer(){tmpbuffer=new FLOATTYPE[BufferSize];};
+		virtual void free_buffer(){delete[] tmpbuffer;};
+		
+		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
+		virtual void DoProcess() = 0;
+		virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n)
+		{
+			auto l = BufferSize - offset;
+			if(l > 0) memcpy(tmpbuffer, in1 + offset, l * sizeof(FLOATTYPE));
+			if(offset > 0) memcpy(tmpbuffer + l, in2, offset * sizeof(FLOATTYPE));
+			
+			DoProcess();
+			
+			Int half = BufferSize / 2;
+			if(l > 0)
+			{
+				//memcpy(out1 + offset, tmpdouble, l * sizeof(double));
+				for(UInt i=0;i<l;i++)
+				{
+					FLOATTYPE fade = (FLOATTYPE)abs((Int)i - half) / (FLOATTYPE)half;
+					//if(fade>1.0)cout << "fade="<<fade<<endl;
+					//when fade=1: at the side: coeff=0
+					out1[offset + i] = (out1[offset + i] * (coeff_o/*+(fade*coeff_n)*/)) + ((tmpbuffer[i] / BufferSize) * coeff_n * (1.0 - fade));
+				}
+			}
+			if(offset > 0)
+			{
+				//memcpy(out2, tmpdouble + l, offset * sizeof(double));
+				for(UInt i=l;i<this->BufferSize;i++)
+				{
+					FLOATTYPE fade = (FLOATTYPE)abs((Int)i - half) / (FLOATTYPE)half;
+					out2[i - l] = (out2[i - l] * (coeff_o/*+(fade*coeff_n)*/)) + ((tmpbuffer[i]  / BufferSize) * coeff_n * (1.0 - fade));
+				}
+			}
+		}
 		
 		Int outbuffer_index, inbuffer_index;
 		UInt outbuffer_pos, inbuffer_pos;
@@ -250,6 +286,11 @@ namespace xaxaxa
 			outbuffer_pos(0), inbuffer_pos(0), overlapcount(overlapcount)
 		{
 			//InBuffer = (NUMTYPE*)malloc(sizeof(NUMTYPE)*BufferSize);
+			alloc_buffer();
+		}
+		~OverlappedFilter()
+		{
+			free_buffer();
 		}
 	};
 };

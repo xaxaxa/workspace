@@ -205,17 +205,24 @@ void do_save(Stream& fs)
 	{
 	}
 }
+void saveas();
 void save()
 {
+	if(fname.length()==0)
+	{
+		saveas();
+		return;
+	}
 	FileStream fs(File(fname.c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666));
 	do_save(fs);
 	fs.Close();
 }
-void load()
+
+void do_load(Stream& fs)
 {
 	try
 	{
-		FileStream fs(File(fname.c_str(),O_RDONLY));
+		//FileStream fs(File(fname.c_str(),O_RDONLY));
 		struct
 		{
 			double freq; double val;
@@ -244,24 +251,70 @@ void load()
 	}
 }
 
+void loadfile();
+void load()
+{
+	if(fname.length()==0)
+	{
+		loadfile();
+		return;
+	}
+	FileStream fs(File(fname.c_str(),O_RDONLY));
+	do_load(fs);
+	fs.Close();
+}
+
 void saveas()
 {
 	Gtk::FileChooserDialog* d;
 	b->get_widget("filechooserdialog1",d);
 	Gtk::Window* w;
 	b->get_widget("window1",w);
-	cout << w << endl;
 	d->set_transient_for(*w);
+	d->set_action(FILE_CHOOSER_ACTION_SAVE);
+	Gtk::Button* b=d->add_button(Stock::SAVE,RESPONSE_OK);
 	if(d->run()==RESPONSE_OK)
 	{
 		GIOGenericStream s=Glib::RefPtr<Gio::OutputStream>::cast_dynamic(d->get_file()->replace());
 		do_save(s);
 		s.Close();
+		fname=d->get_filename();
+		if(fname.length()<=0)
+		{
+			WARN(1,"current file name could not be updated because the file path is not obtainable(not a local file?)");
+		}
 	}
 	d->hide();
+	b->get_parent()->Gtk::Container::remove(*b);
+	delete b;
+}
+void loadfile()
+{
+	Gtk::FileChooserDialog* d;
+	b->get_widget("filechooserdialog1",d);
+	Gtk::Window* w;
+	b->get_widget("window1",w);
+	d->set_transient_for(*w);
+	d->set_action(FILE_CHOOSER_ACTION_OPEN);
+	Gtk::Button* b=d->add_button(Stock::OPEN,RESPONSE_OK);
+	if(d->run()==RESPONSE_OK)
+	{
+		GIOGenericStream s=Glib::RefPtr<Gio::InputStream>::cast_dynamic(d->get_file()->read());
+		do_load(s);
+		s.Close();
+		fname=d->get_filename();
+		if(fname.length()<=0)
+		{
+			WARN(1,"current file name could not be updated because the file path is not obtainable(not a local file?)");
+		}
+	}
+	d->hide();
+	b->get_parent()->Gtk::Container::remove(*b);
+	delete b;
 }
 int main (int argc, char *argv[])
 {
+	Util.ChDir(Util.GetDirFromPath(Util.GetProgramPath()));
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
@@ -344,13 +397,14 @@ int main (int argc, char *argv[])
 	b->get_widget("b_saveas",bt);
 	bt->signal_clicked().connect(&saveas);
 	b->get_widget("b_open",bt);
+	bt->signal_clicked().connect(&loadfile);
+	b->get_widget("b_revert",bt);
 	bt->signal_clicked().connect(&load);
 	
 	Gtk::FileChooserDialog* d;
 	b->get_widget("filechooserdialog1",d);
 	//d->signal_response().connect(&on_response);
 	d->add_button(Stock::CANCEL,RESPONSE_CANCEL);
-	d->add_button(Stock::OPEN,RESPONSE_OK);
 	
 	v->add(*c);
 	c->set_hexpand(true);

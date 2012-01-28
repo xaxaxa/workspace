@@ -551,6 +551,12 @@ namespace xaxaxa
 	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2);
 	Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2);
 	Stream::Cap operator~(Stream::Cap c);
+	class StreamSource: public Object
+	{
+	public:
+		virtual Stream& CreateStream()=0;
+		virtual ~StreamSource(){}
+	};
 	class NullStream: public Stream
 	{
 		virtual Cap Capabilities(){return Cap::Read | Cap::Write | Cap::Close;}
@@ -685,7 +691,19 @@ namespace xaxaxa
 		}
 		virtual Cap Capabilities(){return Cap::All;}
 	};
-#ifdef cplib_glib_wrappers
+	class FileStreamSource: public StreamSource
+	{
+	public:
+		string filename;
+		int flags; mode_t mode;
+		virtual Stream& CreateStream()
+		{
+			FileStream* fs=new FileStream(File(filename.c_str(),flags,mode));
+			return *fs;
+		}
+		virtual ~FileStreamSource(){}
+	};
+	#ifdef cplib_glib_wrappers
 	class GIOGenericStream: public Stream
 	{
 	public:
@@ -1182,5 +1200,27 @@ namespace xaxaxa
 		}
 	};
 
+	class Util_c
+	{
+	public:
+		string GetDirFromPath(const string path)
+		{
+			Int i=path.rfind("/");
+			if(i<0)return string();
+			return path.substr(0, i+1);
+		}
+		string GetProgramPath()
+		{
+			char buf[256];
+			Int i=readlink("/proc/self/exe", buf, sizeof(buf));
+			if(i<0)throw Exception(errno);
+			return string(buf, i);
+		}
+		void ChDir(string dir)
+		{
+			if(chdir(dir.c_str())<0)throw Exception(errno);
+		}
+	};
+	extern Util_c Util;
 }
 #endif

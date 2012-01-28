@@ -406,5 +406,5 @@ namespace xaxaxa
 	{
 		signal(SIGSEGV, &handle_sig);
 	}
-
+	Util_c Util;
 }
