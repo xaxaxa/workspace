@@ -27,25 +27,26 @@
 
 namespace xaxaxa
 {
-	template<class NUMTYPE>class FFTFilter: public OverlappedFilter<NUMTYPE, double>
+	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2<NUMTYPE, double>
 	{
 	public:
 		fftw_plan p1, p2;
 		//double* tmpdouble;
 		fftw_complex* tmpcomplex;
 		double* coefficients;
-		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->BufferSize);}
+		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->PeriodSize());}
 		virtual void free_buffer(){fftw_free(this->tmpbuffer);}
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount): OverlappedFilter<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount)
+		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod)
 		{
-			Int l=((UInt)(buffersize / 2) + 1);
+			Int l=((UInt)(this->PeriodSize() / 2) + 1);
 			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
 			tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
 			coefficients = new double[l];
 			for(Int i=0;i<l;i++)
 				coefficients[i] = 1.0;
-			p1 = fftw_plan_dft_r2c_1d(buffersize, this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
-			p2 = fftw_plan_dft_c2r_1d(buffersize, tmpcomplex, this->tmpbuffer, 0);
+			cout << this->PeriodSize() << endl;
+			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
+			p2 = fftw_plan_dft_c2r_1d(this->PeriodSize(), tmpcomplex, this->tmpbuffer, 0);
 		}
 		~FFTFilter()
 		{
@@ -57,7 +58,7 @@ namespace xaxaxa
 		}
 		virtual void DoProcess()
 		{
-			UInt complexsize = (UInt)(this->BufferSize / 2) + 1;
+			UInt complexsize = (UInt)(this->PeriodSize() / 2) + 1;
 			fftw_execute(p1);
 			for(UInt i=0;i<complexsize;i++)
 			{
@@ -65,6 +66,9 @@ namespace xaxaxa
 				tmpcomplex[i][1] *= coefficients[i];
 			}
 			fftw_execute(p2);
+			Int ps=this->PeriodSize();
+			for(UInt i=0;i<ps;i++)
+				this->tmpbuffer[i] /= ps;
 		}
 	};
 };

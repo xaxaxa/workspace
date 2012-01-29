@@ -1222,5 +1222,11 @@ namespace xaxaxa
 		}
 	};
 	extern Util_c Util;
+	template<class T>inline T modulus(T number, T modulus)
+	{
+		 T result = number % modulus;
+		 if (result < 0) result += modulus;
+		 return result;
+	}
 }
 #endif

@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(8192, 8, 8, 4);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 20, 20, 2, 16);
 	
 	jack_client_t *client;
 	jack_set_error_function (error);
@@ -164,7 +164,7 @@ int main (int argc, char *argv[])
 	printf ("engine sample rate: %u\n", srate=jack_get_sample_rate (client));
 	
 	FFTFilter<jack_default_audio_sample_t>* tmpf=(FFTFilter<jack_default_audio_sample_t>*)filt[0];
-	UInt complexsize = (UInt)(tmpf->BufferSize / 2) + 1;
+	UInt complexsize = (UInt)(tmpf->PeriodSize() / 2) + 1;
 	load(fs,tmpf->coefficients,complexsize);
 	fs.Close();
 	for(UInt i=1;i<CHANNELS;i++)

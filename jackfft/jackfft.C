@@ -146,7 +146,7 @@ void update_fft()
 	for(UInt i=0;i<CHANNELS;i++)
 	{
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
-		UInt complexsize = (UInt)(f->BufferSize / 2) + 1;
+		UInt complexsize = (UInt)(f->PeriodSize() / 2) + 1;
 		for(UInt n=0;n<complexsize;n++)
 			f->coefficients[n]=scale_value(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
 	}
@@ -157,7 +157,7 @@ void on_change(void* user, UInt i1, UInt i2)
 	for(UInt i=0;i<CHANNELS;i++)
 	{
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
-		UInt complexsize = (UInt)(f->BufferSize / 2) + 1;
+		UInt complexsize = (UInt)(f->PeriodSize() / 2) + 1;
 		//complexsize /= 5;
 		UInt min_index=floor(scale_freq((double)i1/EQ_POINTS)*(double)complexsize);
 		UInt max_index=ceil(scale_freq((double)i2/EQ_POINTS)*(double)complexsize);
@@ -318,7 +318,7 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(8192, 8, 8, 4);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 20, 20, 2, 16);
 	
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();
