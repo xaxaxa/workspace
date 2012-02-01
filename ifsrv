@@ -35,7 +35,7 @@
 #	end
 #	
 #***global options***
-#	nowait: do not wait for the interface to be configured; (yes|no)
+#	nowait: do not wait for the interface to be configured; (0|1)
 #
 #***config options***
 #	these are self explanatory: type(static|dhcp), address, netmask, gateway
@@ -44,10 +44,20 @@
 #	nowait
 #	config: configurations for this interface; separated by space; they're tried in the order specified
 
-import sys;
+import sys,os;
+array_opts=["configs","address"];
+def parseoption(a,target):
+	optval=None;
+	if a[0] in array_opts:
+		optval=a[1:];
+		if a[0] in target:
+			target[a[0]].extend(optval);
+			return;
+	else: optval=a[1];
+	target[a[0]]=optval;
 def readconfig(f):
-	obj={"options":{},"configs":[],"interfaces":[]};
-	array_opts=["configs"];
+	obj={"options":{},"configs":{},"interfaces":{}};
+	
 	cur_scope=(None,None);
 	while True:
 		tmp=f.readline();
@@ -55,38 +65,61 @@ def readconfig(f):
 		a=tmp.split();
 		if len(a)<1: continue;
 		cmd=a[0];
+		if cmd[0]=='#': continue;
 		if cmd=="option":
-			optval=None;
-			if a[1] in array_opts:
-				optval=a[2:];
-			else: optval=a[2];
 			if cur_scope[0]==None:
-				obj["options"][a[1]]=optval;
-			else: cur_scope[1]["options"][a[1]]=optval;
+				parseoption(a[1:],obj["options"]);
+			else: parseoption(a[1:],cur_scope[1]["options"]);
 			continue;
-		if cur_scope[0]==None: #global scope
-			if cmd=="iface": #add interface
-				iface={"name":a[1],"options":{}};
-				obj["interfaces"].append(iface);
-				cur_scope=("interface", iface);
-			elif cmd=="config": #add config
-				conf={"name":a[1],"options":{}};
-				obj["configs"].append(conf);
-				cur_scope=("config", conf);
+		#if cur_scope[0]==None: #global scope
+		if cmd=="iface": #add interface
+			iface={"name":a[1],"options":{}};
+			obj["interfaces"][a[1]]=iface;
+			cur_scope=("interface", iface);
+			continue;
+		elif cmd=="config": #add config
+			conf={"name":a[1],"options":{},"type":a[2]};
+			obj["configs"][a[1]]=conf;
+			cur_scope=("config", conf);
+			continue;
 		elif cmd=="end":
 			cur_scope=(None,None);
+			continue;
+		#command not recognized. treating it as an option
+		if cur_scope[0]==None:
+			parseoption(a,obj["options"]);
+		else: parseoption(a,cur_scope[1]["options"]);
 	return obj;
+conf=None;
+def init_iface(iface):
+	os.spawnvp(os.P_WAIT,"ip",("ip","addr","flush","dev",iface["name"]));
+	
+def apply_config(iface,config): #apply and test config
+	init_iface(iface);
+	if config["type"]=="static":
+		for addr in config["options"]["address"]:
+			os.spawnvp(os.P_WAIT,"ip",("ip","addr","add","dev",iface["name"],"local",addr));
+	elif config["type"]=="dhcp":
+		os.spawnvp(os.P_WAIT,"dhclient",("dhclient",iface["name"]));
+def activate_iface(iface):
+	global conf;
+	for c in iface["options"]["configs"]:
+		if apply_config(iface,conf["configs"][c]): break;
 def start():
-	pass;
+	global conf;
+	f=open(sys.argv[1],'rb');
+	conf=readconfig(f);
+	for iface in conf["interfaces"]:
+		activate_iface(conf["interfaces"][iface]);
+
 def main():
 	if len(sys.argv)<2:
 		print("to use ifsrv, put '#!/path/to/ifsrv' at the top of your config file and put the config file in /etc/init.d/ or whatever; don't forget to chmod it");
 		return 0;
 	if len(sys.argv)<3:
-		print("usage: %s (start|stop|reload)"%sys.argv[1]);
+		print("usage: %s (start|stop|restart)"%sys.argv[1]);
 		return 0;
-	f=open(sys.argv[1],'rb');
-	print(readconfig(f));
+	eval(sys.argv[2]+"()");
 	return 0;
 
 if __name__ == '__main__':
