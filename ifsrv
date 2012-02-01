@@ -99,6 +99,14 @@ def apply_config(iface,config): #apply and test config
 	if config["type"]=="static":
 		for addr in config["options"]["address"]:
 			os.spawnvp(os.P_WAIT,"ip",("ip","addr","add","dev",iface["name"],"local",addr));
+		if "pingtest" in config["options"] and config["options"]["pingtest"]=="1":
+			t_o=2;
+			h=config["options"]["gateway"];
+			if "pingtimeout" in config["options"]: t_o=int(config["options"]["pingtimeout"]);
+			if "pinghost" in config["options"]: h=config["options"]["pinghost"];
+			retv=os.spawnvp(os.P_WAIT,"ping",("ping","-c","1","-w",str(t_o),h));
+			return retv==0;
+		return True;
 	elif config["type"]=="dhcp":
 		os.spawnvp(os.P_WAIT,"dhclient",("dhclient",iface["name"]));
 def activate_iface(iface):
