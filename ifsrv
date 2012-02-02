@@ -44,7 +44,46 @@
 #	nowait
 #	config: configurations for this interface; separated by space; they're tried in the order specified
 
-import sys,os;
+import sys,os,select,threading,subprocess,time;
+
+
+
+class WaitableEvent:
+    """Provides an abstract object that can be used to resume select loops with
+    indefinite waits from another thread or process. This mimics the standard
+    threading.Event interface."""
+    def __init__(self):
+        self._read_fd, self._write_fd = os.pipe()
+
+    def wait(self, timeout=None):
+        rfds, wfds, efds = select.select([self._read_fd], [], [], timeout)
+        return self._read_fd in rfds
+
+    def isSet(self):
+        return self.wait(0)
+
+    def clear(self):
+        if self.isSet():
+            os.read(self._read_fd, 1)
+
+    def set(self):
+        if not self.isSet():
+            os.write(self._write_fd, b'1')
+
+    def fileno(self):
+        """Return the FD number of the read side of the pipe, allows this object to
+        be used with select.select()."""
+        return self._read_fd
+
+    def __del__(self):
+        os.close(self._read_fd)
+        os.close(self._write_fd)
+
+
+
+
+if sys.version_info < (3,):
+    range = xrange;
 array_opts=["configs","address"];
 def parseoption(a,target):
 	optval=None;
@@ -65,6 +104,7 @@ def readconfig(f):
 		a=tmp.split();
 		if len(a)<1: continue;
 		cmd=a[0];
+		#print(cmd[0]);
 		if cmd[0]=='#': continue;
 		if cmd=="option":
 			if cur_scope[0]==None:
@@ -90,36 +130,108 @@ def readconfig(f):
 			parseoption(a,obj["options"]);
 		else: parseoption(a,cur_scope[1]["options"]);
 	return obj;
+
 conf=None;
+
 def init_iface(iface):
+	if "curconf" in iface: del iface["curconf"];
+	#if "configured" in iface: del iface["configured"];
 	os.spawnvp(os.P_WAIT,"ip",("ip","addr","flush","dev",iface["name"]));
-	
-def apply_config(iface,config): #apply and test config
+
+def get_gateway(iface):
+	s=subprocess.check_output(("ip","route","show","dev",iface["name"]));
+	for l in s:
+		tmp=s.split();
+		if len(tmp)>2:
+			if tmp[0]=="default" and tmp[1]=="via": return tmp[2];
+	return None;
+
+def testconfig(iface,config=None):
+	if config==None: config=iface["curconf"];
+	if config==None: return False;
+	if "pingtest" in config["options"] and config["options"]["pingtest"]=="1":
+		t_o=2;
+		h=None;
+		if config["type"]=="static": h=config["options"]["gateway"];
+		elif config["type"]=="dhcp": h=get_gateway(iface);
+		if "pingtimeout" in config["options"]: t_o=int(config["options"]["pingtimeout"]);
+		if "pinghost" in config["options"]: h=config["options"]["pinghost"];
+		if h==None: return False;
+		retv=os.spawnvp(os.P_WAIT,"ping",("ping","-c","1","-w",str(t_o),h));
+		return retv==0;
+	return True;
+
+def apply_config(iface,config,is_thread=False): #apply config
 	init_iface(iface);
 	if config["type"]=="static":
+		print("setting ip addresses");
 		for addr in config["options"]["address"]:
 			os.spawnvp(os.P_WAIT,"ip",("ip","addr","add","dev",iface["name"],"local",addr));
-		if "pingtest" in config["options"] and config["options"]["pingtest"]=="1":
-			t_o=2;
-			h=config["options"]["gateway"];
-			if "pingtimeout" in config["options"]: t_o=int(config["options"]["pingtimeout"]);
-			if "pinghost" in config["options"]: h=config["options"]["pinghost"];
-			retv=os.spawnvp(os.P_WAIT,"ping",("ping","-c","1","-w",str(t_o),h));
-			return retv==0;
-		return True;
 	elif config["type"]=="dhcp":
+		print("executing dhclient");
 		os.spawnvp(os.P_WAIT,"dhclient",("dhclient",iface["name"]));
+	#iface["curconf"]=config;
+	if is_thread:
+		if testconfig(iface,config): return;
+		print("asdf");
+		do_activate_iface(iface,True);
+def do_activate_iface(iface,is_thread=False):
+	global conf;
+	configs=iface["options"]["configs"];
+	st=0;
+	if "st" in iface: st=iface["st"];
+	if st>=len(configs): st=0;
+	c=None;
+	for i in range(st,len(configs)):
+		c=conf["configs"][configs[i]];
+		if "nowait" in c["options"] and c["options"]["nowait"] and (not is_thread):
+			iface["st"]=i+1;
+			t=threading.Thread(target=apply_config,args=(iface,c,True));
+			t.start();
+			return;
+		apply_config(iface,c);
+		if testconfig(iface,c): break;
+	iface["curconf"]=c;
 def activate_iface(iface):
+	if "nowait" in iface["options"] and iface["options"]["nowait"]=="1":
+		t=threading.Thread(target=do_activate_iface,args=(iface,True));
+		t.start();
+	else: do_activate_iface(iface);
+def loadconfig():
 	global conf;
-	for c in iface["options"]["configs"]:
-		if apply_config(iface,conf["configs"][c]): break;
-def start():
-	global conf;
-	f=open(sys.argv[1],'rb');
+	if conf!=None: return;
+	f=open(sys.argv[1],'r');
 	conf=readconfig(f);
+	f.close();
+def run(evt=None):
+	global conf;
+	loadconfig();
 	for iface in conf["interfaces"]:
 		activate_iface(conf["interfaces"][iface]);
-
+	if evt!=None: evt.set();
+	while True:
+		time.sleep(10);	#FIXME
+		for iface in conf["interfaces"]:
+			iface=conf["interfaces"][iface];
+			if "curconf" in iface:
+				#print(iface);
+				if not testconfig(iface):
+					del iface["curconf"];
+					activate_iface(iface);
+def do_start():
+	global conf;
+	loadconfig();
+	t_o=None;
+	if "timeout" in conf["options"]: t_o=float(conf["options"]["timeout"]);
+	evt=WaitableEvent();
+	tmp=os.fork();
+	if tmp==0: #child
+		run(evt);
+	elif tmp>0: #parent
+		if (not evt.wait(t_o)) and t_o>0: print("timed out waiting for interface config");
+		#print("dgsjdgghjasd");
+def start():
+	do_start();
 def main():
 	if len(sys.argv)<2:
 		print("to use ifsrv, put '#!/path/to/ifsrv' at the top of your config file and put the config file in /etc/init.d/ or whatever; don't forget to chmod it");
