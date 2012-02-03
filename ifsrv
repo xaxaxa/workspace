@@ -133,13 +133,25 @@ def readconfig(f):
 
 conf=None;
 
+def kill_dhclient(iface):
+	try:
+		f=open("/var/run/dhclient-"+iface["name"]+".pid","r");
+		pid=int(f.readline().strip());
+		os.kill(pid,9);
+		os.remove("/var/run/dhclient-"+iface["name"]+".pid");
+	except: pass;
 def init_iface(iface):
 	if "curconf" in iface: del iface["curconf"];
 	#if "configured" in iface: del iface["configured"];
+	kill_iface(iface);
+	os.spawnvp(os.P_WAIT,"ifconfig",("ifconfig",iface["name"],"up"));
 	os.spawnvp(os.P_WAIT,"ip",("ip","addr","flush","dev",iface["name"]));
-
+	#os.spawnvp(os.P_WAIT,"dhclient",("dhclient","-x",iface["name"]));
+	kill_dhclient(iface);
 def get_gateway(iface):
 	s=subprocess.check_output(("ip","route","show","dev",iface["name"]));
+	s=s.decode("utf-8");
+	#print(s);
 	for l in s:
 		tmp=s.split();
 		if len(tmp)>2:
@@ -156,8 +168,13 @@ def testconfig(iface,config=None):
 		elif config["type"]=="dhcp": h=get_gateway(iface);
 		if "pingtimeout" in config["options"]: t_o=int(config["options"]["pingtimeout"]);
 		if "pinghost" in config["options"]: h=config["options"]["pinghost"];
+		#print("pinging "+h);
 		if h==None: return False;
-		retv=os.spawnvp(os.P_WAIT,"ping",("ping","-c","1","-w",str(t_o),h));
+		pid=os.spawnvp(os.P_NOWAIT,"ping",("ping","-c","1","-w",str(t_o),h));
+		iface["pid"]=pid;
+		(pid,retv)=os.waitpid(pid,0);
+		try: del iface["pid"];
+		except: pass;
 		return retv==0;
 	return True;
 
@@ -166,15 +183,24 @@ def apply_config(iface,config,is_thread=False): #apply config
 	if config["type"]=="static":
 		print("setting ip addresses");
 		for addr in config["options"]["address"]:
-			os.spawnvp(os.P_WAIT,"ip",("ip","addr","add","dev",iface["name"],"local",addr));
+			pid=os.spawnvp(os.P_NOWAIT,"ip",("ip","addr","add","dev",iface["name"],"local",addr));
+			iface["pid"]=pid;
+			os.waitpid(pid,0);
+			try: del iface["pid"];
+			except: pass;
 	elif config["type"]=="dhcp":
 		print("executing dhclient");
-		os.spawnvp(os.P_WAIT,"dhclient",("dhclient",iface["name"]));
+		pid=os.spawnvp(os.P_NOWAIT,"dhclient",("dhclient","-pf","/var/run/dhclient-"+iface["name"]+".pid",iface["name"]));
+		iface["pid"]=pid;
+		os.waitpid(pid,0);
+		try: del iface["pid"];
+		except: pass;
 	#iface["curconf"]=config;
 	if is_thread:
 		if testconfig(iface,config): return;
 		print("asdf");
 		do_activate_iface(iface,True);
+
 def do_activate_iface(iface,is_thread=False):
 	global conf;
 	configs=iface["options"]["configs"];
@@ -187,37 +213,64 @@ def do_activate_iface(iface,is_thread=False):
 		if "nowait" in c["options"] and c["options"]["nowait"] and (not is_thread):
 			iface["st"]=i+1;
 			t=threading.Thread(target=apply_config,args=(iface,c,True));
+			#iface["thr"]=t;
 			t.start();
 			return;
 		apply_config(iface,c);
 		if testconfig(iface,c): break;
 	iface["curconf"]=c;
-def activate_iface(iface):
-	if "nowait" in iface["options"] and iface["options"]["nowait"]=="1":
+
+def activate_iface(iface,nowait=None):
+	if nowait==None: nowait=("nowait" in iface["options"] and iface["options"]["nowait"]=="1");
+	if nowait:
 		t=threading.Thread(target=do_activate_iface,args=(iface,True));
+		#iface["thr"]=t;
 		t.start();
 	else: do_activate_iface(iface);
+	
+def detect_cable(iface):
+	try:
+		f=open("/sys/class/net/"+iface["name"]+"/carrier","r");
+		s=f.readline().strip();
+		f.close();
+		return s!="0";
+	except: return True;
 def loadconfig():
 	global conf;
 	if conf!=None: return;
 	f=open(sys.argv[1],'r');
 	conf=readconfig(f);
 	f.close();
+def kill_iface(iface):
+	try:
+		if "pid" in iface:
+			os.kill(iface["pid"],9);
+	except: pass
 def run(evt=None):
 	global conf;
 	loadconfig();
 	for iface in conf["interfaces"]:
-		activate_iface(conf["interfaces"][iface]);
+		iface=conf["interfaces"][iface];
+		init_iface(iface);
+		iface["cable"]=detect_cable(iface);
+		if iface["cable"]: activate_iface(iface);
+		else: print(iface["name"]+" cable unplugged");
 	if evt!=None: evt.set();
 	while True:
-		time.sleep(10);	#FIXME
+		time.sleep(5);	#FIXME
 		for iface in conf["interfaces"]:
 			iface=conf["interfaces"][iface];
-			if "curconf" in iface:
-				#print(iface);
-				if not testconfig(iface):
-					del iface["curconf"];
-					activate_iface(iface);
+			try:
+				tmp=detect_cable(iface);
+				if tmp and (not iface["cable"]): #cable was plugged in
+					#kill_iface(iface);
+					print(iface["name"]+" cable plugged");
+					activate_iface(iface,True);
+				elif iface["cable"] and (not tmp):
+					print(iface["name"]+" cable unplugged");
+					init_iface(iface);
+				iface["cable"]=tmp;
+			except: pass;
 def do_start():
 	global conf;
 	loadconfig();
