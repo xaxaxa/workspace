@@ -138,7 +138,9 @@ def kill_dhclient(iface):
 		f=open("/var/run/dhclient-"+iface["name"]+".pid","r");
 		pid=int(f.readline().strip());
 		os.kill(pid,9);
-		os.remove("/var/run/dhclient-"+iface["name"]+".pid");
+		#os.remove("/var/run/dhclient-"+iface["name"]+".pid");
+	except: pass;
+	try: os.remove("/var/run/dhclient-"+iface["name"]+".pid");
 	except: pass;
 def init_iface(iface):
 	if "curconf" in iface: del iface["curconf"];
@@ -146,14 +148,18 @@ def init_iface(iface):
 	kill_iface(iface);
 	os.spawnvp(os.P_WAIT,"ifconfig",("ifconfig",iface["name"],"up"));
 	os.spawnvp(os.P_WAIT,"ip",("ip","addr","flush","dev",iface["name"]));
+	os.spawnvp(os.P_WAIT,"ip",("ip","route","flush","dev",iface["name"]));
 	#os.spawnvp(os.P_WAIT,"dhclient",("dhclient","-x",iface["name"]));
 	kill_dhclient(iface);
+	#os.system("ifconfig "+iface["name"]);
 def get_gateway(iface):
 	s=subprocess.check_output(("ip","route","show","dev",iface["name"]));
 	s=s.decode("utf-8");
 	#print(s);
+	s=s.split("\n");
 	for l in s:
-		tmp=s.split();
+		#print(l);
+		tmp=l.split();
 		if len(tmp)>2:
 			if tmp[0]=="default" and tmp[1]=="via": return tmp[2];
 	return None;
@@ -168,14 +174,17 @@ def testconfig(iface,config=None):
 		elif config["type"]=="dhcp": h=get_gateway(iface);
 		if "pingtimeout" in config["options"]: t_o=int(config["options"]["pingtimeout"]);
 		if "pinghost" in config["options"]: h=config["options"]["pinghost"];
-		#print("pinging "+h);
+		if h==None: print("warning: no gateway found, pinghost is not specified, and pingtest is enabled");
+		else: print("pinging "+h);
 		if h==None: return False;
 		pid=os.spawnvp(os.P_NOWAIT,"ping",("ping","-c","1","-w",str(t_o),h));
 		iface["pid"]=pid;
 		(pid,retv)=os.waitpid(pid,0);
 		try: del iface["pid"];
 		except: pass;
-		return retv==0;
+		if retv!=0: return False;
+		#return retv==0;
+	print("interface "+iface["name"]+" activated using config \""+config["name"]+"\"");
 	return True;
 
 def apply_config(iface,config,is_thread=False): #apply config
@@ -184,6 +193,12 @@ def apply_config(iface,config,is_thread=False): #apply config
 		print("setting ip addresses");
 		for addr in config["options"]["address"]:
 			pid=os.spawnvp(os.P_NOWAIT,"ip",("ip","addr","add","dev",iface["name"],"local",addr));
+			iface["pid"]=pid;
+			os.waitpid(pid,0);
+			try: del iface["pid"];
+			except: pass;
+		if "gateway" in config["options"]:
+			pid=os.spawnvp(os.P_NOWAIT,"ip",("ip","route","add","default","via",config["options"]["gateway"],"dev",iface["name"]));
 			iface["pid"]=pid;
 			os.waitpid(pid,0);
 			try: del iface["pid"];
@@ -217,7 +232,9 @@ def do_activate_iface(iface,is_thread=False):
 			t.start();
 			return;
 		apply_config(iface,c);
-		if testconfig(iface,c): break;
+		if testconfig(iface,c):
+			#print("interface "+iface["name"]+" activated using config \""+c["name"]+"\"");
+			break;
 	iface["curconf"]=c;
 
 def activate_iface(iface,nowait=None):
@@ -241,6 +258,8 @@ def loadconfig():
 	f=open(sys.argv[1],'r');
 	conf=readconfig(f);
 	f.close();
+	if len(conf["interfaces"])<=0:
+		raise Error("at least one interface should be defined");
 def kill_iface(iface):
 	try:
 		if "pid" in iface:
@@ -282,9 +301,34 @@ def do_start():
 		run(evt);
 	elif tmp>0: #parent
 		if (not evt.wait(t_o)) and t_o>0: print("timed out waiting for interface config");
+		return tmp;
 		#print("dgsjdgghjasd");
+	return 0;
+def stop():
+	global conf;
+	loadconfig();
+	try:
+		pidfile="/var/run/ifsrv-"+conf["interfaces"].keys()[0]+".pid";
+		try:
+			f=open(pidfile,"r");
+			pid=int(f.readline().strip());
+			os.kill(pid,9);
+			f.close();
+		except: pass;
+		os.remove(pidfile);
+	except: pass;
 def start():
-	do_start();
+	global conf;
+	loadconfig();
+	stop();
+	pid=do_start();
+	if pid>0:
+		pidfile="/var/run/ifsrv-"+conf["interfaces"].keys()[0]+".pid";
+		f=open(pidfile,"w+",0666);
+		f.write(str(pid)+"\n");
+		f.close();
+def restart():
+	start();
 def main():
 	if len(sys.argv)<2:
 		print("to use ifsrv, put '#!/path/to/ifsrv' at the top of your config file and put the config file in /etc/init.d/ or whatever; don't forget to chmod it");
