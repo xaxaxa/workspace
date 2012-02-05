@@ -1,0 +1,10 @@
+<wtsp>
+<%
+void asdfg()
+{
+	
+}
+%>
+<label>asdf</label>
+<button onclick="asdfg();">zxcv</button>
+</wtsp>

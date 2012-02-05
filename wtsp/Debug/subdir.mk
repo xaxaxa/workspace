@@ -3,18 +3,21 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
-CPP_SRCS += \
-../WTSPApplication.cpp 
+C_UPPER_SRCS += \
+../Application.C \
+../Parser.C 
 
 OBJS += \
-./WTSPApplication.o 
+./Application.o \
+./Parser.o 
 
-CPP_DEPS += \
-./WTSPApplication.d 
+C_UPPER_DEPS += \
+./Application.d \
+./Parser.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
-%.o: ../%.cpp
+%.o: ../%.C
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross G++ Compiler'
 	g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
