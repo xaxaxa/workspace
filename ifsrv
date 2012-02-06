@@ -85,10 +85,13 @@ class WaitableEvent:
 if sys.version_info < (3,):
     range = xrange;
 array_opts=["configs","address"];
-def parseoption(a,target):
+def parseoption(tmp,target):
 	optval=None;
+	i=tmp.find(" ");
+	if i<0: return;
+	a=(tmp[:i],tmp[i+1:]);
 	if a[0] in array_opts:
-		optval=a[1:];
+		optval=a[1].split();
 		if a[0] in target:
 			target[a[0]].extend(optval);
 			return;
@@ -101,7 +104,7 @@ def readconfig(f):
 	while True:
 		tmp=f.readline();
 		if tmp==None or len(tmp)<=0: return obj;
-		a=tmp.split();
+		a=tmp.split(); tmp=tmp.strip();
 		if len(a)<1: continue;
 		cmd=a[0];
 		#print(cmd[0]);
@@ -127,8 +130,8 @@ def readconfig(f):
 			continue;
 		#command not recognized. treating it as an option
 		if cur_scope[0]==None:
-			parseoption(a,obj["options"]);
-		else: parseoption(a,cur_scope[1]["options"]);
+			parseoption(tmp,obj["options"]);
+		else: parseoption(tmp,cur_scope[1]["options"]);
 	return obj;
 
 conf=None;
@@ -184,7 +187,7 @@ def testconfig(iface,config=None):
 		except: pass;
 		if retv!=0: return False;
 		#return retv==0;
-	print("interface "+iface["name"]+" activated using config \""+config["name"]+"\"");
+	#print("interface "+iface["name"]+" activated using config \""+config["name"]+"\"");
 	return True;
 
 def apply_config(iface,config,is_thread=False): #apply config
@@ -210,10 +213,11 @@ def apply_config(iface,config,is_thread=False): #apply config
 		os.waitpid(pid,0);
 		try: del iface["pid"];
 		except: pass;
-	#iface["curconf"]=config;
 	if is_thread:
-		if testconfig(iface,config): return;
-		print("asdf");
+		if testconfig(iface,config):
+			iface["curconf"]=config;
+			postup(iface);
+			return;
 		do_activate_iface(iface,True);
 
 def do_activate_iface(iface,is_thread=False):
@@ -233,8 +237,9 @@ def do_activate_iface(iface,is_thread=False):
 			return;
 		apply_config(iface,c);
 		if testconfig(iface,c):
-			#print("interface "+iface["name"]+" activated using config \""+c["name"]+"\"");
-			break;
+			iface["curconf"]=c;
+			postup(iface);
+			return;
 	iface["curconf"]=c;
 
 def activate_iface(iface,nowait=None):
@@ -265,6 +270,21 @@ def kill_iface(iface):
 		if "pid" in iface:
 			os.kill(iface["pid"],9);
 	except: pass
+
+def postup(iface):
+	global conf;
+	config=iface["curconf"];
+	print("interface "+iface["name"]+" activated using config \""+config["name"]+"\"");
+	try:
+		if "up" in config["options"]:
+			print(config["options"]["up"]);
+			eval(config["options"]["up"]);
+	except BaseException as (a): print a;
+	try:
+		if "up" in iface["options"]:
+			print(iface["options"]["up"]);
+			eval(iface["options"]["up"]);
+	except BaseException as (a): print a;
 def run(evt=None):
 	global conf;
 	loadconfig();
@@ -327,6 +347,10 @@ def start():
 		f=open(pidfile,"w+",0666);
 		f.write(str(pid)+"\n");
 		f.close();
+def showconf():
+	global conf;
+	loadconfig();
+	print conf;
 def restart():
 	start();
 def main():
