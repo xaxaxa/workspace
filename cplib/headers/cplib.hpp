@@ -45,8 +45,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #ifdef cplib_glib_wrappers
-	#include <glibmm.h>
-	#include <giomm.h>
+#include <glibmm.h>
+#include <giomm.h>
 #endif
 //#define FUNCTION(RETVAL,...) struct{RETVAL(*f)(void*,__VA_ARGS__);void* obj;}
 //RETVAL(*)(__VA_ARGS__)
@@ -260,11 +260,11 @@ namespace xaxaxa
 	/*struct Buffer
 	 {
 	 public:
-	 void* buf;
+	 void* Data;
 	 private:
 	 void* __location;
 	 public:
-	 int length;
+	 int Length;
 	 //bool destruct;
 	 struct BufferInfo
 	 {
@@ -272,29 +272,28 @@ namespace xaxaxa
 	 };
 	 inline Buffer()
 	 {
-	 buf=NULL;
+	 Data = NULL;
 	 }
 	 inline Buffer(void* buf, int length, Buffer* src = NULL)
 	 {
-	 this->buf = buf;
-	 this->length = length;
+	 this->Data = buf;
+	 this->Length = length;
 	 this->__location = (src == NULL ? NULL : src->__location);
 	 //this->destruct=destruct;
 	 //Retain();
 	 }
 	 inline Buffer(int length)
 	 {
-	 if(length<=0)
+	 if (length <= 0)
 	 {
-	 this->__location=NULL;
+	 this->__location = NULL;
 	 return;
 	 }
 	 this->__location = malloc(sizeof(BufferInfo) + length);
 	 BufferInfo *inf = (BufferInfo*) __location;
 	 inf->RetainCount = 1;
-	 this->buf = (void*) (((__uint8_t *) this->__location)
-	 + sizeof(BufferInfo));
-	 this->length = length;
+	 this->Data = (void*) (((__uint8_t *) this->__location) + sizeof(BufferInfo));
+	 this->Length = length;
 	 //this->destruct=destruct;
 	 #ifdef __debug_print123
 	 __Buffer_bytes_inc(length);
@@ -305,10 +304,10 @@ namespace xaxaxa
 	 {
 	 if (__location == NULL)
 	 {
-	 if (buf != NULL)
+	 if (Data != NULL)
 	 {
-	 free(buf);
-	 buf = NULL;
+	 free(Data);
+	 Data = NULL;
 	 #ifdef __debug_print123
 	 __Buffer_bytes_dec(length);
 	 dbgprint(length << " bytes freed(total " << __Buffer_bytes_get() << ")");
@@ -319,7 +318,7 @@ namespace xaxaxa
 	 {
 	 free(__location);
 	 __location = NULL;
-	 buf = NULL;
+	 Data = NULL;
 	 #ifdef __debug_print123
 	 __Buffer_bytes_dec(length);
 	 dbgprint(length << " bytes freed(total " << __Buffer_bytes_get() << ")");
@@ -329,7 +328,7 @@ namespace xaxaxa
 
 	 inline Buffer& Retain()
 	 {
-	 if (__location != NULL&&buf!=NULL)
+	 if (__location != NULL && Data != NULL)
 	 {
 	 BufferInfo *inf = (BufferInfo*) __location;
 	 inf->RetainCount++;
@@ -337,27 +336,35 @@ namespace xaxaxa
 	 }
 	 return *this;
 	 }
-	 inline Buffer SubBuffer(int index, int length, bool retain=false)
+	 inline Buffer SubBuffer(int index, int length, bool retain = false)
 	 {
-	 if (index < 0 || length > this->length) throw Exception(
-	 "SubBuffer() out of range");
+	 if (index < 0 || length > this->Length)
+	 throw Exception("SubBuffer() out of range");
 	 //Buffer b((void*)((char*)buf+index),length,this,false,retain);
 	 Buffer b;
-	 b.buf = (void*) ((char*) buf + index);
-	 b.length = length;
+	 b.Data = (void*) ((char*) Data + index);
+	 b.Length = length;
 	 b.__location = this->__location;
-	 if(retain)this->Retain();
+	 if (retain)
+	 this->Retain();
 	 return b;
+	 }
+	 inline Buffer SubBuffer(int index)
+	 {
+	 return SubBuffer(index, Length - index);
 	 }
 	 inline void Release()
 	 {
-	 if (length<=0||buf==NULL)return;
+	 if (Length <= 0 || Data == NULL
+	 )
+	 return;
 	 if (__location != NULL)
 	 {
 	 BufferInfo *inf = (BufferInfo*) __location;
 	 inf->RetainCount--;
 	 dbgprint("Buffer::Release()");
-	 if (inf->RetainCount == 0) Free();
+	 if (inf->RetainCount == 0)
+	 Free();
 	 }
 	 }
 	 };*/
@@ -369,7 +376,9 @@ namespace xaxaxa
 	typedef __uint32_t UInt;
 	typedef __int64_t Long;
 	typedef __uint64_t ULong;
-
+	typedef float Float;
+	typedef double Double;
+	typedef long double Decimal;
 	class Buffer
 	{
 	public:
@@ -423,9 +432,12 @@ namespace xaxaxa
 		}
 		inline Buffer SubBuffer(int index, int length) const
 		{
-			if (index < 0 || length > this->Length) throw Exception("SubBuffer() out of range");
-			if (IsRaw) return Buffer(Data + index, length);
-			else return Buffer(Data + index, length, pbuf);
+			if (index < 0 || index + length > this->Length)
+				throw Exception("SubBuffer() out of range");
+			if (IsRaw)
+				return Buffer(Data + index, length);
+			else
+				return Buffer(Data + index, length, pbuf);
 		}
 		inline Buffer SubBuffer(int index) const
 		{
@@ -497,14 +509,15 @@ namespace xaxaxa
 	class Stream: public Object
 	{
 	public:
-		enum class Cap:Byte
+		enum class Cap
+:		Byte
 		{
 			None=0,
 			Read=1, Write=2, ReadWrite=Read|Write, Flush=4, Close=8,
 			Seek=16, Length=32,
 			All=0xFF
 		};
-		
+
 		enum class SeekFrom
 		{
 			Nop=0,
@@ -516,10 +529,14 @@ namespace xaxaxa
 		virtual void Write(Buffer buf)=0;
 		virtual void Flush()=0;
 		virtual void Close()=0;
-		virtual void Seek(Long n, SeekFrom from){}
-		virtual Long Position(){return 0;}
-		virtual void Length(Long newlen=-1){}//set or get length
-		virtual Cap Capabilities(){return Cap::None;}
+		virtual void Seek(Long n, SeekFrom from)
+		{}
+		virtual Long Position()
+		{	return 0;}
+		virtual void Length(Long newlen=-1)
+		{} //set or get length
+		virtual Cap Capabilities()
+		{	return Cap::None;}
 		//bool AutoClose;
 		//typedef boost::function<void (void*,Stream*)> Callback;
 		FUNCTION_DECLARE(Callback,void,Stream*);
@@ -542,7 +559,8 @@ namespace xaxaxa
 		{
 
 		}
-		Stream(){}
+		Stream()
+		{}
 		virtual ~Stream()
 		{
 			//if(AutoClose)Close();
@@ -555,11 +573,16 @@ namespace xaxaxa
 	{
 	public:
 		virtual Stream& CreateStream()=0;
-		virtual ~StreamSource(){}
+		virtual ~StreamSource()
+		{
+		}
 	};
 	class NullStream: public Stream
 	{
-		virtual Cap Capabilities(){return Cap::Read | Cap::Write | Cap::Close;}
+		virtual Cap Capabilities()
+		{
+			return Cap::Read | Cap::Write | Cap::Close;
+		}
 		virtual Int Read(Buffer buf)
 		{
 			return 0;
@@ -582,12 +605,67 @@ namespace xaxaxa
 		void *buf;
 		int Capacity;
 		int Length;
+		void Clear()
+		{
+			Length = 0;
+		}
+		inline void EnsureCapacity(int c)
+		{
+			if (Capacity >= c)
+				return;
+			int tmp = this->Capacity;
+			while (tmp < c)
+			{
+				tmp *= 2;
+			}
+			this->buf = realloc(this->buf, tmp);
+			this->Capacity = tmp;
+		}
 		void Append(Buffer buf);
 		void Append(STRING buf);
-		void Append(char* buf, int length);
+		inline void Append(char* buf, int length)
+		{
+			this->EnsureCapacity(this->Length + length);
+			memcpy((char*) this->buf + this->Length, buf, length);
+			this->Length += length;
+		}
 		void Append(char* buf);
 		void Append(const StringBuilder* s);
-		void EnsureCapacity(int c);
+		inline void Append(Int n)
+		{
+			//char c[log10(0xFFFFFFFF)+2];
+			char c[12];
+			int i = snprintf(c, sizeof(c), "%i", n);
+			Append(c, i);
+		}
+		inline void Append(UInt n)
+		{
+			//char c[log10(0xFFFFFFFF)+2];
+			char c[12];
+			int i = snprintf(c, sizeof(c), "%i", n);
+			Append(c, i);
+		}
+		inline void Append(Long n)
+		{
+			//char c[log10(0xFFFFFFFF)+2];
+			char c[22];
+			int i = snprintf(c, sizeof(c), "%li", n);
+			Append(c, i);
+		}
+		inline void Append(ULong n)
+		{
+			//char c[log10(0xFFFFFFFF)+2];
+			char c[22];
+			int i = snprintf(c, sizeof(c), "%li", n);
+			Append(c, i);
+		}
+		/*inline void Append(Float n)
+		 {
+		 //char c[log10(0xFFFFFFFF)+2];
+		 char c[22];
+		 int i = snprintf(c, sizeof(c), "%f", n);
+		 Append(c, i);
+		 }*/
 		int CompareTo(Buffer buf);
 		int CompareTo(const StringBuilder* sb);
 		STRING ToString();
@@ -598,7 +676,7 @@ namespace xaxaxa
 		virtual void Close();
 	};
 	typedef int FILEDES;
-	#define CreateFile open
+#define CreateFile open
 	struct File
 	{
 		FILEDES _f;
@@ -606,11 +684,13 @@ namespace xaxaxa
 		{
 		}
 		virtual inline ~File()
-		{}
+		{
+		}
 		inline File(const char *path, int flags)
 		{
-			_f = CreateFile(path,flags);
-			if(_f<0)throw Exception(errno);
+			_f = CreateFile(path, flags);
+			if (_f < 0)
+				throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -618,8 +698,9 @@ namespace xaxaxa
 		}
 		inline File(const char *path, int flags, mode_t mode)
 		{
-			_f = CreateFile(path,flags,mode);
-			if(_f<0)throw Exception(errno);
+			_f = CreateFile(path, flags, mode);
+			if (_f < 0)
+				throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -636,7 +717,8 @@ namespace xaxaxa
 		{
 			//throw Exception();
 			dbgprint("file " << _f << " closed");
-			if (_f != -1) close(_f);
+			if (_f != -1)
+				close(_f);
 			_f = -1;
 		}
 		inline virtual Int Write(Buffer buf)
@@ -655,12 +737,14 @@ namespace xaxaxa
 		}
 		inline virtual off_t Seek(off_t offset, int whence)
 		{
-			off_t tmp=lseek(_f, offset, whence);
-			if(tmp==(off_t)-1)throw Exception(errno);
+			off_t tmp = lseek(_f, offset, whence);
+			if (tmp == (off_t) -1)
+				throw Exception(errno);
 			return tmp;
 		}
 		virtual void Flush()
-		{}
+		{
+		}
 		inline Int GetFlags()
 		{
 			return fcntl(_f, F_GETFL, 0);
@@ -687,45 +771,83 @@ namespace xaxaxa
 		}
 		virtual void Seek(Long n, SeekFrom from)
 		{
-			f.Seek(n, (int)from);
+			f.Seek(n, (int) from);
 		}
-		virtual Cap Capabilities(){return Cap::All;}
+		virtual Cap Capabilities()
+		{
+			return Cap::All;
+		}
+	};
+	class StandardStream: public Stream
+	{
+	public:
+		FileStream in, out;
+		StandardStream() :
+				in(File(0)), out(File(1))
+		{
+		}
+		virtual int Read(Buffer buf)
+		{
+			return in.Read(buf);
+		}
+		virtual void Write(Buffer buf)
+		{
+			out.Write(buf);
+		}
+		virtual void Flush()
+		{
+			out.Flush();
+		}
+		virtual void Close()
+		{
+		}
+		virtual Cap Capabilities()
+		{
+			return Cap::ReadWrite;
+		}
 	};
 	class FileStreamSource: public StreamSource
 	{
 	public:
 		string filename;
-		int flags; mode_t mode;
+		int flags;
+		mode_t mode;
 		virtual Stream& CreateStream()
 		{
-			FileStream* fs=new FileStream(File(filename.c_str(),flags,mode));
+			FileStream* fs = new FileStream(File(filename.c_str(), flags, mode));
 			return *fs;
 		}
-		virtual ~FileStreamSource(){}
+		virtual ~FileStreamSource()
+		{
+		}
 	};
-	#ifdef cplib_glib_wrappers
+#ifdef cplib_glib_wrappers
 	class GIOGenericStream: public Stream
 	{
 	public:
 		Glib::RefPtr<Glib::Object> f;
 		//Glib::RefPtr<Glib::Interface> i;
 		/*enum class T:Byte
-		{
-			I=1,O=2,IO=I|O
-		};
-		T t;*/
+		 {
+		 I=1,O=2,IO=I|O
+		 };
+		 T t;*/
 		Cap c;
 		void CheckCaps()
 		{
 			Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
 			if(s)
-				c=c|Cap::Seek;
+			c=c|Cap::Seek;
 			else c=c&(~Cap::Seek);
 		}
-		GIOGenericStream(Glib::RefPtr<Gio::IOStream> f):f(f),c(Cap::ReadWrite){CheckCaps();}
-		GIOGenericStream(Glib::RefPtr<Gio::InputStream> f):f(f),c(Cap::Read){CheckCaps();}
-		GIOGenericStream(Glib::RefPtr<Gio::OutputStream> f):f(f),c(Cap::Write){CheckCaps();}
-		virtual ~GIOGenericStream(){}
+		GIOGenericStream(Glib::RefPtr<Gio::IOStream> f):f(f),c(Cap::ReadWrite)
+		{	CheckCaps();}
+		GIOGenericStream(Glib::RefPtr<Gio::InputStream> f):f(f),c(Cap::Read)
+		{	CheckCaps();}
+		GIOGenericStream(Glib::RefPtr<Gio::OutputStream> f):f(f),c(Cap::Write)
+		{	CheckCaps();}
+		virtual ~GIOGenericStream()
+		{}
 		virtual int Read(Buffer buf)
 		{
 			if((c&Cap::Read)==Cap::None)throw NotSupportedException();
@@ -734,7 +856,8 @@ namespace xaxaxa
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
 				s=f->get_input_stream();
-			}else s=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
+			}
+			else s=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
 			return s->read(buf.Data,buf.Length);
 		}
 		virtual void Write(Buffer buf)
@@ -745,7 +868,8 @@ namespace xaxaxa
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
 				s=f->get_output_stream();
-			}else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
+			}
+			else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
 			gsize tmp;
 			if(!s->write_all(buf.Data,buf.Length,tmp))
 			{
@@ -761,7 +885,8 @@ namespace xaxaxa
 			{
 				Glib::RefPtr<Gio::IOStream> f=Glib::RefPtr<Gio::IOStream>::cast_static(this->f);
 				s=f->get_output_stream();
-			}else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
+			}
+			else s=Glib::RefPtr<Gio::OutputStream>::cast_static(this->f);
 			s->flush();
 		}
 		virtual void Close()
@@ -797,11 +922,11 @@ namespace xaxaxa
 			switch(from)
 			{
 				case SeekFrom::Begin:
-					t=Glib::SEEK_TYPE_SET; break;
+				t=Glib::SEEK_TYPE_SET; break;
 				case SeekFrom::End:
-					t=Glib::SEEK_TYPE_END; break;
+				t=Glib::SEEK_TYPE_END; break;
 				case SeekFrom::Current:
-					t=Glib::SEEK_TYPE_CUR; break;
+				t=Glib::SEEK_TYPE_CUR; break;
 				default: return;
 			}
 			s->seek(n, t);
@@ -816,19 +941,23 @@ namespace xaxaxa
 			}
 			else throw NotSupportedException();
 		}
-		virtual Cap Capabilities(){return c;}
+		virtual Cap Capabilities()
+		{	return c;}
 	};
 #endif
-	class StreamReader: public Stream
+	class StreamReaderWriter: public Stream
 	{
 	public:
 		Stream* s;
 		void* buf;
+		StringBuilder wbuf;
+		int wbuffersize;
+		int max_wbuffer_copy;
 		int buf_size;
 		int buf_index;
 		int buf_length;
-		StreamReader(Stream& s, int buffersize = 4096);
-		virtual ~StreamReader();
+		StreamReaderWriter(Stream& s, int rbuffersize = 4096, int wbuffersize = 4096);
+		virtual ~StreamReaderWriter();
 		virtual int Read(Buffer buf);
 		virtual int Read(StringBuilder& buf, int length);
 		virtual int Read(StringBuilder& buf, const char* delimitors, int delimitor_count);
@@ -836,15 +965,110 @@ namespace xaxaxa
 
 		//skips over any extra delimitors
 		virtual int Read(Stream& buf, const char* delimitors, int delimitor_count);
+		inline Short ReadByte()
+		{
+			if (buf_length <= 0)
+			{
+				Buffer tmpb((char*) this->buf, buf_size);
+				int tmp = s->Read(tmpb);
+				if (tmp <= 0)
+					return -1;
+				buf_index = 0;
+				buf_length = tmp;
+			}
+			return ((char*) (this->buf))[buf_index++];
+		}
+		//
+		//buf: destination stream(where data read will be put).
+		//delimitors: array of delimitors
+		//delimitor_count: self explanatory
+		//delim_index: (out) the index (in the array 'delimitors') of the delimitor
+		//				that the read operation stopped at
+		//NOTES:
 		//looks for delimitors in the order they are specified.
-		//delimitors should NOT be null terminated
-		virtual int Read(Stream& buf, const STRING* delimitors, int delimitor_count);
-		virtual int ReadLine(StringBuilder& buf);
+		//delimitors should NOT be null terminated.
+		//the delimitor will be consumed.
+		//RETURN VALUE: -1 if no data was read; 0 if delimitor was read but there
+		//was no data in between;
+		virtual int Read(Stream& buf, const STRING* delimitors, int delimitor_count,
+				int* delim_index = NULL);
+		virtual int ReadLine(Stream& buf);
 
 		virtual void Write(Buffer buf);
 		virtual void Flush();
 		virtual void Close();
+		void do_flush()
+		{
+			if (wbuf.Length <= 0)
+				return;
+			s->Write(wbuf.ToBuffer());
+			wbuf.Clear();
+		}
+		inline void flush_if_full(int space = 0)
+		{
+			if (wbuf.Length > (wbuffersize - space))
+				do_flush();
+		}
+		void Write(void* buf, int len)
+		{
+			if (len > max_wbuffer_copy)
+			{
+				s->Write(Buffer(buf, len));
+				return;
+			}
+			//s->Write(buf);
+			//flush_if_full(len);
+			wbuf.Append((char*) buf, len);
+			flush_if_full();
+		}
+		inline void write_fast(void* buf, int len)
+		{
+			//flush_if_full(len);
+			wbuf.Append((char*) buf, len);
+			flush_if_full();
+		}
+		inline void Write(char* s)
+		{
+			Write(s, strlen(s));
+		}
+		template<class T> inline void Write(T x)
+		{
+			//flush_if_full(len);
+			wbuf.Append(x);
+			flush_if_full();
+		}
 	};
+
+	typedef StreamReaderWriter StreamWriter;
+	typedef StreamReaderWriter StreamReader;
+	template<class X> Stream& operator<<(Stream& s, const X& x)
+	{
+		s.Write(x);
+		return s;
+	}
+	inline Int operator>>(Stream& s, Buffer& b)
+	{
+		return s.Read(b);
+	}
+	inline Int operator>>(StreamReaderWriter& s, Stream& o)
+	{
+		return s.ReadLine(o);
+	}
+	template<class X> StreamWriter& operator<<(StreamWriter& s, const X& x)
+	{
+		s.Write(x);
+		return s;
+	}
+	template<class S, class X> S& operator<<(S& os, const vector<X>& dt)
+	{
+		os << "[";
+		bool notfirst = false;
+		for (typename vector<X>::const_iterator it = dt.begin(); it != dt.end(); it++)
+			(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		os << "]";
+		return os;
+	}
+
 	class BitArray64
 	{
 	public:
@@ -928,7 +1152,8 @@ namespace xaxaxa
 	}
 	template<class T> void ArrayList<T>::EnsureCapacity(int c)
 	{
-		if (Capacity >= c) return;
+		if (Capacity >= c)
+			return;
 		int tmp = this->Capacity;
 		while (tmp < c)
 		{
@@ -956,7 +1181,9 @@ namespace xaxaxa
 
 		inline static BufferManager* GetDefault()
 		{
-			if (__def_BufferManager == NULL) __def_BufferManager = new BufferManager();
+			if (__def_BufferManager == NULL
+			)
+				__def_BufferManager = new BufferManager();
 			return __def_BufferManager;
 		}
 		ArrayList<Buffer> l;
@@ -977,12 +1204,15 @@ namespace xaxaxa
 		}
 		Buffer Get()
 		{
-			if (l.Length <= 0) return Buffer(bufferSize);
-			else return l.array[--l.Length];
+			if (l.Length <= 0)
+				return Buffer(bufferSize);
+			else
+				return l.array[--l.Length];
 		}
 		void Return(Buffer& b)
 		{
-			if (l.Length < maxSpare) l.Append(b);
+			if (l.Length < maxSpare)
+				l.Append(b);
 			//else b->Release();
 		}
 	};
@@ -1020,90 +1250,90 @@ namespace xaxaxa
 #define __intwrap1(var,max) var%=(max);
 #define __intwrap(var,max) ((var)%(max))
 	/*template<class T> class CircularQueue: public Object
-	{
-	public:
-		T* array;
-		int size;
-		int __wrap;
-		int s1, s2, e1, e2;
-		BitArray b;
-		CircularQueue(int size) :
-				b(size)
-		{
-			s1 = 0;
-			s2 = 0;
-			e1 = 0;
-			e2 = 0;
-			this->size = size;
-			this->__wrap = size * 2;
-			array = new T[size];
-		}
-		~CircularQueue()
-		{
-			delete[] array;
-		}
-		inline int __getlength(int i1, int i2, int wrap)
-		{
-			return (i2 < i1 ? i2 + wrap : i2) - i1;
-		}
-		inline T& GetPointer(int i)
-		{
-			__intwrap1(i, size);
-			if (i >= size || i < 0)
-				throw new OutOfRangeException("CircularQueue::GetPointer() out of range");
-			return array[i]; //__intwrap(i,size);
-		}
-		inline bool CanAppend()
-		{
-			return __getlength(s1, e2, __wrap) < size;
-		}
-		int BeginAppend()
-		{
-			if (__getlength(s1, e2, __wrap) >= size) return -1;
-			int tmp = e2++;
-			__intwrap1(e2, __wrap);
-			b.Set(__intwrap(tmp,size), true);
-			return tmp;
-		}
-		void EndAppend(int i)
-		{
-			if (i == e1)
-			{
-				do
-				{
-					e1++;
-					__intwrap1(e1, __wrap);
-				}
-				while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
-			}
-			else b.Set(__intwrap(i,size), false);
-		}
-		inline bool CanDequeue()
-		{
-			return __getlength(s2, e1, __wrap) > 0;
-		}
-		int BeginDequeue()
-		{
-			if (__getlength(s2, e1, __wrap) <= 0) return -1;
-			int tmp = s2++;
-			__intwrap1(s2, __wrap);
-			b.Set(__intwrap(tmp,size), true);
-			return tmp;
-		}
-		void EndDequeue(int i)
-		{
-			if (i == s1)
-			{
-				do
-				{
-					s1++;
-					__intwrap1(s1, __wrap);
-				}
-				while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
-			}
-			else b.Set(__intwrap(i,size), false);
-		}
-	};*/
+	 {
+	 public:
+	 T* array;
+	 int size;
+	 int __wrap;
+	 int s1, s2, e1, e2;
+	 BitArray b;
+	 CircularQueue(int size) :
+	 b(size)
+	 {
+	 s1 = 0;
+	 s2 = 0;
+	 e1 = 0;
+	 e2 = 0;
+	 this->size = size;
+	 this->__wrap = size * 2;
+	 array = new T[size];
+	 }
+	 ~CircularQueue()
+	 {
+	 delete[] array;
+	 }
+	 inline int __getlength(int i1, int i2, int wrap)
+	 {
+	 return (i2 < i1 ? i2 + wrap : i2) - i1;
+	 }
+	 inline T& GetPointer(int i)
+	 {
+	 __intwrap1(i, size);
+	 if (i >= size || i < 0)
+	 throw new OutOfRangeException("CircularQueue::GetPointer() out of range");
+	 return array[i]; //__intwrap(i,size);
+	 }
+	 inline bool CanAppend()
+	 {
+	 return __getlength(s1, e2, __wrap) < size;
+	 }
+	 int BeginAppend()
+	 {
+	 if (__getlength(s1, e2, __wrap) >= size) return -1;
+	 int tmp = e2++;
+	 __intwrap1(e2, __wrap);
+	 b.Set(__intwrap(tmp,size), true);
+	 return tmp;
+	 }
+	 void EndAppend(int i)
+	 {
+	 if (i == e1)
+	 {
+	 do
+	 {
+	 e1++;
+	 __intwrap1(e1, __wrap);
+	 }
+	 while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
+	 }
+	 else b.Set(__intwrap(i,size), false);
+	 }
+	 inline bool CanDequeue()
+	 {
+	 return __getlength(s2, e1, __wrap) > 0;
+	 }
+	 int BeginDequeue()
+	 {
+	 if (__getlength(s2, e1, __wrap) <= 0) return -1;
+	 int tmp = s2++;
+	 __intwrap1(s2, __wrap);
+	 b.Set(__intwrap(tmp,size), true);
+	 return tmp;
+	 }
+	 void EndDequeue(int i)
+	 {
+	 if (i == s1)
+	 {
+	 do
+	 {
+	 s1++;
+	 __intwrap1(s1, __wrap);
+	 }
+	 while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
+	 }
+	 else b.Set(__intwrap(i,size), false);
+	 }
+	 };*/
 	template<class T> class CircularQueue: public Object
 	{
 	public:
@@ -1113,78 +1343,76 @@ namespace xaxaxa
 		Int __wrap;
 		Int s1, s2, e1, e2;
 		BitArray b;
-		CircularQueue(Int size, Int objsize=1) :
-				b(size),size(size),objsize(objsize),__wrap(size*2),
-				s1(0),s2(0),e1(0),e2(0)
+		CircularQueue(Int size, Int objsize = 1) :
+				b(size), size(size), objsize(objsize), __wrap(size * 2), s1(0), s2(0), e1(0), e2(0)
 		{
-			array = new T[size*objsize];
-		}
-		~CircularQueue()
-		{
-			delete[] array;
-		}
-		inline int __getlength(Int i1, Int i2, Int wrap)
-		{
-			return (i2 < i1 ? i2 + wrap : i2) - i1;
-		}
-		inline T& GetPointer(Int i)
-		{
-			__intwrap1(i, size);
-			if (i >= size || i < 0)
+			array = new T[size * objsize];}
+			~CircularQueue()
+			{
+				delete[] array;
+			}
+			inline int __getlength(Int i1, Int i2, Int wrap)
+			{
+				return (i2 < i1 ? i2 + wrap : i2) - i1;
+			}
+			inline T& GetPointer(Int i)
+			{
+				__intwrap1(i, size);
+				if (i >= size || i < 0)
 				throw new OutOfRangeException("CircularQueue::GetPointer() out of range");
-			return array[i*objsize]; //__intwrap(i,size);
-		}
-		inline bool CanAppend()
-		{
-			return __getlength(s1, e2, __wrap) < size;
-		}
-		int BeginAppend()
-		{
-			if (__getlength(s1, e2, __wrap) >= size) return -1;
-			int tmp = e2++;
-			__intwrap1(e2, __wrap);
-			b.Set(__intwrap(tmp,size), true);
-			return tmp;
-		}
-		void EndAppend(Int i)
-		{
-			if (i == e1)
-			{
-				do
-				{
-					e1++;
-					__intwrap1(e1, __wrap);
+				return array[i*objsize]; //__intwrap(i,size);
 				}
-				while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
-			}
-			else b.Set(__intwrap(i,size), false);
-		}
-		inline bool CanDequeue()
-		{
-			return __getlength(s2, e1, __wrap) > 0;
-		}
-		Int BeginDequeue()
-		{
-			if (__getlength(s2, e1, __wrap) <= 0) return -1;
-			Int tmp = s2++;
-			__intwrap1(s2, __wrap);
-			b.Set(__intwrap(tmp,size), true);
-			return tmp;
-		}
-		void EndDequeue(Int i)
-		{
-			if (i == s1)
-			{
-				do
+				inline bool CanAppend()
 				{
-					s1++;
-					__intwrap1(s1, __wrap);
+					return __getlength(s1, e2, __wrap) < size;
 				}
-				while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
-			}
-			else b.Set(__intwrap(i,size), false);
-		}
-	};
+				int BeginAppend()
+				{
+					if (__getlength(s1, e2, __wrap) >= size) return -1;
+					int tmp = e2++;
+					__intwrap1(e2, __wrap);
+					b.Set(__intwrap(tmp,size), true);
+					return tmp;
+				}
+				void EndAppend(Int i)
+				{
+					if (i == e1)
+					{
+						do
+						{
+							e1++;
+							__intwrap1(e1, __wrap);
+						}
+						while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
+					}
+					else b.Set(__intwrap(i,size), false);
+				}
+				inline bool CanDequeue()
+				{
+					return __getlength(s2, e1, __wrap) > 0;
+				}
+				Int BeginDequeue()
+				{
+					if (__getlength(s2, e1, __wrap) <= 0) return -1;
+					Int tmp = s2++;
+					__intwrap1(s2, __wrap);
+					b.Set(__intwrap(tmp,size), true);
+					return tmp;
+				}
+				void EndDequeue(Int i)
+				{
+					if (i == s1)
+					{
+						do
+						{
+							s1++;
+							__intwrap1(s1, __wrap);
+						}
+						while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
+					}
+					else b.Set(__intwrap(i,size), false);
+				}
+			};
 	class PointerException: public Exception
 	{
 	public:
@@ -1205,28 +1433,32 @@ namespace xaxaxa
 	public:
 		string GetDirFromPath(const string path)
 		{
-			Int i=path.rfind("/");
-			if(i<0)return string();
-			return path.substr(0, i+1);
+			Int i = path.rfind("/");
+			if (i < 0)
+				return string();
+			return path.substr(0, i + 1);
 		}
 		string GetProgramPath()
 		{
 			char buf[256];
-			Int i=readlink("/proc/self/exe", buf, sizeof(buf));
-			if(i<0)throw Exception(errno);
+			Int i = readlink("/proc/self/exe", buf, sizeof(buf));
+			if (i < 0)
+				throw Exception(errno);
 			return string(buf, i);
 		}
 		void ChDir(string dir)
 		{
-			if(chdir(dir.c_str())<0)throw Exception(errno);
+			if (chdir(dir.c_str()) < 0)
+				throw Exception(errno);
 		}
 	};
 	extern Util_c Util;
-	template<class T>inline T modulus(T number, T modulus)
+	template<class T> inline T modulus(T number, T modulus)
 	{
-		 T result = number % modulus;
-		 if (result < 0) result += modulus;
-		 return result;
+		T result = number % modulus;
+		if (result < 0)
+			result += modulus;
+		return result;
 	}
 }
 #endif

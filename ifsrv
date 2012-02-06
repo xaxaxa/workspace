@@ -84,19 +84,22 @@ class WaitableEvent:
 
 if sys.version_info < (3,):
     range = xrange;
-array_opts=["configs","address"];
+#list of options that are arrays; true indicates one line should be split;
+array_opts={"configs": True, "address": True, "up": False, "unplug": False, "postconfig": False, "preconfig": False};
 def parseoption(tmp,target):
 	optval=None;
 	i=tmp.find(" ");
 	if i<0: return;
 	a=(tmp[:i],tmp[i+1:]);
 	if a[0] in array_opts:
-		optval=a[1].split();
+		if array_opts[a[0]]: optval=a[1].split();
+		else: optval=[a[1]];
 		if a[0] in target:
 			target[a[0]].extend(optval);
 			return;
 	else: optval=a[1];
 	target[a[0]]=optval;
+
 def readconfig(f):
 	obj={"options":{},"configs":{},"interfaces":{}};
 	
@@ -271,19 +274,21 @@ def kill_iface(iface):
 			os.kill(iface["pid"],9);
 	except: pass
 
+def execscr(s,iface):
+	global conf;
+	config=iface["curconf"];
+	for c in s:
+		print(c);
+		eval(c);
 def postup(iface):
 	global conf;
 	config=iface["curconf"];
 	print("interface "+iface["name"]+" activated using config \""+config["name"]+"\"");
 	try:
-		if "up" in config["options"]:
-			print(config["options"]["up"]);
-			eval(config["options"]["up"]);
+		if "up" in config["options"]: execscr(config["options"]["up"],iface);
 	except BaseException as (a): print a;
 	try:
-		if "up" in iface["options"]:
-			print(iface["options"]["up"]);
-			eval(iface["options"]["up"]);
+		if "up" in iface["options"]: execscr(iface["options"]["up"],iface);
 	except BaseException as (a): print a;
 def run(evt=None):
 	global conf;
@@ -307,6 +312,7 @@ def run(evt=None):
 					activate_iface(iface,True);
 				elif iface["cable"] and (not tmp):
 					print(iface["name"]+" cable unplugged");
+					if "unplug" in iface["name"]["options"]: execscr(iface["name"]["options"]["unplug"],iface);
 					init_iface(iface);
 				iface["cable"]=tmp;
 			except: pass;

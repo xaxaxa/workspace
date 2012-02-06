@@ -39,17 +39,18 @@ namespace xaxaxa
 #endif
 	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2)
 	{
-		return (Stream::Cap)((Byte)c1|(Byte)c2);
+		return (Stream::Cap) ((Byte) c1 | (Byte) c2);
 	}
 	Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2)
 	{
-		return (Stream::Cap)((Byte)c1&(Byte)c2);
+		return (Stream::Cap) ((Byte) c1 & (Byte) c2);
 	}
 	Stream::Cap operator~(Stream::Cap c)
 	{
-		return (Stream::Cap)(~(Byte)c);
+		return (Stream::Cap) (~(Byte) c);
 	}
-	FileStream::FileStream(File f):f(f)
+	FileStream::FileStream(File f) :
+			f(f)
 	{
 	}
 	FileStream::~FileStream()
@@ -62,9 +63,10 @@ namespace xaxaxa
 	}
 	void FileStream::Write(Buffer buf)
 	{
-		int bw=0;
-		int off=0;
-		while(off<buf.Length && (bw=f.Write(buf.SubBuffer(off)))>0)off+=bw;
+		int bw = 0;
+		int off = 0;
+		while (off < buf.Length && (bw = f.Write(buf.SubBuffer(off))) > 0)
+			off += bw;
 	}
 	void FileStream::Flush()
 	{
@@ -77,25 +79,27 @@ namespace xaxaxa
 
 ///////////////////////////////////////////////////////////
 
-	StreamReader::StreamReader(Stream& s, int buffersize)
+	StreamReaderWriter::StreamReaderWriter(Stream& s, int rbuffersize, int wbuffersize) :
+			wbuf(wbuffersize), wbuffersize(wbuffersize), max_wbuffer_copy(1024)
 	{
 		this->s = &s;
-		buf = malloc(buffersize);
-		this->buf_size = buffersize;
+		buf = malloc(rbuffersize);
+		this->buf_size = rbuffersize;
 		this->buf_index = 0;
 		this->buf_length = 0;
 	}
-	StreamReader::~StreamReader()
+	StreamReaderWriter::~StreamReaderWriter()
 	{
 		free(buf);
 	}
-	int StreamReader::Read(Buffer buf)
+	int StreamReaderWriter::Read(Buffer buf)
 	{
 		int br = 0;
-		
+
 		int tmp = buf_length;
-		if (buf.Length < tmp) tmp = buf.Length;
-		if(tmp>0)
+		if (buf.Length < tmp)
+			tmp = buf.Length;
+		if (tmp > 0)
 		{
 			memcpy(buf.Data, ((Byte*) this->buf) + buf_index, tmp);
 			buf.Data += tmp;
@@ -108,13 +112,14 @@ namespace xaxaxa
 			br += s->Read(buf);
 		return br;
 	}
-	int StreamReader::Read(StringBuilder& buf, int length)
+	int StreamReaderWriter::Read(StringBuilder& buf, int length)
 	{
 		int br = 0;
 		if (buf_length > 0)
 		{
 			int tmp = buf_length;
-			if (length < tmp) tmp = length;
+			if (length < tmp)
+				tmp = length;
 			Buffer tmpb((char*) this->buf + buf_index, tmp);
 			buf.Append(tmpb);
 			length -= tmp;
@@ -132,8 +137,7 @@ namespace xaxaxa
 		}
 		return br;
 	}
-	int StreamReader::Read(StringBuilder& buf, const char* delimitors,
-			int delimitor_count)
+	int StreamReaderWriter::Read(StringBuilder& buf, const char* delimitors, int delimitor_count)
 	{
 		int br = 0;
 		while (1)
@@ -142,7 +146,8 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -160,8 +165,8 @@ namespace xaxaxa
 						while (tmp < buf_length)
 						{
 							for (j = 0; j < delimitor_count; j++)
-								if (((char*) (this->buf))[buf_index + tmp]
-										== delimitors[j]) goto asdfg;
+								if (((char*) (this->buf))[buf_index + tmp] == delimitors[j])
+									goto asdfg;
 							break;
 							asdfg: tmp++;
 						}
@@ -176,7 +181,7 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	int StreamReader::Read(Stream& buf, const char* delimitors, int delimitor_count)
+	int StreamReaderWriter::Read(Stream& buf, const char* delimitors, int delimitor_count)
 	{
 		int br = 0;
 		while (1)
@@ -185,7 +190,8 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -203,8 +209,8 @@ namespace xaxaxa
 						while (tmp < buf_length)
 						{
 							for (j = 0; j < delimitor_count; j++)
-								if (((char*) (this->buf))[buf_index + tmp]
-										== delimitors[j]) goto asdfg;
+								if (((char*) (this->buf))[buf_index + tmp] == delimitors[j])
+									goto asdfg;
 							break;
 							asdfg: tmp++;
 						}
@@ -219,8 +225,7 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	int StreamReader::Read(Stream& buf, const STRING* delimitors,
-			int delimitor_count)
+	int StreamReaderWriter::Read(Stream& buf, const STRING* delimitors, int delimitor_count, int* delim_index)
 	{
 		int br = 0;
 		while (1)
@@ -229,7 +234,8 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -242,7 +248,8 @@ namespace xaxaxa
 					{
 						for (int ii = 0; ii < delimitors[j].length; ii++)
 						{
-							if (i + ii >= tmp2) goto cont;
+							if (i + ii >= tmp2)
+								goto cont;
 							if (((char*) (this->buf))[i + ii] != delimitors[j].c[ii])
 								goto cont;
 						}
@@ -261,6 +268,7 @@ namespace xaxaxa
 						 }*/
 						buf_index += tmp;
 						buf_length -= tmp;
+						if(delim_index!=NULL)*delim_index=j;
 						return br;
 					}
 					cont: ;
@@ -272,19 +280,30 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	int StreamReader::ReadLine(StringBuilder& buf)
+	int StreamReaderWriter::ReadLine(Stream& buf)
 	{
-		return Read(buf, "\x0A\x0D", 2);
+		STRING delim[2]{"\r\n","\n"};
+		return Read(buf, delim, 2);
+		//return Read(buf, "\r\n", 2);
 	}
-	void StreamReader::Write(Buffer buf)
+	void StreamReaderWriter::Write(Buffer buf)
 	{
-		s->Write(buf);
+		if (buf.Length > max_wbuffer_copy)
+		{
+			s->Write(buf);
+			return;
+		}
+		//s->Write(buf);
+		flush_if_full(buf.Length);
+		wbuf.Append(buf);
+		flush_if_full();
 	}
-	void StreamReader::Flush()
+	void StreamReaderWriter::Flush()
 	{
+		do_flush();
 		s->Flush();
 	}
-	void StreamReader::Close()
+	void StreamReaderWriter::Close()
 	{
 		s->Close();
 	}
@@ -319,48 +338,25 @@ namespace xaxaxa
 		Buffer tmpb((char*) s->buf, s->Length);
 		Append(tmpb);
 	}
-	void StringBuilder::Append(char* buf, int length)
-	{
-		this->EnsureCapacity(this->Length + length);
-		memcpy((char*) this->buf + this->Length, buf, length);
-		this->Length += length;
-	}
 	void StringBuilder::Append(char* buf)
 	{
 		Append(buf, strlen(buf));
 	}
-	void StringBuilder::EnsureCapacity(int c)
-	{
-		if (Capacity >= c) return;
-		int tmp = this->Capacity;
-		while (tmp < c)
-		{
-			tmp *= 2;
-		}
-		this->buf = realloc(this->buf, tmp);
-		this->Capacity = tmp;
-	}
 	int StringBuilder::CompareTo(Buffer buf)
 	{
-		if (buf.Length <= 0 || this->Length <= 0) return -1;
-		return memcmp(this->buf, buf.Data,
-				buf.Length < this->Length ? buf.Length : this->Length);
+		if (buf.Length <= 0 || this->Length <= 0)
+			return -1;
+		return memcmp(this->buf, buf.Data, buf.Length < this->Length ? buf.Length : this->Length);
 	}
 	int StringBuilder::CompareTo(const StringBuilder* sb)
 	{
-		if (sb->Length <= 0 || this->Length <= 0) return -1;
-		return memcmp(buf, sb->buf,
-				sb->Length < this->Length ? sb->Length : this->Length);
+		if (sb->Length <= 0 || this->Length <= 0)
+			return -1;
+		return memcmp(buf, sb->buf, sb->Length < this->Length ? sb->Length : this->Length);
 	}
 	STRING StringBuilder::ToString()
 	{
-		STRING tmp;
-		/*tmp.c=(char*)malloc(Length);
-		 memcpy(tmp.c,buf,Length);
-		 tmp.length=Length;*/
-		tmp.c = (char*) this->buf;
-		tmp.length = Length;
-		return tmp;
+		return {(char*) this->buf, Length};
 	}
 	Buffer StringBuilder::ToBuffer()
 	{
@@ -394,11 +390,11 @@ namespace xaxaxa
 		//Exception *ex;
 		switch (sig)
 		{
-			case SIGSEGV:
-				throw PointerException();
-				break;
-			default:
-				throw Exception();
+		case SIGSEGV:
+			throw PointerException();
+			break;
+		default:
+			throw Exception();
 		}
 
 	}
