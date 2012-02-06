@@ -6,11 +6,33 @@ using namespace xaxaxa;
 int main(int c, char** v)
 {
 	int i(0);
-	StandardStream s;
+	//StandardStream ss;
+	
+	/*StringBuilder s;
+	for(i=0;i<1000000;i++)
+	{
+		s << "asdfghjklasdfghjk" << i;
+	}
+	s.Seek(0);
+	i=0;
+	
 	StreamReader r(s);
 	StringBuilder buffer;
+	STRING delim[2]{"asdfghjkl","asdf"};
+	while(r.Read(buffer,delim,2)>=0)
+	{
+		//ss.Write(buffer.ToBuffer());
+		//ss.Write("\n");
+		
+		i++;
+		buffer.Clear();
+	}*/
+	
+	FileStream s(File("/tmp/data1",O_RDONLY));
+	StreamReader r(s,1024*32);
+	StringBuilder buffer;
 	//NullStream ns;
-	while(r.ReadLine(buffer)>=0)
+	while(r.fast_readline(buffer)>=0)
 	{
 		//r.Write(buffer.ToBuffer());
 		//r.Write("\n");
@@ -22,7 +44,7 @@ int main(int c, char** v)
 	/*string tmp;
 	while(std::getline(cin,tmp))
 	{
-		cout << tmp << "\n";
+		//cout << tmp << "\n";
 		i++;
 	}*/
 	

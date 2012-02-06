@@ -404,6 +404,12 @@ namespace xaxaxa
 			this->Length = strlen(buf);
 			this->IsRaw = true;
 		}
+		Buffer(const char* buf)
+		{
+			this->Data = (Byte*) buf;
+			this->Length = strlen(buf);
+			this->IsRaw = true;
+		}
 		Buffer(Byte* buf, int length)
 		{
 			this->Data = (Byte*) buf;
@@ -529,12 +535,12 @@ namespace xaxaxa
 		virtual void Write(Buffer buf)=0;
 		virtual void Flush()=0;
 		virtual void Close()=0;
-		virtual void Seek(Long n, SeekFrom from)
+		virtual void Seek(Long n, SeekFrom from=SeekFrom::Begin)
 		{}
 		virtual Long Position()
 		{	return 0;}
-		virtual void Length(Long newlen=-1)
-		{} //set or get length
+		virtual Long Length(Long newlen=-1)
+		{	return 0;} //set or get length
 		virtual Cap Capabilities()
 		{	return Cap::None;}
 		//bool AutoClose;
@@ -602,12 +608,18 @@ namespace xaxaxa
 	public:
 		StringBuilder(int initsize = 4096);
 		virtual ~StringBuilder();
+		virtual Cap Capabilities()
+		{
+			return Cap::ReadWrite | Cap::Length | Cap::Seek;
+		}
 		void *buf;
 		int Capacity;
-		int Length;
+		int length;
+		int position;
 		void Clear()
 		{
-			Length = 0;
+			length = 0;
+			position = 0;
 		}
 		inline void EnsureCapacity(int c)
 		{
@@ -623,13 +635,15 @@ namespace xaxaxa
 		}
 		void Append(Buffer buf);
 		void Append(STRING buf);
-		inline void Append(char* buf, int length)
+		inline void Append(const char* buf, int length)
 		{
-			this->EnsureCapacity(this->Length + length);
-			memcpy((char*) this->buf + this->Length, buf, length);
-			this->Length += length;
+			this->EnsureCapacity(this->position + length);
+			memcpy((char*) this->buf + this->position, buf, length);
+			this->position += length;
+			if (this->position > this->length)
+				this->length = this->position;
 		}
-		void Append(char* buf);
+		void Append(const char* buf);
 		void Append(const StringBuilder* s);
 		inline void Append(Int n)
 		{
@@ -674,6 +688,36 @@ namespace xaxaxa
 		virtual void Write(Buffer buf);
 		virtual void Flush();
 		virtual void Close();
+		virtual void Seek(Long n, SeekFrom from = SeekFrom::Begin)
+		{
+			switch (from)
+			{
+			case SeekFrom::Begin:
+				break;
+			case SeekFrom::Current:
+				n += position;
+				break;
+			case SeekFrom::End:
+				n = length - n;
+				break;
+			default:
+				return;
+			}
+			if (n < 0)
+				n = 0;
+			position = n;
+		}
+		virtual Long Position()
+		{
+			return position;
+		}
+		virtual Long Length(Long newlen = -1)
+		{
+			if (newlen < 0)
+				return length;
+			else
+				return (length = newlen);
+		}
 	};
 	typedef int FILEDES;
 #define CreateFile open
@@ -992,6 +1036,9 @@ namespace xaxaxa
 		//was no data in between;
 		virtual int Read(Stream& buf, const STRING* delimitors, int delimitor_count,
 				int* delim_index = NULL);
+
+		//delimitors have to be 1, 2, 4, or 8 bytes
+		int fast_readline(Stream& buf);
 		virtual int ReadLine(Stream& buf);
 
 		virtual void Write(Buffer buf);
@@ -999,14 +1046,14 @@ namespace xaxaxa
 		virtual void Close();
 		void do_flush()
 		{
-			if (wbuf.Length <= 0)
+			if (wbuf.length <= 0)
 				return;
 			s->Write(wbuf.ToBuffer());
 			wbuf.Clear();
 		}
 		inline void flush_if_full(int space = 0)
 		{
-			if (wbuf.Length > (wbuffersize - space))
+			if (wbuf.length > (wbuffersize - space))
 				do_flush();
 		}
 		void Write(void* buf, int len)
@@ -1041,7 +1088,17 @@ namespace xaxaxa
 
 	typedef StreamReaderWriter StreamWriter;
 	typedef StreamReaderWriter StreamReader;
-	template<class X> Stream& operator<<(Stream& s, const X& x)
+	template<class X> inline StringBuilder& operator<<(StringBuilder& sb, const X& x)
+	{
+		sb.Append(x);
+		return sb;
+	}
+	/*inline StringBuilder& operator<<(StringBuilder& sb, const char* x)
+	 {
+	 sb.Append(x);
+	 return sb;
+	 }*/
+	template<class X> inline Stream& operator<<(Stream& s, const X& x)
 	{
 		s.Write(x);
 		return s;
@@ -1054,12 +1111,12 @@ namespace xaxaxa
 	{
 		return s.ReadLine(o);
 	}
-	template<class X> StreamWriter& operator<<(StreamWriter& s, const X& x)
+	template<class X> inline StreamWriter& operator<<(StreamWriter& s, const X& x)
 	{
 		s.Write(x);
 		return s;
 	}
-	template<class S, class X> S& operator<<(S& os, const vector<X>& dt)
+	template<class S, class X> inline S& operator<<(S& os, const vector<X>& dt)
 	{
 		os << "[";
 		bool notfirst = false;

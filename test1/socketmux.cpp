@@ -35,7 +35,7 @@ namespace xaxaxa
 		//tmpsb.Length=0;
 		//char asdf[9];
 		StringBuilder& sb=use_sb2?tmpsb2:tmpsb1;
-		if(sb.Length>0)
+		if(sb.length>0)
 		{
 			sending=true;
 			sending_oob=true;
@@ -406,7 +406,7 @@ x:
 		{
 			sending=false;
 			StringBuilder& sb=use_sb2?tmpsb1:tmpsb2;
-			sb.Length=0;
+			sb.Clear();
 			BeginSend();
 		}
 		else
