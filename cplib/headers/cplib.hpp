@@ -975,7 +975,7 @@ namespace xaxaxa
 			}
 			s->seek(n, t);
 		}
-		virtual void Length(Long newlen=-1)
+		virtual Long Length(Long newlen=-1)
 		{
 			if(newlen>=0) //truncate
 			{
