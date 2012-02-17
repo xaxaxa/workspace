@@ -1,0 +1,12 @@
+body,textarea,input,table,td
+{margin:0px;padding:0px;}
+.chatbox
+{
+	overflow-y:scroll;
+	overflow-x:hidden;
+}
+.chattxt
+{
+	margin:0px;padding:0px;
+	height:100%;
+}
