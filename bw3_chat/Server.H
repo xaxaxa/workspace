@@ -48,7 +48,7 @@ namespace chat
 	};
 	struct Client
 	{
-		typedef boost::function<void(const Message&)> Callback;
+		typedef boost::function<void(const Message&,bool)> Callback;
 		Callback cb;
 		WApplication* app;
 	};
@@ -95,26 +95,26 @@ namespace chat
 			recursive_mutex::scoped_lock lock(mutex);
 			cbs.erase(cb);
 		}
-		virtual void Notify(Client* cb, const Message& msg)
+		virtual void Notify(Client* cb, const Message& msg, bool flush=true)
 		{
 			recursive_mutex::scoped_lock lock(mutex);
 			WApplication *app = WApplication::instance();
 			if (app && app->sessionId() == cb->app->sessionId())
-				cb->cb(msg);
+				cb->cb(msg,flush);
 			else
 			{
 				//wserver.post(cb->sessionID, boost::bind(cb->cb, boost::ref(msg)));
 				WApplication::UpdateLock lock2(cb->app);
-				cb->cb(msg);
-				cb->app->triggerUpdate();
+				cb->cb(msg,flush);
+				if(flush)cb->app->triggerUpdate();
 			}
 		}
-		virtual void Send(const Message& evt)
+		virtual void Send(const Message& evt, bool flush=true)
 		{
 			recursive_mutex::scoped_lock lock(mutex);
 
 			for (auto it = cbs.begin(); it != cbs.end(); it++)
-				Notify(*it, evt);
+				Notify(*it, evt, flush);
 		}
 
 	};

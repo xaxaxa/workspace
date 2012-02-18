@@ -673,6 +673,10 @@ namespace xaxaxa
 			int i = snprintf(c, sizeof(c), "%li", n);
 			Append(c, i);
 		}
+		inline void Append(const string s)
+		{
+			Append(s.data(), s.length());
+		}
 		/*inline void Append(Float n)
 		 {
 		 //char c[log10(0xFFFFFFFF)+2];
@@ -684,6 +688,12 @@ namespace xaxaxa
 		int CompareTo(const StringBuilder* sb);
 		STRING ToString();
 		Buffer ToBuffer();
+		char* ToCString()
+		{
+			EnsureCapacity(length + 1);
+			((char*) buf)[length] = '\x00';
+			return ((char*) buf);
+		}
 		virtual int Read(Buffer buf);
 		virtual void Write(Buffer buf);
 		virtual void Flush();
@@ -1488,6 +1498,8 @@ namespace xaxaxa
 	class Util_c
 	{
 	public:
+		int _argc;
+		char** _argv;
 		string GetDirFromPath(const string path)
 		{
 			Int i = path.rfind("/");
@@ -1507,6 +1519,20 @@ namespace xaxaxa
 		{
 			if (chdir(dir.c_str()) < 0)
 				throw Exception(errno);
+		}
+		void RestartOnCrash(int argc, char** argv)
+		{
+			_argc = argc;
+			_argv = argv;
+			pid_t pid=fork();
+			if(pid==0)
+			{
+				return;
+			}
+			else if(pid<0)
+			{
+				throw Exception(errno);
+			}
 		}
 	};
 	extern Util_c Util;

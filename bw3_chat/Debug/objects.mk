@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lwt -lwtdbopostgres -lwtdbo -lboost_signals -lwthttp
+LIBS := -lwt -lcplib -lwtdbopostgres -lwtdbo -lboost_signals -lwthttp
 

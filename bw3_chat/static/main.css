@@ -10,3 +10,109 @@ body,textarea,input,table,td
 	margin:0px;padding:0px;
 	height:100%;
 }
+
+.header
+{
+	border-top: solid 1px #999999;
+	background-color: #e5e5ff;
+	margin-top: 10px;
+	padding: 4px 4px 4px 4px;
+	font-size: 11px;
+}
+.inappropriate
+{
+	background-color: #ffccdd;
+}
+.postbyadmin
+{
+	background-color: #ffffaa;
+}
+.highlight2
+{
+	background-color: #ffffaa;
+}
+.content
+{
+	display:block;
+	padding: 10px 4px 10px 4px;
+	font-size: 13px;
+	font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+}
+.unread
+{
+	background-color:#ccccff;
+}
+.highlight
+{
+	border:solid 4px #00aa00;
+}
+.header_a
+{
+	border-top: solid 1px #000000;
+	background-color: #e5e5e5;
+	margin-top: 10px;
+	padding: 4px 4px 4px 4px;
+	font-size: 11px;
+}
+.content_a
+{
+	padding: 10px 4px 10px 4px;
+	font-size: 13px;
+	font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+}
+.deleted
+{
+	color: #999999;
+}
+.admindeleted
+{
+	color: #ff0000;
+	font-weight:bold;
+	background-color:#ff99bb;
+}
+.replybyposter
+{
+	background-color: #ccccf9;
+}
+.footer
+{
+	padding: 2px 4px 2px 4px;
+	font-size: 11px;
+}
+.footer_a
+{
+	padding: 2px 4px 2px 4px;
+	font-size: 11px;
+}
+.nickname
+{
+	color: #0000aa;
+	font-weight: bold;
+}
+.line
+{
+	border-top: solid 1px #000000;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.msg
+{
+	margin: 10px 0px 10px 0px;
+	border: solid 2px #aaaaaa;
+	padding: 10px 20px 10px 20px;
+	color: #ff0000;
+	font-family: Arial;
+	font-size: 14px;
+	font-weight: bold;
+}
+.link1
+{
+	color:#0000ff;
+	cursor:default;
+}
+.title
+{
+	font-size:13px;
+	font-weight:bold;
+	margin-bottom:5px;
+}

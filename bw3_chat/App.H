@@ -18,44 +18,46 @@
 #include <Wt/WVBoxLayout>
 #include <Wt/WLineEdit>
 #include "ChatWidget.H"
+#include "SharedObjManager.H"
+#include "htmlfunc.H"
 using namespace Wt;
-
+using namespace xaxaxa;
 namespace chat
 {
 
 	class App:public WApplication
 	{
 	public:
-		WLineEdit txt;
+		//WLineEdit txt;
 		ChatWidget c;
-		GenericServer& s;
+		SharedObjPtr<long,GenericServer> s;
 		JSlot clearInput;
 		void send()
 		{
-			s.Send(TextMessage(txt.text().toUTF8()));
+			//s.Get()->Send(TextMessage(txt.text().toUTF8()));
 		}
-		App(const WEnvironment& env, GenericServer& s)
-		:WApplication(env),c(s),s(s)
+		App(const WEnvironment& env, SharedObjPtr<long,GenericServer> s)
+		:WApplication(env),c(*s.Get()),s(s)
 		{
 			enableUpdates();
 			setTitle("Chat");
 			useStyleSheet("main.css");
-			txt.setStyleClass("chattxt");
+			//txt.setStyleClass("chattxt");
 			WVBoxLayout* l=new WVBoxLayout();
 			l->setSpacing(2);
 			l->setContentsMargins(0,0,0,0);
 			l->addWidget(&c,1);
-			l->addWidget(&txt,0);
+			//l->addWidget(&txt,0);
 			root()->setPadding(0);
 			root()->setLayout(l);
 
-			clearInput.setJavaScript
+			/*clearInput.setJavaScript
 			      ("function(o, e) { setTimeout(function() {"
 			       "" + txt.jsRef() + ".value='';"
 			       "}, 0); }");
 			txt.enterPressed().connect(this, &App::send);
 			txt.enterPressed().connect(clearInput);
-			txt.enterPressed().connect(&txt, &WLineEdit::setFocus);
+			txt.enterPressed().connect(&txt, &WLineEdit::setFocus);*/
 
 		}
 		virtual ~App(){}

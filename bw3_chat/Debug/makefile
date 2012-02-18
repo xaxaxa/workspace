@@ -43,7 +43,7 @@ all: bw3_chat
 bw3_chat: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -Wl,--unresolved-symbols=ignore-all -o "bw3_chat" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -pie -fpie -Wl,--unresolved-symbols=ignore-all -o "bw3_chat" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

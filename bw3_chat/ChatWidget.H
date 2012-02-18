@@ -12,7 +12,11 @@
 #include <Wt/WBoxLayout>
 #include <Wt/WTextArea>
 #include "Server.H"
+#include "htmlfunc.H"
+#include <string>
+using namespace xaxaxa;
 using namespace Wt;
+using namespace std;
 namespace chat
 {
 
@@ -21,28 +25,45 @@ namespace chat
 	public:
 		WContainerWidget messages;
 		Server& s;
-		Client* c;
+		Client c;
 		//WTextArea txt;
-		void cb(const Message& msg)
+		void cb(const Message& msg, bool flush)
 		{
-			messages.addWidget(msg.ToWidget());
+			if (&msg != NULL
+				)messages.addWidget(msg.ToWidget());
+			if (flush)
+			{
+				/*auto v=messages.children();
+				auto it=v.rbegin();
+				if(it==v.rend())return;*/
+				parseDates(*(c.app));
+				string js = "setTimeout(function(){"+messages.jsRef() + ".scrollTop=" + messages.jsRef() + ".scrollHeight;},100);";
+				c.app->doJavaScript(js);
+				/*string js2 = "document.body.onload=function(){" + messages.jsRef()
+						+ ".scrollTop=" + messages.jsRef() + ".scrollHeight;};";
+				messages.doJavaScript(js2);*/
+			}
 		}
-		ChatWidget(Server& s):s(s)
+		ChatWidget(Server& s) :
+				s(s)
 		{
-			c=new Client();
-			c->cb=boost::bind(mem_fn(&ChatWidget::cb),this,_1);
-			c->app=WApplication::instance();
-			s.Attach(c);
+			//c = new Client();
+			c.cb = boost::bind(mem_fn(&ChatWidget::cb), this, _1, _2);
+			c.app = WApplication::instance();
+			s.Attach(&c);
 			setPadding(0);
 			messages.setStyleClass("chatbox");
 			//txt.setStyleClass("chattxt");
 			WBoxLayout *l = new WBoxLayout(WBoxLayout::Direction::TopToBottom);
-			l->setContentsMargins(0,0,0,0);
-			l->addWidget(&messages,1);
+			l->setContentsMargins(0, 0, 0, 0);
+			l->addWidget(&messages, 1);
 			//l->addWidget(&txt,0);
 			setLayout(l);
 		}
-		virtual ~ChatWidget(){}
+		virtual ~ChatWidget()
+		{
+			//delete c;
+		}
 	};
 
 } /* namespace bw3 */
