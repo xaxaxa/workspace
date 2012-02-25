@@ -14,9 +14,11 @@
 #include "Server.H"
 #include "htmlfunc.H"
 #include <string>
+#include <boost/shared_ptr.hpp>
 using namespace xaxaxa;
 using namespace Wt;
 using namespace std;
+using namespace boost;
 namespace chat
 {
 
@@ -27,10 +29,9 @@ namespace chat
 		Server& s;
 		Client c;
 		//WTextArea txt;
-		void cb(const Message& msg, bool flush)
+		void cb(const boost::shared_ptr<Message> msg, bool flush)
 		{
-			if (&msg != NULL
-				)messages.addWidget(msg.ToWidget());
+			if (msg)messages.addWidget(msg->ToWidget());
 			if (flush)
 			{
 				/*auto v=messages.children();
@@ -39,6 +40,7 @@ namespace chat
 				parseDates(*(c.app));
 				string js = "setTimeout(function(){"+messages.jsRef() + ".scrollTop=" + messages.jsRef() + ".scrollHeight;},100);";
 				c.app->doJavaScript(js);
+				c.app->triggerUpdate();
 				/*string js2 = "document.body.onload=function(){" + messages.jsRef()
 						+ ".scrollTop=" + messages.jsRef() + ".scrollHeight;};";
 				messages.doJavaScript(js2);*/
@@ -50,6 +52,7 @@ namespace chat
 			//c = new Client();
 			c.cb = boost::bind(mem_fn(&ChatWidget::cb), this, _1, _2);
 			c.app = WApplication::instance();
+			c.sessionId=c.app->sessionId();
 			s.Attach(&c);
 			setPadding(0);
 			messages.setStyleClass("chatbox");
@@ -63,6 +66,7 @@ namespace chat
 		virtual ~ChatWidget()
 		{
 			//delete c;
+			s.Detach(&c);
 		}
 	};
 

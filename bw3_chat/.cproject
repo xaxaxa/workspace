@@ -27,6 +27,7 @@
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.18008545" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.120186763" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.other.1810006514" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c --std=c++0x -fmessage-length=0" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.debugging.other.720673457" superClass="gnu.cpp.compiler.option.debugging.other" value="-rdynamic" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1354261678" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.444163023" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -44,7 +45,7 @@
 									<listOptionValue builtIn="false" value="boost_signals"/>
 									<listOptionValue builtIn="false" value="wthttp"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.1921857467" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-pie -fpie -Wl,--unresolved-symbols=ignore-all" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.1921857467" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-pie -fpie -rdynamic -Wl,--unresolved-symbols=ignore-all" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1019152409" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -80,9 +81,10 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1514335482" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.989422979" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
 								<option id="gnu.cpp.compiler.exe.release.option.optimization.level.2010941934" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.2123138771" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.2123138771" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.1393144124" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.other.95360873" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c --std=c++0x -fmessage-length=0" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.debugging.other.2027321350" superClass="gnu.cpp.compiler.option.debugging.other" value="-rdynamic" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.574279336" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.1328721426" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release">
@@ -100,7 +102,7 @@
 									<listOptionValue builtIn="false" value="boost_signals"/>
 									<listOptionValue builtIn="false" value="wthttp"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.1253255718" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-pie -fpie -Wl,--unresolved-symbols=ignore-all" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.1253255718" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-pie -fpie -rdynamic -Wl,--unresolved-symbols=ignore-all" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1016273401" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

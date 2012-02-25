@@ -13,6 +13,7 @@
 #include <set>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 #include <cplib/cplib.hpp>
 #include <Wt/WText>
 using namespace Wt;
@@ -48,9 +49,10 @@ namespace chat
 	};
 	struct Client
 	{
-		typedef boost::function<void(const Message&,bool)> Callback;
+		typedef boost::function<void(const boost::shared_ptr<Message>,bool)> Callback;
 		Callback cb;
 		WApplication* app;
+		string sessionId;
 	};
 	class Server
 	{
@@ -95,21 +97,21 @@ namespace chat
 			recursive_mutex::scoped_lock lock(mutex);
 			cbs.erase(cb);
 		}
-		virtual void Notify(Client* cb, const Message& msg, bool flush=true)
+		virtual void Notify(Client* cb, const boost::shared_ptr<Message> msg, bool flush=true)
 		{
-			recursive_mutex::scoped_lock lock(mutex);
+			//recursive_mutex::scoped_lock lock(mutex);
 			WApplication *app = WApplication::instance();
-			if (app && app->sessionId() == cb->app->sessionId())
+			if (app && app->sessionId() == cb->sessionId)
 				cb->cb(msg,flush);
 			else
 			{
-				//wserver.post(cb->sessionID, boost::bind(cb->cb, boost::ref(msg)));
-				WApplication::UpdateLock lock2(cb->app);
+				wserver.post(cb->sessionId, boost::bind(cb->cb, msg,flush));
+				/*WApplication::UpdateLock lock2(cb->app);
 				cb->cb(msg,flush);
-				if(flush)cb->app->triggerUpdate();
+				if(flush)cb->app->triggerUpdate();*/
 			}
 		}
-		virtual void Send(const Message& evt, bool flush=true)
+		virtual void Send(const boost::shared_ptr<Message> evt, bool flush=true)
 		{
 			recursive_mutex::scoped_lock lock(mutex);
 

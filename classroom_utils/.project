@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>cplib</name>
+	<name>classroom_utils</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -23,7 +23,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value>-j5</value>
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
@@ -31,7 +31,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${workspace_loc:/cplib/Debug}</value>
+					<value>${workspace_loc:/classroom_utils/Debug}</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
@@ -63,7 +63,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.useDefaultBuildCmd</key>
-					<value>false</value>
+					<value>true</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>

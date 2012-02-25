@@ -104,6 +104,11 @@ int main(int argc, char **argv)
 	 a3.Release();
 	 cout << "a1, a2, a3 released" << endl;
 	 return 0;*/
+	Util.SetHandlers();
+
+	//char* c=NULL;
+	//*c='a';
+
 	Wt::WServer server(argv[0]);
 	server.setServerConfiguration(argc, argv, WTHTTP_CONFIGURATION);
 	server.addEntryPoint(Wt::Application, boost::bind(newapp, _1, boost::ref(server)),

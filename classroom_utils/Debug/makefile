@@ -37,19 +37,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: bw3_chat
+all: classroom_utils
 
 # Tool invocations
-bw3_chat: $(OBJS) $(USER_OBJS)
+classroom_utils: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -pie -fpie -rdynamic -Wl,--unresolved-symbols=ignore-all -o "bw3_chat" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++  -o "classroom_utils" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) bw3_chat
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) classroom_utils
 	-@echo ' '
 
 .PHONY: all clean dependents

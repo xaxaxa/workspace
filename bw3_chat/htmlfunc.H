@@ -28,7 +28,7 @@ namespace xaxaxa
 					"	var m=d.getMinutes();"
 					"	var h=d.getHours();"
 					"	return d.getFullYear()+'-'+(M<10?'0'+M:M)+'-'+(D<10?'0'+D:D)"
-					"			+' '+(h==0?12:(h%12))+':'+(m<10?'0'+m:m)+(h>=12?' PM':' AM');"
+					"			+' '+((h==0||h==12)?12:(h%12))+':'+(m<10?'0'+m:m)+(h>=12?' PM':' AM');"
 					"}"
 					"var a=document.getElementsByTagName(\"span\");var i;"
 					"for(i=0;i<a.length;i++)\n"

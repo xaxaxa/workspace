@@ -29,15 +29,15 @@ namespace chat
 	{
 	public:
 		//WLineEdit txt;
-		ChatWidget c;
 		SharedObjPtr<long,GenericServer> s;
+		ChatWidget c;
 		JSlot clearInput;
 		void send()
 		{
 			//s.Get()->Send(TextMessage(txt.text().toUTF8()));
 		}
 		App(const WEnvironment& env, SharedObjPtr<long,GenericServer> s)
-		:WApplication(env),c(*s.Get()),s(s)
+		:WApplication(env),s(s),c(*s.Get())
 		{
 			enableUpdates();
 			setTitle("Chat");

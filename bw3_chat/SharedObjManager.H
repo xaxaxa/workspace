@@ -35,14 +35,9 @@ namespace chat
 	public:
 		T* Object;
 		int refcount;
-		recursive_mutex mutex;
-		SharedObjInfo(const SharedObjInfo& a) :
-				Object(a.Object), refcount(a.refcount), mutex()
-		{
-
-		}
+		//recursive_mutex mutex;
 		SharedObjInfo(T* obj) :
-				Object(obj), refcount(0), mutex()
+				Object(obj), refcount(0)
 		{
 
 		}
@@ -52,12 +47,10 @@ namespace chat
 		}
 		inline void inc()
 		{
-			recursive_mutex::scoped_lock lock(mutex);
 			++refcount;
 		}
 		inline void dec()
 		{
-			recursive_mutex::scoped_lock lock(mutex);
 			--refcount;
 		}
 	};
@@ -69,12 +62,7 @@ namespace chat
 		iterator it;
 		SharedObjManager<Tkey, Tvalue>* m;
 		SharedObjPtr(SharedObjManager<Tkey, Tvalue>& m);
-		SharedObjPtr(SharedObjManager<Tkey, Tvalue>& m, iterator it) :
-				it(it), m(&m)
-		{
-			if (Valid())
-				inc();
-		}
+		inline SharedObjPtr(SharedObjManager<Tkey, Tvalue>& m, iterator it);
 		inline void Release();
 		inline bool Valid();
 
@@ -86,12 +74,7 @@ namespace chat
 				return (*it).second.Object;
 			return NULL;
 		}
-		SharedObjPtr(const SharedObjPtr<Tkey, Tvalue>& other) :
-				it(other.it), m(other.m)
-		{
-			if (Valid())
-				inc();
-		}
+		SharedObjPtr(const SharedObjPtr<Tkey, Tvalue>& other);
 		inline SharedObjPtr<Tkey, Tvalue>& operator=(const SharedObjPtr<Tkey, Tvalue>& other)
 		{
 			Release();
@@ -101,18 +84,8 @@ namespace chat
 				inc();
 			return *this;
 		}
-		inline void inc()
-		{
-			(*it).second.inc();
-		}
-		inline void TryDelete();
-		inline void dec()
-		{
-			//recursive_mutex::scoped_lock lock((*it).second.mutex);
-			(*it).second.dec();
-			TryDelete();
-		}
-
+		inline void inc();
+		inline void dec();
 		~SharedObjPtr()
 		{
 			Release();
@@ -126,13 +99,13 @@ namespace chat
 		typedef typename map<Tkey, SharedObjInfo<Tvalue> >::iterator iterator;
 		inline void TryDelete(iterator it)
 		{
-			recursive_mutex::scoped_lock lock(mutex);
-			{
-				recursive_mutex::scoped_lock lock1((*it).second.mutex);
-				if ((*it).second.refcount > 0)
-					return;
-				(*it).second.Delete();
-			}
+			//recursive_mutex::scoped_lock lock(mutex);
+			//{
+			//recursive_mutex::scoped_lock lock1((*it).second.mutex);
+			if ((*it).second.refcount > 0)
+				return;
+			(*it).second.Delete();
+			//}
 			m.erase(it);
 		}
 		SharedObjPtr<Tkey, Tvalue> Get(const Tkey& k)
@@ -163,16 +136,39 @@ namespace chat
 	{
 
 	}
+	template<class Tkey, class Tvalue> SharedObjPtr<Tkey, Tvalue>::SharedObjPtr(
+			SharedObjManager<Tkey, Tvalue>& m, iterator it) :
+			it(it), m(&m)
+	{
+		recursive_mutex::scoped_lock lock(m.mutex);
+		if (Valid())
+			inc();
+	}
+	template<class Tkey, class Tvalue> SharedObjPtr<Tkey, Tvalue>::SharedObjPtr(
+			const SharedObjPtr<Tkey, Tvalue>& other):it(other.it),m(other.m)
+	{
+		recursive_mutex::scoped_lock lock(m->mutex);
+		if (Valid())
+			inc();
+	}
 	template<class Tkey, class Tvalue> bool SharedObjPtr<Tkey, Tvalue>::Valid()
 	{
 		return it != m->m.end();
 	}
-	template<class Tkey, class Tvalue> void SharedObjPtr<Tkey, Tvalue>::TryDelete()
+	template<class Tkey, class Tvalue> void SharedObjPtr<Tkey, Tvalue>::inc()
 	{
+		//recursive_mutex::scoped_lock lock(m->mutex);
+		(*it).second.inc();
+	}
+	template<class Tkey, class Tvalue> void SharedObjPtr<Tkey, Tvalue>::dec()
+	{
+		//recursive_mutex::scoped_lock lock(m->mutex);
+		(*it).second.dec();
 		m->TryDelete(it);
 	}
 	template<class Tkey, class Tvalue> void SharedObjPtr<Tkey, Tvalue>::Release()
 	{
+		recursive_mutex::scoped_lock lock(m->mutex);
 		if (Valid())
 			dec();
 		it = m->m.end();

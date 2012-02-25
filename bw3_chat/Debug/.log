@@ -1,0 +1,14 @@
+signal 11 (Segmentation fault), address is 0 from 0x7f5f2c5d8db2
+
+[bt]: (1) ./bw3_chat : main+0x34 [0x7f5f2c5d8db2]
+[bt]: (2) ./bw3_chat : main+0x34 [0x7f5f2c5d8db2]
+[bt]: (3) /lib/libc.so.6 : __libc_start_main+0xed [0x7f5f2a45538d]
+[bt]: (4) ./bw3_chat : +0x53559 [0x7f5f2c5d8559]
+
+signal 11 (Segmentation fault), address is 0 from 0x7f88920d7db2
+
+[bt]: (1) ./bw3_chat : main+0x34 [0x7f88920d7db2]
+[bt]: (2) ./bw3_chat : main+0x34 [0x7f88920d7db2]
+[bt]: (3) /lib/libc.so.6 : __libc_start_main+0xed [0x7f888ff5438d]
+[bt]: (4) ./bw3_chat : +0x53559 [0x7f88920d7559]
+

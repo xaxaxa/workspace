@@ -18,10 +18,12 @@
 #include <boost/lexical_cast.hpp>
 #include <Wt/Dbo/WtSqlTraits>
 #include <cplib/cplib.hpp>
+#include <boost/shared_ptr.hpp>
 #include "htmlfunc.H"
 using namespace std;
 namespace dbo = Wt::Dbo;
 using namespace xaxaxa;
+using namespace boost;
 namespace chat
 {
 	string formatDateTime(const WDateTime& dt)
@@ -131,10 +133,11 @@ namespace chat
 			}
 			for (auto i = replies.rbegin(); i != replies.rend(); ++i)
 			{
-				Notify(c, **i, false);
+				auto msg=boost::shared_ptr<Message>(new Reply(**i));
+				Notify(c, msg, false);
 				last_id = (*i)->id;
 			}
-			Notify(c, *((Message*) NULL), true);
+			Notify(c, boost::shared_ptr<Message>(), true);
 			transaction.rollback();
 		}
 		virtual void Update()
@@ -152,10 +155,11 @@ namespace chat
 			vector<dbo::ptr<Reply> > replies;
 			for (auto i = l.begin(); i != l.end(); ++i)
 			{
-				Send(**i,false);
+				auto msg=boost::shared_ptr<Message>(new Reply(**i));
+				Send(msg,false);
 				last_id = (*i)->id;
 			}
-			Send(*((Message*) NULL), true);
+			Send(boost::shared_ptr<Message>(), true);
 			transaction.rollback();
 		}
 		virtual ~bw3_chatserver()
