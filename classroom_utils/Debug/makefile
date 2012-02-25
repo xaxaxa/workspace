@@ -43,7 +43,7 @@ all: classroom_utils
 classroom_utils: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "classroom_utils" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -pie -fpie -o "classroom_utils" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
