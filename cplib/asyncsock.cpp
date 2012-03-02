@@ -8,8 +8,6 @@ namespace xaxaxa
 {
 	namespace Sockets
 	{
-
-
 		EndPoint* EndPoint::FromSockAddr(sockaddr* addr)
 		{
 			switch(addr->sa_family)
@@ -49,7 +47,7 @@ namespace xaxaxa
 				}
 				for (int a = 0; a < tmp; a++)
 				{
-					epoll_event ev = events[a];
+					epoll_event& ev = events[a];
 					SOCKET s = ev.data.fd;
 					if(tmp_erased.count(s)>0)continue;
 					dbgprint("s=" << s);

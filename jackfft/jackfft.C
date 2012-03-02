@@ -34,6 +34,7 @@
 #include <gdk/gdk.h>
 #include "eqcontrol.C"
 #include <cplib/cplib.hpp>
+#include <math.h>
 
 using namespace std;
 vector<jack_port_t *> inputs;
@@ -48,7 +49,23 @@ using namespace std;
 
 
 Filter<jack_default_audio_sample_t>* filt[CHANNELS];
+struct timespec last_refreshed;
+#define EQ_POINTS 1500
+EQControl* c;
+EQControl* c2;
+Glib::RefPtr<Gtk::Builder> b;
+string fname=".default.jfft";
 
+long long get_nsec(const timespec& t)
+{
+	return t.tv_sec*1000000000+t.tv_nsec;
+}
+template<class t> inline double complex_to_real(t x)
+{
+	auto r=x[0];
+	auto i=x[1];
+	return sqrt(pow(r,2)+pow(i,2));
+}
 int process (jack_nframes_t length, void *arg)
 {
 	for(size_t i=0;i<inputs.size();i++)
@@ -70,6 +87,19 @@ int process (jack_nframes_t length, void *arg)
 		}*/
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
+	}
+	struct timespec t;
+	clock_gettime(CLOCK_MONOTONIC, &t);
+	if(get_nsec(last_refreshed)+(50*1000000)<get_nsec(t))
+	{
+		last_refreshed=t;
+		//refresh
+		for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
+			c2->data[i]=0;
+		for(size_t ii=0;ii<inputs.size();ii++)
+			for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
+				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[i]))/inputs.size();
+		c2->queue_draw();
 	}
 	return 0;
 }
@@ -136,10 +166,6 @@ double scale_value_r(double x)
 	//else if(x<-1.0)return 0.0;
 	else return x+1.0;
 }
-#define EQ_POINTS 1500
-EQControl* c;
-Glib::RefPtr<Gtk::Builder> b;
-string fname=".default.jfft";
 
 void update_fft()
 {
@@ -254,14 +280,16 @@ void do_load(Stream& fs)
 void loadfile();
 void load()
 {
-	if(fname.length()==0)
-	{
-		loadfile();
-		return;
-	}
-	FileStream fs(File(fname.c_str(),O_RDONLY));
-	do_load(fs);
-	fs.Close();
+	try{
+		if(fname.length()==0)
+		{
+			loadfile();
+			return;
+		}
+		FileStream fs(File(fname.c_str(),O_RDONLY));
+		do_load(fs);
+		fs.Close();
+	}catch(Exception& ex){}
 }
 
 void saveas()
@@ -314,11 +342,12 @@ void loadfile()
 }
 int main (int argc, char *argv[])
 {
+	memset(&last_refreshed,sizeof(last_refreshed),0);
 	Util.ChDir(Util.GetDirFromPath(Util.GetProgramPath()));
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 20, 20, 2, 16);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 20, 20, 2, 8);
 	
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();
@@ -373,10 +402,7 @@ int main (int argc, char *argv[])
 		outputs.push_back(jack_port_register (client, CONCAT("output_"<<i).c_str(), 
 						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
 	}
-	if (jack_activate (client)) {
-		fprintf (stderr, "cannot activate client");
-		return 1;
-	}
+	
 //aaaaa:
 	Gtk::Main kit(argc, argv);
 	
@@ -384,13 +410,15 @@ int main (int argc, char *argv[])
 	Gtk::Window* w;
 	//Gtk::Grid* g;
 	//Gtk::EventBox* eb;
-	Gtk::Viewport* v;
+	
 	Gtk::Button* bt;
 	b->get_widget("window1",w);
-	b->get_widget("viewport1",v);
 	c=new EQControl(EQ_POINTS);
 	c->Change+=EQControl::ChangeDelegate(&on_change,c);
 	c->MouseMove+=EQControl::MouseDelegate(&on_mousemove,c);
+	
+	UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
+	c2=new EQControl(complexsize);
 	
 	b->get_widget("b_save",bt);
 	bt->signal_clicked().connect(&save);
@@ -405,11 +433,15 @@ int main (int argc, char *argv[])
 	b->get_widget("filechooserdialog1",d);
 	//d->signal_response().connect(&on_response);
 	d->add_button(Stock::CANCEL,RESPONSE_CANCEL);
-	
+	Gtk::Viewport* v;
+	b->get_widget("viewport1",v);
 	v->add(*c);
+	b->get_widget("viewport2",v);
+	v->add(*c2);
 	c->set_hexpand(true);
 	c->set_vexpand(true);
 	c->show();
+	c2->show();
 	//b->get_widget("grid1",g);
 	//b->get_widget("eventbox1",eb);
 	
@@ -432,6 +464,11 @@ int main (int argc, char *argv[])
 		//if(i==0)pb_size=p->get_allocation().get_width();
 	}*/
 	load();
+	
+	if (jack_activate (client)) {
+		fprintf (stderr, "cannot activate client");
+		return 1;
+	}
 	kit.run(*w);
 	
 	jack_client_close (client);

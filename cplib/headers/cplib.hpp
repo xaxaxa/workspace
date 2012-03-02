@@ -605,6 +605,36 @@ namespace xaxaxa
 		{
 		}
 	};
+	class Poller;
+	inline Poller* GetDefaultPoller();
+	class Pollable
+	{ //represents something that needs to wait for events but doesn't know how
+	public:
+		typedef uint32_t event_t;
+		Poller* p;
+		virtual ~Pollable()
+		{
+		}
+		virtual int GetFileDesc()=0;
+		virtual void Trigger(event_t events)=0;
+	};
+	class Poller
+	{
+	public:
+		virtual void Wait(Pollable& p, Pollable::event_t events)=0;
+	};
+	class BlockingPoller: public Poller
+	{
+		virtual void Wait(Pollable& p, Pollable::event_t events)
+		{
+			int pid=p.GetFileDesc();
+
+		}
+	};
+	Poller* GetDefaultPoller()
+	{
+
+	}
 	class StringBuilder: public Stream
 	{
 	public:
