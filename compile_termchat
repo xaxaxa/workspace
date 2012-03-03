@@ -1,2 +1,3 @@
-g++ -Wall -lncurses -lpthread -lcplib -Icplib/headers/ -o "termchat" "termchat.cxx"
+g++ -Wall -c -fPIC --std=c++0x -o termchat.o termchat.cxx
+g++ -lncurses -lpthread -lcplib -o termchat termchat.o
 

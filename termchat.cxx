@@ -4,8 +4,8 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <cplib.hpp>
-#include <asyncsock.hpp>
+#include <cplib/cplib.hpp>
+#include <cplib/asyncsock.hpp>
 #include <stdbool.h>
 #include <boost/shared_ptr.hpp>
 #include <list>
