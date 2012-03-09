@@ -1,5 +1,5 @@
 /*
- * untitled.cxx
+ * jackfft.C
  * 
  * Copyright 2012  <xaxaxa@xaxaxa-mac>
  * 
@@ -43,6 +43,7 @@ vector<jack_port_t *> outputs;
 #define CONCAT(X) (((stringstream&)(stringstream()<<X)).str())
 double cur_index=0;
 int srate;
+bool display_spectrum=false;
 
 using namespace xaxaxa;
 using namespace std;
@@ -56,64 +57,7 @@ EQControl* c2;
 Glib::RefPtr<Gtk::Builder> b;
 string fname=".default.jfft";
 
-long long get_nsec(const timespec& t)
-{
-	return t.tv_sec*1000000000+t.tv_nsec;
-}
-template<class t> inline double complex_to_real(t x)
-{
-	auto r=x[0];
-	auto i=x[1];
-	return sqrt(pow(r,2)+pow(i,2));
-}
-int process (jack_nframes_t length, void *arg)
-{
-	for(size_t i=0;i<inputs.size();i++)
-	{
-		jack_default_audio_sample_t *out = 
-					(jack_default_audio_sample_t *) 
-					jack_port_get_buffer (outputs[i], length);
-		jack_default_audio_sample_t *in = 
-					(jack_default_audio_sample_t *) 
-					jack_port_get_buffer (inputs[i], length);
 
-		filt[i]->PutData(in, length);
-		filt[i]->GetData(out, length);
-		/*Int a;
-		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
-		{
-			//cout << a << endl;
-			((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.EndDequeue(a);
-		}*/
-		//for(UInt i=0;i<length;i++)
-		//	out[i] = in[i];
-	}
-	struct timespec t;
-	clock_gettime(CLOCK_MONOTONIC, &t);
-	if(get_nsec(last_refreshed)+(50*1000000)<get_nsec(t))
-	{
-		last_refreshed=t;
-		//refresh
-		for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
-			c2->data[i]=0;
-		for(size_t ii=0;ii<inputs.size();ii++)
-			for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
-				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[i]))/inputs.size();
-		c2->queue_draw();
-	}
-	return 0;
-}
-void error (const char *desc)
-{
-	fprintf (stderr, "JACK error: %s\n", desc);
-}
-void jack_shutdown (void *arg)
-{
-	exit (1);
-}
-//UInt pb_size=0;
-//Gtk::ProgressBar* pb;
-//UInt freqs = 50;
 inline double scale_freq(double x)
 {
 	x=pow(2,x*10);
@@ -166,6 +110,73 @@ double scale_value_r(double x)
 	//else if(x<-1.0)return 0.0;
 	else return x+1.0;
 }
+
+long long get_nsec(const timespec& t)
+{
+	return t.tv_sec*1000000000+t.tv_nsec;
+}
+template<class t> inline double complex_to_real(const t& x)
+{
+	auto r=x[0];
+	auto i=x[1];
+	return r;
+	return sqrt(pow(r,2)+pow(i,2));
+}
+int process (jack_nframes_t length, void *arg)
+{
+	for(size_t i=0;i<inputs.size();i++)
+	{
+		jack_default_audio_sample_t *out = 
+					(jack_default_audio_sample_t *) 
+					jack_port_get_buffer (outputs[i], length);
+		jack_default_audio_sample_t *in = 
+					(jack_default_audio_sample_t *) 
+					jack_port_get_buffer (inputs[i], length);
+
+		filt[i]->PutData(in, length);
+		filt[i]->GetData(out, length);
+		/*Int a;
+		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
+		{
+			//cout << a << endl;
+			((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.EndDequeue(a);
+		}*/
+		//for(UInt i=0;i<length;i++)
+		//	out[i] = in[i];
+	}
+	struct timespec t;
+	clock_gettime(CLOCK_MONOTONIC, &t);
+	if(display_spectrum && get_nsec(last_refreshed)+(50*1000000)<get_nsec(t))
+	{
+		last_refreshed=t;
+		//refresh
+		for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
+			c2->data[i]=0.5;
+		for(size_t ii=0;ii<inputs.size();ii++)
+		{
+			UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->PeriodSize() / 2) + 1;
+			for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
+			{
+				UInt complex_index=scale_freq((double)i/(c2->datalen-1))*(complexsize-1);
+				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index]))/complexsize*10/inputs.size();
+				
+			}
+		}
+		c2->queue_draw();
+	}
+	return 0;
+}
+void error (const char *desc)
+{
+	fprintf (stderr, "JACK error: %s\n", desc);
+}
+void jack_shutdown (void *arg)
+{
+	exit (1);
+}
+//UInt pb_size=0;
+//Gtk::ProgressBar* pb;
+//UInt freqs = 50;
 
 void update_fft()
 {
@@ -342,7 +353,12 @@ void loadfile()
 }
 int main (int argc, char *argv[])
 {
-	memset(&last_refreshed,sizeof(last_refreshed),0);
+	memset(&last_refreshed,0,sizeof(last_refreshed));
+	for(int i=1;i<argc;i++)
+	{
+		string tmp(argv[i]);
+		if(tmp=="-s")display_spectrum=true;
+	}
 	Util.ChDir(Util.GetDirFromPath(Util.GetProgramPath()));
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
@@ -417,8 +433,8 @@ int main (int argc, char *argv[])
 	c->Change+=EQControl::ChangeDelegate(&on_change,c);
 	c->MouseMove+=EQControl::MouseDelegate(&on_mousemove,c);
 	
-	UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
-	c2=new EQControl(complexsize);
+	//UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
+	
 	
 	b->get_widget("b_save",bt);
 	bt->signal_clicked().connect(&save);
@@ -436,12 +452,24 @@ int main (int argc, char *argv[])
 	Gtk::Viewport* v;
 	b->get_widget("viewport1",v);
 	v->add(*c);
-	b->get_widget("viewport2",v);
-	v->add(*c2);
+	
 	c->set_hexpand(true);
 	c->set_vexpand(true);
 	c->show();
-	c2->show();
+	
+	b->get_widget("viewport2",v);
+	if(display_spectrum)
+	{
+		c2=new EQControl(EQ_POINTS);
+		v->add(*c2);
+		c2->show();
+	}
+	else
+	{
+		Gtk::Grid* g1;
+		b->get_widget("grid1",g1);
+		g1->remove(*v);
+	}
 	//b->get_widget("grid1",g);
 	//b->get_widget("eventbox1",eb);
 	

@@ -505,5 +505,135 @@ namespace xaxaxa
 			delete[] InBufferPtrs;
 		}
 	};
+	template<class NUMTYPE, class FLOATTYPE = double> class OverlappedFilter3
+	{
+	public:
+		CircularQueue<FLOATTYPE> InBuffer, OutBuffer;
+		UInt *InBufferPtrs;
+		Int curBuffer_in, nextBuffer_in;
+		UInt BufferSize, OutBuffers, InBuffers;
+		Int outbuffer_index, inbuffer_index;
+		UInt outbuffer_pos, inbuffer_pos;
+		UInt overlapcount;
+		Int BuffersPerPeriod;
+		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
+
+		inline UInt PeriodSize()
+		{
+			return BufferSize*BuffersPerPeriod;
+		}
+		FLOATTYPE* tmpbuffer;
+		virtual void alloc_buffer()
+		{
+			tmpbuffer = new FLOATTYPE[PeriodSize()];
+		}
+		virtual void free_buffer()
+		{
+			delete[] tmpbuffer;
+		}
+
+		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
+		virtual void DoProcess() = 0;
+		void DoProcess1()
+		{
+			Int offset=0;
+			for(Int i1=curBuffer_in;i1!=nextBuffer_in;i1=modulus(i1+1,BuffersPerPeriod+1))
+			{
+				FLOATTYPE* in1=&InBuffer.GetPointer(InBufferPtrs[i1]);
+				memcpy(tmpbuffer + offset, in1, BufferSize * sizeof(FLOATTYPE));
+				offset+=BufferSize;
+			}
+			DoProcess();
+		}
+
+		
+		void proc()
+		{
+			Int skip=BuffersPerPeriod/this->overlapcount;
+			if(skip<1)skip=1;
+			UInt overlapcount=BuffersPerPeriod/skip;
+			//WARN(3,"asdf0");
+		asdf:
+			Int tmp;
+			while(modulus(nextBuffer_in-curBuffer_in,BuffersPerPeriod+1) < BuffersPerPeriod)
+			{
+				if((tmp=InBuffer.BeginDequeue())<0) return;
+				InBufferPtrs[nextBuffer_in]=tmp;
+				nextBuffer_in=modulus(nextBuffer_in+1,BuffersPerPeriod+1);
+				//WARN(3,"got buffers: " << modulus(nextBuffer_in-curBuffer_in,BuffersPerPeriod+1) << " total; nextBuffer_in=" << nextBuffer_in << "; curBuffer_in=" << curBuffer_in);
+			}
+			
+			DoProcess1();
+			for(Int i=0;i<skip;i++)
+			{
+				InBuffer.EndDequeue(InBufferPtrs[curBuffer_in]);
+				curBuffer_in=modulus(curBuffer_in+1,BuffersPerPeriod+1);
+			}
+			goto asdf;
+		}
+		inline void __warn(UInt length)
+		{
+			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffers << "; length = " << length);
+			return;
+		}
+		virtual void PutData(const NUMTYPE* data, UInt length)
+		{
+			while (length > 0)
+			{
+				if (inbuffer_index < 0)
+				{
+					inbuffer_index = InBuffer.BeginAppend();
+					if (inbuffer_index < 0)
+					{
+						__warn(length);
+						return;
+					}
+				}
+				auto l = __MIN(length, BufferSize - inbuffer_pos);
+				//memcpy(&InBuffer.GetPointer(inbuffer_index) + inbuffer_pos, data, l * sizeof(NUMTYPE));
+				FLOATTYPE* dst = &InBuffer.GetPointer(inbuffer_index) + inbuffer_pos;
+				for (UInt i = 0; i < l; i++)
+					dst[i] = (FLOATTYPE) data[i];
+				inbuffer_pos += l;
+				if (inbuffer_pos >= BufferSize)
+				{
+					InBuffer.EndAppend(inbuffer_index);
+					//WARN(3, "inbuffer_pos >= BufferSize");
+					inbuffer_index = -1;
+					inbuffer_pos = 0;
+					proc();
+				}
+				data += l;
+				length -= l;
+			}
+		}
+		virtual UInt OutputSize()=0;
+		virtual bool GetData(NUMTYPE* out)
+		{
+			auto tmp = OutBuffer.BeginDequeue();
+			if (tmp < 0)
+				return false;
+			memcpy(out,&OutBuffer.GetPointer(tmp),OutBuffer.objsize*sizeof(double));
+			OutBuffer.EndDequeue(tmp);
+			return true;
+		}
+		OverlappedFilter3(UInt buffersize_in, UInt buffersize_out, UInt inbuffers, UInt outbuffers,
+				UInt overlapcount, UInt BuffersPerPeriod) :
+		InBuffer(inbuffers, buffersize_in), OutBuffer(outbuffers, buffersize_out),
+		curBuffer_in(0), nextBuffer_in(0),
+		BufferSize(buffersize_in), OutBuffers(outbuffers), InBuffers(inbuffers),
+		outbuffer_index(-1), inbuffer_index(-1), outbuffer_pos(0), inbuffer_pos(0),
+		overlapcount(overlapcount), BuffersPerPeriod(BuffersPerPeriod)
+		{
+			//InBuffer = (NUMTYPE*)malloc(sizeof(NUMTYPE)*BufferSize);
+			alloc_buffer();
+			InBufferPtrs = new UInt[(BuffersPerPeriod+1)];
+		}
+		~OverlappedFilter3()
+		{
+			free_buffer();
+			delete[] InBufferPtrs;
+		}
+	};
 }
 

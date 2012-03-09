@@ -5,4 +5,6 @@ rmhttphdr:
 	g++ rmhttphdr.cxx -g3 --std=c++0x -o rmhttphdr -lcplib
 clean:
 	rm -f main rmhttphdr
-
+install:
+	cp -f main /usr/local/bin/tcpsdump
+	cp -f rmhttphdr /usr/local/bin/

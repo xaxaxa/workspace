@@ -618,23 +618,6 @@ namespace xaxaxa
 		virtual int GetFileDesc()=0;
 		virtual void Trigger(event_t events)=0;
 	};
-	class Poller
-	{
-	public:
-		virtual void Wait(Pollable& p, Pollable::event_t events)=0;
-	};
-	class BlockingPoller: public Poller
-	{
-		virtual void Wait(Pollable& p, Pollable::event_t events)
-		{
-			int pid=p.GetFileDesc();
-
-		}
-	};
-	Poller* GetDefaultPoller()
-	{
-
-	}
 	class StringBuilder: public Stream
 	{
 	public:

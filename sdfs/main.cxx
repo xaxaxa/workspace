@@ -29,6 +29,11 @@ using namespace xaxaxa;
 using namespace IO;
 
 void test1();
+void cb(void* a, const ULong& id, int retv)
+{
+	cout << "cb("<<id<<", "<<retv<<");"<<endl;
+}
+struct stat st;
 int main(int argc, char** argv)
 {
 	CacheItem<char[1024]> aaaaa;
@@ -44,7 +49,10 @@ int main(int argc, char** argv)
 	UInt bindex = SDFS_UNPACK_ID_BLOCKINDEX(tmp);
 	cout << "bindex=" << bindex << endl;
 	cout << "sizeof(StorageManager)=" << sizeof(StorageManager<>) << endl;
-	test1();
+	//test1();
+	StorageManager<> asdf;
+	asdf.CB+=StorageManager<>::Callback(&cb,NULL);
+	asdf.fs_stat(123,5,st);
 	return 0;
 }
 void test1()
@@ -56,7 +64,7 @@ void test1()
 	{
 		sb.Append(b.SubBuffer(0, br));
 	}
-	ChunkData cd { sb.buf, (UInt)sb.Length };
+	ChunkData cd { sb.buf, (UInt)sb.length };
 	StorageManager<> m;
 	CChunk c;
 	m.ParseChunk(cd, c);

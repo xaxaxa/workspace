@@ -124,9 +124,9 @@ namespace sdfs
 			uid_t s_uid;
 			gid_t s_gid;
 			FILELEN_T s_size;
-			time_t s_atime;
-			time_t s_mtime;
-			time_t s_ctime;
+			timespec s_atime;
+			timespec s_mtime;
+			timespec s_ctime;
 		};
 		struct dirent
 		{
@@ -530,8 +530,11 @@ namespace sdfs
 		LockObj l;
 		typedef xaxaxa::Lock<LockObj> Lock;
 		//typedef unsigned long ReqID;
-		DELEGATE(void,Callback,ReqID,int);EVENT(Callback) CB;
-		void Reply(ReqID rid, int retv);
+		DELEGATE(void,Callback,const ReqID&,int);EVENT(Callback) CB;
+		void Reply(ReqID rid, int retv)
+		{
+			RAISEEVENT(CB,rid,retv);
+		}
 		//retv: return value. negative if error occured.
 		//positive or zero if successful.
 		//for read() and write(), returns bytes read/written.
@@ -560,7 +563,7 @@ namespace sdfs
 	protected:
 		inline bool requestChunk(CID id);
 		void cb(const IStorage::CallbackInfo& inf);
-		inline void beginGetChunk(CID id, const ReqInfo& inf);
+		inline void beginGetChunk(CID id, ReqInfo& inf);
 		//begins the chunk request and invokes the correct function based on the ReqState
 		//when the operation completes. cache is queried first.
 
@@ -581,7 +584,7 @@ namespace sdfs
 				return;
 			}
 			CBlock_dirindex* dir = (CBlock_dirindex*) bl;
-			Block::inodehdr* inode = dir->GetEntry(inf.stat_info.cid)->hdr.inode;
+			Block::inodehdr* inode = &(dir->GetEntry(inf.stat_info.cid)->hdr.inode);
 			struct stat* st = (struct stat*) inf.stat_info.st;
 			memset(st, 0, sizeof(st));
 			st->st_atim = inode->s_atime;
@@ -612,7 +615,7 @@ namespace sdfs
 					Reply(inf.id, -ENOENT);
 					return;
 			}
-			inf.s = ReqState(&stat_cb2, this);
+			inf.s = ReqState(&StorageManager<ReqID,LockObj>::stat_cb2, this);
 			inf.stat_info.dir_bid = SDFS_UNPACK_ID_BLOCKINDEX(ihdr->parent);
 			beginGetChunk(SDFS_UNPACK_ID_CID(ihdr->parent), inf);
 			//inf.stat_info2.parentoffset = ihdr->entryoffset;
@@ -649,7 +652,7 @@ namespace sdfs
 			ReqInfo inf;
 			inf.id = rid;
 			inf.stat_info.st = &st;
-			inf.s = ReqState(&stat_cb1, this);
+			inf.s = ReqState(&StorageManager<ReqID,LockObj>::stat_cb1, this);
 			inf.stat_info.cid = id;
 			beginGetChunk(SDFS_UNPACK_ID_CID(id), inf);
 		}
@@ -876,7 +879,7 @@ namespace sdfs
 		curReqs.erase(inf.cid);
 	}
 	template<class ReqID, class LockObj> inline void StorageManager<ReqID, LockObj>::beginGetChunk(
-			CID id, const ReqInfo & inf)
+			CID id, ReqInfo & inf)
 	{
 		Lock lck(l);
 		ChunkPtr ptr;
@@ -887,7 +890,11 @@ namespace sdfs
 		}
 		auto it = this->curReqs.find(id);
 		bool requested = it != curReqs.end();
-		if (!requested)
+		if (requested)
+		{
+			curReqs.insert( { id, inf });
+		}
+		else
 		{
 			if (requestChunk(id))
 				curReqs.insert( { id, inf });
