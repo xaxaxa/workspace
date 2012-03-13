@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 20, 20, 2, 16);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 4, 4, 2, 4, 8192*2);
 	
 	jack_client_t *client;
 	jack_set_error_function (error);

@@ -635,5 +635,131 @@ namespace xaxaxa
 			delete[] InBufferPtrs;
 		}
 	};
+	template<class NUMTYPE>class FilterBuffer
+	{
+	public:
+		NUMTYPE* data;
+		UInt length;
+		UInt size;
+		FilterBuffer(NUMTYPE* buf, UInt size):data(buf),length(0),size(size)
+		{
+			
+		}
+		UInt Append(NUMTYPE* data, UInt length)
+		{
+			UInt length2=size-this->length;
+			if(length2<length)length=length2;
+			if(length<=0)return 0;
+			memcpy(this->data+this->length,data,length*sizeof(NUMTYPE));
+			this->length+=length;
+			return length;
+		}
+		class AppendData
+		{
+		public:
+			FilterBuffer<NUMTYPE>& buf;
+			NUMTYPE* data;
+			UInt length;
+			AppendData(FilterBuffer<NUMTYPE>& buf, NUMTYPE* data, UInt length)
+				:buf(buf), data(data), length(length)
+			{
+				UInt tmp=buf.Append(data, length);
+				this->data+=tmp;
+				this->length-=tmp;
+			}
+			~AppendData()
+			{
+				if(length<=0)return;
+				buf.Append(data, length);
+			}
+			inline NUMTYPE* operator()()
+			{
+				if(buf.length>=buf.size)
+				{
+					buf.length=0;
+					return buf.data;
+				}
+				return NULL;
+			}
+		};
+	};
+	template<class NUMTYPE>class FilterBuffer2
+	{
+	public:
+		CircularQueue<NUMTYPE> OutBuffer;
+		Int BufferSize,index,pos,index2,pos2;
+		FilterBuffer2(UInt size,UInt buffers):OutBuffer(buffers,size),BufferSize(size),index(-1),pos(0),
+			index2(-1),pos2(0)
+		{
+			//alt_buffer=new NUMTYPE[length];
+		}
+		~FilterBuffer2()
+		{
+			//delete[] alt_buffer;
+		}
+		virtual void PutData(const NUMTYPE* data, Int length)
+		{
+			while (length > 0)
+			{
+				if (index < 0)
+				{
+					index = OutBuffer.BeginAppend();
+					if (index < 0)
+					{
+						//__warn(length);
+						return;
+					}
+				}
+				auto l = __MIN(length, BufferSize - pos);
+				memcpy(&OutBuffer.GetPointer(index) + pos, data, l * sizeof(NUMTYPE));
+				pos += l;
+				if (pos >= BufferSize)
+				{
+					OutBuffer.EndAppend(index);
+					//WARN(3, "inbuffer_pos >= BufferSize");
+					index = -1;
+					pos = 0;
+				}
+				data += l;
+				length -= l;
+			}
+		}
+		//Int outbuffer_index;
+		//UInt outbuffer_pos;
+		virtual bool GetData(NUMTYPE* out, Int length)
+		{
+			UInt br = 0;
+			//cerr << "OutBuffer.Length()=" <<OutBuffer.Length()<<endl;
+			Int data_avail=0;
+			if(index2>=0)
+				data_avail+=(BufferSize-pos2);
+			data_avail+=OutBuffer.Length()*BufferSize;
+			if(data_avail<length)return false;
+			while (length > 0)
+			{
+				if (index2 < 0)
+				{
+					index2 = OutBuffer.BeginDequeue();
+					if (index2 < 0)
+						return true;
+				}
+				auto l = __MIN(length, BufferSize - pos2);
+				memcpy(out, &OutBuffer.GetPointer(index2) + pos2,
+						l * sizeof(NUMTYPE));
+
+				pos2 += l;
+				br += l;
+				if (pos2 >= BufferSize)
+				{
+					OutBuffer.EndDequeue(index2);
+					index2 = -1;
+					pos2 = 0;
+				}
+				out += l;
+				length -= l;
+			}
+			return true;
+		}
+	};
 }
 

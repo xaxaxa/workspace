@@ -535,6 +535,16 @@ namespace xaxaxa
 		};
 		virtual Int Read(Buffer buf)=0;
 		virtual void Write(Buffer buf)=0;
+		bool Fill(Buffer buf)
+		{
+			int br;
+			while((br=Read(buf))>0)
+			{
+				if(br>=buf.Length)return true;
+				buf=buf.SubBuffer(br);
+			}
+			return false;
+		}
 		virtual void Flush()=0;
 		virtual void Close()=0;
 		virtual void Seek(Long n, SeekFrom from=SeekFrom::Begin)
@@ -1468,6 +1478,10 @@ namespace xaxaxa
 						while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
 					}
 					else b.Set(__intwrap(i,size), false);
+				}
+				inline Int Length()
+				{
+					return __getlength(s2, e1, __wrap);
 				}
 				inline bool CanDequeue()
 				{

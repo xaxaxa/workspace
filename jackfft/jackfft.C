@@ -119,7 +119,7 @@ template<class t> inline double complex_to_real(const t& x)
 {
 	auto r=x[0];
 	auto i=x[1];
-	return r;
+	//return r;
 	return sqrt(pow(r,2)+pow(i,2));
 }
 int process (jack_nframes_t length, void *arg)
@@ -151,14 +151,14 @@ int process (jack_nframes_t length, void *arg)
 		last_refreshed=t;
 		//refresh
 		for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
-			c2->data[i]=0.5;
+			c2->data[i]=0;
 		for(size_t ii=0;ii<inputs.size();ii++)
 		{
-			UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->PeriodSize() / 2) + 1;
+			UInt complexsize = ((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->ComplexSize();
 			for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
 			{
 				UInt complex_index=scale_freq((double)i/(c2->datalen-1))*(complexsize-1);
-				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index]))/complexsize*10/inputs.size();
+				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index]))/100/inputs.size();
 				
 			}
 		}
@@ -183,7 +183,7 @@ void update_fft()
 	for(UInt i=0;i<CHANNELS;i++)
 	{
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
-		UInt complexsize = (UInt)(f->PeriodSize() / 2) + 1;
+		UInt complexsize = f->ComplexSize();
 		for(UInt n=0;n<complexsize;n++)
 			f->coefficients[n]=scale_value(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
 	}
@@ -194,7 +194,7 @@ void on_change(void* user, UInt i1, UInt i2)
 	for(UInt i=0;i<CHANNELS;i++)
 	{
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
-		UInt complexsize = (UInt)(f->PeriodSize() / 2) + 1;
+		UInt complexsize = f->ComplexSize();
 		//complexsize /= 5;
 		UInt min_index=floor(scale_freq((double)i1/EQ_POINTS)*(double)complexsize);
 		UInt max_index=ceil(scale_freq((double)i2/EQ_POINTS)*(double)complexsize);
@@ -363,7 +363,7 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 20, 20, 2, 8);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 4, 4, 2, 4, 8192*2);
 	
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();

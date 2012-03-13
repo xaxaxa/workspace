@@ -27,39 +27,85 @@
 
 namespace xaxaxa
 {
+	class WindowedFFT
+	{
+	public:
+		int size;
+		int size_c;
+		double* Data;
+		fftw_complex* Data_c;
+		fftw_plan p1, p2;
+		WindowedFFT(int size):size(size),size_c(size/2+1)
+		{
+			Data=(double*)fftw_malloc(sizeof(double)*size);
+			Data_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
+			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, 0); //FFTW_UNALIGNED
+			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, 0);
+		}
+		void Forward(double* data, int length)
+		{
+			if(length>size)throw Exception("data length exceeds fft size");
+			int s=size/2-ceil((double)length/2);
+			memset(Data,0,size*sizeof(double));
+			memcpy(Data+s,data,length*sizeof(double));
+			fftw_execute(p1);
+		}
+		double* Reverse(int length)
+		{
+			if(length>size)throw Exception("data length exceeds fft size");
+			int s=size/2-ceil((double)length/2);
+			fftw_execute(p2);
+			return Data+s;
+		}
+		~WindowedFFT()
+		{
+			fftw_destroy_plan(p1);
+			fftw_destroy_plan(p2);
+			fftw_free(Data);
+			fftw_free(Data_c);
+		}
+	};
 	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2<NUMTYPE, double>
 	{
 	public:
-		fftw_plan p1, p2;
+		//fftw_plan p1, p2;
 		//double* tmpdouble;
 		fftw_complex* tmpcomplex;
-		fftw_complex* tmpcomplex2;
+		//fftw_complex* tmpcomplex2;
 		double* coefficients;
 		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->PeriodSize());}
 		virtual void free_buffer(){fftw_free(this->tmpbuffer);}
 		//struct timespec last_refreshed;
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod)
+		WindowedFFT fft;
+		inline UInt ComplexSize()
+		{
+			return fft.size_c;
+		}
+		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod),fft(FFTSize)
 		{
 			asdf=0;
 			//memset(&last_refreshed,0,sizeof(last_refreshed));
-			Int l=((UInt)(this->PeriodSize() / 2) + 1);
-			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
-			tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
-			tmpcomplex2 = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
+			Int l=ComplexSize();//((UInt)(this->PeriodSize() / 2) + 1);
 			coefficients = new double[l];
 			for(Int i=0;i<l;i++)
 				coefficients[i] = 1.0;
+			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
+			
+			tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
+			/*tmpcomplex2 = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
+			
 			//cout << this->PeriodSize() << endl;
 			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
 			p2 = fftw_plan_dft_c2r_1d(this->PeriodSize(), tmpcomplex2, this->tmpbuffer, 0);
+			* */
 		}
 		~FFTFilter()
 		{
-			fftw_destroy_plan(p1);
+			/*fftw_destroy_plan(p1);
 			fftw_destroy_plan(p2);
-			//fftw_free(tmpdouble);
+			//fftw_free(tmpdouble);*/
 			fftw_free(tmpcomplex);
-			fftw_free(tmpcomplex2);
+			//fftw_free(tmpcomplex2);
 			delete[] coefficients;
 		}
 		
@@ -71,11 +117,12 @@ namespace xaxaxa
 		
 		virtual void DoProcess()
 		{
-			UInt complexsize = (UInt)(this->PeriodSize() / 2) + 1;
+			UInt complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
 			//asdf++;
 			//if(asdf>1)
 			//{
-			fftw_execute(p1);
+			//fftw_execute(p1);
+			fft.Forward(this->tmpbuffer,this->PeriodSize());
 				//int shift=21;
 				/*for(UInt i=0;i<complexsize;i++)
 				{
@@ -104,13 +151,15 @@ namespace xaxaxa
 				tmpcomplex[i][0]=0;
 				tmpcomplex[i][1]=0;
 			}*/
-			memcpy(tmpcomplex2,tmpcomplex,complexsize*sizeof(fftw_complex));
+			memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(fftw_complex));
 			for(UInt i=0;i<complexsize;i++)
 			{
-				tmpcomplex2[i][0] = tmpcomplex2[i][0]*coefficients[i];
-				tmpcomplex2[i][1] = tmpcomplex2[i][1]*coefficients[i];
+				fft.Data_c[i][0] = fft.Data_c[i][0]*coefficients[i];
+				fft.Data_c[i][1] = fft.Data_c[i][1]*coefficients[i];
 			}
-			fftw_execute(p2);
+			//fftw_execute(p2);
+			double* d=fft.Reverse(this->PeriodSize());
+			memcpy(this->tmpbuffer,d,sizeof(double)*this->PeriodSize());
 			Int ps=this->PeriodSize();
 			for(UInt i=0;i<ps;i++)
 				this->tmpbuffer[i] /= ps;
@@ -170,6 +219,111 @@ namespace xaxaxa
 			double* d=&this->OutBuffer.GetPointer(tmp);
 			memcpy(d,tmpcomplex,complexsize*sizeof(double)*2);
 			this->OutBuffer.EndAppend(tmp);
+		}
+	};
+	class FFTStream_f
+	{
+	public:
+		//double* phase;
+		double* buffer;
+		fftw_complex* buffer_c;
+		double* buffer_out;
+		int size,size_c;
+		fftw_plan p1;
+		FFTStream_f(int size):size(size),size_c(size/2+1)
+		{
+			buffer=(double*)fftw_malloc(sizeof(double)*size);
+			buffer_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
+			buffer_out=(double*)fftw_malloc(sizeof(double)*size_c);
+			p1 = fftw_plan_dft_r2c_1d(size, buffer, buffer_c, 0); //FFTW_UNALIGNED
+			//p2 = fftw_plan_dft_c2r_1d(size, buffer_c, buffer, 0);
+		}
+		~FFTStream_f()
+		{
+			fftw_destroy_plan(p1);
+			fftw_free(buffer);
+			fftw_free(buffer_c);
+			fftw_free(buffer_out);
+		}
+		double* Process()
+		{
+			int w=size/2;
+			for(int i=0;i<w;i++)
+			{
+				buffer[i]*=((double)i)/(w-1);
+			}
+			for(int i=size-w;i<size;i++)
+			{
+				buffer[i]*=((double)(i-(size-w)))/(w-1);
+			}
+			fftw_execute(p1);
+			for(int i=0;i<size_c;i++)
+			{
+				buffer_out[i]=sqrt(pow(buffer_c[i][0],2)+pow(buffer_c[i][1],2));
+			}
+			return buffer_out;
+		}
+	};
+	inline double modulus(double a, double b)
+	{
+		int tmp=a/b;
+		return a-tmp*b;
+	}
+	class FFTStream_r
+	{
+	public:
+		double* phase;
+		double* buffer;
+		fftw_complex* buffer_c;
+		double* buffer_out;
+		int size,size_c;
+		fftw_plan p1;
+		FFTStream_r(int size):size(size),size_c(size/2+1)
+		{
+			buffer=(double*)fftw_malloc(sizeof(double)*size);
+			buffer_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
+			phase=(double*)fftw_malloc(sizeof(double)*size_c);
+			for(int i=0;i<size_c;i++)
+				phase[i]=100;
+			buffer_out=(double*)fftw_malloc(sizeof(double)*size);
+			//p1 = fftw_plan_dft_r2c_1d(size, buffer, buffer_c, 0); //FFTW_UNALIGNED
+			p1 = fftw_plan_dft_c2r_1d(size, buffer_c, buffer_out, 0);
+		}
+		~FFTStream_r()
+		{
+			fftw_destroy_plan(p1);
+			fftw_free(buffer);
+			fftw_free(buffer_c);
+			fftw_free(phase);
+			fftw_free(buffer_out);
+		}
+		double* Process()
+		{
+			for(int i=0;i<size_c;i++)
+			{
+				if(i==0||i==size_c-1)
+				{
+					buffer_c[i][0]=this->buffer[i];
+					continue;
+				}
+				double phase=this->phase[i];
+				double amplitude=this->buffer[i];
+				//sine
+				buffer_c[i][0]=cos(phase)*amplitude;
+				//cosine
+				buffer_c[i][1]=sin(phase)*amplitude;
+				
+				/*double period=(double)((size_c-1) * 2) / i;
+				double periods=size/period;
+				phase+=periods;
+				phase=modulus(phase,(2*M_PI));*/
+				//double period=1/freq;
+				//this->phase[i]=phase;
+			}
+			fftw_execute(p1);
+			for(int i=0;i<size;i++)
+				buffer_out[i]/=size;
+			return buffer_out;
 		}
 	};
 };
