@@ -688,14 +688,14 @@ namespace xaxaxa
 		{
 			//char c[log10(0xFFFFFFFF)+2];
 			char c[22];
-			int i = snprintf(c, sizeof(c), "%li", n);
+			int i = snprintf(c, sizeof(c), "%lli", n);
 			Append(c, i);
 		}
 		inline void Append(ULong n)
 		{
 			//char c[log10(0xFFFFFFFF)+2];
 			char c[22];
-			int i = snprintf(c, sizeof(c), "%li", n);
+			int i = snprintf(c, sizeof(c), "%lli", n);
 			Append(c, i);
 		}
 		inline void Append(const string s)
@@ -1565,6 +1565,7 @@ namespace xaxaxa
 				throw Exception(errno);
 			}
 		}
+#if __x86_64__
 		static void crit_err_hdlr(int sig_num, siginfo_t * info, void * ucontext)
 		{
 			sig_ucontext_t * uc = (sig_ucontext_t *) ucontext;
@@ -1641,15 +1642,17 @@ namespace xaxaxa
 
 			exit(EXIT_FAILURE);
 		}
+#endif
 		void SetHandlers()
 		{
+#if __x86_64__
 			struct sigaction sigact;
-
 			sigact.sa_sigaction = &Util_c::crit_err_hdlr;
 			sigact.sa_flags = SA_RESTART | SA_SIGINFO;
 			sigaction(SIGSEGV, &sigact, (struct sigaction *) NULL);
 			sigaction(SIGABRT, &sigact, (struct sigaction *) NULL);
 			sigaction(SIGFPE, &sigact, (struct sigaction *) NULL);
+#endif
 		}
 	};
 	extern Util_c Util;

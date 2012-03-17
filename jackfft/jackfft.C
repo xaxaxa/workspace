@@ -113,7 +113,7 @@ double scale_value_r(double x)
 
 long long get_nsec(const timespec& t)
 {
-	return t.tv_sec*1000000000+t.tv_nsec;
+	return ((long long)t.tv_sec)*1000000000+(long long)t.tv_nsec;
 }
 template<class t> inline double complex_to_real(const t& x)
 {
