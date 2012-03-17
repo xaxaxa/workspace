@@ -7,6 +7,7 @@ namespace fbdump
 	{
 		public static void Main (string[] args)
 		{
+			GLib.Thread.Init ();
 			Gdk.Threads.Init ();
 			Application.Init ();
 			MainWindow win = new MainWindow ();
