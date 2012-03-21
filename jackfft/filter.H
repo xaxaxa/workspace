@@ -372,7 +372,7 @@ namespace xaxaxa
 			}
 			Int trololo,troll;
 			if(padding<=0)goto trolled;
-			trololo=BufferSize*padding;
+			trololo=BufferSize*padding/2;
 			for(Int i=0;i<trololo;i++)
 			{
 				tmpbuffer[i]*=((double)i)/(double)(trololo-1);

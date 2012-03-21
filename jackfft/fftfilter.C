@@ -78,6 +78,7 @@ namespace xaxaxa
 		fftw_complex* tmpcomplex;
 		//fftw_complex* tmpcomplex2;
 		double* coefficients;
+		double freq_scale;
 		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->PeriodSize());}
 		virtual void free_buffer(){fftw_free(this->tmpbuffer);}
 		//struct timespec last_refreshed;
@@ -86,7 +87,7 @@ namespace xaxaxa
 		{
 			return fft.size_c;
 		}
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding),fft(FFTSize)
+		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding),freq_scale(1.0),fft(FFTSize)
 		{
 			asdf=0;
 			//memset(&last_refreshed,0,sizeof(last_refreshed));
@@ -148,10 +149,14 @@ namespace xaxaxa
 				tmpcomplex[i][1]=0;
 			}*/
 			memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(fftw_complex));
-			for(UInt i=0;i<complexsize;i++)
+			if(freq_scale==1.)
 			{
-				fft.Data_c[i][0] = fft.Data_c[i][0]*coefficients[i];
-				fft.Data_c[i][1] = fft.Data_c[i][1]*coefficients[i];
+				for(UInt i=0;i<complexsize;i++)
+				{
+					fft.Data_c[i][0] = fft.Data_c[i][0]*coefficients[i];
+					fft.Data_c[i][1] = fft.Data_c[i][1]*coefficients[i];
+				}
+				goto trolled;
 			}
 			/*Int skip=this->BuffersPerPeriod/this->overlapcount;
 			if(skip<1)skip=1;
@@ -159,11 +164,11 @@ namespace xaxaxa
 			Int skip_samples=this->PeriodSize()/overlapcount;*/
 			
 			//for(Int i=complexsize-1;i>=0;i--)
-			/*for(Int i=0;i<complexsize;i++)
+			for(Int i=0;i<complexsize;i++)
 			{
 				int i2;
 				//if(i>50)
-				double asdf=((double)i)*4/5;
+				double asdf=((double)i)/freq_scale;
 				i2=(int)asdf;
 				if(i2==0 || i==0)	//prevent division by zero
 					continue;
@@ -195,8 +200,8 @@ namespace xaxaxa
 				amplitude*=coefficients[i];
 				fft.Data_c[i][1] = cos(phase)*amplitude;
 				fft.Data_c[i][0] = sin(phase)*amplitude;
-			//trolled: ;
-			}*/
+			}
+		trolled:
 			//fftw_execute(p2);
 			/*int shift=50;
 			for(Int i=complexsize-1-shift;i>=0;i--)

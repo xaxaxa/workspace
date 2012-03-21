@@ -49,7 +49,8 @@ using namespace xaxaxa;
 using namespace std;
 
 
-Filter<jack_default_audio_sample_t>* filt[CHANNELS];
+FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
+FFTFilter<jack_default_audio_sample_t>** filt2=NULL;
 struct timespec last_refreshed;
 #define EQ_POINTS 1500
 EQControl* c;
@@ -83,13 +84,20 @@ inline double scale_freq_r(double x)
 	//cout << x << endl;
 	return x<0?-x:x;
 }
+double logn(double n, double x)
+{
+	return log(x)/log(n);
+}
+//x: [0.0,2.0]
 double scale_value(double x)
 {
 	//return x*x;
-	double tmp = x - 1.0;
-	if(tmp<0)
+	double tmp = x - 1.;
+	tmp*=5.;
+	/*if(tmp<0)
 		return 1.0/(-tmp*19.0+1.0);
-	else return tmp*19.0+1.0;
+	else return tmp*19.0+1.0;*/
+	return pow(2,tmp);
 }
 /*
  * y=1/(-19x+1)
@@ -102,13 +110,12 @@ double scale_value_r(double x)
 {
 	//return x*x;
 	//cout << x << endl;
-	if(x>1.0)x=(x-1.0)/19.0;
-	else x=(-((1/x)-1.0)/19.0);
+	return logn(2,x)/5.+1.;
 	
-	if(std::isnan(x))return 1.0;
+	/*if(std::isnan(x))return 1.0;
 	//else if(x>1.0)return 2.0;
 	//else if(x<-1.0)return 0.0;
-	else return x+1.0;
+	else return x+1.0;*/
 }
 
 long long get_nsec(const timespec& t)
@@ -133,6 +140,16 @@ int process (jack_nframes_t length, void *arg)
 					(jack_default_audio_sample_t *) 
 					jack_port_get_buffer (inputs[i], length);
 
+		if(filt2!=NULL && filt2[i]!=NULL)
+		{
+			filt2[i]->PutData(in, length);
+			if(filt2[i]->GetData(out, length)>0)
+			{
+				delete filt[i];
+				filt[i]=NULL;
+				continue;
+			}
+		}
 		filt[i]->PutData(in, length);
 		filt[i]->GetData(out, length);
 		/*Int a;
@@ -144,6 +161,17 @@ int process (jack_nframes_t length, void *arg)
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
+	for(size_t i=0;i<inputs.size();i++)
+	{
+		if(filt[i]!=NULL)goto asdfghjkl;
+	}
+	for(size_t i=0;i<inputs.size();i++)
+	{
+		filt[i]=filt2[i];
+	}
+	delete[] filt2;
+	filt2=NULL;
+asdfghjkl:
 	FFTFilter<jack_default_audio_sample_t>* trololo=((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
 	struct timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
@@ -156,12 +184,12 @@ int process (jack_nframes_t length, void *arg)
 			c2->data[i]=0;
 		for(size_t ii=0;ii<inputs.size();ii++)
 		{
+			if(filt[ii]==NULL)continue;
 			UInt complexsize = ((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->ComplexSize();
 			for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
 			{
 				UInt complex_index=scale_freq((double)i/(c2->datalen-1))*(complexsize-1);
 				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index]))/100/inputs.size();
-				
 			}
 		}
 		c2->queue_draw();
@@ -180,8 +208,20 @@ void jack_shutdown (void *arg)
 //Gtk::ProgressBar* pb;
 //UInt freqs = 50;
 
-void update_fft()
+void update_fft(FFTFilter<jack_default_audio_sample_t>** filt2=NULL)
 {
+	if(filt2!=NULL)
+	{
+		for(UInt i=0;i<CHANNELS;i++)
+		{
+			if(filt2[i]==NULL)continue;
+			auto f=filt2[i];
+			UInt complexsize = f->ComplexSize();
+			for(UInt n=0;n<complexsize;n++)
+				f->coefficients[n]=scale_value(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
+		}
+		return;
+	}
 	for(UInt i=0;i<CHANNELS;i++)
 	{
 		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
@@ -313,7 +353,7 @@ void saveas()
 	b->get_widget("window1",w);
 	d->set_transient_for(*w);
 	d->set_action(FILE_CHOOSER_ACTION_SAVE);
-	Gtk::Button* b=d->add_button(Stock::SAVE,RESPONSE_OK);
+	Gtk::Button* b1=d->add_button(Stock::SAVE,RESPONSE_OK);
 	if(d->run()==RESPONSE_OK)
 	{
 		GIOGenericStream s=Glib::RefPtr<Gio::OutputStream>::cast_dynamic(d->get_file()->replace());
@@ -326,8 +366,8 @@ void saveas()
 		}
 	}
 	d->hide();
-	b->get_parent()->Gtk::Container::remove(*b);
-	delete b;
+	b1->get_parent()->Gtk::Container::remove(*b1);
+	delete b1;
 }
 void loadfile()
 {
@@ -353,6 +393,43 @@ void loadfile()
 	b->get_parent()->Gtk::Container::remove(*b);
 	delete b;
 }
+void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
+{
+	double asdf=1.;
+	Gtk::CheckButton* cb;
+	Gtk::Entry* e;
+	b->get_widget("c_pitchshift",cb);
+	if(cb->get_active())
+	{
+		b->get_widget("t_pitch1",e);
+		asdf=strtod(e->get_text().c_str(),NULL);
+		b->get_widget("t_pitch2",e);
+		asdf/=strtod(e->get_text().c_str(),NULL);
+	}
+	if(filt2!=NULL)
+	{
+		for(size_t i=0;i<inputs.size();i++)
+		{
+			if(filt2[i]==NULL)continue;
+			filt2[i]->freq_scale=asdf;
+		}
+		return;
+	}
+	for(size_t i=0;i<inputs.size();i++)
+		((FFTFilter<jack_default_audio_sample_t>*)filt[i])->freq_scale=asdf;
+}
+void apply_pitchshift()
+{
+	apply_pitchshift1(NULL);
+}
+void apply_label_workaround(Gtk::Label* l)
+{
+	l->signal_size_allocate().connect([l](Allocation& a)
+	{
+		l->set_size_request(a.get_width()-5,-1);
+		//l->set_size_request(-1,-1);
+	});
+}
 int main (int argc, char *argv[])
 {
 	memset(&last_refreshed,0,sizeof(last_refreshed));
@@ -365,10 +442,14 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>
+	{
+		FFTFilter<jack_default_audio_sample_t>* trololo=new FFTFilter<jack_default_audio_sample_t>
 		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
-		(1024, 20,			20,			2,		12,					2,			8192*2);
-	
+		(1024, 16,			16,			2,		12,					2,			8192*2);
+		
+		//trololo->freq_scale=9./10.;
+		filt[i]=trololo;
+	}
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();
 	q.GetPointer(tmp)=123;
@@ -448,6 +529,55 @@ int main (int argc, char *argv[])
 	bt->signal_clicked().connect(&loadfile);
 	b->get_widget("b_revert",bt);
 	bt->signal_clicked().connect(&load);
+	b->get_widget("b_apply",bt);
+	bt->signal_clicked().connect(&apply_pitchshift);
+	Gtk::CheckButton* cb;
+	b->get_widget("c_pitchshift",cb);
+	cb->signal_toggled().connect(&apply_pitchshift);
+	
+	
+	Gtk::Label* lb;
+	b->get_widget("label8",lb);
+	apply_label_workaround(lb);
+	
+	b->get_widget("b_params",bt);
+	bt->signal_clicked().connect([]()
+	{
+		Gtk::Window* w1;
+		Gtk::Dialog* d;
+		b->get_widget("window1",w1);
+		b->get_widget("dialog1",d);
+		d->set_transient_for(*w1);
+		if(d->run()!=RESPONSE_APPLY)goto hhhhh;
+		
+		FFTFilter<jack_default_audio_sample_t>** tmp;
+		tmp=new FFTFilter<jack_default_audio_sample_t>*[CHANNELS];
+		Int bs, overlap, bpp, padding, fftsize;
+		Gtk::Entry* ent;
+		b->get_widget("t_bs",ent);
+		bs=atoi(ent->get_text().c_str());
+		b->get_widget("t_overlap",ent);
+		overlap=atoi(ent->get_text().c_str());
+		b->get_widget("t_bpp",ent);
+		bpp=atoi(ent->get_text().c_str());
+		b->get_widget("t_padding",ent);
+		padding=atoi(ent->get_text().c_str());
+		b->get_widget("t_fftsize",ent);
+		fftsize=atoi(ent->get_text().c_str());
+		Int buffers;
+		buffers=bpp+padding*2;
+		for(int i=0;i<CHANNELS;i++)
+		{
+			tmp[i]=new FFTFilter<jack_default_audio_sample_t>
+			//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
+			(bs,  buffers,		buffers,	overlap,bpp,				padding,	fftsize);
+		}
+		update_fft(tmp);
+		apply_pitchshift1(tmp);
+		filt2=tmp;
+	hhhhh:
+		d->hide();
+	});
 	
 	Gtk::FileChooserDialog* d;
 	b->get_widget("filechooserdialog1",d);
@@ -462,18 +592,31 @@ int main (int argc, char *argv[])
 	c->show();
 	
 	b->get_widget("viewport2",v);
-	if(display_spectrum)
-	{
+	//if(display_spectrum)
+	//{
 		c2=new EQControl(EQ_POINTS);
 		v->add(*c2);
 		c2->show();
-	}
+		c2->MouseMove+=EQControl::MouseDelegate(&on_mousemove,c2);
+	/*}
 	else
 	{
 		Gtk::Table* t1;
 		b->get_widget("table1",t1);
 		t1->remove(*v);
-	}
+	}*/
+	
+	b->get_widget("c_spectrum",cb);
+	cb->set_active(display_spectrum);
+	v->set_visible(display_spectrum);
+	cb->signal_toggled().connect([cb]()
+	{
+		display_spectrum=cb->get_active();
+		Gtk::Viewport* vp;
+		b->get_widget("viewport2",vp);
+		vp->set_visible(display_spectrum);
+	});
+	
 	//b->get_widget("grid1",g);
 	//b->get_widget("eventbox1",eb);
 	
