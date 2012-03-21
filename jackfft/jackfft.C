@@ -144,11 +144,13 @@ int process (jack_nframes_t length, void *arg)
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
+	FFTFilter<jack_default_audio_sample_t>* trololo=((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
 	struct timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	if(display_spectrum && get_nsec(last_refreshed)+(50*1000000)<get_nsec(t))
+	if(display_spectrum && get_nsec(last_refreshed)+(50*1000000)<get_nsec(t) && trololo->didprocess)
 	{
 		last_refreshed=t;
+		trololo->didprocess=false;
 		//refresh
 		for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
 			c2->data[i]=0;
@@ -363,7 +365,9 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 4, 4, 2, 4, 8192*2);
+		filt[i]=new FFTFilter<jack_default_audio_sample_t>
+		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
+		(1024, 20,			20,			2,		12,					2,			8192*2);
 	
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();
@@ -422,7 +426,7 @@ int main (int argc, char *argv[])
 //aaaaa:
 	Gtk::Main kit(argc, argv);
 	
-	b = Gtk::Builder::create_from_file("a.glade");
+	b = Gtk::Builder::create_from_file("main2.ui");
 	Gtk::Window* w;
 	//Gtk::Grid* g;
 	//Gtk::EventBox* eb;
@@ -453,8 +457,8 @@ int main (int argc, char *argv[])
 	b->get_widget("viewport1",v);
 	v->add(*c);
 	
-	c->set_hexpand(true);
-	c->set_vexpand(true);
+	//c->set_hexpand(true);
+	//c->set_vexpand(true);
 	c->show();
 	
 	b->get_widget("viewport2",v);
@@ -466,9 +470,9 @@ int main (int argc, char *argv[])
 	}
 	else
 	{
-		Gtk::Grid* g1;
-		b->get_widget("grid1",g1);
-		g1->remove(*v);
+		Gtk::Table* t1;
+		b->get_widget("table1",t1);
+		t1->remove(*v);
 	}
 	//b->get_widget("grid1",g);
 	//b->get_widget("eventbox1",eb);

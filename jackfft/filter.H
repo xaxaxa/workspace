@@ -333,11 +333,12 @@ namespace xaxaxa
 		UInt outbuffer_pos, inbuffer_pos;
 		UInt overlapcount;
 		Int BuffersPerPeriod;
+		Int padding;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
-
+		bool didprocess;
 		inline UInt PeriodSize()
 		{
-			return BufferSize*BuffersPerPeriod;
+			return BufferSize*(BuffersPerPeriod+(padding*2));
 		}
 		FLOATTYPE* tmpbuffer;
 		virtual void alloc_buffer()
@@ -353,26 +354,51 @@ namespace xaxaxa
 		virtual void DoProcess() = 0;
 		virtual void DoProcess(FLOATTYPE coeff_o, FLOATTYPE coeff_n)
 		{
+			Int BuffersPerPeriod=this->BuffersPerPeriod+(padding*2);
 			Int offset=0;
+			Int half = BufferSize*this->BuffersPerPeriod / 2;
 			for(Int i1=curBuffer_in;i1!=nextBuffer_in;i1=modulus(i1+1,BuffersPerPeriod+1))
 			{
 				FLOATTYPE* in1=&InBuffer.GetPointer(InBufferPtrs[i1]);
 				memcpy(tmpbuffer + offset, in1, BufferSize * sizeof(FLOATTYPE));
+				/*for (Int i = 0; i < BufferSize; i++)
+				{
+					FLOATTYPE fade;
+					if(overlapcount<=1) fade=0;
+					else fade = (FLOATTYPE) abs(offset + i - half) / (FLOATTYPE) half;
+					tmpbuffer[offset+i] = in1[i] * (1.0 - fade);
+				}*/
 				offset+=BufferSize;
 			}
-
+			Int trololo,troll;
+			if(padding<=0)goto trolled;
+			trololo=BufferSize*padding;
+			for(Int i=0;i<trololo;i++)
+			{
+				tmpbuffer[i]*=((double)i)/(double)(trololo-1);
+			}
+			troll=PeriodSize();
+			for(Int i=troll-trololo;i<troll;i++)
+			{
+				tmpbuffer[i]*=((double)(troll-i-1))/(double)(trololo-1);
+			}
+trolled:
 			DoProcess();
+			didprocess=true;
 
-			Int half = PeriodSize() / 2;
-			offset=0;
-			for(Int i1=curBuffer_out;i1!=nextBuffer_out;i1=modulus(i1+1,BuffersPerPeriod+1))
+			offset=BufferSize*padding;
+			for(Int i1=curBuffer_out;i1!=nextBuffer_out;i1=modulus(i1+1,this->BuffersPerPeriod+1))
 			{
 				FLOATTYPE* out1=&OutBuffer.GetPointer(OutBufferPtrs[i1]);
 				//memcpy(out1, tmpbuffer + offset, BufferSize * sizeof(FLOATTYPE));
 				for (Int i = 0; i < BufferSize; i++)
 				{
-					FLOATTYPE fade = (FLOATTYPE) abs(offset + i - half) / (FLOATTYPE) half;
+					FLOATTYPE fade;
+					if(overlapcount<=1) fade=0;
+					else fade = (FLOATTYPE) abs(offset - (Int)(BufferSize*padding) + i - half) / (FLOATTYPE) half;
+					//fade=0;
 					out1[i] = (out1[i] * (coeff_o)) + (tmpbuffer[offset+i] * coeff_n * (1.0 - fade));
+					//out1[i] = (out1[i] * (coeff_o)) + (tmpbuffer[offset+i] * coeff_n);
 				}
 				offset+=BufferSize;
 			}
@@ -384,9 +410,10 @@ namespace xaxaxa
 			//while((curBuffer_in = InBuffer.BeginDequeue()) >= 0)
 			//	InBuffer.EndDequeue(curBuffer_in);
 			//return;
-			Int skip=BuffersPerPeriod/this->overlapcount;
+			Int skip=this->BuffersPerPeriod/this->overlapcount;
 			if(skip<1)skip=1;
-			UInt overlapcount=BuffersPerPeriod/skip;
+			UInt overlapcount=this->BuffersPerPeriod/skip;
+			Int BuffersPerPeriod=this->BuffersPerPeriod+(padding*2);
 			//WARN(3,"asdf0");
 		asdf:
 			Int tmp;
@@ -398,11 +425,11 @@ namespace xaxaxa
 				//WARN(3,"got buffers: " << modulus(nextBuffer_in-curBuffer_in,BuffersPerPeriod+1) << " total; nextBuffer_in=" << nextBuffer_in << "; curBuffer_in=" << curBuffer_in);
 			}
 			//WARN(3,"asdf1");
-			while(modulus(nextBuffer_out-curBuffer_out,BuffersPerPeriod+1) < BuffersPerPeriod)
+			while(modulus(nextBuffer_out-curBuffer_out,this->BuffersPerPeriod+1) < this->BuffersPerPeriod)
 			{
 				if((tmp=OutBuffer.BeginAppend())<0) return;
 				OutBufferPtrs[nextBuffer_out]=tmp;
-				nextBuffer_out=modulus(nextBuffer_out+1,BuffersPerPeriod+1);
+				nextBuffer_out=modulus(nextBuffer_out+1,this->BuffersPerPeriod+1);
 				memset(&OutBuffer.GetPointer(tmp), 0, BufferSize * sizeof(FLOATTYPE));
 			}
 			//WARN(3,"asdf2");
@@ -416,7 +443,7 @@ namespace xaxaxa
 				InBuffer.EndDequeue(InBufferPtrs[curBuffer_in]);
 				OutBuffer.EndAppend(OutBufferPtrs[curBuffer_out]);
 				curBuffer_in=modulus(curBuffer_in+1,BuffersPerPeriod+1);
-				curBuffer_out=modulus(curBuffer_out+1,BuffersPerPeriod+1);
+				curBuffer_out=modulus(curBuffer_out+1,this->BuffersPerPeriod+1);
 			}
 			goto asdf;
 		}
@@ -487,16 +514,18 @@ namespace xaxaxa
 			return br;
 		}
 		OverlappedFilter2(UInt buffersize, UInt inbuffers, UInt outbuffers,
-				UInt overlapcount, UInt BuffersPerPeriod) :
+				UInt overlapcount, Int BuffersPerPeriod, Int padding=1) :
 		InBuffer(inbuffers, buffersize), OutBuffer(outbuffers, buffersize),
 		curBuffer_in(0), nextBuffer_in(0), curBuffer_out(0), nextBuffer_out(0),
 		BufferSize(buffersize), OutBuffers(outbuffers), InBuffers(inbuffers),
 		outbuffer_index(-1), inbuffer_index(-1), outbuffer_pos(0), inbuffer_pos(0),
-		overlapcount(overlapcount), BuffersPerPeriod(BuffersPerPeriod)
+		overlapcount(overlapcount), BuffersPerPeriod(BuffersPerPeriod), padding(padding),
+		didprocess(false)
 		{
 			//InBuffer = (NUMTYPE*)malloc(sizeof(NUMTYPE)*BufferSize);
 			alloc_buffer();
-			InBufferPtrs = new UInt[(BuffersPerPeriod+1)*2];
+			BuffersPerPeriod+=padding*2;
+			InBufferPtrs = new UInt[(BuffersPerPeriod+1)+(this->BuffersPerPeriod+1)];
 			OutBufferPtrs = InBufferPtrs+(BuffersPerPeriod+1);
 		}
 		~OverlappedFilter2()

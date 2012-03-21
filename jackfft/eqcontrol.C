@@ -53,10 +53,8 @@ namespace xaxaxa
 			if(p2>=datalen)return data[(UInt)p1];
 			return data[(UInt)p1]*(p2-pos)+data[(UInt)p2]*(pos-p1);
 		}
-		virtual bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& gc)
+		void do_draw(const ::Cairo::RefPtr< ::Cairo::Context>& gc)
 		{
-			//Gtk::DrawingArea::on_draw(gc);
-			
 			UInt w=get_allocation().get_width();
 			UInt h=get_allocation().get_height();
 			double x1,y1,x2,y2;
@@ -79,10 +77,6 @@ namespace xaxaxa
 				//gc->line_to(x,123);
 				//gc->stroke();
 			}
-			//gc->rectangle(5,5,100,100);
-			
-		//ret:
-			return true;
 		}
 		virtual bool on_motion_notify_event(GdkEventMotion* event)
 		{
@@ -145,15 +139,30 @@ namespace xaxaxa
 			d=false;
 			return true;
 		}
+		virtual bool on_expose_event(GdkEventExpose* evt)
+		{
+			Glib::RefPtr<Gdk::Window> window = get_window();
+			if(window)
+			{
+				::Cairo::RefPtr< ::Cairo::Context> ctx = window->create_cairo_context();
+				if(evt)
+				{
+					ctx->rectangle(evt->area.x, evt->area.y, evt->area.width, evt->area.height);
+					ctx->clip();
+				}
+				do_draw(ctx);
+			}
+			return true;
+		}
 		EQControl(UInt datalen): Gtk::DrawingArea(), datalen(datalen), last_i(-1), last_v(-1.0), d(false)
 		{
-			//signal_draw().connect(sigc::mem_fun(this,&EQControl::onDraw));
+			//signal_expose_event().connect(sigc::mem_fun(this,&EQControl::onExpose));
 			//signal_motion_notify_event().connect(sigc::mem_fun(this,&EQControl::on_motion_notify_event));
 			data=new double[datalen];
 			for(UInt i=0;i<datalen;i++)
 				data[i] = 0.5;
 			set_app_paintable(true);
-			set_double_buffered(false);
+			set_double_buffered(true);
 			set_redraw_on_allocate(true);
 			set_events(get_events()|POINTER_MOTION_MASK|BUTTON_MOTION_MASK|BUTTON_PRESS_MASK|BUTTON_RELEASE_MASK);
 		}

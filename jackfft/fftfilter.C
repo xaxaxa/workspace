@@ -27,6 +27,11 @@
 
 namespace xaxaxa
 {
+	inline double modulus(double a, double b)
+	{
+		int tmp=a/b;
+		return a-tmp*b;
+	}
 	class WindowedFFT
 	{
 	public:
@@ -81,7 +86,7 @@ namespace xaxaxa
 		{
 			return fft.size_c;
 		}
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod),fft(FFTSize)
+		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding),fft(FFTSize)
 		{
 			asdf=0;
 			//memset(&last_refreshed,0,sizeof(last_refreshed));
@@ -122,6 +127,7 @@ namespace xaxaxa
 			//if(asdf>1)
 			//{
 			//fftw_execute(p1);
+			//cout << this->PeriodSize() << endl;
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
 				//int shift=21;
 				/*for(UInt i=0;i<complexsize;i++)
@@ -132,19 +138,9 @@ namespace xaxaxa
 				//asdf=0;
 			//}
 			
-			/*for(Int i=complexsize-1-shift;i>=0;i--)
-			{
-				tmpcomplex[i+shift][0]=tmpcomplex[i][0]*coefficients[i+shift];
-				tmpcomplex[i+shift][1]=tmpcomplex[i][1]*coefficients[i+shift];
-			}*/
 			//tmpcomplex[0][0]=0;
 			//tmpcomplex[0][1]=0;
-			/*for(Int i=complexsize-1;i>=0;i--)
-			{
-				int i2=(int)round((double)i*19/20);
-				tmpcomplex[i][0] = tmpcomplex[i2][0]*coefficients[i];
-				tmpcomplex[i][1] = tmpcomplex[i2][1]*coefficients[i];
-			}*/
+			
 			
 			/*for(UInt i=(complexsize-1)/2+1;i<complexsize;i++)
 			{
@@ -157,12 +153,62 @@ namespace xaxaxa
 				fft.Data_c[i][0] = fft.Data_c[i][0]*coefficients[i];
 				fft.Data_c[i][1] = fft.Data_c[i][1]*coefficients[i];
 			}
+			/*Int skip=this->BuffersPerPeriod/this->overlapcount;
+			if(skip<1)skip=1;
+			UInt overlapcount=this->BuffersPerPeriod/skip;
+			Int skip_samples=this->PeriodSize()/overlapcount;*/
+			
+			//for(Int i=complexsize-1;i>=0;i--)
+			/*for(Int i=0;i<complexsize;i++)
+			{
+				int i2;
+				//if(i>50)
+				double asdf=((double)i)*4/5;
+				i2=(int)asdf;
+				if(i2==0 || i==0)	//prevent division by zero
+					continue;
+				if(i2+1>=complexsize)
+				{
+					fft.Data_c[i][0]=fft.Data_c[i][1]=0.;
+					continue;
+				}
+				double trololo=asdf-i2;
+				//double freq1=(asdf/(double)(complexsize-1))*0.5;
+				double period1=(double)fft.size/(double)asdf;
+				//double freq2=(double)i/(double)(complexsize-1)*0.5;
+				double period2=(double)fft.size/(double)i;
+				double sine=(tmpcomplex[i2][1]*(1.0-trololo) + tmpcomplex[i2+1][1]*trololo);
+				double cosine=(tmpcomplex[i2][0]*(1.0-trololo) + tmpcomplex[i2+1][0]*trololo);
+				
+				double amplitude=sqrt(sine*sine+cosine*cosine);
+				double phase=atan2(cosine,sine);	//radians; [-pi,pi]
+				//double phase_delta1=(skip_samples%period1)/period1*(2*M_PI);
+				phase=phase*((double)period1);
+				//phase=phase/((double)(M_PI*2));
+				//phase=phase*((double)(M_PI*2));
+				phase=phase/((double)period2);
+				//phase*=1.5;
+				//if(i==100)cout << phase << endl;
+				//else i2=i;
+				//fft.Data_c[i][0] = (fft.Data_c[i2][0]*(1.0-trololo) + fft.Data_c[i2+1][0]*trololo)*coefficients[i];
+				//fft.Data_c[i][1] = (fft.Data_c[i2][1]*(1.0-trololo) + fft.Data_c[i2+1][1]*trololo)*coefficients[i];
+				amplitude*=coefficients[i];
+				fft.Data_c[i][1] = cos(phase)*amplitude;
+				fft.Data_c[i][0] = sin(phase)*amplitude;
+			//trolled: ;
+			}*/
 			//fftw_execute(p2);
+			/*int shift=50;
+			for(Int i=complexsize-1-shift;i>=0;i--)
+			{
+				fft.Data_c[i+shift][0]=fft.Data_c[i][0]*coefficients[i+shift];
+				fft.Data_c[i+shift][1]=fft.Data_c[i][1]*coefficients[i+shift];
+			}*/
 			double* d=fft.Reverse(this->PeriodSize());
 			memcpy(this->tmpbuffer,d,sizeof(double)*this->PeriodSize());
 			Int ps=this->PeriodSize();
 			for(UInt i=0;i<ps;i++)
-				this->tmpbuffer[i] /= ps;
+				this->tmpbuffer[i] /= fft.size;
 		}
 	};
 	template<class NUMTYPE>class FFTTransform: public OverlappedFilter3<NUMTYPE, double>
@@ -264,11 +310,7 @@ namespace xaxaxa
 			return buffer_out;
 		}
 	};
-	inline double modulus(double a, double b)
-	{
-		int tmp=a/b;
-		return a-tmp*b;
-	}
+	
 	class FFTStream_r
 	{
 	public:
