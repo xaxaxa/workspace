@@ -339,6 +339,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="n_rows">4</property>
+        <property name="n_columns">2</property>
         <child>
           <object class="GtkViewport" id="viewport1">
             <property name="visible">True</property>
@@ -575,6 +576,19 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
             <property name="top_attach">2</property>
             <property name="bottom_attach">3</property>
             <property name="y_options"></property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVScale" id="vscale1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="round_digits">1</property>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="bottom_attach">4</property>
+            <property name="x_options"></property>
           </packing>
         </child>
       </object>

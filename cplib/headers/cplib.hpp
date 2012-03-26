@@ -451,6 +451,17 @@ namespace xaxaxa
 		{
 			return SubBuffer(index, Length - index);
 		}
+		inline void Clip(int index, int length)
+		{
+			if (index < 0 || index + length > this->Length)
+				throw Exception("Buffer::Clip() out of range");
+			Data+=index;
+			Length=length;
+		}
+		inline void Clip(int index)
+		{
+			Clip(index,Length-index);
+		}
 		inline void Release()
 		{
 			if (IsRaw)
@@ -533,17 +544,16 @@ namespace xaxaxa
 			End=SEEK_END,
 			Current=SEEK_CUR
 		};
-		virtual Int Read(Buffer buf)=0;
-		virtual void Write(Buffer buf)=0;
+		virtual Int Read(const Buffer& buf)=0;
+		virtual void Write(const Buffer& buf)=0;
 		bool Fill(Buffer buf)
 		{
 			int br;
 			while((br=Read(buf))>0)
 			{
-				if(br>=buf.Length)return true;
-				buf=buf.SubBuffer(br);
+				buf.Clip(br);
 			}
-			return false;
+			return buf.Length<=0;
 		}
 		virtual void Flush()=0;
 		virtual void Close()=0;
@@ -559,12 +569,12 @@ namespace xaxaxa
 		//typedef boost::function<void (void*,Stream*)> Callback;
 		FUNCTION_DECLARE(Callback,void,Stream*);
 		int __tmp;
-		virtual void BeginRead(Buffer buf, Callback cb)
+		virtual void BeginRead(const Buffer& buf, Callback cb)
 		{
 			__tmp = Read(buf);
 			FUNCTION_CALL(cb, this);
 		}
-		virtual void BeginWrite(Buffer buf, Callback cb)
+		virtual void BeginWrite(const Buffer& buf, Callback cb)
 		{
 			Write(buf);
 			FUNCTION_CALL(cb, this);
@@ -601,11 +611,11 @@ namespace xaxaxa
 		{
 			return Cap::Read | Cap::Write | Cap::Close;
 		}
-		virtual Int Read(Buffer buf)
+		virtual Int Read(const Buffer& buf)
 		{
 			return 0;
 		}
-		virtual void Write(Buffer buf)
+		virtual void Write(const Buffer& buf)
 		{
 		}
 		virtual void Flush()
@@ -658,7 +668,7 @@ namespace xaxaxa
 			this->buf = realloc(this->buf, tmp);
 			this->Capacity = tmp;
 		}
-		void Append(Buffer buf);
+		void Append(const Buffer& buf);
 		void Append(STRING buf);
 		inline void Append(const char* buf, int length)
 		{
@@ -670,6 +680,10 @@ namespace xaxaxa
 		}
 		void Append(const char* buf);
 		void Append(const StringBuilder* s);
+		inline void Append(char c)
+		{
+			Append(&c, 1);
+		}
 		inline void Append(Int n)
 		{
 			//char c[log10(0xFFFFFFFF)+2];
@@ -719,8 +733,8 @@ namespace xaxaxa
 			((char*) buf)[length] = '\x00';
 			return ((char*) buf);
 		}
-		virtual int Read(Buffer buf);
-		virtual void Write(Buffer buf);
+		virtual int Read(const Buffer& buf);
+		virtual void Write(const Buffer& buf);
 		virtual void Flush();
 		virtual void Close();
 		virtual void Seek(Long n, SeekFrom from = SeekFrom::Begin)
@@ -800,14 +814,14 @@ namespace xaxaxa
 				close(_f);
 			_f = -1;
 		}
-		inline virtual Int Write(Buffer buf)
+		inline virtual Int Write(const Buffer& buf)
 		{
 			Int tmp = write(_f, buf.Data, buf.Length);
 			if (tmp < 0)
 				throw Exception(errno);
 			return tmp;
 		}
-		inline virtual Int Read(Buffer buf)
+		inline virtual Int Read(const Buffer& buf)
 		{
 			Int tmp = read(_f, buf.Data, buf.Length);
 			if (tmp < 0)
@@ -840,8 +854,8 @@ namespace xaxaxa
 		File f;
 		FileStream(File f);
 		virtual ~FileStream();
-		virtual int Read(Buffer buf);
-		virtual void Write(Buffer buf);
+		virtual int Read(const Buffer& buf);
+		virtual void Write(const Buffer& buf);
 		virtual void Flush();
 		virtual void Close();
 		virtual Long Position()
@@ -865,11 +879,11 @@ namespace xaxaxa
 				in(File(0)), out(File(1))
 		{
 		}
-		virtual int Read(Buffer buf)
+		virtual int Read(const Buffer& buf)
 		{
 			return in.Read(buf);
 		}
-		virtual void Write(Buffer buf)
+		virtual void Write(const Buffer& buf)
 		{
 			out.Write(buf);
 		}
@@ -927,7 +941,7 @@ namespace xaxaxa
 		{	CheckCaps();}
 		virtual ~GIOGenericStream()
 		{}
-		virtual int Read(Buffer buf)
+		virtual int Read(const Buffer& buf)
 		{
 			if((c&Cap::Read)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::InputStream> s;
@@ -939,7 +953,7 @@ namespace xaxaxa
 			else s=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
 			return s->read(buf.Data,buf.Length);
 		}
-		virtual void Write(Buffer buf)
+		virtual void Write(const Buffer& buf)
 		{
 			if((c&Cap::Write)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::OutputStream> s;
@@ -1037,7 +1051,7 @@ namespace xaxaxa
 		int buf_length;
 		StreamReaderWriter(Stream& s, int rbuffersize = 4096, int wbuffersize = 4096);
 		virtual ~StreamReaderWriter();
-		virtual int Read(Buffer buf);
+		virtual int Read(const Buffer& buf);
 		virtual int Read(StringBuilder& buf, int length);
 		virtual int Read(StringBuilder& buf, const char* delimitors, int delimitor_count);
 		//virtual int read(Stream *buf,int length);
@@ -1076,7 +1090,7 @@ namespace xaxaxa
 		int fast_readline(Stream& buf);
 		virtual int ReadLine(Stream& buf);
 
-		virtual void Write(Buffer buf);
+		virtual void Write(const Buffer& buf);
 		virtual void Flush();
 		virtual void Close();
 		void do_flush()
@@ -1119,6 +1133,17 @@ namespace xaxaxa
 			wbuf.Append(x);
 			flush_if_full();
 		}
+		template<class T> inline void WriteLine(T x)
+		{
+			wbuf.Append(x);
+			wbuf.Append('\n');
+			flush_if_full();
+		}
+		inline void WriteLine()
+		{
+			wbuf.Append('\n');
+			flush_if_full();
+		}
 	};
 
 	typedef StreamReaderWriter StreamWriter;
@@ -1138,7 +1163,7 @@ namespace xaxaxa
 		s.Write(x);
 		return s;
 	}
-	inline Int operator>>(Stream& s, Buffer& b)
+	inline Int operator>>(Stream& s, const Buffer& b)
 	{
 		return s.Read(b);
 	}

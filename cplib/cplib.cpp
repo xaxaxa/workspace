@@ -57,11 +57,11 @@ namespace xaxaxa
 	{
 		//Close();
 	}
-	int FileStream::Read(Buffer buf)
+	int FileStream::Read(const Buffer& buf)
 	{
 		return f.Read(buf);
 	}
-	void FileStream::Write(Buffer buf)
+	void FileStream::Write(const Buffer& buf)
 	{
 		int bw = 0;
 		int off = 0;
@@ -92,7 +92,7 @@ namespace xaxaxa
 	{
 		free(buf);
 	}
-	int StreamReaderWriter::Read(Buffer buf)
+	int StreamReaderWriter::Read(const Buffer& buf)
 	{
 		int br = 0;
 
@@ -102,15 +102,42 @@ namespace xaxaxa
 		if (tmp > 0)
 		{
 			memcpy(buf.Data, ((Byte*) this->buf) + buf_index, tmp);
-			buf.Data += tmp;
-			buf.Length -= tmp;
+			//buf.Clip(tmp);
 			buf_index += tmp;
 			buf_length -= tmp;
 			br += tmp;
 		}
-		if (buf.Length > 0)
-			br += s->Read(buf);
-		return br;
+		if (br >= buf.Length) return br;
+		if (buf.Length-br > this->buf_size)
+		{
+			while((br >= buf.Length) && (tmp=s->Read(buf.SubBuffer(br))) > 0)
+			{
+				br += tmp;
+				//buf.Clip(tmp);
+			}
+			return br;
+		}
+		while (1)
+		{
+			if (buf_length <= 0)
+			{
+				Buffer tmpb((char*) this->buf, buf_size);
+				tmp = s->Read(tmpb);
+				if (tmp <= 0)
+					return br;
+				buf_index = 0;
+				buf_length = tmp;
+			}
+			tmp = buf_length;
+			if (buf.Length-br < tmp)
+				tmp = buf.Length-br;
+			memcpy(buf.Data+br, ((Byte*) this->buf) + buf_index, tmp);
+			//buf.Clip(tmp);
+			buf_index += tmp;
+			buf_length -= tmp;
+			br += tmp;
+			if (br >= buf.Length) return br;
+		}
 	}
 	int StreamReaderWriter::Read(StringBuilder& buf, int length)
 	{
@@ -351,7 +378,7 @@ namespace xaxaxa
 		return Read(buf, delim, 2);
 		//return Read(buf, "\r\n", 2);
 	}
-	void StreamReaderWriter::Write(Buffer buf)
+	void StreamReaderWriter::Write(const Buffer& buf)
 	{
 		if (buf.Length > max_wbuffer_copy)
 		{
@@ -370,6 +397,7 @@ namespace xaxaxa
 	}
 	void StreamReaderWriter::Close()
 	{
+		Flush();
 		s->Close();
 	}
 /////////////////////////////////////////////////////////
@@ -385,7 +413,7 @@ namespace xaxaxa
 	{
 		free(buf);
 	}
-	void StringBuilder::Append(Buffer buf)
+	void StringBuilder::Append(const Buffer& buf)
 	{
 		//int tmp=this->Length;
 		this->EnsureCapacity(this->position + buf.Length);
@@ -434,7 +462,7 @@ namespace xaxaxa
 		return Buffer((char*) this->buf, length);
 	}
 
-	int StringBuilder::Read(Buffer buf)
+	int StringBuilder::Read(const Buffer& buf)
 	{
 		int i = length - position;
 		if (i <= 0)
@@ -445,7 +473,7 @@ namespace xaxaxa
 		position += i;
 		return i;
 	}
-	void StringBuilder::Write(Buffer buf)
+	void StringBuilder::Write(const Buffer& buf)
 	{
 		Append(buf);
 	}

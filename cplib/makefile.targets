@@ -1,0 +1,6 @@
+install:
+	pwd
+	cp -af "./libcplib.so" "/usr/local/lib/"
+	rm -rf "/usr/local/include/cplib"
+	cp -af "../headers" "/usr/local/include/cplib"
+
