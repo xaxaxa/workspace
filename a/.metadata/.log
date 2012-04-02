@@ -1,0 +1,18 @@
+!SESSION 2012-04-01 19:23:55.611 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.6.0_23
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=linux, ARCH=x86, WS=gtk, NL=en_CA
+Command-line arguments:  -os linux -ws gtk -arch x86
+
+!ENTRY org.eclipse.ui 4 4 2012-04-01 19:24:30.230
+!MESSAGE Unable to find Action Set: com.aptana.editor.php.presentation
+
+!ENTRY org.eclipse.ui.browser 2 0 2012-04-01 19:28:45.092
+!MESSAGE Internal browser is not available: No more handles [MOZILLA_FIVE_HOME='/usr/lib/xulrunner-addons'] (java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: 
+	/home/xaxatrollo/Aptana Studio 3/configuration/org.eclipse.osgi/bundles/226/1/.cp/libswt-mozilla-gtk-3659.so: libxpcom.so: cannot open shared object file: No such file or directory
+	no swt-mozilla-gtk in java.library.path
+	Can't load library: /tmp/swtlib-32/libswt-mozilla-gtk-3659.so
+	Can't load library: /tmp/swtlib-32/libswt-mozilla-gtk.so
+	/tmp/swtlib-32/libswt-mozilla-gtk-3659.so: libxpcom.so: cannot open shared object file: No such file or directory
+)

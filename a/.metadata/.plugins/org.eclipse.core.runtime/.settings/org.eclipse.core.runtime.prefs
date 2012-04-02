@@ -1,0 +1,4 @@
+#Sun Apr 01 19:24:39 PDT 2012
+content-types/com.aptana.editor.text.content-type.generic/file-extensions=feature,sh,ss,bashrc,bash_profile,bash_login,profile,bash_logout,jsp,tld,pt,cpt,dtml,rss,opml,xslt
+eclipse.preferences.version=1
+content-types/com.aptana.editor.text.content-type.generic/file-names=.textmate_init
