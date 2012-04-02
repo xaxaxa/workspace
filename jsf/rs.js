@@ -450,7 +450,8 @@ function rspanel(e,wnd)
 				{
 					th.cur_element.__td.parentNode.parentNode.parentNode.onmousedown(null,true);
 				}*/
-				th.cur_element=th.find_movable_element(th.cur_element);
+				var tmp=th.find_movable_element(th.cur_element);
+				if(th.cur_element!=tmp)tmp.onmousedown(null,true);
 				var tmp;
 				try
 				{
@@ -583,7 +584,8 @@ function rspanel(e,wnd)
 					{
 						th.cur_element.__td.parentNode.parentNode.parentNode.onmousedown(null,true);
 					}*/
-					th.cur_element=th.find_resizable_element(th.cur_element);
+					var tmp=th.find_resizable_element(th.cur_element);
+					if(th.cur_element!=tmp)tmp.onmousedown(null,true);
 					var tmp;
 					try
 					{
