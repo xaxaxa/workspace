@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Untitled Page</title>
+</head>
+<script src="panel.js"></script>
+<script src="splitter.js"></script>
+<script>
+var p;
+var s;
+function l()
+{
+	p=new panel(document.getElementById("d"),window);
+	//set dock
+	//document.getElementById("b1").dock=DOCK_TOP;
+	document.getElementById("ip").dock=DOCK_TOP;
+	document.getElementById("ta").dock=DOCK_FILL;
+	document.getElementById("bottompanel").dock=DOCK_BOTTOM;
+	p.layout();
+}
+var w,h;
+function rs()
+{
+	if(w==document.getElementById("d").offsetWidth && h==document.getElementById("d").offsetHeight)return;
+	p.layout();
+	w=document.getElementById("d").offsetWidth;
+	h=document.getElementById("d").offsetHeight;
+}
+</script>
+<body onload="l();" onresize="rs();" bottommargin="0" leftmargin="0" rightmargin="0" topmargin="0" style="overflow:hidden; border:none;" BGCOLOR="#d4d0c8">
+	<div style="width:100%; height:100%; overflow:hidden;" id="d">
+	<FORM STYLE="width:100%;height:100%;" ID="ajaxform" NAME="ajaxform" ACTION="send_notify.aspx" METHOD="post" TARGET="ajaxf">
+	<INPUT ID="ip" NAME="ip" VALUE="127.0.0.1" />
+	<DIV ID="bottompanel" style="left: 149px; width: 428px; position: absolute; top: 320px; height: 24px">
+		<INPUT ID="Button1" TYPE="submit" VALUE="send" /></DIV>
+	<TEXTAREA ID="ta" NAME="content"></TEXTAREA>
+	</FORM>
+	</div>
+	<IFRAME ID="ajaxf" NAME="ajaxf"></IFRAME>
+	
+</body>
+</html>

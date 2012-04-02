@@ -27,11 +27,11 @@ int process (jack_nframes_t length, void *arg)
 {
 	for(size_t i=0;i<inputs.size();i++)
 	{
-		jack_default_audio_sample_t *out = 
-					(jack_default_audio_sample_t *) 
+		jack_default_audio_sample_t *out =
+					(jack_default_audio_sample_t *)
 					jack_port_get_buffer (outputs[i], length);
-		jack_default_audio_sample_t *in = 
-					(jack_default_audio_sample_t *) 
+		jack_default_audio_sample_t *in =
+					(jack_default_audio_sample_t *)
 					jack_port_get_buffer (inputs[i], length);
 
 		filt[i]->PutData(in, length);
@@ -64,7 +64,7 @@ inline double scale_freq(double x)
 }
 /*
  * y=5x^2
- * 
+ *
  * y=((x*2)^2)/4
  * 4y=(2x)^2
  * sqrt(4y)=2x
@@ -101,7 +101,7 @@ double scale_value_r(double x)
 	//cout << x << endl;
 	if(x>1.0)x=(x-1.0)/19.0;
 	else x=(-((1/x)-1.0)/19.0);
-	
+
 	if(std::isnan(x))return 1.0;
 	//else if(x>1.0)return 2.0;
 	//else if(x<-1.0)return 0.0;
@@ -150,8 +150,14 @@ int main (int argc, char *argv[])
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
 	for(UInt i=0;i<CHANNELS;i++)
-		filt[i]=new FFTFilter<jack_default_audio_sample_t>(1024, 4, 4, 2, 4, 8192*2);
-	
+	{
+		FFTFilter<jack_default_audio_sample_t>* trololo=new FFTFilter<jack_default_audio_sample_t>
+		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
+		(1024, 16,			16,			2,		12,					2,			8192*2);
+
+		//trololo->freq_scale=9./10.;
+		filt[i]=trololo;
+	}
 	jack_client_t *client;
 	jack_set_error_function (error);
 	JackStatus st;
@@ -162,7 +168,7 @@ int main (int argc, char *argv[])
 	jack_set_process_callback (client, process, 0);
 	jack_on_shutdown (client, jack_shutdown, 0);
 	printf ("engine sample rate: %u\n", srate=jack_get_sample_rate (client));
-	
+
 	FFTFilter<jack_default_audio_sample_t>* tmpf=(FFTFilter<jack_default_audio_sample_t>*)filt[0];
 	UInt complexsize = (UInt)(tmpf->PeriodSize() / 2) + 1;
 	load(fs,tmpf->coefficients,complexsize);
@@ -176,9 +182,9 @@ int main (int argc, char *argv[])
 	int i;
 	for(i=0;i<CHANNELS;i++)
 	{
-		inputs.push_back(jack_port_register (client, CONCAT("input_"<<i).c_str(), 
+		inputs.push_back(jack_port_register (client, CONCAT("input_"<<i).c_str(),
 						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
-		outputs.push_back(jack_port_register (client, CONCAT("output_"<<i).c_str(), 
+		outputs.push_back(jack_port_register (client, CONCAT("output_"<<i).c_str(),
 						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
 	}
 	if (jack_activate (client)) {

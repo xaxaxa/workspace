@@ -1,0 +1,43 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+ajax_lib
+</name>
+</assembly>
+<members>
+<member name="P:ajax_lib.My.Resources.Resources.ResourceManager">
+	<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member><member name="P:ajax_lib.My.Resources.Resources.Culture">
+	<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member><member name="P:ajax_lib.My.Resources.Resources.postback_scr">
+	<summary>
+  Looks up a localized string similar to function __doajaxpostback(eventtarget,eventargument)
+{
+	document.getElementById("__AJAXPOSTBACK").value="1";
+	if(eventargument!=null)document.getElementById("__AJAXPOSTBACK_EVENTARGUMENT").value=eventargument;
+	if(eventtarget!=null)document.getElementById("__AJAXPOSTBACK_EVENTTARGET").value=eventtarget;
+	document.forms[0].target="__AJAXPOSTBACK_IFRAME";
+	document.forms[0].submit();
+}
+function __exec_tmp(scr)
+{
+	//window.__tmp();
+	var f=new Function(scr);
+	f();
+	f=null;
+}
+.
+</summary>
+</member><member name="T:ajax_lib.My.Resources.Resources">
+	<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+</members>
+</doc>

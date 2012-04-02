@@ -1,0 +1,50 @@
+<html>
+<head>
+    <title>Untitled Page</title>
+    <script>
+    function l()
+    {
+	//return;
+	var ob;
+	var ax_obj=document.getElementById("obj1");
+	for(ob in ax_obj)
+	{
+		var opt=document.createElement("option");
+		opt.innerHTML=ob+"="+ax_obj[ob]+"<br>";
+		document.getElementById("sel").appendChild(opt);
+	}
+	//ax_obj.FlashVars="";
+	function oncomplete()
+	{
+		alert("axxaxxxxxaxa");
+	};
+	document.getElementById("inp1").onkeyup=function()
+	{
+		var i;
+		var v=document.getElementById("inp1").value;
+		if(v == "")return;
+		var s=document.getElementById("sel");
+		for(i=0;i<s.options.length;i++)
+		{
+			if(s.options[i].innerHTML.substring(0,v.length).toLowerCase() == v.toLowerCase())
+			{
+				s.options[i].selected=true;
+				return;
+			}
+		}
+	};
+    }
+    </script>
+</head>
+<body onload="l();">
+<OBJECT CLASSID="clsid:D27CDB6E-AE6D-11CF-96B8-444553540000" id="obj1" style="width:550px;height:400px;">
+<param name="FlashVars" value="v=d%3A%2Fa%2Fflv%2F1%2Eflv$d%3A%2Fa%2Fflv%2F2%2Eflv" />
+<param name="movie" value="flv_p.swf" />
+<param name="WMode" value="window" />
+</OBJECT><br />
+<input type="text" id="inp1" /><br />
+	<select id="sel" style="width: 707px; height: 292px" size="2">
+		
+	</select>
+</body>
+</html>

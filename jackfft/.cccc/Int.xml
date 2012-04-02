@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Detailed report on module Int-->
+<CCCC_Project>
+<module_summary>
+<lines_of_code value="0" level="0" />
+<lines_of_code_per_member_function value="******" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<McCabes_cyclomatic_complexity_per_member_function value="******" level="0" />
+<lines_of_code value="0" level="0" />
+<lines_of_code_per_member_function value="********" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+<weighted_methods_per_class_unity value="0" level="0" />
+<weighted_methods_per_class_visibility value="0" level="0" />
+<depth_of_inheritance_tree value="0" level="0" />
+<number_of_children value="0" level="0" />
+<coupling_between_objects value="6" level="0" />
+<IF4 value="0" level="0" />
+<IF4_per_member_function value="********" level="0" />
+<IF4_visible value="0" level="0" />
+<IF4_visible_per_member_function value="********" level="0" />
+<IF4_concrete value="0" level="0" />
+<IF4_concrete_per_member_function value="********" level="0" />
+</module_summary>
+<module_detail>
+</module_detail>
+<procedural_detail>
+</procedural_detail>
+<structural_detail>
+<module>
+<name>Int</name>
+<client_module>
+<name>BufferedFilter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="97" />
+</extent>
+<name>FFTFilter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<name>FilterBuffer2</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="719" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="729" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="758" />
+</extent>
+<name>OverlappedFilter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="145" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="201" />
+</extent>
+<name>OverlappedFilter2</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="330" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="332" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="335" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="336" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="517" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="517" />
+</extent>
+<name>OverlappedFilter3</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="542" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="544" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="547" />
+</extent>
+</client_module>
+<supplier_module>
+</supplier_module>
+</module>
+</structural_detail>
+</CCCC_Project>

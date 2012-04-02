@@ -1,0 +1,193 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+webcontrollib2
+</name>
+</assembly>
+<members>
+<member name="P:webcontrollib2.My.Resources.Resources.ResourceManager">
+	<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.Culture">
+	<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.panel">
+	<summary>
+  Looks up a localized string similar to // JScript File
+var __FILE_PANEL_JS=true;
+var DOCK_NONE=0;
+var DOCK_TOP=1;
+var DOCK_BOTTOM=2;
+var DOCK_LEFT=3;
+var DOCK_RIGHT=4;
+var DOCK_FILL=5;
+var DOCK_TOPLEFT=6;
+var DOCK_TOPRIGHT=7;
+var DOCK_BOTTOMLEFT=8;
+var DOCK_BOTTOMRIGHT=9;
+var DOCK_CENTER=10;
+var DOCK_CENTERH=11;
+var DOCK_CENTERV=12;
+var getp=function(e)
+{
+	return e.parentNode;
+};
+var layout_element=function(e,d)
+{
+	if(d==null)return;
+	if(d==DOCK_NONE)return;
+	var p=getp(e);
+	var mt,mb,ml,mr;
+	mt=((e.margintop==null) ? 0  [rest of string was truncated]";.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.splitter">
+	<summary>
+  Looks up a localized string similar to // JScript File
+
+if(__FILE_PANEL_JS==null)
+{
+	alert("\"panel.js\" is required.");
+}
+function splitter(e,rs_e,inv,vertical,dock,wnd,min)
+{
+	if(wnd==null)wnd=window;
+	if(dock==null)
+	{
+		if(vertical)
+			dock=DOCK_LEFT;
+		else
+			dock=DOCK_TOP;
+	}
+	if(min==null)min=0;
+	this.minimum=min;
+	this.e=e;
+	this.rs_e=rs_e;
+	this.inv=inv;
+	this.wnd=wnd;
+	this.vertical=vertical;
+	this.element=wnd.document.createElement("input");
+	this.element.type="text";
+	//this.element.style.backgroundColor="#0 [rest of string was truncated]";.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.taskbar">
+	<summary>
+  Looks up a localized string similar to // JScript File
+
+function taskbar_init(e,wnd)
+{
+	wnd.taskbar=new Object();
+	wnd.taskbar.element=e;
+	wnd.wnd_on_show=function(w)
+	{
+		if(window.taskbar)
+		{
+			var b=wnd.document.createElement("input");
+			b.type="button";
+			//b.style.border="2px outset";
+			b.style.borderLeft="#eaeaea 2px solid";
+			b.style.borderTop="#eaeaea 2px solid";
+			b.style.borderRight="#808080 2px solid";
+			b.style.borderBottom="#808080 2px solid";
+			b.__w=w;
+			w.__b=b;
+			b.value=w.param.title;
+			b.onmouse [rest of string was truncated]";.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.TextFile1">
+	<summary>
+  Looks up a localized string similar to ;alfdjskf;afdsljalsdkfj;asljf;lasjdf.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.wnd_2">
+	<summary>
+  Looks up a localized string similar to // JScript File
+
+var RS_IMG_MODE_BG=1;
+var RS_IMG_MODE_IMG=2;
+var RS_IMG_MODE_ALL=3;
+if(window.on_beginresize==null)window.on_beginresize=function(e)
+{
+	if(typeof window.rs_img == "object")
+	{
+		var i;
+		for(i=0;i&lt;window.rs_img.length;i++)
+		{
+			if(!window.rs_img[i].imgishidden)
+			{
+				if(window.rs_img[i].rs_img_mode==RS_IMG_MODE_BG)
+				{
+					window.rs_img[i].imgishidden=true;
+					window.rs_img[i].__tmp=window.rs_img[i].style.backgroundImage;
+					window.rs_img[i].style.backgroundIma [rest of string was truncated]";.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.wz_dragdrop">
+	<summary>
+  Looks up a localized string similar to /* This notice must be untouched at all times, and must not be removed.
+
+wz_dragdrop.js	v. 4.91
+The latest version is available at
+http://www.walterzorn.com
+or http://www.devira.com
+or http://www.walterzorn.de
+
+Copyright (c) Walter Zorn. All rights reserved.
+Created 26. 8. 2002 by Walter Zorn (Web: http://www.walterzorn.com )
+Last modified: 10.10.2008
+
+This DHTML &amp; Drag&amp;Drop Library adds Drag&amp;Drop functionality to:
+- images, even those not positioned via layers,
+  nor via stylesheets or any other kind of "h [rest of string was truncated]";.
+</summary>
+</member><member name="P:webcontrollib2.My.Resources.Resources.wz_jsgraphics">
+	<summary>
+  Looks up a localized string similar to /* This notice must be untouched at all times.
+
+wz_jsgraphics.js    v. 3.05
+The latest version is available at
+http://www.walterzorn.com
+or http://www.devira.com
+or http://www.walterzorn.de
+
+Copyright (c) 2002-2009 Walter Zorn. All rights reserved.
+Created 3. 11. 2002 by Walter Zorn (Web: http://www.walterzorn.com )
+Last modified: 2. 2. 2009
+
+Performance optimizations for Internet Explorer
+by Thomas Frank and John Holdsworth.
+fillPolygon method implemented by Matthieu Haller.
+
+High Performan [rest of string was truncated]";.
+</summary>
+</member><member name="T:webcontrollib2.My.Resources.Resources">
+	<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member><member name="P:webcontrollib2.multilist.displaycheck">
+	<summary>
+ the displaycheck property determines if checkboxes should be displayed.
+ </summary>
+	<value>true: checkboxes are visible;false: checkboxes are not visible</value>
+	<returns></returns>
+	<remarks></remarks>
+</member><member name="P:webcontrollib2.multilist.itemdata">
+	<summary>
+ separate using ";"
+ example:
+ aaa:xxxxxx:0;bbb:zzzzzz:1
+ 2 items,item 1:name=aaa;text=xxxxxx;selected=0,item 2:name=bbb;text=zzzzzzz;selected=1
+ </summary>
+	<value>items.</value>
+	<returns>aaaaaaaaaaaaa</returns>
+	<remarks>aaaaaaaaaaaa</remarks>
+</member><member name="T:webcontrollib2.multilist">
+	<summary>
+ listbox or checked list box.
+ multiple items can be selected without pressing ctrl.
+ </summary>
+	<remarks></remarks>
+</member>
+</members>
+</doc>

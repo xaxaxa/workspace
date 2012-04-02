@@ -1,0 +1,55 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Untitled Page</title>
+</head>
+
+<script src="wnd_2.js"></script>
+
+<body topmargin="0" bottommargin="0" leftmargin="0" rightmargin="0" scroll="no" style="overflow: hidden;
+	border: none;">
+	<table style="width: 100%; height: 100%;" cellpadding="0" cellspacing="0">
+		<tr>
+			<td>
+				<div style="width: 100%; height: 100%; overflow: hidden;" id="di">
+					<button type="button" onclick="(new wnd2(0,0,300,200,window,document.getElementById('di'),null,null,null)).show();"
+						style="position: absolute; left: 33px; top: 28px;">
+					</button>
+					<button type="button" id="BUTTON1" onclick="return BUTTON1_onclick()" style="position:absolute;">
+					</button>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td style="height: 32px; border-top: #d4d0c8 1px solid; padding-top: 1px;">
+				<div id="tb" style="width: 100%; height: 100%; overflow: hidden; border-top: #d0d0d0 1px solid;
+					background-color: #d4d0c8; z-index: 995; position: absolute;">
+				</div>&nbsp;
+			</td>
+		</tr>
+	</table>
+
+	<script src="taskbar.js"></script>
+<script src="common.js"></script>
+<script src="popup_panel.js"></script>
+	<script>
+function BUTTON1_onclick() {
+/*var p=new popup_panel(document.body,100,100,window);
+p.displayarea.style.backgroundColor="#dcdcdc";
+p.displayarea.innerHTML="<button onclick=\"alert('xaxaxa');\" onmouseover=\"this.style.backgroundColor='#ffffff';\" onmouseout=\"this.style.backgroundColor='';\"></button><button onclick=\"alert('axaxax');\" onmouseover=\"this.style.backgroundColor='#ffffff';\" onmouseout=\"this.style.backgroundColor='';\"></button>";
+p.show(0,0);*/
+	var _tmp=
+	[//	text			onclick
+		["xaxaxa",		function(){alert('xaxaxa');}],
+		["aaaaaaa",		function(){alert('aaaaaaaaaaaaaaaaaaaaaaaa');}]
+	];
+	var p=new popup_menu(document.body,_tmp,window);
+	p.show(0,0);
+}
+	taskbar_init(document.getElementById("tb"),window);
+	//for(var i=0;i<3;i++)
+	//	(new wnd2(i*30,i*30,300,200,window,document.getElementById("di"),null,"aaaaaa",null)).show();
+
+	</script>
+
+</body>
+</html>

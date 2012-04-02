@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Detailed report on module UInt-->
+<CCCC_Project>
+<module_summary>
+<lines_of_code value="0" level="0" />
+<lines_of_code_per_member_function value="******" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<McCabes_cyclomatic_complexity_per_member_function value="******" level="0" />
+<lines_of_code value="0" level="0" />
+<lines_of_code_per_member_function value="********" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+<weighted_methods_per_class_unity value="0" level="0" />
+<weighted_methods_per_class_visibility value="0" level="0" />
+<depth_of_inheritance_tree value="0" level="0" />
+<number_of_children value="0" level="0" />
+<coupling_between_objects value="10" level="0" />
+<IF4 value="0" level="0" />
+<IF4_per_member_function value="********" level="0" />
+<IF4_visible value="0" level="0" />
+<IF4_visible_per_member_function value="********" level="0" />
+<IF4_concrete value="0" level="0" />
+<IF4_concrete_per_member_function value="********" level="0" />
+</module_summary>
+<module_detail>
+</module_detail>
+<procedural_detail>
+</procedural_detail>
+<structural_detail>
+<module>
+<name>UInt</name>
+<client_module>
+<name>AppendData</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="691" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="692" />
+</extent>
+<name>BufferedFilter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="45" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="46" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="52" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="57" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="98" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="99" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="127" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="127" />
+</extent>
+<name>FFTFilter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="90" />
+</extent>
+<name>FFTTransform</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="228" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="228" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="228" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="228" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="fftfilter.C" line="228" />
+</extent>
+<name>Filter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="32" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="33" />
+</extent>
+<name>FilterBuffer</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="671" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="672" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="673" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="677" />
+</extent>
+<name>FilterBuffer2</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="720" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="720" />
+</extent>
+<name>OverlappedFilter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="146" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="166" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="202" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="203" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="244" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="249" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="280" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<name>OverlappedFilter2</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by reference</description>
+<source_reference file="filter.H" line="329" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="331" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="333" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="334" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="450" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="455" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="486" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="516" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="516" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="516" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="517" />
+</extent>
+<name>OverlappedFilter3</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by reference</description>
+<source_reference file="filter.H" line="541" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="543" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="545" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="546" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="603" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="608" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="649" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="649" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="649" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="649" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="650" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="650" />
+</extent>
+</client_module>
+<supplier_module>
+</supplier_module>
+</module>
+</structural_detail>
+</CCCC_Project>

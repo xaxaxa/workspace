@@ -1,24 +1,24 @@
 /*
  * jackfft.C
- * 
+ *
  * Copyright 2012  <xaxaxa@xaxaxa-mac>
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
+ *
+ *
  */
 #define cplib_glib_wrappers
 #include <iostream>
@@ -41,34 +41,34 @@ vector<jack_port_t *> inputs;
 vector<jack_port_t *> outputs;
 #define CHANNELS 2
 #define CONCAT(X) (((stringstream&)(stringstream()<<X)).str())
-double cur_index=0;
+double cur_index = 0;
 int srate;
-bool display_spectrum=false;
+bool display_spectrum = false;
 
 using namespace xaxaxa;
 using namespace std;
 
 
 FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
-FFTFilter<jack_default_audio_sample_t>** filt2=NULL;
+FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
 struct timespec last_refreshed;
 #define EQ_POINTS 1500
 EQControl* c;
 EQControl* c2;
 Glib::RefPtr<Gtk::Builder> b;
-string fname=".default.jfft";
+string fname = ".default.jfft";
 
 
 inline double scale_freq(double x)
 {
-	x=pow(2,x*10);
-	x=x-1;
-	if(x<0)return 0;
-	return x/1024;
+	x = pow(2, x * 10);
+	x = x - 1;
+	if(x < 0)return 0;
+	return x / 1024;
 }
 /*
  * y=5x^2
- * 
+ *
  * y=((x*2)^2)/4
  * 4y=(2x)^2
  * sqrt(4y)=2x
@@ -77,27 +77,27 @@ inline double scale_freq(double x)
 inline double scale_freq_r(double x)
 {
 	//cout << x << " " << log2(x*256) << endl;
-	x=x*1024+1;
+	x = x * 1024 + 1;
 	//if(x<1.0)return 0;
-	x=log2(x)/10;
+	x = log2(x) / 10;
 	//if(::isinf(x)||::isnan(x))return 0;
 	//cout << x << endl;
-	return x<0?-x:x;
+	return x < 0 ? -x : x;
 }
 double logn(double n, double x)
 {
-	return log(x)/log(n);
+	return log(x) / log(n);
 }
 //x: [0.0,2.0]
 double scale_value(double x)
 {
 	//return x*x;
 	double tmp = x - 1.;
-	tmp*=5.;
+	tmp *= 5.;
 	/*if(tmp<0)
 		return 1.0/(-tmp*19.0+1.0);
 	else return tmp*19.0+1.0;*/
-	return pow(2,tmp);
+	return pow(2, tmp);
 }
 /*
  * y=1/(-19x+1)
@@ -110,8 +110,8 @@ double scale_value_r(double x)
 {
 	//return x*x;
 	//cout << x << endl;
-	return logn(2,x)/5.+1.;
-	
+	return logn(2, x) / 5. + 1.;
+
 	/*if(std::isnan(x))return 1.0;
 	//else if(x>1.0)return 2.0;
 	//else if(x<-1.0)return 0.0;
@@ -120,33 +120,33 @@ double scale_value_r(double x)
 
 long long get_nsec(const timespec& t)
 {
-	return ((long long)t.tv_sec)*1000000000+(long long)t.tv_nsec;
+	return ((long long)t.tv_sec) * 1000000000 + (long long)t.tv_nsec;
 }
 template<class t> inline double complex_to_real(const t& x)
 {
-	auto r=x[0];
-	auto i=x[1];
+	auto r = x[0];
+	auto i = x[1];
 	//return r;
-	return sqrt(pow(r,2)+pow(i,2));
+	return sqrt(pow(r, 2) + pow(i, 2));
 }
-int process (jack_nframes_t length, void *arg)
+int process(jack_nframes_t length, void *arg)
 {
-	for(size_t i=0;i<inputs.size();i++)
+	for(size_t i = 0; i < inputs.size(); i++)
 	{
-		jack_default_audio_sample_t *out = 
-					(jack_default_audio_sample_t *) 
-					jack_port_get_buffer (outputs[i], length);
-		jack_default_audio_sample_t *in = 
-					(jack_default_audio_sample_t *) 
-					jack_port_get_buffer (inputs[i], length);
+		jack_default_audio_sample_t *out =
+			(jack_default_audio_sample_t *)
+			jack_port_get_buffer(outputs[i], length);
+		jack_default_audio_sample_t *in =
+			(jack_default_audio_sample_t *)
+			jack_port_get_buffer(inputs[i], length);
 
-		if(filt2!=NULL && filt2[i]!=NULL)
+		if(filt2 != NULL && filt2[i] != NULL)
 		{
 			filt2[i]->PutData(in, length);
-			if(filt2[i]->GetData(out, length)>0)
+			if(filt2[i]->GetData(out, length) > 0)
 			{
 				delete filt[i];
-				filt[i]=NULL;
+				filt[i] = NULL;
 				continue;
 			}
 		}
@@ -161,106 +161,106 @@ int process (jack_nframes_t length, void *arg)
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
-	for(size_t i=0;i<inputs.size();i++)
+	for(size_t i = 0; i < inputs.size(); i++)
 	{
-		if(filt[i]!=NULL)goto asdfghjkl;
+		if(filt[i] != NULL)goto asdfghjkl;
 	}
-	for(size_t i=0;i<inputs.size();i++)
+	for(size_t i = 0; i < inputs.size(); i++)
 	{
-		filt[i]=filt2[i];
+		filt[i] = filt2[i];
 	}
 	delete[] filt2;
-	filt2=NULL;
+	filt2 = NULL;
 asdfghjkl:
-	FFTFilter<jack_default_audio_sample_t>* trololo=((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
+	FFTFilter<jack_default_audio_sample_t>* trololo = ((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
 	struct timespec t;
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	if(display_spectrum && get_nsec(last_refreshed)+(50*1000000)<get_nsec(t) && trololo->didprocess)
+	if(display_spectrum && get_nsec(last_refreshed) + (50 * 1000000) < get_nsec(t) && trololo->didprocess)
 	{
-		last_refreshed=t;
-		trololo->didprocess=false;
+		last_refreshed = t;
+		trololo->didprocess = false;
 		//refresh
-		for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
-			c2->data[i]=0;
-		for(size_t ii=0;ii<inputs.size();ii++)
+		for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
+			c2->data[i] = 0;
+		for(size_t ii = 0; ii < inputs.size(); ii++)
 		{
-			if(filt[ii]==NULL)continue;
+			if(filt[ii] == NULL)continue;
 			UInt complexsize = ((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->ComplexSize();
-			for(decltype(c2->datalen) i=0;i<c2->datalen;i++)
+			for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
 			{
-				UInt complex_index=scale_freq((double)i/(c2->datalen-1))*(complexsize-1);
-				c2->data[i]+=(complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index]))/100/inputs.size();
+				UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
+				c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
 			}
 		}
 		c2->queue_draw();
 	}
 	return 0;
 }
-void error (const char *desc)
+void error(const char *desc)
 {
-	fprintf (stderr, "JACK error: %s\n", desc);
+	fprintf(stderr, "JACK error: %s\n", desc);
 }
-void jack_shutdown (void *arg)
+void jack_shutdown(void *arg)
 {
-	exit (1);
+	exit(1);
 }
 //UInt pb_size=0;
 //Gtk::ProgressBar* pb;
 //UInt freqs = 50;
 
-void update_fft(FFTFilter<jack_default_audio_sample_t>** filt2=NULL)
+void update_fft(FFTFilter<jack_default_audio_sample_t>** filt2 = NULL)
 {
-	if(filt2!=NULL)
+	if(filt2 != NULL)
 	{
-		for(UInt i=0;i<CHANNELS;i++)
+		for(UInt i = 0; i < CHANNELS; i++)
 		{
-			if(filt2[i]==NULL)continue;
-			auto f=filt2[i];
+			if(filt2[i] == NULL)continue;
+			auto f = filt2[i];
 			UInt complexsize = f->ComplexSize();
-			for(UInt n=0;n<complexsize;n++)
-				f->coefficients[n]=scale_value(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
+			for(UInt n = 0; n < complexsize; n++)
+				f->coefficients[n] = scale_value(c->GetPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
 		}
 		return;
 	}
-	for(UInt i=0;i<CHANNELS;i++)
+	for(UInt i = 0; i < CHANNELS; i++)
 	{
-		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
+		auto f = (FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
 		UInt complexsize = f->ComplexSize();
-		for(UInt n=0;n<complexsize;n++)
-			f->coefficients[n]=scale_value(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
+		for(UInt n = 0; n < complexsize; n++)
+			f->coefficients[n] = scale_value(c->GetPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
 	}
 }
 void on_change(void* user, UInt i1, UInt i2)
 {
-	EQControl* c=(EQControl*)user;
-	for(UInt i=0;i<CHANNELS;i++)
+	EQControl* c = (EQControl*)user;
+	for(UInt i = 0; i < CHANNELS; i++)
 	{
-		auto f=(FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
+		auto f = (FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
 		UInt complexsize = f->ComplexSize();
 		//complexsize /= 5;
-		UInt min_index=floor(scale_freq((double)i1/EQ_POINTS)*(double)complexsize);
-		UInt max_index=ceil(scale_freq((double)i2/EQ_POINTS)*(double)complexsize);
+		UInt min_index = floor(scale_freq((double)i1 / EQ_POINTS) * (double)complexsize);
+		UInt max_index = ceil(scale_freq((double)i2 / EQ_POINTS) * (double)complexsize);
 		//cout << "i1="<<i1<<"; i2="<<i2<<"; scale_freq="<<scale_freq((double)i1/EQ_POINTS)<<endl;
 		//cout << "min_index="<<min_index<<"; max_index="<<max_index<<endl;
-		UInt max_n=floor(max_index);
-		if(max_n>complexsize)max_n=complexsize;
-		for(UInt n=min_index;n<max_n;n++)
+		UInt max_n = floor(max_index);
+		if(max_n > complexsize)max_n = complexsize;
+		for(UInt n = min_index; n < max_n; n++)
 		{
-			double tmp=(c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS)*2.0);
+			double tmp = (c->GetPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
 			//cout << c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS) << endl;
-			tmp=scale_value(tmp);
+			tmp = scale_value(tmp);
 			//if(tmp1>4)cout << tmp1 << " " << tmp << endl;
-			f->coefficients[n]=tmp;
+			f->coefficients[n] = tmp;
 		}
 	}
 }
 void on_mousemove(void* user, double i)
 {
-	EQControl* c=(EQControl*)user;
-	double freq=scale_freq(i/c->datalen)*srate/2.0;
+	EQControl* c = (EQControl*)user;
+	double freq = scale_freq(i / c->datalen) * srate / 2.0;
 	Gtk::Label* l;
-	b->get_widget("label1",l);
-	l->set_text(CONCAT((UInt)freq<<" Hz").c_str());
+	b->get_widget("label1", l);
+	l->set_text(CONCAT((UInt)freq << " Hz").c_str());
 }
 
 void do_save(Stream& fs)
@@ -269,13 +269,14 @@ void do_save(Stream& fs)
 	{
 		struct
 		{
-			double freq; double val;
+			double freq;
+			double val;
 		} buf;
-		Buffer b(&buf,sizeof(buf));
-		for(UInt i=0;i<EQ_POINTS;i++)
+		Buffer b(&buf, sizeof(buf));
+		for(UInt i = 0; i < EQ_POINTS; i++)
 		{
-			buf.freq=scale_freq((double)i/EQ_POINTS)*srate/2;
-			buf.val=scale_value(c->GetPoint(i)*2.0);
+			buf.freq = scale_freq((double)i / EQ_POINTS) * srate / 2;
+			buf.val = scale_value(c->GetPoint(i) * 2.0);
 			//cout << buf.val << endl;
 			fs.Write(b);
 		}
@@ -287,12 +288,12 @@ void do_save(Stream& fs)
 void saveas();
 void save()
 {
-	if(fname.length()==0)
+	if(fname.length() == 0)
 	{
 		saveas();
 		return;
 	}
-	FileStream fs(File(fname.c_str(),O_CREAT|O_WRONLY|O_TRUNC,0666));
+	FileStream fs(File(fname.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666));
 	do_save(fs);
 	fs.Close();
 }
@@ -304,24 +305,25 @@ void do_load(Stream& fs)
 		//FileStream fs(File(fname.c_str(),O_RDONLY));
 		struct
 		{
-			double freq; double val;
+			double freq;
+			double val;
 		} buf;
-		Buffer b(&buf,sizeof(buf));
-		UInt i1=0;
-		double last_v=0.5;
-		while(fs.Read(b)>=b.Length)
+		Buffer b(&buf, sizeof(buf));
+		UInt i1 = 0;
+		double last_v = 0.5;
+		while(fs.Read(b) >= b.Length)
 		{
 			//cout << buf.freq << endl;
-			UInt i2=(UInt)round(scale_freq_r((double)buf.freq/(srate/2))*EQ_POINTS);
+			UInt i2 = (UInt)round(scale_freq_r((double)buf.freq / (srate / 2)) * EQ_POINTS);
 			//cout << i2 << endl;
-			if(i2>EQ_POINTS)break;
-			for(UInt i=i1;i<i2;i++)
-				c->data[i]=scale_value_r(last_v*(i2-i)/(i2-i1)+buf.val*(i-i1)/(i2-i1))/2.0;
-			i1=i2;
-			last_v=buf.val;
+			if(i2 > EQ_POINTS)break;
+			for(UInt i = i1; i < i2; i++)
+				c->data[i] = scale_value_r(last_v * (i2 - i) / (i2 - i1) + buf.val * (i - i1) / (i2 - i1)) / 2.0;
+			i1 = i2;
+			last_v = buf.val;
 		}
-		for(UInt i=i1;i<EQ_POINTS;i++)
-			c->data[i]=scale_value_r(last_v)/2.0;
+		for(UInt i = i1; i < EQ_POINTS; i++)
+			c->data[i] = scale_value_r(last_v) / 2.0;
 		c->queue_draw();
 		update_fft();
 	}
@@ -333,36 +335,36 @@ void do_load(Stream& fs)
 void loadfile();
 void load()
 {
-	try{
-		if(fname.length()==0)
+	try {
+		if(fname.length() == 0)
 		{
 			loadfile();
 			return;
 		}
-		FileStream fs(File(fname.c_str(),O_RDONLY));
+		FileStream fs(File(fname.c_str(), O_RDONLY));
 		do_load(fs);
 		fs.Close();
-	}catch(Exception& ex){}
+	} catch(Exception& ex) {}
 }
 
 void saveas()
 {
 	Gtk::FileChooserDialog* d;
-	b->get_widget("filechooserdialog1",d);
+	b->get_widget("filechooserdialog1", d);
 	Gtk::Window* w;
-	b->get_widget("window1",w);
+	b->get_widget("window1", w);
 	d->set_transient_for(*w);
 	d->set_action(FILE_CHOOSER_ACTION_SAVE);
-	Gtk::Button* b1=d->add_button(Stock::SAVE,RESPONSE_OK);
-	if(d->run()==RESPONSE_OK)
+	Gtk::Button* b1 = d->add_button(Stock::SAVE, RESPONSE_OK);
+	if(d->run() == RESPONSE_OK)
 	{
-		GIOGenericStream s=Glib::RefPtr<Gio::OutputStream>::cast_dynamic(d->get_file()->replace());
+		GIOGenericStream s = Glib::RefPtr<Gio::OutputStream>::cast_dynamic(d->get_file()->replace());
 		do_save(s);
 		s.Close();
-		fname=d->get_filename();
-		if(fname.length()<=0)
+		fname = d->get_filename();
+		if(fname.length() <= 0)
 		{
-			WARN(1,"current file name could not be updated because the file path is not obtainable(not a local file?)");
+			WARN(1, "current file name could not be updated because the file path is not obtainable(not a local file?)");
 		}
 	}
 	d->hide();
@@ -372,21 +374,21 @@ void saveas()
 void loadfile()
 {
 	Gtk::FileChooserDialog* d;
-	b->get_widget("filechooserdialog1",d);
+	b->get_widget("filechooserdialog1", d);
 	Gtk::Window* w;
-	b->get_widget("window1",w);
+	b->get_widget("window1", w);
 	d->set_transient_for(*w);
 	d->set_action(FILE_CHOOSER_ACTION_OPEN);
-	Gtk::Button* b=d->add_button(Stock::OPEN,RESPONSE_OK);
-	if(d->run()==RESPONSE_OK)
+	Gtk::Button* b = d->add_button(Stock::OPEN, RESPONSE_OK);
+	if(d->run() == RESPONSE_OK)
 	{
-		GIOGenericStream s=Glib::RefPtr<Gio::InputStream>::cast_dynamic(d->get_file()->read());
+		GIOGenericStream s = Glib::RefPtr<Gio::InputStream>::cast_dynamic(d->get_file()->read());
 		do_load(s);
 		s.Close();
-		fname=d->get_filename();
-		if(fname.length()<=0)
+		fname = d->get_filename();
+		if(fname.length() <= 0)
 		{
-			WARN(1,"current file name could not be updated because the file path is not obtainable(not a local file?)");
+			WARN(1, "current file name could not be updated because the file path is not obtainable(not a local file?)");
 		}
 	}
 	d->hide();
@@ -395,28 +397,28 @@ void loadfile()
 }
 void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
 {
-	double asdf=1.;
+	double asdf = 1.;
 	Gtk::CheckButton* cb;
 	Gtk::Entry* e;
-	b->get_widget("c_pitchshift",cb);
+	b->get_widget("c_pitchshift", cb);
 	if(cb->get_active())
 	{
-		b->get_widget("t_pitch1",e);
-		asdf=strtod(e->get_text().c_str(),NULL);
-		b->get_widget("t_pitch2",e);
-		asdf/=strtod(e->get_text().c_str(),NULL);
+		b->get_widget("t_pitch1", e);
+		asdf = strtod(e->get_text().c_str(), NULL);
+		b->get_widget("t_pitch2", e);
+		asdf /= strtod(e->get_text().c_str(), NULL);
 	}
-	if(filt2!=NULL)
+	if(filt2 != NULL)
 	{
-		for(size_t i=0;i<inputs.size();i++)
+		for(size_t i = 0; i < inputs.size(); i++)
 		{
-			if(filt2[i]==NULL)continue;
-			filt2[i]->freq_scale=asdf;
+			if(filt2[i] == NULL)continue;
+			filt2[i]->freq_scale = asdf;
 		}
 		return;
 	}
-	for(size_t i=0;i<inputs.size();i++)
-		((FFTFilter<jack_default_audio_sample_t>*)filt[i])->freq_scale=asdf;
+	for(size_t i = 0; i < inputs.size(); i++)
+		((FFTFilter<jack_default_audio_sample_t>*)filt[i])->freq_scale = asdf;
 }
 void apply_pitchshift()
 {
@@ -424,31 +426,31 @@ void apply_pitchshift()
 }
 void apply_label_workaround(Gtk::Label* l)
 {
-	l->signal_size_allocate().connect([l](Allocation& a)
+	l->signal_size_allocate().connect([l](Allocation & a)
 	{
-		l->set_size_request(a.get_width()-5,-1);
+		l->set_size_request(a.get_width() - 5, -1);
 		//l->set_size_request(-1,-1);
 	});
 }
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	memset(&last_refreshed,0,sizeof(last_refreshed));
-	for(int i=1;i<argc;i++)
+	memset(&last_refreshed, 0, sizeof(last_refreshed));
+	for(int i = 1; i < argc; i++)
 	{
 		string tmp(argv[i]);
-		if(tmp=="-s")display_spectrum=true;
+		if(tmp == "-s")display_spectrum = true;
 	}
 	Util.ChDir(Util.GetDirFromPath(Util.GetProgramPath()));
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
-	for(UInt i=0;i<CHANNELS;i++)
+	for(UInt i = 0; i < CHANNELS; i++)
 	{
-		FFTFilter<jack_default_audio_sample_t>* trololo=new FFTFilter<jack_default_audio_sample_t>
+		FFTFilter<jack_default_audio_sample_t>* trololo = new FFTFilter<jack_default_audio_sample_t>
 		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
-		(1024, 16,			16,			2,		12,					2,			8192*2);
-		
+		(1024, 16,			16,			2,		12,					2,			8192 * 2);
+
 		//trololo->freq_scale=9./10.;
-		filt[i]=trololo;
+		filt[i] = trololo;
 	}
 	/*CircularQueue<int> q(2,3);
 	auto tmp=q.BeginAppend();
@@ -473,7 +475,7 @@ int main (int argc, char *argv[])
 	(&q.GetPointer(tmp))[1]=7890;
 	(&q.GetPointer(tmp))[2]=78901;
 	q.EndAppend(tmp);
-	
+
 	while((tmp=q.BeginDequeue())>=0)
 	{
 		cout << (&q.GetPointer(tmp))[0] << endl;
@@ -481,123 +483,123 @@ int main (int argc, char *argv[])
 		cout << (&q.GetPointer(tmp))[2] << endl << "-----" << endl;
 		q.EndDequeue(tmp);
 	}
-	
+
 	return 0;*/
-	
+
 	jack_client_t *client;
-	jack_set_error_function (error);
+	jack_set_error_function(error);
 	JackStatus st;
-	if ((client = jack_client_open ("jackfft",JackNoStartServer,&st)) == 0) {
-		fprintf (stderr, "could not connect to server: status %i\n",st);
+	if((client = jack_client_open("jackfft", JackNoStartServer, &st)) == 0) {
+		fprintf(stderr, "could not connect to server: status %i\n", st);
 		return 1;
 	}
-	jack_set_process_callback (client, process, 0);
-	jack_on_shutdown (client, jack_shutdown, 0);
-	printf ("engine sample rate: %u\n", srate=jack_get_sample_rate (client));
+	jack_set_process_callback(client, process, 0);
+	jack_on_shutdown(client, jack_shutdown, 0);
+	printf("engine sample rate: %u\n", srate = jack_get_sample_rate(client));
 	/* create ports */
 	int i;
-	for(i=0;i<CHANNELS;i++)
+	for(i = 0; i < CHANNELS; i++)
 	{
-		inputs.push_back(jack_port_register (client, CONCAT("input_"<<i).c_str(), 
-						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
-		outputs.push_back(jack_port_register (client, CONCAT("output_"<<i).c_str(), 
-						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
+		inputs.push_back(jack_port_register(client, CONCAT("input_" << i).c_str(),
+											JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
+		outputs.push_back(jack_port_register(client, CONCAT("output_" << i).c_str(),
+											 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
 	}
-	
+
 //aaaaa:
 	Gtk::Main kit(argc, argv);
-	
+
 	b = Gtk::Builder::create_from_file("main2.ui");
 	Gtk::Window* w;
 	//Gtk::Grid* g;
 	//Gtk::EventBox* eb;
-	
+
 	Gtk::Button* bt;
-	b->get_widget("window1",w);
-	c=new EQControl(EQ_POINTS);
-	c->Change+=EQControl::ChangeDelegate(&on_change,c);
-	c->MouseMove+=EQControl::MouseDelegate(&on_mousemove,c);
-	
+	b->get_widget("window1", w);
+	c = new EQControl(EQ_POINTS);
+	c->Change += EQControl::ChangeDelegate(&on_change, c);
+	c->MouseMove += EQControl::MouseDelegate(&on_mousemove, c);
+
 	//UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
-	
-	
-	b->get_widget("b_save",bt);
+
+
+	b->get_widget("b_save", bt);
 	bt->signal_clicked().connect(&save);
-	b->get_widget("b_saveas",bt);
+	b->get_widget("b_saveas", bt);
 	bt->signal_clicked().connect(&saveas);
-	b->get_widget("b_open",bt);
+	b->get_widget("b_open", bt);
 	bt->signal_clicked().connect(&loadfile);
-	b->get_widget("b_revert",bt);
+	b->get_widget("b_revert", bt);
 	bt->signal_clicked().connect(&load);
-	b->get_widget("b_apply",bt);
+	b->get_widget("b_apply", bt);
 	bt->signal_clicked().connect(&apply_pitchshift);
 	Gtk::CheckButton* cb;
-	b->get_widget("c_pitchshift",cb);
+	b->get_widget("c_pitchshift", cb);
 	cb->signal_toggled().connect(&apply_pitchshift);
-	
-	
+
+
 	Gtk::Label* lb;
-	b->get_widget("label8",lb);
+	b->get_widget("label8", lb);
 	apply_label_workaround(lb);
-	
-	b->get_widget("b_params",bt);
+
+	b->get_widget("b_params", bt);
 	bt->signal_clicked().connect([]()
 	{
 		Gtk::Window* w1;
 		Gtk::Dialog* d;
-		b->get_widget("window1",w1);
-		b->get_widget("dialog1",d);
+		b->get_widget("window1", w1);
+		b->get_widget("dialog1", d);
 		d->set_transient_for(*w1);
-		if(d->run()!=RESPONSE_APPLY)goto hhhhh;
-		
+		if(d->run() != RESPONSE_APPLY)goto hhhhh;
+
 		FFTFilter<jack_default_audio_sample_t>** tmp;
-		tmp=new FFTFilter<jack_default_audio_sample_t>*[CHANNELS];
+		tmp = new FFTFilter<jack_default_audio_sample_t>*[CHANNELS];
 		Int bs, overlap, bpp, padding, fftsize;
 		Gtk::Entry* ent;
-		b->get_widget("t_bs",ent);
-		bs=atoi(ent->get_text().c_str());
-		b->get_widget("t_overlap",ent);
-		overlap=atoi(ent->get_text().c_str());
-		b->get_widget("t_bpp",ent);
-		bpp=atoi(ent->get_text().c_str());
-		b->get_widget("t_padding",ent);
-		padding=atoi(ent->get_text().c_str());
-		b->get_widget("t_fftsize",ent);
-		fftsize=atoi(ent->get_text().c_str());
+		b->get_widget("t_bs", ent);
+		bs = atoi(ent->get_text().c_str());
+		b->get_widget("t_overlap", ent);
+		overlap = atoi(ent->get_text().c_str());
+		b->get_widget("t_bpp", ent);
+		bpp = atoi(ent->get_text().c_str());
+		b->get_widget("t_padding", ent);
+		padding = atoi(ent->get_text().c_str());
+		b->get_widget("t_fftsize", ent);
+		fftsize = atoi(ent->get_text().c_str());
 		Int buffers;
-		buffers=bpp+padding*2;
-		for(int i=0;i<CHANNELS;i++)
+		buffers = bpp + padding * 2;
+		for(int i = 0; i < CHANNELS; i++)
 		{
-			tmp[i]=new FFTFilter<jack_default_audio_sample_t>
+			tmp[i] = new FFTFilter<jack_default_audio_sample_t>
 			//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
-			(bs,  buffers,		buffers,	overlap,bpp,				padding,	fftsize);
+			(bs,  buffers,		buffers,	overlap, bpp,				padding,	fftsize);
 		}
 		update_fft(tmp);
 		apply_pitchshift1(tmp);
-		filt2=tmp;
-	hhhhh:
+		filt2 = tmp;
+hhhhh:
 		d->hide();
 	});
-	
+
 	Gtk::FileChooserDialog* d;
-	b->get_widget("filechooserdialog1",d);
+	b->get_widget("filechooserdialog1", d);
 	//d->signal_response().connect(&on_response);
-	d->add_button(Stock::CANCEL,RESPONSE_CANCEL);
+	d->add_button(Stock::CANCEL, RESPONSE_CANCEL);
 	Gtk::Viewport* v;
-	b->get_widget("viewport1",v);
+	b->get_widget("viewport1", v);
 	v->add(*c);
-	
+
 	//c->set_hexpand(true);
 	//c->set_vexpand(true);
 	c->show();
-	
-	b->get_widget("viewport2",v);
+
+	b->get_widget("viewport2", v);
 	//if(display_spectrum)
 	//{
-		c2=new EQControl(EQ_POINTS);
-		v->add(*c2);
-		c2->show();
-		c2->MouseMove+=EQControl::MouseDelegate(&on_mousemove,c2);
+	c2 = new EQControl(EQ_POINTS);
+	v->add(*c2);
+	c2->show();
+	c2->MouseMove += EQControl::MouseDelegate(&on_mousemove, c2);
 	/*}
 	else
 	{
@@ -605,22 +607,22 @@ int main (int argc, char *argv[])
 		b->get_widget("table1",t1);
 		t1->remove(*v);
 	}*/
-	
-	b->get_widget("c_spectrum",cb);
+
+	b->get_widget("c_spectrum", cb);
 	cb->set_active(display_spectrum);
 	v->set_visible(display_spectrum);
 	cb->signal_toggled().connect([cb]()
 	{
-		display_spectrum=cb->get_active();
+		display_spectrum = cb->get_active();
 		Gtk::Viewport* vp;
-		b->get_widget("viewport2",vp);
+		b->get_widget("viewport2", vp);
 		vp->set_visible(display_spectrum);
 	});
-	
+
 	//b->get_widget("grid1",g);
 	//b->get_widget("eventbox1",eb);
-	
-	
+
+
 	/*eb->signal_motion_notify_event().connect(sigc::ptr_fun(&on_motion_notify));
 	pb=new Gtk::ProgressBar[freqs];
 	for(UInt i=0;i<freqs;i++)
@@ -639,13 +641,14 @@ int main (int argc, char *argv[])
 		//if(i==0)pb_size=p->get_allocation().get_width();
 	}*/
 	load();
-	
-	if (jack_activate (client)) {
-		fprintf (stderr, "cannot activate client");
+
+	if(jack_activate(client)) {
+		fprintf(stderr, "cannot activate client");
 		return 1;
 	}
 	kit.run(*w);
-	
-	jack_client_close (client);
+
+	jack_client_close(client);
 	return 0;
 }
+

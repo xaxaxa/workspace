@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS="http://www.w3.org/1999/xhtml">
+<HEAD>
+	<TITLE>Untitled Page</TITLE>
+
+	<SCRIPT LANGUAGE="javascript" TYPE="text/javascript">
+<!--
+
+function Button1_onclick() {
+var theDiv=document.getElementById("di");
+/*var totalWidth = theDiv.width();
+totalWidth += parseInt(theDiv.css("padding-left"), 10) + parseInt(theDiv.css("padding-right"), 10); //Total Padding Width
+totalWidth += parseInt(theDiv.css("margin-left"), 10) + parseInt(theDiv.css("margin-right"), 10); //Total Margin Width
+totalWidth += parseInt(theDiv.css("borderLeftWidth"), 10) + parseInt(theDiv.css("borderRightWidth"), 10); //Total Border Width*/
+alert(theDiv.clientWidth);
+alert(theDiv.offsetWidth);
+}
+
+// -->
+	</SCRIPT>
+
+</HEAD>
+<BODY>
+	<DIV ID="di" STYLE="border: #000000 5px solid;">
+		xaaxxaxaxa</DIV>
+	<INPUT ID="Button1" TYPE="button" VALUE="button" LANGUAGE="javascript"
+		ONCLICK="return Button1_onclick()" />
+</BODY>
+</HTML>

@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1333237484 source:/home/xaxatrollo/workspace/trollnet/main.cpp
+	<iostream>
+	<maidsafe/dht/config.h>
+	<maidsafe/dht/contact.h>
+	<maidsafe/dht/node-api.h>
+	<maidsafe/dht/node_container.h>
+	<maidsafe/dht/node_id.h>
+	<maidsafe/dht/return_codes.h>
+	<maidsafe/dht/version.h>
+

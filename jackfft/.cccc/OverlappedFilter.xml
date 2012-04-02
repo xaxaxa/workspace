@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Detailed report on module OverlappedFilter-->
+<CCCC_Project>
+<module_summary>
+<lines_of_code value="158" level="0" />
+<lines_of_code_per_member_function value="******" level="0" />
+<McCabes_cyclomatic_complexity value="34" level="0" />
+<McCabes_cyclomatic_complexity_per_member_function value="******" level="2" />
+<lines_of_code value="22" level="0" />
+<lines_of_code_per_member_function value="********" level="2" />
+<lines_of_code_per_line_of_comment value="7.182" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="1.545" level="0" />
+<weighted_methods_per_class_unity value="11" level="0" />
+<weighted_methods_per_class_visibility value="11" level="0" />
+<depth_of_inheritance_tree value="1" level="0" />
+<number_of_children value="0" level="0" />
+<coupling_between_objects value="6" level="0" />
+<IF4 value="0" level="0" />
+<IF4_per_member_function value="********" level="0" />
+<IF4_visible value="0" level="0" />
+<IF4_visible_per_member_function value="********" level="0" />
+<IF4_concrete value="0" level="0" />
+<IF4_concrete_per_member_function value="********" level="0" />
+</module_summary>
+<module_detail>
+<description>definition</description>
+<source_reference file="filter.H" line="141" />
+<lines_of_code value="11" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</module_detail>
+<procedural_detail>
+<member_function>
+<name>DoProcess()</name>
+<extent>
+<description>declaration</description>
+<source_reference file="filter.H" line="164" />
+</extent>
+<lines_of_code value="1" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="1" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>DoProcess(FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,UInt,FLOATTYPE,FLOATTYPE)</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="165" />
+</extent>
+<lines_of_code value="29" level="0" />
+<McCabes_cyclomatic_complexity value="6" level="0" />
+<lines_of_comment value="6" level="0" />
+<lines_of_code_per_line_of_comment value="4.833" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="1.000" level="0" />
+</member_function>
+<member_function>
+<name>GetData(NUMTYPE *,UInt)</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="280" />
+</extent>
+<lines_of_code value="28" level="0" />
+<McCabes_cyclomatic_complexity value="7" level="0" />
+<lines_of_comment value="1" level="0" />
+<lines_of_code_per_line_of_comment value="28.000" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="7.000" level="1" />
+</member_function>
+<member_function>
+<name>OverlappedFilter(UInt,UInt,UInt,UInt)</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<lines_of_code value="9" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="1" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>PeriodSize()</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="149" />
+</extent>
+<lines_of_code value="4" level="0" />
+<McCabes_cyclomatic_complexity value="1" level="0" />
+<lines_of_comment value="1" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>PutData(const NUMTYPE *,UInt)</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="249" />
+</extent>
+<lines_of_code value="29" level="0" />
+<McCabes_cyclomatic_complexity value="6" level="0" />
+<lines_of_comment value="2" level="0" />
+<lines_of_code_per_line_of_comment value="14.500" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="3.000" level="0" />
+</member_function>
+<member_function>
+<name>__warn(UInt)</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="244" />
+</extent>
+<lines_of_code value="5" level="0" />
+<McCabes_cyclomatic_complexity value="1" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>alloc_buffer()</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="154" />
+</extent>
+<lines_of_code value="4" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>free_buffer()</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="158" />
+</extent>
+<lines_of_code value="4" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>proc()</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="204" />
+</extent>
+<lines_of_code value="30" level="0" />
+<McCabes_cyclomatic_complexity value="13" level="1" />
+<lines_of_comment value="10" level="0" />
+<lines_of_code_per_line_of_comment value="3.000" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="1.300" level="0" />
+</member_function>
+<member_function>
+<name>~OverlappedFilter()</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="320" />
+</extent>
+<lines_of_code value="4" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+</procedural_detail>
+<structural_detail>
+<module>
+<name>OverlappedFilter</name>
+<client_module>
+</client_module>
+<supplier_module>
+<name>CircularQueue</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="144" />
+</extent>
+<name>FLOATTYPE</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by reference</description>
+<source_reference file="filter.H" line="153" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="165" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="165" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="165" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="165" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="166" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="166" />
+</extent>
+<name>Filter</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>inheritance</description>
+<source_reference file="filter.H" line="141" />
+</extent>
+<name>Int</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="145" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="201" />
+</extent>
+<name>NUMTYPE</name>
+<visible>true</visible>
+<concrete>false</concrete>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="249" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="280" />
+</extent>
+<name>UInt</name>
+<visible>true</visible>
+<concrete>true</concrete>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="146" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="166" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="202" />
+</extent>
+<extent>
+<description>has by value</description>
+<source_reference file="filter.H" line="203" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="244" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="249" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="280" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+<extent>
+<description>pass by value</description>
+<source_reference file="filter.H" line="310" />
+</extent>
+</supplier_module>
+</module>
+</structural_detail>
+</CCCC_Project>

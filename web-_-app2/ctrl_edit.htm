@@ -1,0 +1,1564 @@
+<HTML>
+<HEAD>
+	<TITLE>Untitled Page</TITLE>
+	<SCRIPT SRC="common.js"></SCRIPT>
+	<SCRIPT SRC="panel.js"></SCRIPT>
+	<SCRIPT SRC="splitter.js"></SCRIPT>
+	<SCRIPT SRC="wnd_2.js"></SCRIPT>
+	<SCRIPT SRC="rs.js"></SCRIPT>
+	<SCRIPT SRC="menu.js"></SCRIPT>
+	<SCRIPT SRC="querystring.js"></SCRIPT>
+	<SCRIPT>
+var p;
+var s;
+var rs0,rs1,rs2,rs3,rs4,rs5,rs6,rs7;
+var offsetx,offsety;
+var cur_element;
+var rs=0;
+var rs1;
+var m1;
+var cb_data;
+function insertAdjacentElement(p,where,parsedNode)
+{
+	switch (where)
+	{
+		case "beforeBegin":
+			p.parentNode.insertBefore(parsedNode,p);
+			break;
+		case "afterBegin":
+			p.insertBefore(parsedNode,p.firstChild);
+			break;
+		case "beforeEnd":
+			p.appendChild(parsedNode);
+			break;
+		case "afterEnd":
+			if(p.nextSibling)
+				p.parentNode.insertBefore(parsedNode,p.nextSibling);
+			else
+				p.parentNode.appendChild(parsedNode);
+		break;
+	}
+}
+function insertAdjacentHTML(p,where,htmlStr) 
+{
+	var r = p.ownerDocument.createRange(); 
+	r.setStartBefore(this); 
+	var parsedHTML = r.createContextualFragment(htmlStr); 
+	insertAdjacentElement(p,where,parsedHTML);
+}
+function insertAdjacentText(p,where,txtStr) 
+{
+	var parsedText = p.ownerDocument.createTextNode(txtStr);
+	insertAdjacentElement(p,where,parsedText);
+}
+
+function copy_node(src,dst)
+{
+	var i;
+	for(i in src)
+	{
+		if(i!="id" && i!="__id")
+		{
+			try
+			{
+				try
+				{
+					if(src[i]!="")dst[i]=src[i];
+				}catch(exc){dst[i]=src[i];}
+			}catch(ex){}
+		}
+	}
+	try
+	{
+		if(dst.style==null)dst.style=new Object();
+	}catch(ex){}
+	dst.style.cssText=src.style.cssText;
+}
+function clone_node(n)
+{
+	var newnode=document.createElement(n.tagName);
+	copy_node(n,newnode);
+	return newnode;
+}
+function clone_node2(n)
+{
+	var newnode=new Object();
+	copy_node(n,newnode);
+	return newnode;
+}
+function md()
+{
+	m1.hide();
+	if(curmenu)
+	{
+		curmenu.parentNode.removeChild(curmenu);
+		curmenu=null;
+	}
+}
+function insert(tagname,style,__name,__type,__html)
+{
+	if(rs1.cur_element==null)return;
+	var rn;
+	var cn;
+	//if(rs1.cur_element.innerHTML=="&nbsp;")rs1.cur_element.innerHTML="";
+	if(tagname=="table")
+	{
+		rn=prompt("rows","3");
+		if(rn==null)return;
+		cn=prompt("columns","3");
+		if(cn==null)return;
+	}
+	var el=document.createElement(tagname);
+	try
+	{
+		if(__type!=null)el.type=__type;
+	}
+	catch(ex){}
+	try
+	{
+		if(__html!=null)el.innerHTML=__html;
+	}
+	catch(ex){}
+	if(style!=null)el.style.cssText=style;
+	if(tagname!="tr" && tagname!="td")el.style.position="absolute";
+	el.__name=__name;
+	
+	if(rs1.cur_element.__innerelement)
+	{
+		if(rs1.cur_element.__innerelement.tagName.toLowerCase()=="td")
+			insertAdjacentElement(rs1.cur_element.__innerelement,"afterBegin",el);
+		else
+			rs1.cur_element.__innerelement.appendChild(el);
+	}
+	else
+	{
+		if(rs1.cur_element.tagName.toLowerCase()=="td")
+			insertAdjacentElement(rs1.cur_element,"afterBegin",el);
+		else
+			rs1.cur_element.appendChild(el);
+	}
+	if(tagname=="table")
+	{
+		el.__innerelement=document.createElement("tbody");
+		el.appendChild(el.__innerelement);
+		el.border="1";
+		el.cellSpacing="0";
+		el.cellPadding="0";
+		
+		var i;
+		var ii;
+		for(i=0;i<rn;i++)
+		{
+			var tr=document.createElement("tr");
+			el.__innerelement.appendChild(tr);
+			for(ii=0;ii<cn;ii++)
+			{
+				var td=document.createElement("td");
+				td.align="left";
+				td.vAlign="top";
+				td.innerHTML="&nbsp;";
+				/*var div=document.createElement("div");
+				div.style.cssText="width:100%;height:100%;";
+				div.__td=td;
+				td.__div=div;
+				td.appendChild(div);*/
+				tr.appendChild(td);
+			}
+		}
+		el.style.width=(cn*100)+"px";
+		el.style.height=(rn*22)+"px";
+	}
+	//rs1.addcontrol(el,rs1.cur_element);
+	addelement(el);
+	el.__tmpf=rs1.ctrl_onmousedown;
+	el.__tmpf(null,true);
+	//p.layout();
+}
+function addelement(e)
+{
+	//if(e.tagName.toLowerCase()=="tbody")return;
+	if(e.tagName.toLowerCase()=="tr")
+		e.__parent=e.parentNode.parentNode;
+	if(e.tagName.toLowerCase()=="td")
+		e.__parent=e.parentNode.parentNode.parentNode;
+	if(e.tagName.toLowerCase()=="tbody")
+		e.parentNode.__innerelement=e;
+	rs1.add(e);
+	var i;
+	for(i=0;i<e.childNodes.length;i++)
+	{
+		var n=e.childNodes[i];
+		if(e.childNodes[i].tagName!=null)
+		{
+			if(e.childNodes[i].style!=null || e.childNodes[i].tagName.toLowerCase()=="tr")
+			{
+				addelement(n);
+			}
+		}
+
+	}
+}
+var propertyitem=
+//	0				1			2				3		4		5			6			7
+[//	propertyname(get)		id||code(get)		propertyname(set)||code(set)add "px"	relayout	recalculate points	preset property	nullable
+	["__id",			"prop_id",		"__id",			false,		false,		false,			false],
+	["tagName",			"prop_tag",		"tagName",			false,		true,		true,			false],
+	["style.marginLeft",		"prop_x",		"style.marginLeft",		true,		false,		true,			false],
+	["style.marginTop",		"prop_y",		"style.marginTop",		true,		false,		true,			false],
+	["offsetWidth",		"prop_width",		"style.width",		true,		true,		true,			false],
+	["offsetHeight",		"prop_height",	"style.height",		true,		true,		true,			false],
+	["style.padding",		"prop_padding",	"style.padding",		false,		true,		true,			false],
+	["<custom>",/*==============*/function(e,item)
+	{//get
+		var r="";//margin:	top;right;bottom;left
+		if(e.margintop!=null || e.marginright!=null || e.marginbottom!=null || e.marginleft!=null)
+		{
+			if(e.margintop!=null)
+			{
+				r+=e.margintop.toString()+" ";
+			}
+			else
+			{
+				r+="0 ";
+			}
+			if(e.marginright!=null)
+			{
+				r+=e.marginright.toString()+" ";
+			}
+			else
+			{
+				r+="0 ";
+			}
+			if(e.marginbottom!=null)
+			{
+				r+=e.marginbottom.toString()+" ";
+			}
+			else
+			{
+				r+="0 ";
+			}
+			if(e.marginleft!=null)
+			{
+				r+=e.marginleft.toString();
+			}
+			else
+			{
+				r+="0";
+			}
+		}
+		document.getElementById("prop_margin").value=r;
+	},/*=============================================*/function(e,item)
+	{//set
+		try
+		{
+			e.marginleft=null;
+			e.margintop=null;
+			e.marginright=null;
+			e.marginbottom=null;
+			var v=document.getElementById("prop_margin").value;
+			if(v=="")
+			{
+				return;
+			}
+			var arr=v.split(" ");
+			if(arr==null)return;
+
+			if(arr.length==1)
+			{
+				e.margintop=parseInt(arr[0],10);
+				if(isNaN(e.margintop))e.margintop=null;
+				e.marginright=e.margintop;
+				e.marginbottom=e.margintop;
+				e.marginleft=e.margintop;
+				return;
+			}
+			if(arr.length<1)return;
+			e.margintop=parseInt(arr[0],10);
+			if(isNaN(e.margintop))e.margintop=null;
+			if(arr.length<2)return;
+			e.marginright=parseInt(arr[1],10);
+			if(isNaN(e.marginright))e.marginright=null;
+
+			if(arr.length<3)return;
+			e.marginbottom=parseInt(arr[2],10);
+			if(isNaN(e.marginbottom))e.marginbottom=null;
+
+			if(arr.length<4)return;
+			e.marginleft=parseInt(arr[3],10);
+			if(isNaN(e.marginleft))e.marginleft=null;
+		}
+		finally
+		{
+			p.layout(e);
+			rs1.calc_points(e);
+		}
+	},											"prop_margin"],
+//	0				1			2				3		4		5			6			7
+//	propertyname(get)		id||code(get)		propertyname(set)||code(set)add "px"||id	relayout	recalculate points	preset property	nullable
+	["style.color",		"prop_color",		"style.color",		false,		false,		false,			false],
+	["style.backgroundColor",	"prop_backcolor",	"style.backgroundColor",	false,		false,		false,			false],
+	["value",			"prop_value",		"value",			false,		false,		false,			false],
+	["innerHTML",			"prop_innerhtml",	"innerHTML",			false,		true,		true,			false],
+	["style.overflow",		"prop_overflow",	"style.overflow",		false,		true,		true,			false],
+	["__contenteditable",	"prop_edit",		"__contenteditable",		false,		false,		false,			false],
+	["__borderstyle1",		"prop_borderstyle",	"__borderstyle",		false,		true,		false,			true],
+	["__borderwidth1",		"prop_borderwidth",	"__borderwidth",		false,		true,		false,			true],
+	["__bordercolor1",		"prop_bordercolor",	"__bordercolor",		false,		true,		false,			true],
+//	0				1			2				3		4		5			6			7
+//events				id			propertyname(set)		add "px"	relayout	recalculate points	preset property
+	["__onmousedown",		"prop_onmousedown",	"__onmousedown",		false,		false,		false,			false],
+	["__onmouseup",		"prop_onmouseup",	"__onmouseup",		false,		false,		false,			false],
+	["__onclick",			"prop_onclick",	"__onclick",			false,		false,		false,			false],
+	["__onmouseover",		"prop_onmouseover",	"__onmouseover",		false,		false,		false,			false],
+	["__onmouseout",		"prop_onmouseout",	"__onmouseout",		false,		false,		false,			false],
+	["__onmousemove",		"prop_onmousemove",	"__onmousemove",		false,		false,		false,			false],
+	["__onkeydown",		"prop_onkeydown",	"__onkeydown",		false,		false,		false,			false],
+	["__onkeyup",			"prop_onkeyup",	"__onkeyup",			false,		false,		false,			false],
+//	0				1			2				3		4		5			6			7
+//	propertyname(get)		id			propertyname(set)		add "px"	relayout	recalculate points	preset property	nullable
+	["cursor",			"prop_cursor",	"cursor",			false,		true,		true,			false],
+	["src",			"prop_src",		"src",				false,		true,		true,			false],
+	["__href",			"prop_href",		"__href",			false,		false,		false,			false],
+	["border",			"prop_t_bw",		"border",			false,		true,		true,			false,			true],
+	["borderColor",		"prop_t_bc",		"borderColor",		false,		false,		false,			false,			false],
+	["borderColorDark",		"prop_t_bcd",		"borderColorDark",		false,		false,		false,			false,			false],
+	["borderColorLight",		"prop_t_bcl",		"borderColorLight",		false,		false,		false,			false,			false],
+	["cellSpacing",		"prop_t_cs",		"cellSpacing",		false,		true,		true,			false,			true],
+	["cellPadding",		"prop_t_cp",		"cellPadding",		false,		true,		true,			false,			true],
+	["align",			"prop_align",		"align",			false,		true,		true,			false,			true],
+	["vAlign",			"prop_valign",	"vAlign",			false,		true,		true,			false,			true]
+];
+function showproperties(e)
+{
+	var i;
+	for(i=0;i<propertyitem.length;i++)
+	{
+		if(propertyitem[i][0]=="<custom>")
+		{
+			(propertyitem[i][1])(e,propertyitem[i]);
+		}
+		else
+		{
+			var val=eval("e."+propertyitem[i][0]);
+			if(val==null)
+			{
+				document.getElementById(propertyitem[i][1]).value="";
+			}
+			else
+			{
+				document.getElementById(propertyitem[i][1]).value=val;
+				if(propertyitem[i][6])
+					(new Function("e","i","e."+propertyitem[i][2]+"=e."+propertyitem[i][0]+";"))(e,i);
+			}
+		}
+	}
+	if(e.tagName.toLowerCase()=="tr" || e.tagName.toLowerCase()=="td")
+	{
+		document.getElementById("dockpanel").disabled=true;
+	}
+	else
+	{
+		document.getElementById("dockpanel").disabled=false;
+	}
+}
+function updateproperties(e,i)
+{
+	if(propertyitem[i][0]=="<custom>")
+	{
+		(propertyitem[i][2])(e,propertyitem[i]);
+	}
+	else
+	{
+		if(document.getElementById(propertyitem[i][1]).value=="" && propertyitem[i][7])
+		{
+			(new Function("e","i","e."+propertyitem[i][2]+"=null;"))(e,i);
+		}
+		else
+		{
+			(new Function("e","i","e."+propertyitem[i][2]+"=(propertyitem[i][3] && document.getElementById(propertyitem[i][1]).value!=\"\") ? (document.getElementById(propertyitem[i][1]).value+\"px\") : (document.getElementById(propertyitem[i][1]).value);"))(e,i);
+		}
+		if(propertyitem[i][4])p.layout(e);
+		if(propertyitem[i][5])rs1.calc_points(rs1.cur_element);
+	}
+}
+//l()
+function l()
+{
+	/*var tmp=new ___tmpf();
+	for(var i=0;i<8;i++)
+	{
+		(new Function("rs"+i.toString()+"=document.getElementById('rsf"+i.toString()+"');"))();
+		document.getElementById("rsf"+i.toString()).style.zIndex=5;
+		document.getElementById("rsf"+i.toString()).contentWindow.document.body.onmousemove=rsf_onmousemove;
+		
+		tmp.setf(document.getElementById("rsf"+i.toString()).contentWindow.document);
+		//document.getElementById("rsf"+i.toString()).contentWindow.document.onmousedown=new Function("e","rsf_onmousedown(e,window);");
+		document.getElementById("rsf"+i.toString()).contentWindow.document.body.onmouseup=rsf_onmouseup;
+		document.getElementById("rsf"+i.toString()).contentWindow.document.body.ind=i+1;
+	}*/
+	offsetx=0;
+	offsety=0;
+	p=new panel(document.getElementById("d"),window);
+	//set dock
+	document.getElementById("properties").dock=DOCK_RIGHT;
+	//document.getElementById("toolbox").dock=DOCK_LEFT;
+	document.getElementById("mainpanel").dock=DOCK_FILL;
+	document.getElementById("__sp1").dock=DOCK_RIGHT;
+	document.getElementById("dockpanel").dock=DOCK_TOP;
+	document.getElementById("__sp2").dock=DOCK_TOP;
+	document.getElementById("__sp3").dock=DOCK_RIGHT;
+	document.getElementById("label1").dock=DOCK_TOP;
+	document.getElementById("label2").dock=DOCK_TOP;
+	document.getElementById("propertypanel").dock=DOCK_FILL;
+	document.getElementById("bottompanel").dock=DOCK_BOTTOM;
+	document.getElementById("leftpanel").dock=DOCK_RIGHT;
+	document.getElementById("toolbox").dock=DOCK_RIGHT;
+	document.getElementById("mainpanel").margintop=15;
+	//document.getElementById("mainpanel").marginbottom=8;
+	//document.getElementById("mainpanel").marginleft=8;
+	var sp=new splitter(document.getElementById("__sp1"),document.getElementById("properties"),true,true,DOCK_FILL,window,80);
+	sp.onresize=function()
+	{
+		p.layout(sp.rs_e);
+	};
+	var sp2=new splitter(document.getElementById("__sp2"),document.getElementById("dockpanel"),false,false,DOCK_FILL,window,80);
+	sp2.onresize=function()
+	{
+		p.layout(sp2.rs_e);
+	};
+	var sp3=new splitter(document.getElementById("__sp3"),document.getElementById("toolbox"),true,true,DOCK_FILL,window,80);
+	sp3.onresize=function()
+	{
+		p.layout(sp3.rs_e);
+		rs1.calc_points(rs1.cur_element);
+	};
+	rs1=new rspanel(document.getElementById("mainpanel"),window);
+	//document.getElementById("mainpanel").__id="mainpanel";
+	document.getElementById("mainpanel").__name="panel";
+	if(!rs1.is_ie)
+	{
+		//document.getElementById("properties").marginright=-16;
+	}
+	rs1.onresize=function()
+	{
+		p.layout(rs1.cur_element);
+	};
+	
+	if(rs1.is_ie)
+	{
+		//document.getElementById("properties").style.display="inline";
+		document.getElementById("bottompanel").style.display="inline";
+	}
+	/*var d1=document.createElement("div");
+	d1.style.cssText="margin-top:300px;margin-left:300px;width:100px;height:100px;position:absolute;border:#dcdcdc 5px solid;";
+	rs1.addcontrol(d1);
+	d1=document.createElement("div");
+	d1.style.cssText="margin-top:10px;margin-left:10px;width:200px;height:200px;position:absolute;border:#dcdcdc 5px solid;";
+	rs1.addcontrol(d1);
+
+	var d2=document.createElement("div");
+	d2.style.cssText="margin-top:10px;margin-left:10px;width:80px;height:80px;position:absolute;border:#dcdcdc 5px solid;";
+	rs1.addcontrol(d2,d1);
+	d1.__id="d1";
+
+	var d3=document.createElement("div");
+	d3.style.cssText="margin-top:10px;margin-left:10px;width:60px;height:60px;position:absolute;border:#dcdcdc 5px solid;";
+	rs1.addcontrol(d3,d2);*/
+	//window.clipboardData.
+	//document.body.cloneNode(
+	var menuitems=
+	[//	text			onclick
+		["Cut",		function(item)
+		{
+			resetborder();
+			window.top.cb_data=clone_node2(rs1.cur_element);//rs1.cur_element;
+			var p=rs1.cur_element.parentNode;
+			p.removeChild(rs1.cur_element);
+			p.__tmpf=rs1.ctrl_onmousedown;
+			p.__tmpf(null,true);
+		}],
+		["Copy",		function(item)
+		{
+			resetborder();
+			window.top.cb_data=clone_node2(rs1.cur_element);//rs1.cur_element;
+		}],
+		["Paste",		function(item)
+		{
+			if(window.top.cb_data!=null)
+			{
+				var n=clone_node(window.top.cb_data);//window.top.cb_data.cloneNode(true);
+				n.style.marginTop="0px";
+				n.style.marginLeft="0px";
+				if(rs1.cur_element.tagName.toLowerCase()=="td")
+					insertAdjacentElement(rs1.cur_element,"afterBegin",n);
+				else
+					rs1.cur_element.appendChild(n);
+				//rs1.add(n);
+				addelement(n);
+				p.layout(document.getElementById("mainpanel"));
+				n.__tmpf=rs1.ctrl_onmousedown;
+				n.__tmpf(null,true);
+			}
+		}],
+		["Paste In Place",	function(item)
+		{
+			if(window.top.cb_data!=null)
+			{
+				var n=clone_node(window.top.cb_data);//window.top.cb_data.cloneNode(true);
+				if(rs1.cur_element.tagName.toLowerCase()=="td")
+					insertAdjacentElement(rs1.cur_element,"afterBegin",n);
+				else
+					rs1.cur_element.appendChild(n);
+				//rs1.add(n);
+				addelement(n);
+				p.layout(document.getElementById("mainpanel"));
+				n.__tmpf=rs1.ctrl_onmousedown;
+				n.__tmpf(null,true);
+			}
+		}]
+	];
+	m1=new menu(window,menuitems);
+	document.getElementById("mainpanel").oncontextmenu=function(ev)
+	{
+		var e;
+		if(ev)
+			e=ev;
+		else
+			e=window.event;
+		m1.show(e.clientX,e.clientY);
+		return false;
+	};
+	rs1.onmousedown=function(th,e)
+	{
+		md();
+	};
+	rs1.onselect=function(th,e)
+	{
+		p.layout(e);
+		showproperties(e);
+	};
+	rs1.onchange=function(th,e)
+	{
+		showproperties(e);
+	};
+	rs1.add(document.getElementById("mainpanel"));
+	w=document.getElementById("d").offsetWidth;
+	h=document.getElementById("d").offsetHeight;
+
+	var f=new Function("insert(this.__item[1],this.__item[2],this.__item[0],this.__item[3],this.__item[4]);");
+	var f2=new Function("this.style.backgroundColor='#000000';this.style.color='#ffffff';");
+	var f3=new Function("this.style.backgroundColor='';this.style.color='';");
+	var f5=new Function("this.__cmd(this.__item);");
+	var toolboxitems=
+	[//	description	tagname	style												type		innerHTML
+		["Button",	"button",	"width:70px;height:24px",									"button",	null],
+		["Panel",	"div",		"width:100px;height:100px;border:#000000 1px solid;",					null,		null],
+		["Label",	"div",		"",												null,		"Label"],
+		["Image",	"img",		"",												null,		null],
+		["Link",	"a",		"width:70px;height:24px;text-decoration:underline;cursor:hand;",			null,		"Link"],
+		["Table",	"table",	"width:100px;height:100px",									null,		null],
+		["Text Field","input",	"width:100px;height:24px",									"text",	null],
+		["Text Box",	"textarea",	"width:200px;height:150px",									null,		null]
+	];
+	var toolboxitems2=
+	[//	description	function
+		["Menu",	function(item)
+		{
+			var i;
+			if(rs1.cur_element==null)return;
+			var el=document.createElement("div");
+			el.style.width="200px";
+			el.style.height="22px";
+			el.dock=DOCK_TOP;
+			el.__name="Panel";
+			for(i=0;i<window.parent.__pages.length;i++)
+			{
+				var opt=document.createElement("a");
+				opt.dock=DOCK_LEFT;
+				opt.innerHTML=window.parent.__pages[i];
+				opt.marginleft=5;
+				opt.marginright=5;
+				opt.__href=window.parent.__pages[i]+".htm";
+				opt.style.cursor="hand";
+				opt.__name="Link";
+				opt.style.textDecoration="underline";
+				el.appendChild(opt);
+			}
+			el.style.position="absolute";
+			if(rs1.cur_element.tagName.toLowerCase()=="td")
+				insertAdjacentElement(rs1.cur_element,"afterBegin",el);
+			else
+				rs1.cur_element.appendChild(el);
+			addelement(el);
+			p.layout(document.getElementById("mainpanel"));
+		}]
+	];
+	var i;
+	for(i=0;i<toolboxitems.length;i++)
+	{
+		var opt=document.createElement("div");
+		//opt.value=i.toString();
+		opt.innerHTML=toolboxitems[i][0];
+		opt.style.cssText="cursor:default;padding-left:6px;";
+		opt.onmouseover=f2;
+		opt.onmouseout=f3;
+		opt.onclick=f;
+		opt.__item=toolboxitems[i];
+		document.getElementById("toolbox").appendChild(opt);
+	}
+	for(i=0;i<toolboxitems2.length;i++)
+	{
+		var opt=document.createElement("div");
+		//opt.value=i.toString();
+		opt.innerHTML=toolboxitems2[i][0];
+		opt.style.cssText="cursor:default;padding-left:6px;";
+		opt.onmouseover=f2;
+		opt.onmouseout=f3;
+		opt.onclick=f5;
+		opt.__item=toolboxitems2[i];
+		opt.__cmd=toolboxitems2[i][1];
+		document.getElementById("toolbox").appendChild(opt);
+	}
+	var f4=function(){updateproperties(rs1.cur_element,this.__i);};
+	for(i=0;i<propertyitem.length;i++)
+	{
+		if(propertyitem[i][0]!="<custom>")
+		{
+			document.getElementById(propertyitem[i][1]).__i=i;
+			document.getElementById(propertyitem[i][1]).onchange=f4;
+			document.getElementById(propertyitem[i][1]).dock=DOCK_FILLH;
+			//document.getElementById(propertyitem[i][1]).no_absolute=true;
+			//document.getElementById(propertyitem[i][1]).parentNode.style.overflow="hidden";
+			document.getElementById(propertyitem[i][1]).parentNode.style.height=(document.getElementById(propertyitem[i][1]).offsetHeight+1).toString()+"px";
+		}
+		else
+		{
+			document.getElementById(propertyitem[i][3]).__i=i;
+			document.getElementById(propertyitem[i][3]).onchange=f4;
+			document.getElementById(propertyitem[i][3]).dock=DOCK_FILLH;
+			//document.getElementById(propertyitem[i][1]).no_absolute=true;
+			//document.getElementById(propertyitem[i][1]).parentNode.style.overflow="hidden";
+			document.getElementById(propertyitem[i][3]).parentNode.style.height=(document.getElementById(propertyitem[i][3]).offsetHeight+1).toString()+"px";
+		}
+	}
+	document.getElementById("properties").style.display="none";
+	try{document.getElementById("ifr1").style.display="none";}catch(ex){}
+	p.layout();
+	openfile(prompt("page"));
+}
+var w,h;
+//on_rs()
+function on_rs()
+{
+	if(w==document.getElementById("d").offsetWidth && h==document.getElementById("d").offsetHeight)return;
+	p.layout();
+	rs1.calc_points(rs1.cur_element);
+	w=document.getElementById("d").offsetWidth;
+	h=document.getElementById("d").offsetHeight;
+}
+
+
+function addcontrol(p,ctrl)
+{
+	ctrl.onmousedown=ctrl_onmousedown;
+	p.appendChild(ctrl);
+}
+
+
+function Button14_onclick()
+{
+	try
+	{
+		if(rs1.cur_element)
+		{
+			if(rs1.cur_element.__parent)
+			{
+				rs1.cur_element.__parent.onmousedown(null,true);
+				return;
+			}
+			if(rs1.cur_element.parentNode)
+			{
+				rs1.cur_element.parentNode.onmousedown(null,true);
+			}
+		}
+	}
+	catch(ex)
+	{}
+}
+function selectchild(p,i)
+{
+	try{p.childNodes[i].onmousedown(null,true);}catch(ex){}
+}
+function cb1(w)
+{
+	var htm="<select onchange=\"window.parent.selectchild(window.wnd.sctrl,parseInt(this.value));\" id=\"sel\" size=\"2\" style=\"width:100%; height:100%;\">";
+	var i;
+	for(i=0;i<w.sctrl.childNodes.length;i++)
+	{
+		if(w.sctrl.childNodes[i].tagName!=null)htm+="<option value=\""+i.toString()+"\">"+w.sctrl.childNodes[i].id+"&nbsp;&lt;"+w.sctrl.childNodes[i].tagName+"&gt;</option>";
+	}
+	htm+="</select>";
+	w.clientarea.innerHTML=htm;
+}
+var sctrl;
+var curmenu;
+//select child node
+function Button15_onclick()
+{
+	/*var w=new wnd2(0,0,300,250,window,document.getElementById("mainpanel"),cb1,"",null);
+	w.sctrl=rs1.cur_element;
+	w.show();
+	rs1.add(w.fr);*/
+	if(rs1.cur_element==null)return;
+	sctrl=rs1.cur_element;
+	if(sctrl.__innerelement)sctrl=sctrl.__innerelement;
+	var s=document.createElement("div");
+	//s.size="2";
+	var i;
+	var c=0;
+	var f=new Function("selectchild(sctrl,parseInt(this.value));if(curmenu){curmenu.parentNode.removeChild(curmenu);curmenu=null;}");
+	var f2=new Function("this.style.backgroundColor='#000000';this.style.color='#ffffff';selectchild(sctrl,parseInt(this.value));");
+	var f3=new Function("this.style.backgroundColor='';this.style.color='';");
+	curmenu=s;
+	s.onmousedown=new Function("ev","var e;if(ev)e=ev; else e=window.event; e.cancelBubble=true;");
+	for(i=0;i<sctrl.childNodes.length;i++)
+	{
+		if(sctrl.childNodes[i].tagName!=null)
+		{
+			if(sctrl.childNodes[i].rspanel!=null)
+			{
+				//if(sctrl.childNodes[i].__name!=null)
+				//{
+					c+=1;
+					var opt=document.createElement("div");
+					opt.value=i.toString();
+					opt.innerHTML=(sctrl.childNodes[i].__id==null?"":sctrl.childNodes[i].__id)+(sctrl.childNodes[i].__name==null?"&lt;"+sctrl.childNodes[i].tagName+"&gt;":"("+sctrl.childNodes[i].__name+")");
+					opt.style.cssText="cursor:default;height:20px;";
+					opt.onmouseover=f2;
+					opt.onmouseout=f3;
+					opt.onclick=f;
+					s.appendChild(opt);
+					//htm+="<option value=\""+i.toString()+"\">"+sctrl.childNodes[i].id+"&nbsp;&lt;"+sctrl.childNodes[i].tagName+"&gt;</option>";
+				//}
+			}
+		}
+	}
+	var h=c*20;
+	h+=2;
+	if(h>document.getElementById("mainpanel").offsetHeight)h=document.getElementById("d").offsetHeight;
+	if(h<20)h=20;
+	s.style.cssText="position:absolute;z-index:7;margin-top:-"+h.toString()+"px;width:550px;height:"+h.toString()+"px;border:#000000 1px solid;overflow:auto;background-color:#eaeaea;";
+	document.getElementById("bottompaneldiv").appendChild(s);
+}
+
+function Button16_onclick()
+{
+	if(rs1.cur_element==null)return;
+	rs1.cur_element.parentNode.removeChild(rs1.cur_element);
+	rs1.cur_element=null;
+}
+
+function toolbox_btn_onmousedown()
+{
+	if(document.getElementById("toolbox").style.display.toLowerCase()=="none")
+	{
+		document.getElementById("toolbox").style.display="";
+		document.getElementById("__sp3").style.display="";
+	}
+	else
+	{
+		document.getElementById("toolbox").style.display="none";
+		document.getElementById("__sp3").style.display="none";
+	}
+	p.layout(document.getElementById("toolbox"));
+	rs1.calc_points(rs1.cur_element);
+}
+function properties_btn_onmousedown()
+{
+	if(document.getElementById("properties").style.display.toLowerCase()=="none")
+	{
+		if(rs1.is_ie)
+		{
+			document.getElementById("properties").style.display="inline";
+		}
+		else
+		{
+			document.getElementById("properties").style.display="";
+		}
+		document.getElementById("__sp1").style.display="";
+	}
+	else
+	{
+		document.getElementById("properties").style.display="none";
+		document.getElementById("__sp1").style.display="none";
+	}
+	p.layout(document.getElementById("properties"));
+	rs1.calc_points(rs1.cur_element);
+}
+var __w;
+var intv;
+function Button17_onclick()
+{
+	if(intv!=null)return;
+	__w=window.open("",null,"scrollbars=1,resizable=1,toolbars=0,width="+document.getElementById("mainpanel").offsetWidth.toString()+",height="+document.getElementById("mainpanel").offsetHeight.toString()+",top=0,left=0");
+	intv=setInterval
+	("\
+	if(__w.document)\
+	{\
+		if(__w.document.body)\
+		{\
+			clearInterval(intv);\
+			intv=null;\
+			__w.document.body.topMargin=\"0\";\
+			__w.document.body.bottomMargin=\"0\";\
+			__w.document.body.leftMargin=\"0\";\
+			__w.document.body.rightMargin=\"0\";\
+			__w.document.body.style.border=\"none\";\
+			__w.document.body.innerHTML=\"<scr"+"\"+\"ipt src=\\\"panel.js\\\"></scr"+"\"+\"ipt><scr"+"\"+\"ipt>var p;window.onload=function(){p=new panel(document.body);};window.onresize=function(){p.layout();};</scr"+"\"+\"ipt>\"+document.getElementById(\"mainpanel\").innerHTML;\
+			\
+		}\
+	}\
+	",100);
+	/*__w.onload=function()
+	{
+		__w.document.body.innerHTML=document.getElementById("d").innerHTML;
+	};*/
+}
+//save()
+function save()
+{
+	resetborder();
+	document.getElementById("content").value=save_e(document.getElementById("mainpanel"));
+	if(rs1.cur_element)
+	{
+		rs1.cur_element.style.border="#000000 1px dotted";
+	}
+	var tmp=prompt("filename","a.xht");
+	if(tmp==null)return;
+	document.getElementById("fn").value=tmp;
+	document.forms["sf"].submit();
+}
+//save_e()
+function save_e(e)
+{
+	if(e.tagName==null)return "";
+	if(!(e.tagName.toLowerCase()=="tbody" || e.tagName.toLowerCase()=="tr" || e.tagName.toLowerCase()=="td"))
+	{
+		if(e.style==null)return "";
+		//if(e.__name==null)return "";
+		if(e.rspanel==null)return "";
+	}
+	var x="<control tagname=\""+e.tagName+"\" style=\""+e.style.cssText+"\"";//x=\""+e.offsetLeft+"\" y=\""+e.offsetTop+"\" w=\""+e.offsetWidth+"\" h=\""+e.offsetHeight+"\"
+	switch(e.dock)
+	{
+		case DOCK_TOP:
+			x+=" dock=\"DOCK_TOP\"";
+			break;
+		case DOCK_BOTTOM:
+			x+=" dock=\"DOCK_BOTTOM\"";
+			break;
+		case DOCK_LEFT:
+			x+=" dock=\"DOCK_LEFT\"";
+			break;
+		case DOCK_RIGHT:
+			x+=" dock=\"DOCK_RIGHT\"";
+			break;
+		case DOCK_FILL:
+			x+=" dock=\"DOCK_FILL\"";
+			break;
+		case DOCK_TOPLEFT:
+			x+=" dock=\"DOCK_TOPLEFT\"";
+			break;
+		case DOCK_TOPRIGHT:
+			x+=" dock=\"DOCK_TOPRIGHT\"";
+			break;
+		case DOCK_BOTTOMLEFT:
+			x+=" dock=\"DOCK_BOTTOMLEFT\"";
+			break;
+		case DOCK_BOTTOMRIGHT:
+			x+=" dock=\"DOCK_BOTTOMRIGHT\"";
+			break;
+		case DOCK_CENTER:
+			x+=" dock=\"DOCK_CENTER\"";
+			break;
+		case DOCK_CENTERH:
+			x+=" dock=\"DOCK_CENTERH\"";
+			break;
+		case DOCK_CENTERV:
+			x+=" dock=\"DOCK_CENTERV\"";
+			break;
+	}
+	var i;
+	if(e.__id!=null)			x+=" id=\""+e.__id+"\"";
+	if(e.__name!=null)			x+=" name=\""+e.__name+"\"";
+	if(e.__onmousedown!=null)		x+=" onmousedown=\""+e.__onmousedown.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onmouseup!=null)		x+=" onmouseup=\""+e.__onmouseup.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onclick!=null)		x+=" onclick=\""+e.__onclick.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onmouseover!=null)		x+=" onmouseover=\""+e.__onmouseover.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onmouseout!=null)		x+=" onmouseout=\""+e.__onmouseout.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onmousemove!=null)		x+=" onmousemove=\""+e.__onmousemove.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onkeydown!=null)		x+=" onkeydown=\""+e.__onkeydown.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__onkeyup!=null)		x+=" onkeyup=\""+e.__onkeyup.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.value!=null)			x+=" value=\""+e.value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__contenteditable!=null)	x+=" contenteditable=\""+e.__contenteditable+"\"";
+	if(e.type!=null)			x+=" type=\""+e.type+"\"";
+	if(e.src!=null)			x+=" src=\""+e.src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.__href!=null)			x+=" href=\""+e.__href.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;")+"\"";
+	if(e.border!=null)			x+=" border=\""+e.border+"\"";
+	if(e.borderColor!=null)		x+=" bordercolor=\""+e.borderColor+"\"";
+	if(e.borderColorDark!=null)		x+=" bordercolordark=\""+e.borderColorDark+"\"";
+	if(e.borderColorLight!=null)	x+=" bordercolorlight=\""+e.borderColorLight+"\"";
+	if(e.cellSpacing!=null)		x+=" cellspacing=\""+e.cellSpacing+"\"";
+	if(e.cellPadding!=null)		x+=" cellpadding=\""+e.cellPadding+"\"";
+	if(e.align!=null)			x+=" align=\""+e.align+"\"";
+	if(e.vAlign!=null)			x+=" valign=\""+e.vAlign+"\"";
+	if(e.margintop!=null)		x+=" margintop=\""+e.margintop+"\"";
+	if(e.marginbottom!=null)		x+=" marginbottom=\""+e.marginbottom+"\"";
+	if(e.marginleft!=null)		x+=" marginleft=\""+e.marginleft+"\"";
+	if(e.marginright!=null)		x+=" marginright=\""+e.marginright+"\"";
+	var chd=false;
+	for(i=0;i<e.childNodes.length;i++)
+	{
+		if(e.childNodes[i].tagName!=null)
+		{
+			if(e.childNodes[i].tagName.toLowerCase()=="tbody" || e.childNodes[i].tagName.toLowerCase()=="tr" || e.childNodes[i].tagName.toLowerCase()=="td")
+			{
+				chd=true;
+				break;
+			}
+			if(e.childNodes[i].style!=null)
+			{
+				if(e.childNodes[i].rspanel!=null)
+				{
+					chd=true;
+					break;
+				}
+			}
+		}
+	}
+	if(chd)
+	{
+		x+=">";
+		for(i=0;i<e.childNodes.length;i++)
+		{
+			x+=save_e(e.childNodes[i]);
+		}
+	}
+	else
+	{
+		/**/				x+=" nochild=\"1\"";
+		
+		x+="><![CDATA[";
+		x+=e.innerHTML;
+		x+="]]>";
+	}
+	x+="</control>";
+	return x;
+}
+function Button18_onclick()
+{
+	//save();
+	savefile(prompt("page"));
+}
+
+
+function load_callback(t)
+{
+	document.getElementById("mainpanel").innerHTML=t;
+	
+}
+function load_callback_done()
+{
+	try{document.getElementById("ifr1").style.display="none";}catch(ex){}
+	document.getElementById("mainpanel").__tmpf=rs1.ctrl_onmousedown;
+	document.getElementById("mainpanel").__tmpf(null,true);
+}
+function Button19_onclick()
+{
+	var tmp=prompt("filename","a.xht");
+	if(tmp==null)return;
+	try{document.getElementById("ifr1").style.display="";}catch(ex){};
+	document.getElementById("op_fn").value=tmp;
+	document.forms["opf"].submit();
+}
+function openfile(fn)
+{
+	if(fn==null)return;
+	try{document.getElementById("ifr1").style.display="";}catch(ex){};
+	document.getElementById("op_fn").value=fn;
+	document.forms["opf"].submit();
+}
+function savefile(fn)
+{
+	if(fn==null)return;
+	try{document.getElementById("ifr1").style.display="";}catch(ex){};
+	resetborder();
+	document.getElementById("content").value=save_e(document.getElementById("mainpanel"));
+	if(rs1.cur_element)
+	{
+		rs1.cur_element.style.border="#000000 1px dotted";
+	}
+	document.getElementById("fn").value=fn;
+	document.forms["sf"].submit();
+}
+function save_callback()
+{
+	try{document.getElementById("ifr1").style.display="none";}catch(ex){};
+}
+function Button20_onclick()
+{
+	resetborder();
+
+	var e=rs1.cur_element;
+	if(e==null)return;
+	var v=prompt("tagname",e.tagName);
+	if(v==null)return;
+	var newelement=document.createElement(v);
+	//document.body.setAttributeNode(
+	var attr;
+	/*for(attr in e.attributes)
+	{
+		var n=e.getAttributeNode(attr);
+		if(n!=null)newelement.setAttributeNode(n.cloneNode());
+	}*/
+	for(attr in e)
+	{
+		try
+		{newelement[attr]=e[attr];}
+		catch(ex){}
+	}
+	e.parentNode.appendChild(newelement);
+	rs1.add(newelement);
+	newelement.__id=e.__id;
+	newelement.__name="element";
+	newelement.style.cssText=e.style.cssText;
+	newelement.innerHTML=e.innerHTML;
+	e.parentNode.removeChild(e);
+	newelement.__tmpf=newelement.onmousedown;
+	newelement.__tmpf(null,true);
+	//document.body.insertAdjacentElement(
+}
+
+function Button21_onclick()
+{
+	try
+	{
+		rs1.cur_element.parentNode.appendChild(rs1.cur_element);
+		p.layout(document.getElementById("mainpanel"));
+		rs1.calc_points(rs1.cur_element);
+	}
+	catch(ex){alert(ex.message);}
+}
+
+function Button22_onclick()
+{
+	try
+	{
+		insertAdjacentElement(rs1.cur_element.parentNode,"afterBegin",rs1.cur_element);
+		p.layout(document.getElementById("mainpanel"));
+		rs1.calc_points(rs1.cur_element);
+	}
+	catch(ex){alert(ex.message);}
+}
+function resetborder()
+{
+	if(rs1.cur_element)
+	{
+		rs1.cur_element.style.borderTop=rs1.cur_element.__bordertop;
+		rs1.cur_element.style.borderBottom=rs1.cur_element.__borderbottom;
+		rs1.cur_element.style.borderLeft=rs1.cur_element.__borderleft;
+		rs1.cur_element.style.borderRight=rs1.cur_element.__borderright;
+		if(rs1.cur_element.__bordertop=="")
+		{
+			rs1.cur_element.style.borderTopStyle="";
+			rs1.cur_element.style.borderTopWidth="";
+			rs1.cur_element.style.borderTopColor="";
+		}
+		if(rs1.cur_element.__borderleft=="")
+		{
+			rs1.cur_element.style.borderLeftStyle="";
+			rs1.cur_element.style.borderLeftWidth="";
+			rs1.cur_element.style.borderLeftColor="";
+		}
+		if(rs1.cur_element.__borderbottom=="")
+		{
+			rs1.cur_element.style.borderBottomStyle="";
+			rs1.cur_element.style.borderBottomWidth="";
+			rs1.cur_element.style.borderBottomColor="";
+		}
+		if(rs1.cur_element.__borderright=="")
+		{
+			rs1.cur_element.style.borderRightStyle="";
+			rs1.cur_element.style.borderRightWidth="";
+			rs1.cur_element.style.borderRightColor="";
+		}
+		if(rs1.cur_element.__borderstyle!=null)
+		{
+			rs1.cur_element.style.borderStyle=rs1.cur_element.__borderstyle;
+			rs1.cur_element.__borderstyle=null;
+		}
+		if(rs1.cur_element.__borderwidth!=null)
+		{
+			rs1.cur_element.style.borderWidth=rs1.cur_element.__borderwidth;
+			rs1.cur_element.__borderwidth=null;
+		}
+		if(rs1.cur_element.__bordercolor!=null)
+		{
+			rs1.cur_element.style.borderColor=rs1.cur_element.__bordercolor;
+			rs1.cur_element.__bordercolor=null;
+		}
+	}
+}
+
+	</SCRIPT>
+
+</HEAD>
+<BODY ONLOAD="l();" ONRESIZE="on_rs();" BOTTOMMARGIN="0" LEFTMARGIN="0" SCROLL="no"
+	ONMOUSEDOWN="md();" RIGHTMARGIN="0" TOPMARGIN="0" STYLE="overflow: hidden;
+	border: none;">
+	<DIV STYLE="width: 100%; height: 100%; position: absolute; background-color: #d4d0c8;"
+		ID="d">
+		<!--<IFRAME ID="rsf0" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid; border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid; position: absolute; height: 6px; z-index:5;" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf1" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf2" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf3" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf4" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf5" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf6" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>
+		<IFRAME ID="rsf7" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid;
+			position: absolute; height: 6px" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
+		</IFRAME>-->
+		<DIV ID="leftpanel" STYLE="width: 21px; height: 392px; z-index: 4; position: absolute;
+			left: 423px; top: 123px; border-left: #000000 1px solid;" LANGUAGE="javascript">
+			<IMG SRC="toolbox.gif" STYLE="border-top: #000000 1px solid; border-bottom: #000000 1px solid"
+				ID="toolbox_btn" LANGUAGE="javascript" ONMOUSEDOWN="toolbox_btn_onmousedown();event.cancelBubble=true;" />
+			<IMG SRC="properties.gif" STYLE="border-top: #000000 1px solid; border-bottom: #000000 1px solid"
+				ID="properties_btn" LANGUAGE="javascript" ONMOUSEDOWN="properties_btn_onmousedown();event.cancelBubble=true;" /></DIV>
+		<DIV ID="properties" STYLE="width: 221px; height: 515px; z-index: 4; position: absolute;
+			background-color: #d4d0c8; left: 779px; top: 13px; border-top: #000000 1px solid;
+			border-bottom: #000000 1px solid;" LANGUAGE="javascript">
+			<DIV ID="label2">
+				Dock</DIV>
+			<DIV ID="dockpanel" STYLE="width: 100%; height: 111px; overflow: auto;">
+				<INPUT ID="Button1" TYPE="button" VALUE="top" ONCLICK="rs1.cur_element.dock=DOCK_TOP;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+					ID="Button2" TYPE="button" VALUE="bottom" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOM;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+						ID="Button3" TYPE="button" VALUE="left" ONCLICK="rs1.cur_element.dock=DOCK_LEFT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+							ID="Button4" TYPE="button" VALUE="right" ONCLICK="rs1.cur_element.dock=DOCK_RIGHT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+								ID="Button5" TYPE="button" VALUE="fill" ONCLICK="rs1.cur_element.dock=DOCK_FILL;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+									ID="Button7" TYPE="button" VALUE="topleft" ONCLICK="rs1.cur_element.dock=DOCK_TOPLEFT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+										ID="Button8" TYPE="button" VALUE="topright" ONCLICK="rs1.cur_element.dock=DOCK_TOPRIGHT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+											ID="Button9" TYPE="button" VALUE="bottomleft" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOMLEFT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+												ID="Button10" TYPE="button" VALUE="bottomright" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOMRIGHT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+													ID="Button11" TYPE="button" VALUE="center" ONCLICK="rs1.cur_element.dock=DOCK_CENTER;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+														ID="Button12" TYPE="button" VALUE="centerh" ONCLICK="rs1.cur_element.dock=DOCK_CENTERH;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+															ID="Button13" TYPE="button" VALUE="centerv" ONCLICK="rs1.cur_element.dock=DOCK_CENTERV;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
+																ID="Button6" TYPE="button" VALUE="none" ONCLICK="rs1.cur_element.dock=DOCK_NONE;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" />
+			</DIV>
+			<DIV STYLE="font-size: 1pt; width: 100px; height: 8px;" ID="__sp2">
+			</DIV>
+			<DIV ID="label1">
+				Properties</DIV>
+			<DIV ID="propertypanel" STYLE="width: 100%; height: 331px; overflow: auto;">
+				<TABLE STYLE="padding-right: 5px; width: 100%; font-size: 13px; font-family: Arial;"
+					CELLPADDING="0" CELLSPACING="0" BORDER="0">
+					<TR>
+						<TD STYLE="width: 113px">
+							ID</TD>
+						<TD>
+							<INPUT ID="prop_id" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Tag Name</TD>
+						<TD>
+							<INPUT ID="prop_tag" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							x</TD>
+						<TD>
+							<INPUT ID="prop_x" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							y</TD>
+						<TD>
+							<INPUT ID="prop_y" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							width</TD>
+						<TD>
+							<INPUT ID="prop_width" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							height</TD>
+						<TD>
+							<INPUT ID="prop_height" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Padding</TD>
+						<TD>
+							<INPUT ID="prop_padding" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Margin</TD>
+						<TD>
+							<INPUT ID="prop_margin" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Forecolor</TD>
+						<TD>
+							<INPUT ID="prop_color" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Backcolor</TD>
+						<TD>
+							<INPUT ID="prop_backcolor" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Text/Value</TD>
+						<TD>
+							<INPUT ID="prop_value" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							InnerHTML</TD>
+						<TD>
+							<INPUT ID="prop_innerhtml" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Overflow</TD>
+						<TD>
+							<SELECT ID="prop_overflow" STYLE="width: 100%;">
+								<OPTION SELECTED="SELECTED" VALUE=""></OPTION>
+								<OPTION VALUE="auto">Use scrollbars if needed</OPTION>
+								<OPTION VALUE="scroll">Always use scrollbars</OPTION>
+								<OPTION VALUE="hidden">Content is clipped</OPTION>
+								<OPTION VALUE="visible">Content is not clipped</OPTION>
+							</SELECT>
+							&nbsp;
+						</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							ContentEditable</TD>
+						<TD>
+							<SELECT ID="prop_edit" STYLE="width: 100%;">
+								<OPTION SELECTED="SELECTED" VALUE=""></OPTION>
+								<OPTION VALUE="inherit">Inherit</OPTION>
+								<OPTION VALUE="true">True</OPTION>
+								<OPTION VALUE="false">False</OPTION>
+							</SELECT>
+							&nbsp;
+						</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							border style</TD>
+						<TD>
+							<SELECT ID="prop_borderstyle" STYLE="width: 100%;">
+								<OPTION SELECTED="SELECTED" VALUE=""></OPTION>
+								<OPTION VALUE="none">None</OPTION>
+								<OPTION VALUE="solid">Solid Line</OPTION>
+								<OPTION VALUE="inset">Inset</OPTION>
+								<OPTION VALUE="outset">Outset</OPTION>
+								<OPTION VALUE="double">Double Line</OPTION>
+								<OPTION VALUE="dotted">Dotted</OPTION>
+								<OPTION VALUE="dashed">Dashed</OPTION>
+								<OPTION VALUE="groove">Groove</OPTION>
+								<OPTION VALUE="ridge">Ridge</OPTION>
+							</SELECT>
+							&nbsp;
+						</TD>
+					</TR>
+					<TR>
+						<TD>
+							border width</TD>
+						<TD>
+							<INPUT ID="prop_borderwidth" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							border color</TD>
+						<TD>
+							<INPUT ID="prop_bordercolor" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onmousedown</TD>
+						<TD>
+							<INPUT ID="prop_onmousedown" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onmouseup</TD>
+						<TD>
+							<INPUT ID="prop_onmouseup" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onclick</TD>
+						<TD>
+							<INPUT ID="prop_onclick" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onmouseover</TD>
+						<TD>
+							<INPUT ID="prop_onmouseover" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onmouseout</TD>
+						<TD>
+							<INPUT ID="prop_onmouseout" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onmousemove</TD>
+						<TD>
+							<INPUT ID="prop_onmousemove" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onkeydown</TD>
+						<TD>
+							<INPUT ID="prop_onkeydown" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							onkeyup</TD>
+						<TD>
+							<INPUT ID="prop_onkeyup" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Cursor</TD>
+						<TD ID="td_prop_cursor">
+							<SELECT ID="prop_cursor" STYLE="width: 100%;">
+								<OPTION SELECTED="SELECTED" VALUE=""></OPTION>
+								<OPTION VALUE="default" STYLE="cursor: default;">Default</OPTION>
+								<OPTION VALUE="hand" STYLE="cursor: hand;">Hand</OPTION>
+								<OPTION VALUE="s-resize" STYLE="cursor: s-resize;">s-resize</OPTION>
+								<OPTION VALUE="e-resize" STYLE="cursor: e-resize;">e-resize</OPTION>
+								<OPTION VALUE="se-resize" STYLE="cursor: se-resize;">se-resize</OPTION>
+								<OPTION VALUE="sw-resize" STYLE="cursor: sw-resize;">sw-resize</OPTION>
+							</SELECT>
+							&nbsp;
+						</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Src(Image Only)</TD>
+						<TD>
+							<INPUT ID="prop_src" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Href(Link Only)</TD>
+						<TD>
+							<INPUT ID="prop_href" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Table Border Width</TD>
+						<TD>
+							<INPUT ID="prop_t_bw" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Table Border Color</TD>
+						<TD>
+							<INPUT ID="prop_t_bc" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Table BorderColorDark</TD>
+						<TD>
+							<INPUT ID="prop_t_bcd" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Table BorderColorLight</TD>
+						<TD>
+							<INPUT ID="prop_t_bcl" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Table Cell Spacing</TD>
+						<TD>
+							<INPUT ID="prop_t_cs" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Table Cell Padding</TD>
+						<TD>
+							<INPUT ID="prop_t_cp" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
+								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
+								TYPE="text" />&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Align</TD>
+						<TD>
+							<SELECT ID="prop_align" STYLE="width: 100%;">
+								<OPTION SELECTED="SELECTED" VALUE=""></OPTION>
+								<OPTION VALUE="center">Center</OPTION>
+								<OPTION VALUE="left">Left</OPTION>
+								<OPTION VALUE="right">Right</OPTION>
+								<OPTION VALUE="justify">Justify</OPTION>
+							</SELECT>
+							&nbsp;</TD>
+					</TR>
+					<TR>
+						<TD STYLE="width: 113px">
+							Vertical Align</TD>
+						<TD>
+							<SELECT ID="prop_valign" STYLE="width: 100%;">
+								<OPTION SELECTED="SELECTED" VALUE=""></OPTION>
+								<OPTION VALUE="baseline">Baseline</OPTION>
+								<OPTION VALUE="bottom">Bottom</OPTION>
+								<OPTION VALUE="middle">Middle</OPTION>
+								<OPTION VALUE="top">Top</OPTION>
+							</SELECT>
+							&nbsp;</TD>
+					</TR>
+				</TABLE>
+				<INPUT ID="Button20" TYPE="button" VALUE="Change tag name..." LANGUAGE="javascript"
+					ONCLICK="return Button20_onclick()" /></DIV>
+		</DIV>
+		<DIV ID="__sp1" STYLE="width: 8px; height: 100px; border-top: #000000 1px solid;
+			border-left: #000000 1px solid; border-bottom: #000000 1px solid; display: none;">
+		</DIV>
+		<DIV ID="toolbox" STYLE="width: 100px; height: 100px; z-index: 6; position: absolute;
+			left: 82px; top: 250px; border-top: #000000 1px solid; border-bottom: #000000 1px solid;
+			background-color: #d4d0c8; overflow: auto; border-left: #000000 1px solid;
+			display: none;" LANGUAGE="javascript" ONMOUSEDOWN="event.cancelBubble=true;">
+		</DIV>
+		<DIV ID="__sp3" STYLE="width: 8px; height: 100px; display: none;" ONMOUSEDOWN="event.cancelBubble=true;">
+		</DIV>
+		<TABLE CELLPADDING="0" CELLSPACING="0" ID="bottompanel" STYLE="width: 819px; height: 26px;
+			z-index: 4; position: absolute; left: 130px; top: 532px;" LANGUAGE="javascript">
+			<TR>
+				<TD ID="bottompaneltd">
+					<DIV ID="bottompaneldiv">
+					</DIV>
+					<INPUT ID="Button15" TYPE="button" VALUE="Select Child Control..." LANGUAGE="javascript"
+						ONCLICK="return Button15_onclick()" /><WBR /><INPUT ID="Button14" TYPE="button" VALUE="Select Parent"
+							LANGUAGE="javascript" ONCLICK="return Button14_onclick()" /><WBR /><INPUT ID="Button16"
+								TYPE="button" VALUE="Delete" LANGUAGE="javascript" ONCLICK="return Button16_onclick()" /><WBR /><INPUT
+									ID="Button17" TYPE="button" VALUE="Preview" LANGUAGE="javascript" ONCLICK="return Button17_onclick()" /><WBR /><INPUT
+										ID="Button18" TYPE="button" VALUE="Save" LANGUAGE="javascript" ONCLICK="return Button18_onclick()" /><WBR /><INPUT
+											ID="Button19" TYPE="button" VALUE="Open..." LANGUAGE="javascript" ONCLICK="return Button19_onclick()" /><WBR /><INPUT
+												ID="Button21" TYPE="button" VALUE="Bring to front" LANGUAGE="javascript" ONCLICK="return Button21_onclick()" /><WBR /><INPUT
+													ID="Button22" TYPE="button" VALUE="Send to back" LANGUAGE="javascript" ONCLICK="return Button22_onclick()" />
+				</TD>
+			</TR>
+		</TABLE>
+		<DIV ID="mainpanel" ONSCROLL="rs1.calc_points(rs1.cur_element);" STYLE="width: 302px;
+			height: 394px; z-index: 3; position: absolute; left: 459px; top: 116px; overflow: auto;
+			background-color: #ffffff; border-right: #eaeaea 2px solid; border-top: #808080 2px solid;
+			border-left: #808080 2px solid; border-bottom: #eaeaea 2px solid;" LANGUAGE="javascript">
+		</DIV>
+	</DIV>
+	<IFRAME NAME="ajaxf" ID="ajaxf" STYLE="width: 1px; height: 1px; position: absolute"></IFRAME>
+	<FORM STYLE="width: 1px; height: 1px; position: absolute" ID="sf" NAME="sf" ACTION="savef.aspx"
+		TARGET="ajaxf" METHOD="post">
+		<INPUT TYPE="hidden" ID="fn" NAME="fn" />
+		<TEXTAREA STYLE="width: 1px; height: 1px;" NAME="content" ID="content"></TEXTAREA>
+	</FORM>
+	<FORM STYLE="width: 1px; height: 1px; position: absolute" ID="opf" NAME="opf" ACTION="open_xml.aspx"
+		TARGET="ajaxf" METHOD="get">
+		<INPUT TYPE="hidden" ID="op_fn" NAME="fn" />
+		<INPUT TYPE="hidden" ID="op_edit" NAME="edit" VALUE="1" />
+	</FORM>
+	<IFRAME SRC="noscript.htm" STYLE="width: 100%; height: 100%; position: absolute;
+		top: 0px; left: 0px; z-index: 98; background-color: #ffffff;" ID="ifr1"></IFRAME>
+</BODY>
+</HTML>

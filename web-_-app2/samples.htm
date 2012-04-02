@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Untitled Page</title>
+    <SCRIPT SRC="panel.js"></script>
+    <SCRIPT>
+    var pnl;
+function l()
+{
+	pnl=new panel(document.body,window);
+	//set dock
+	//document.getElementById("b1").dock=DOCK_TOP;
+	var i;
+	var f=function()
+	{
+		sel(this.__ct);
+	}
+	for(i=0;i<2;i++)
+	{
+		document.getElementById("panel_"+i.toString()).dock=DOCK_TOP;
+		document.getElementById("ct_"+i.toString()).dock=DOCK_FILL;
+		document.getElementById("bt_"+i.toString()).dock=DOCK_BOTTOM;
+		document.getElementById("bt_"+i.toString()).value="select";
+		document.getElementById("bt_"+i.toString()).__ct=document.getElementById("ct_"+i.toString());
+		document.getElementById("bt_"+i.toString()).onclick=f;
+	}
+	pnl.layout();
+	pnl.layout();
+}
+
+    function sel(el)
+    {
+	window.opener.document.getElementById("ct").innerHTML=el.innerHTML;
+	window.opener.document.getElementById("co").value=el.innerHTML;
+    }
+function rs()
+{
+	//if(w==document.getElementById("d").offsetWidth && h==document.getElementById("d").offsetHeight)return;
+	pnl.layout();
+	//w=document.getElementById("d").offsetWidth;
+	//h=document.getElementById("d").offsetHeight;
+}
+    </SCRIPT>
+</head>
+<body BOTTOMMARGIN="0" LEFTMARGIN="0" RIGHTMARGIN="0" TOPMARGIN="0" ONLOAD="l();" ONRESIZE="rs();">
+<DIV ID="panel_0" STYLE="width:790px;height:474px;">
+<INPUT TYPE="button" ID="bt_0" STYLE="width:24px;" />
+<DIV ID="ct_0" STYLE="width:749px;height:450px;">
+	<TABLE ID="mbotax" ALIGN="center" BGCOLOR="#cccccc" BORDER="1"
+		CELLPADDING="0" CELLSPACING="0" WIDTH="664">
+		<TR>
+			<TD BGCOLOR="#ffffff" COLSPAN="2" VALIGN="top" WIDTH="660">
+				<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="0" HEIGHT="104">
+					<TR>
+						<TD BACKGROUND="http://www.mbotax.com/taxadmin/image/h1.gif"
+							HEIGHT="104" WIDTH="215">
+						</TD>
+						<TD BACKGROUND="http://www.mbotax.com/taxadmin/image/h2.gif"
+							HEIGHT="104" VALIGN="bottom" WIDTH="275">
+							<BR />
+							<IMG BORDER="0" HEIGHT="8" SRC="images/spacer.gif" STYLE="width: 8px;
+								height: 8px" WIDTH="8" /><SPAN STYLE="font-weight: bold; font-size: 16px;
+									width: 219px; color: #ffffff; font-family: Verdana; height: 22px">Online
+									Filing Tax Returns</SPAN><SPAN STYLE="font-weight: bold; font-size: 20px;
+										width: 40px; color: #663399; font-family: 'Times New Roman', Arial;
+										height: 25px">2008</SPAN>
+							<DIV>
+								&nbsp;</DIV>
+						</TD>
+						<TD BACKGROUND="http://www.mbotax.com/taxadmin/image/h2.gif"
+							HEIGHT="104" VALIGN="bottom" WIDTH="180">
+							<A HREF="http://www.netfile.gc.ca/software_mbotax-e.html" STYLE="font-weight: bold;
+								text-decoration: underline" TARGET="_blank">
+								<IMG BORDER="0" SRC="http://www.mbotax.com/taxadmin/image/h3.gif" /></A>
+						</TD>
+					</TR>
+				</TABLE>
+			</TD>
+		</TR>
+		<TR>
+			<TD BGCOLOR="#ffffff" VALIGN="top" WIDTH="481">
+				<TABLE BORDER="0" CELLPADDING="3" CELLSPACING="0" WIDTH="478">
+					<TR>
+						<TD>
+							<BR />
+							<P STYLE="margin-top: 10px; font-weight: bold; font-size: 16px;
+								margin-left: 8px; margin-right: 6px; font-family: Arial">
+								File your tax with NETFILE today</P>
+							<TABLE ALIGN="right" BORDER="0" CELLPADDING="3" CELLSPACING="0"
+								STYLE="width: 102px; height: 170px" WIDTH="102">
+								<TR>
+									<TD>
+										<IMG SRC="http://www.mbotax.com/taxadmin/image/girl1.jpg" STYLE="padding-right: 10px;
+											padding-left: 10px; padding-bottom: 10px; padding-top: 10px" /></TD>
+								</TR>
+							</TABLE>
+							<P STYLE="font-size: 13px; margin-left: 8px; margin-right: 6px;
+								font-family: Arial">
+								<A HREF="http://www.mbotax.com" STYLE="font-weight: bold; text-decoration: underline"
+									TARGET="_blank">MBOTax</A> is a <A HREF="http://www.netfile.gc.ca/software_mbotax-e.html"
+										STYLE="font-weight: bold; text-decoration: underline"
+										TARGET="_blank">NETFILE</A> certified online tax
+								filing application. With MBOTax, filing your tax return has
+								never been so easy !MBOTax, frees you from the hassle of calculating
+								taxes, filling out forms and keeping track of deadlines. With
+								MBOTax, complete your 2007 tax return in about 15 minutes, then
+								simply file it electronically with NETFILE, or print and mail
+								it. You'll get your refund in 10 days ...or even less.<BR />
+								<BR />
+								<A HREF="http://www.mbotax.com" STYLE="font-weight: bold; text-decoration: underline"
+									TARGET="_blank">MBOTax</A> is a featured online product
+								of <A HREF="http://www.mbosoft.com" STYLE="font-weight: bold;
+									text-decoration: underline" TARGET="_blank">MBOSoft</A>.
+								It is easy to use, has a friendly user interface and supports
+								immediate calculation. With the powerful technical support of
+								MBOSoft, you have nothing to worry about.
+							</P>
+							<P STYLE="font-size: 13px; margin-left: 8px; margin-right: 6px;
+								font-family: Arial">
+								<A HREF="http://www.mbotax.com" STYLE="font-weight: bold; text-decoration: underline">
+									File Tax with NETFILE now</A>
+								<BR />
+							</P>
+							<BR />
+						</TD>
+					</TR>
+				</TABLE>
+			</TD>
+			<TD COLSPAN="1" STYLE="background-color: #ff9900" VALIGN="top"
+				WIDTH="163">
+				<A HREF="http://www.mbotax.com" STYLE="font-weight: bold; text-decoration: underline"
+					TARGET="_blank">
+					<BR />
+					<BR />
+					<IMG BORDER="0" SRC="http://www.mbotax.com/images/freetouse.gif" />
+					<BR />
+					<BR />
+					<BR />
+					<IMG BORDER="0" SRC="http://www.mbotax.com/images/offering.gif" /></A></TD>
+		</TR>
+	</TABLE>
+</DIV>
+</DIV>
+<DIV ID="panel_1" STYLE="height:224px;">
+<INPUT TYPE="button" ID="bt_1" />
+<DIV ID="ct_1" STYLE="width:200px;height:200px;"></DIV>
+</DIV>
+</body>
+</html>

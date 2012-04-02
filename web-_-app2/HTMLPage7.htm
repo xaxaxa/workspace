@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="expires" content="0">
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+<META HTTP-EQUIV="imagetoolbar" CONTENT="no">
+<title>Window Simulation with wz_dragdrop.js</title>
+<link rel="stylesheet" type="text/css" href="../../newwalterzorn.css">
+</head>
+<body bgcolor="#ffffff">
+<script type="text/javascript" src="wz_dragdrop.js"></script>
+  <p align="center">
+    &nbsp;<br>
+    <big><b>Window Simulation with wz_dragdrop.js</b></big>
+    <br>
+    (simplyfied example)
+  </p>
+  <p align="center">
+    <a href="demos.htm" target="_top">Back, Zur&uuml;ck</a>
+  </p>  
+  <div id="frame" style="position:absolute;left:130px;top:150px;width:300px;height:240px;border:2px outset #eeeeee;background:#cccccc;visibility:hidden;"></div>
+  <div id="titlebar" style="position:absolute;border:none;background:#4455aa;overflow:hidden;visibility:hidden;"><span style="position:relative;left:2px;top:2px;padding:0px;color:white;font-weight:bold;font-size:11px;font-family:Verdana,Geneva,sans-serif;">&nbsp;Window Simulation</span></div>
+  <div id="clientarea" style="position:absolute;border:2px inset #cccccc;background:white;overflow:auto;visibility:hidden;">
+    <table cellpadding="10">
+      <tr>
+        <td>
+          Instead&nbsp;of&nbsp;nested&nbsp;DIVs,&nbsp;this&nbsp;window&nbsp;simulation uses separate DIVs for outer frame (grey background with outset border), draggable titlebar and 'client area' (white area with inset border).
+          Resize handle and titlebar button are images.
+          <img align="left" src="../../images/dragdrop/ddcham.jpg" width="155" height="95" vspace="5" hspace="5" alt="">
+          By applying the NO_DRAG command or a combination of VERTICAL+HORIZONTAL[1] accordingly, some of these items have been prevented from being draggable by their own.
+          Immediately after SET_DTHML() had been invoked, i.e. while the page was still loading, coherence of these items has been built by use of the API's addChild() method.    
+          The 'User Interface', i.e. the window's responses to mouse events, is completely processed within my_PickFunc(), my_DragFunc() and my_DropFunc()
+          (automatically invoked function bodies for extendes scripting).
+          <br>&nbsp;<br>
+          [1]
+          <br>
+          Different from NO_DRAG, VERTICAL+HORIZONTAL forces the library to consider the item still as Drag&amp;Drop element, triggering my_PickFunc(), my_DragFunc() or my_Drop Func() calls when hit by a mouse event.
+        </td>
+      </tr>
+    </table>      
+  </div>
+  <img name="resizehandle" src="rs.gif" width="20" height="20" alt="" style="visibility:hidden;">
+  <img name="resizebutton" src="rs.gif" width="16" height="14" alt="" style="visibility:hidden;">
+<script type="text/javascript">
+<!--
+
+SET_DHTML("titlebar"+CURSOR_MOVE, "frame"+NO_DRAG, "clientarea"+NO_DRAG, "resizehandle"+MAXOFFLEFT+210+MAXOFFTOP+90+CURSOR_NW_RESIZE, "resizebutton"+VERTICAL+HORIZONTAL);
+
+// Some vars to customize window:
+var frame_padding = 0;
+var titlebar_h = 19;
+var toolbar_h = 20;
+var statusbar_h = 20;
+var clientarea_margin = 4;
+
+// preload button images to ensure un-delayed image swapping    
+var button_down_outset = new Image();
+var button_down_inset = new Image();
+var button_up_outset = new Image();
+var button_up_inset = new Image();
+button_down_outset.src = '../../images/dragdrop/button_down_outset.gif';
+button_down_inset.src = '../../images/dragdrop/button_down_inset.gif';
+button_up_outset.src = '../../images/dragdrop/button_up_outset.gif';
+button_up_inset.src = '../../images/dragdrop/button_up_inset.gif';
+
+// to save window height when window is minimized
+var last_window_h;
+
+
+// initWindow() moves elements to their adequate locations
+// and builds coherences between these elements by converting outer frame, client area and images for resize functionalities
+// to 'childern' of the draggable titlebar 
+function initWindow()
+{
+    dd.elements.titlebar.moveTo(dd.elements.frame.x+2+frame_padding, dd.elements.frame.y+2+frame_padding);
+    dd.elements.titlebar.addChild("frame");
+    dd.elements.titlebar.setZ(dd.elements.frame.z+1); // ensure that titlebar is floating above frame
+    dd.elements.titlebar.resizeTo(dd.elements.frame.w-4-(frame_padding<<1), titlebar_h);
+
+    dd.elements.clientarea.moveTo(dd.elements.frame.x+2+frame_padding+clientarea_margin, dd.elements.titlebar.y+titlebar_h+toolbar_h+clientarea_margin);
+    dd.elements.titlebar.addChild("clientarea");
+    dd.elements.clientarea.resizeTo(dd.elements.frame.w-4-(frame_padding<<1)-(clientarea_margin<<1), dd.elements.frame.h-titlebar_h-toolbar_h-statusbar_h-4-(frame_padding<<1)-clientarea_margin);
+
+    dd.elements.resizehandle.moveTo(dd.elements.frame.x+dd.elements.frame.w-dd.elements.resizehandle.w-2, dd.elements.frame.y+dd.elements.frame.h-dd.elements.resizehandle.h-2);
+    dd.elements.resizebutton.moveTo(dd.elements.titlebar.x+dd.elements.titlebar.w-dd.elements.resizebutton.w-frame_padding-(titlebar_h>>1)+Math.round(dd.elements.resizebutton.w/2), dd.elements.titlebar.y+Math.round(titlebar_h/2)-Math.round(dd.elements.resizebutton.h/2));
+    dd.elements.titlebar.addChild("resizebutton");
+    dd.elements.titlebar.addChild("resizehandle");
+    
+    dd.elements.titlebar.show();
+}
+initWindow();
+
+
+// my_PickFunc, my_DragFunc and my_DropFunc override their namesakes in wz_dragdrop.js
+function my_PickFunc()
+{
+    if (dd.obj.name == "resizebutton")
+    {
+        dd.obj.swapImage(dd.elements.clientarea.visible? button_up_inset.src : button_down_inset.src);
+    }
+}
+
+
+function my_DragFunc()
+{
+    if (dd.obj.name == "resizehandle")
+    {
+        dd.elements.frame.resizeTo(dd.obj.x-dd.elements.frame.x+dd.obj.w+2, dd.obj.y-dd.elements.frame.y+dd.obj.h+2);
+        dd.elements.titlebar.resizeTo(dd.obj.x-dd.elements.titlebar.x+dd.obj.w-frame_padding, titlebar_h);
+        dd.elements.clientarea.resizeTo(dd.elements.frame.w-4-(frame_padding<<1)-(clientarea_margin<<1), dd.elements.frame.h-titlebar_h-toolbar_h-statusbar_h-4-(frame_padding<<1)-clientarea_margin);
+        dd.elements.resizebutton.moveTo(dd.elements.titlebar.x+dd.elements.titlebar.w-dd.elements.resizebutton.w-frame_padding-(titlebar_h>>1)+Math.round(dd.elements.resizebutton.w/2), dd.elements.resizebutton.y);
+    }
+}
+
+
+function my_DropFunc()
+{
+    if (dd.obj.name == "resizebutton")
+    {
+        if (dd.elements.clientarea.visible)
+        {
+            dd.obj.swapImage(button_down_outset.src);
+            dd.elements.clientarea.hide();
+            dd.elements.resizehandle.hide();
+            last_window_h = dd.elements.frame.h;
+            dd.elements.frame.resizeTo(dd.elements.frame.w, titlebar_h+(frame_padding<<1)+4);
+        }
+        else
+        {
+            dd.obj.swapImage(button_up_outset.src);
+            dd.elements.clientarea.show();
+            dd.elements.resizehandle.show();
+            dd.elements.frame.resizeTo(dd.elements.frame.w, last_window_h);
+        }
+    }
+}
+
+//-->
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+

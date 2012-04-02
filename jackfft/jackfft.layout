@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="jackfft" />
-	<File name="jackfft.C" open="1" top="1" tabpos="0">
-		<Cursor position="5133" topLine="185" />
+	<File name="ctrltest.C" open="1" top="0" tabpos="5">
+		<Cursor position="814" topLine="6" />
+	</File>
+	<File name="fftfilter.C" open="1" top="0" tabpos="2">
+		<Cursor position="1208" topLine="37" />
+	</File>
+	<File name="jackfft.C" open="1" top="0" tabpos="1">
+		<Cursor position="5018" topLine="190" />
+	</File>
+	<File name="jackfftc.C" open="1" top="0" tabpos="4">
+		<Cursor position="2958" topLine="139" />
 	</File>
 </CodeBlocks_layout_file>
