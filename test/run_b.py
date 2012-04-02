@@ -1,0 +1,2 @@
+import b
+b.main();
