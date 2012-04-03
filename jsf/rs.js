@@ -25,6 +25,7 @@ function rspanel(e,wnd)
 	this.mov.frameBorder="0";
 	this.mov.scrolling="no";
 	this.mov.style.backgroundImage="url(move.gif)";
+	//this.mov.style.cursor="move";*/
 	wnd.document.body.appendChild(this.mov);
 	
 	this.is_ie=window.is_ie;//(window.navigator.appName.toLowerCase().indexOf("microsoft")>-1);
@@ -44,12 +45,12 @@ function rspanel(e,wnd)
 		var tn;
 		if(e.tagName)tn=e.tagName.toLowerCase();
 		else return false;
-		return ((!e.dock)||e.dock==DOCK_NONE||e.dock==DOCK_CENTERH||e.dock==DOCK_CENTERV)&&tn!="td"&&tn!="tr";
+		return ((!e.dock)||e.dock==DOCK_NONE||e.dock==DOCK_CENTERH||e.dock==DOCK_CENTERV)&&tn!="td"&&tn!="tr"&&tn!="tbody";
 	};
 	this.find_movable_element=function(e)
 	{
 		var e_old=e;
-		while(e && !this.is_movable(e))
+		while(e && !this.is_movable(e) && e!=this.e)
 			e=e.parentNode;
 		if(e) return e;
 		else return e_old;
@@ -59,12 +60,12 @@ function rspanel(e,wnd)
 		var tn;
 		if(e.tagName)tn=e.tagName.toLowerCase();
 		else return false;
-		return ((!e.dock)&&(e.dock!=DOCK_FILL))&&tn!="td"&&tn!="tr";
+		return ((!e.dock)||(e.dock!=DOCK_FILL))&&tn!="td"&&tn!="tr"&&tn!="tbody";
 	};
 	this.find_resizable_element=function(e)
 	{
 		var e_old=e;
-		while(e && !this.is_resizable(e))
+		while(e && !this.is_resizable(e) && e!=this.e)
 			e=e.parentNode;
 		if(e) return e;
 		else return e_old;
@@ -91,36 +92,19 @@ function rspanel(e,wnd)
 		}*/
 		var e_old=e;
 		e=th.find_movable_element(e);
+		//alert(e.outerHTML);
 		//move
 		switch(e.dock)
 		{
 			case DOCK_FILL:
-				th.mov.style.display="none";
-				break;
 			case DOCK_TOP:
-				th.mov.style.display="none";
-				break;
 			case DOCK_BOTTOM:
-				th.mov.style.display="none";
-				break;
 			case DOCK_LEFT:
-				th.mov.style.display="none";
-				break;
 			case DOCK_RIGHT:
-				th.mov.style.display="none";
-				break;
 			case DOCK_CENTER:
-				th.mov.style.display="none";
-				break;
 			case DOCK_TOPLEFT:
-				th.mov.style.display="none";
-				break;
 			case DOCK_TOPRIGHT:
-				th.mov.style.display="none";
-				break;
 			case DOCK_BOTTOMLEFT:
-				th.mov.style.display="none";
-				break;
 			case DOCK_BOTTOMRIGHT:
 				th.mov.style.display="none";
 				break;
@@ -417,8 +401,7 @@ function rspanel(e,wnd)
 		th.mov.contentWindow.document.body.bottomMargin="0";
 		th.mov.contentWindow.document.body.leftMargin="0";
 		th.mov.contentWindow.document.body.rightMargin="0";
-		th.mov.contentWindow.document.body.style.cursor="move";
-		th.mov.contentWindow.document.body.style.backgroundImage="url(move.gif)";
+		th.mov.contentWindow.document.body.style.cssText="cursor:move;background-image:url(move.gif);width:100%;height:100%;margin:0px";
 		th.mov.contentWindow.document.body.rs_img_mode=RS_IMG_MODE_BG;
 		if(typeof wnd.rs_img == "object")
 		{
@@ -551,10 +534,7 @@ function rspanel(e,wnd)
 		{
 			this.rsfd[i]=this.rsf[i].contentWindow.document;
 			this.rsfb[i]=this.rsf[i].contentWindow.document.body;
-			this.rsfb[i].topMargin="0";
-			this.rsfb[i].bottomMargin="0";
-			this.rsfb[i].leftMargin="0";
-			this.rsfb[i].rightMargin="0";
+			this.rsfb[i].style.cssText="margin:0px;width:100%;height:100%;";
 			
 			this.rsfd[i].topMargin="0";
 			this.rsfd[i].bottomMargin="0";
@@ -748,41 +728,24 @@ function rspanel(e,wnd)
 				if(this.rspanel.onchange)this.rspanel.onchange(this.rspanel,this.rspanel.cur_element);
 			};
 		}
-		/*this.rsfd[0].style.cursor="se-resize";
-		this.rsfd[1].style.cursor="s-resize";
-		this.rsfd[2].style.cursor="sw-resize";
-		this.rsfd[3].style.cursor="e-resize";
-		this.rsfd[4].style.cursor="se-resize";
-		this.rsfd[5].style.cursor="s-resize";
-		this.rsfd[6].style.cursor="sw-resize";
-		this.rsfd[7].style.cursor="e-resize";*/
 
-		/*this.rsf[0].style.cursor="se-resize";
-		this.rsf[1].style.cursor="s-resize";
-		this.rsf[2].style.cursor="sw-resize";
-		this.rsf[3].style.cursor="e-resize";
-		this.rsf[4].style.cursor="se-resize";
-		this.rsf[5].style.cursor="s-resize";
-		this.rsf[6].style.cursor="sw-resize";
-		this.rsf[7].style.cursor="e-resize";*/
-
-		this.rsfb[0].style.cursor="se-resize";
-		this.rsfb[1].style.cursor="s-resize";
-		this.rsfb[2].style.cursor="sw-resize";
+		this.rsfb[0].style.cursor="nw-resize";
+		this.rsfb[1].style.cursor="n-resize";
+		this.rsfb[2].style.cursor="ne-resize";
 		this.rsfb[3].style.cursor="e-resize";
 		this.rsfb[4].style.cursor="se-resize";
 		this.rsfb[5].style.cursor="s-resize";
 		this.rsfb[6].style.cursor="sw-resize";
-		this.rsfb[7].style.cursor="e-resize";
+		this.rsfb[7].style.cursor="w-resize";
 
-		this.rsfb[0].innerHTML="<div style='cursor: se-resize;width:100%; height:100%;'></div>";
+		/*this.rsfb[0].innerHTML="<div style='cursor: se-resize;width:100%; height:100%;'></div>";
 		this.rsfb[1].innerHTML="<div style='cursor: s-resize;width:100%; height:100%;'></div>";
 		this.rsfb[2].innerHTML="<div style='cursor: sw-resize;width:100%; height:100%;'></div>";
 		this.rsfb[3].innerHTML="<div style='cursor: e-resize;width:100%; height:100%;'></div>";
 		this.rsfb[4].innerHTML="<div style='cursor: se-resize;width:100%; height:100%;'></div>";
 		this.rsfb[5].innerHTML="<div style='cursor: s-resize;width:100%; height:100%;'></div>";
 		this.rsfb[6].innerHTML="<div style='cursor: sw-resize;width:100%; height:100%;'></div>";
-		this.rsfb[7].innerHTML="<div style='cursor: e-resize;width:100%; height:100%;'></div>";
+		this.rsfb[7].innerHTML="<div style='cursor: e-resize;width:100%; height:100%;'></div>";*/
 	};
 	this.ctrl_onkeypress=function(ev)
 	{
