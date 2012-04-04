@@ -1,4 +1,26 @@
 ﻿window.is_ie=(window.navigator.appName.toLowerCase().indexOf("microsoft")>-1);
+function findPos(obj) {
+ var obj2 = obj;
+ var curtop = 0;
+ var curleft = 0;
+ if (document.getElementById || document.all) {
+  do  {
+   curleft += obj.offsetLeft-obj.scrollLeft;
+   curtop += obj.offsetTop-obj.scrollTop;
+   obj = obj.offsetParent;
+   obj2 = obj2.parentNode;
+   while (obj2!=obj) {
+    curleft -= obj2.scrollLeft;
+    curtop -= obj2.scrollTop;
+    obj2 = obj2.parentNode;
+   }
+  } while (obj.offsetParent)
+ } else if (document.layers) {
+  curtop += obj.y;
+  curleft += obj.x;
+ }
+ return [curleft, curtop];
+}
 function get_x(oElement,t)
 {
 	var iReturnValue = 0;
@@ -10,11 +32,8 @@ function get_x(oElement,t)
 		{
 			//iReturnValue+=(oElement.offsetLeft-oElement.clientLeft);
 			iReturnValue += oElement.clientLeft-oElement.scrollLeft;
+			//iReturnValue += oElement.offsetLeft-oElement.clientLeft;
 		}
-		/*else
-		{
-			
-		}*/
 		oElement = oElement.offsetParent;
 		first=false;
 	}

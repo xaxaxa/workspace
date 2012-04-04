@@ -74,8 +74,8 @@ var layout_element=function(e,d)
 			}
 			if(tmpv<0)tmpv=0;
 			e.style.width=tmpv.toString()+"px";
-			e.style.marginTop=(p.d_t + mt).toString()+"px";
-			e.style.marginLeft=(p.d_l + ml).toString()+"px";
+			e.style.top=(p.d_t + mt).toString()+"px";
+			e.style.left=(p.d_l + ml).toString()+"px";
 			break;
 		case DOCK_BOTTOM:
 			//e.style.width="0px";
@@ -92,8 +92,8 @@ var layout_element=function(e,d)
 			}
 			if(tmpv<0)tmpv=0;
 			e.style.width=tmpv.toString()+"px";
-			e.style.marginTop=(p.d_b - e.offsetHeight - mb).toString()+"px";
-			e.style.marginLeft=(p.d_l + ml).toString()+"px";
+			e.style.top=(p.d_b - e.offsetHeight - mb).toString()+"px";
+			e.style.left=(p.d_l + ml).toString()+"px";
 			break;
 		case DOCK_LEFT:
 			//e.style.height="0px";
@@ -110,8 +110,8 @@ var layout_element=function(e,d)
 			}
 			if(tmpv<0)tmpv=0;
 			e.style.height=tmpv.toString()+"px";
-			e.style.marginTop=(p.d_t + mt).toString()+"px";
-			e.style.marginLeft=(p.d_l + ml).toString()+"px";
+			e.style.top=(p.d_t + mt).toString()+"px";
+			e.style.left=(p.d_l + ml).toString()+"px";
 			break;
 		case DOCK_RIGHT:
 			//e.style.height="0px";
@@ -128,8 +128,8 @@ var layout_element=function(e,d)
 			}
 			if(tmpv<0)tmpv=0;
 			e.style.height=tmpv.toString()+"px";
-			e.style.marginTop=(p.d_t + mt).toString()+"px";
-			e.style.marginLeft=(p.d_r - e.offsetWidth - mr).toString()+"px";
+			e.style.top=(p.d_t + mt).toString()+"px";
+			e.style.left=(p.d_r - e.offsetWidth - mr).toString()+"px";
 			break;
 		case DOCK_FILL:
 			if(e.no_absolute==null)
@@ -138,8 +138,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			e.style.marginTop=(p.d_t + mt).toString()+"px";
-			e.style.marginLeft=(p.d_l + ml).toString()+"px";
+			e.style.top=(p.d_t + mt).toString()+"px";
+			e.style.left=(p.d_l + ml).toString()+"px";
 			//e.style.width="0px";
 			tmpv=(p.d_r - p.d_l - ml - mr);
 			if(!is_ie)
@@ -164,8 +164,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			//e.style.marginTop=(p.d_t + mt).toString()+"px";
-			e.style.marginLeft=(p.d_l + ml).toString()+"px";
+			//e.style.top=(p.d_t + mt).toString()+"px";
+			e.style.left=(p.d_l + ml).toString()+"px";
 			//e.style.width="0px";
 			tmpv=(p.d_r - p.d_l - ml - mr);
 			if(!is_ie)
@@ -190,8 +190,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			e.style.marginTop=(p.d_t + mt).toString()+"px";
-			//e.style.marginLeft=(p.d_l + ml).toString()+"px";
+			e.style.top=(p.d_t + mt).toString()+"px";
+			//e.style.left=(p.d_l + ml).toString()+"px";
 			//e.style.width="0px";
 			/*tmpv=(p.d_r - p.d_l - ml - mr);
 			if(!is_ie)
@@ -216,8 +216,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			e.style.marginTop=(p.d_t + mt)+"px";
-			e.style.marginLeft=(p.d_l + ml)+"px";
+			e.style.top=(p.d_t + mt)+"px";
+			e.style.left=(p.d_l + ml)+"px";
 			break;
 		case DOCK_TOPRIGHT:
 			if(e.no_absolute==null)
@@ -226,8 +226,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			e.style.marginTop=(p.d_t + mt)+"px";
-			e.style.marginLeft=(p.d_r - e.offsetWidth - mr).toString()+"px";
+			e.style.top=(p.d_t + mt)+"px";
+			e.style.left=(p.d_r - e.offsetWidth - mr).toString()+"px";
 			break;
 		case DOCK_BOTTOMLEFT:
 			if(e.no_absolute==null)
@@ -236,8 +236,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			e.style.marginTop=(p.d_b - e.offsetHeight - mb).toString()+"px";
-			e.style.marginLeft=(p.d_l + ml)+"px";
+			e.style.top=(p.d_b - e.offsetHeight - mb).toString()+"px";
+			e.style.left=(p.d_l + ml)+"px";
 			break;
 		case DOCK_BOTTOMRIGHT:
 			if(e.no_absolute==null)
@@ -246,8 +246,8 @@ var layout_element=function(e,d)
 				e.style.top="";
 				e.style.left="";
 			}
-			e.style.marginTop=(p.d_b - e.offsetHeight - mb).toString()+"px";
-			e.style.marginLeft=(p.d_r - e.offsetWidth - mr).toString()+"px";
+			e.style.top=(p.d_b - e.offsetHeight - mb).toString()+"px";
+			e.style.left=(p.d_r - e.offsetWidth - mr).toString()+"px";
 			break;
 		case DOCK_CENTER:
 			if(e.no_absolute==null)
@@ -258,10 +258,10 @@ var layout_element=function(e,d)
 			}
 			nv=(p.d_l + (p.d_r - p.d_l)/2 - e.offsetWidth/2 + (ml - mr));
 			if(nv<0)nv=0;
-			e.style.marginLeft=nv.toString()+"px";
+			e.style.left=nv.toString()+"px";
 			nv=(p.d_t + (p.d_b - p.d_t)/2 - e.offsetHeight/2 + (mt - mb));
 			if(nv<0)nv=0;
-			e.style.marginTop=nv.toString()+"px";
+			e.style.top=nv.toString()+"px";
 			break;
 		case DOCK_CENTERH:
 			if(e.no_absolute==null)
@@ -272,7 +272,7 @@ var layout_element=function(e,d)
 			}
 			nv=(p.d_l + (p.d_r - p.d_l)/2 - e.offsetWidth/2 + (ml - mr));
 			if(nv<0)nv=0;
-			e.style.marginLeft=nv.toString()+"px";
+			e.style.left=nv.toString()+"px";
 			break;
 		case DOCK_CENTERV:
 			if(e.no_absolute==null)
@@ -283,7 +283,7 @@ var layout_element=function(e,d)
 			}
 			nv=(p.d_t + (p.d_b - p.d_t)/2 - e.offsetHeight/2 + (mt - mb));
 			if(nv<0)nv=0;
-			e.style.marginTop=nv.toString()+"px";
+			e.style.top=nv.toString()+"px";
 			break;
 	}
 	switch(d)
