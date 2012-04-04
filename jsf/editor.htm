@@ -1,3 +1,7 @@
+<!DOCTYPE HTML>
+
+<!--<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+-->
 <HTML>
 <HEAD>
 	<TITLE>Troll lol lol</TITLE>
@@ -203,8 +207,8 @@ var propertyitem=
 [//	propertyname(get)		id||code(get)		propertyname(set)||code(set)add "px"	relayout	recalculate points	preset property	nullable
 	["__id",				"prop_id",			"__id",						false,		false,		false,				false],
 	["tagName",				"prop_tag",			"tagName",					false,		true,		true,				false],
-	["style.marginLeft",	"prop_x",			"style.marginLeft",			true,		false,		true,				false],
-	["style.marginTop",		"prop_y",			"style.marginTop",			true,		false,		true,				false],
+	["style.left",			"prop_x",			"style.left",				true,		false,		true,				false],
+	["style.top",			"prop_y",			"style.top",				true,		false,		true,				false],
 	["offsetWidth",			"prop_width",		"style.width",				true,		true,		true,				false],
 	["offsetHeight",		"prop_height",		"style.height",				true,		true,		true,				false],
 	["style.padding",		"prop_padding",		"style.padding",			false,		true,		true,				false],
@@ -290,7 +294,7 @@ var propertyitem=
 		finally
 		{
 			p.layout(e);
-			rs1.calc_points(e);
+			rs1.update_select_points(e);
 		}
 	},											"prop_margin"],
 //	0				1			2				3		4		5			6			7
@@ -378,7 +382,7 @@ function updateproperties(e,i)
 			(new Function("e","i","e."+propertyitem[i][2]+"=(propertyitem[i][3] && document.getElementById(propertyitem[i][1]).value!=\"\") ? (document.getElementById(propertyitem[i][1]).value+\"px\") : (document.getElementById(propertyitem[i][1]).value);"))(e,i);
 		}
 		if(propertyitem[i][4])p.layout(e);
-		if(propertyitem[i][5])rs1.calc_points(rs1.cur_element);
+		if(propertyitem[i][5])rs1.update_select_points(rs1.cur_element);
 	}
 }
 //l()
@@ -430,7 +434,7 @@ function l()
 	sp3.onresize=function()
 	{
 		p.layout(sp3.rs_e);
-		rs1.calc_points(rs1.cur_element);
+		rs1.update_select_points(rs1.cur_element);
 	};
 	rs1=new rspanel(document.getElementById("mainpanel"),window);
 	//document.getElementById("mainpanel").__id="mainpanel";
@@ -626,7 +630,7 @@ function l()
 		{
 			document.getElementById(propertyitem[i][1]).__i=i;
 			document.getElementById(propertyitem[i][1]).onchange=f4;
-			document.getElementById(propertyitem[i][1]).dock=DOCK_FILLH;
+			//document.getElementById(propertyitem[i][1]).dock=DOCK_FILLH;
 			//document.getElementById(propertyitem[i][1]).no_absolute=true;
 			//document.getElementById(propertyitem[i][1]).parentNode.style.overflow="hidden";
 			document.getElementById(propertyitem[i][1]).parentNode.style.height=(document.getElementById(propertyitem[i][1]).offsetHeight+1).toString()+"px";
@@ -635,7 +639,7 @@ function l()
 		{
 			document.getElementById(propertyitem[i][3]).__i=i;
 			document.getElementById(propertyitem[i][3]).onchange=f4;
-			document.getElementById(propertyitem[i][3]).dock=DOCK_FILLH;
+			//document.getElementById(propertyitem[i][3]).dock=DOCK_FILLH;
 			//document.getElementById(propertyitem[i][1]).no_absolute=true;
 			//document.getElementById(propertyitem[i][1]).parentNode.style.overflow="hidden";
 			document.getElementById(propertyitem[i][3]).parentNode.style.height=(document.getElementById(propertyitem[i][3]).offsetHeight+1).toString()+"px";
@@ -652,7 +656,7 @@ function on_rs()
 {
 	if(w==document.getElementById("d").offsetWidth && h==document.getElementById("d").offsetHeight)return;
 	p.layout();
-	rs1.calc_points(rs1.cur_element);
+	rs1.update_select_points(rs1.cur_element);
 	w=document.getElementById("d").offsetWidth;
 	h=document.getElementById("d").offsetHeight;
 }
@@ -771,7 +775,7 @@ function toolbox_btn_onmousedown()
 		document.getElementById("__sp3").style.display="none";
 	}
 	p.layout(document.getElementById("toolbox"));
-	rs1.calc_points(rs1.cur_element);
+	rs1.update_select_points(rs1.cur_element);
 }
 function properties_btn_onmousedown()
 {
@@ -793,7 +797,7 @@ function properties_btn_onmousedown()
 		document.getElementById("__sp1").style.display="none";
 	}
 	p.layout(document.getElementById("properties"));
-	rs1.calc_points(rs1.cur_element);
+	rs1.update_select_points(rs1.cur_element);
 }
 var __w;
 var intv;
@@ -965,17 +969,22 @@ function Button18_onclick()
 function load_callback(t)
 {
 	document.getElementById("mainpanel").innerHTML=t;
-	
 }
 function load_callback_done()
 {
 	try{document.getElementById("ifr1").style.display="none";}catch(ex){}
+	var e=document.getElementById("mainpanel").getElementsByTagName("*");
+	for(var i=0;i<e.length;i++)
+	{
+		if(e[i] && e[i].style)e[i].style.margin="0px";
+	}
+	document.getElementById("mainpanel").style.margin="0px";
 	document.getElementById("mainpanel").__tmpf=rs1.ctrl_onmousedown;
 	document.getElementById("mainpanel").__tmpf(null,true);
 }
 function Button19_onclick()
 {
-	var tmp=prompt("filename","a.xht");
+	var tmp=prompt("filename","a");
 	if(tmp==null)return;
 	try{document.getElementById("ifr1").style.display="";}catch(ex){};
 	document.getElementById("op_fn").value=tmp;
@@ -1045,7 +1054,7 @@ function Button21_onclick()
 	{
 		rs1.cur_element.parentNode.appendChild(rs1.cur_element);
 		p.layout(document.getElementById("mainpanel"));
-		rs1.calc_points(rs1.cur_element);
+		rs1.update_select_points(rs1.cur_element);
 	}
 	catch(ex){alert(ex.message);}
 }
@@ -1056,7 +1065,7 @@ function Button22_onclick()
 	{
 		insertAdjacentElement(rs1.cur_element.parentNode,"afterBegin",rs1.cur_element);
 		p.layout(document.getElementById("mainpanel"));
-		rs1.calc_points(rs1.cur_element);
+		rs1.update_select_points(rs1.cur_element);
 	}
 	catch(ex){alert(ex.message);}
 }
@@ -1115,8 +1124,8 @@ function resetborder()
 </HEAD>
 <BODY ONLOAD="l();" ONRESIZE="on_rs();" BOTTOMMARGIN="0" LEFTMARGIN="0" SCROLL="no"
 	ONMOUSEDOWN="md();" RIGHTMARGIN="0" TOPMARGIN="0" STYLE="overflow: hidden;
-	border: none;">
-	<DIV STYLE="width: 100%; height: 100%; position: absolute; background-color: #d4d0c8;"
+	border: none;margin:0px;padding:0px;">
+	<DIV STYLE="width: 100%; height: 100%; position: absolute; background-color: #d4d0c8;overflow:hidden;"
 		ID="d">
 		<!--<IFRAME ID="rsf0" STYLE="border-right: #000000 1px solid; border-top: #000000 1px solid; border-left: #000000 1px solid; width: 6px; border-bottom: #000000 1px solid; position: absolute; height: 6px; z-index:5;" FRAMEBORDER="0" SCROLLING="no" SRC="about:blank">
 		</IFRAME>
@@ -1160,19 +1169,19 @@ function resetborder()
 			<DIV ID="label2">
 				Dock</DIV>
 			<DIV ID="dockpanel" STYLE="width: 100%; height: 111px; overflow: auto;">
-				<INPUT ID="Button1" TYPE="button" VALUE="top" ONCLICK="rs1.cur_element.dock=DOCK_TOP;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-					ID="Button2" TYPE="button" VALUE="bottom" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOM;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-						ID="Button3" TYPE="button" VALUE="left" ONCLICK="rs1.cur_element.dock=DOCK_LEFT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-							ID="Button4" TYPE="button" VALUE="right" ONCLICK="rs1.cur_element.dock=DOCK_RIGHT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-								ID="Button5" TYPE="button" VALUE="fill" ONCLICK="rs1.cur_element.dock=DOCK_FILL;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-									ID="Button7" TYPE="button" VALUE="topleft" ONCLICK="rs1.cur_element.dock=DOCK_TOPLEFT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-										ID="Button8" TYPE="button" VALUE="topright" ONCLICK="rs1.cur_element.dock=DOCK_TOPRIGHT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-											ID="Button9" TYPE="button" VALUE="bottomleft" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOMLEFT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-												ID="Button10" TYPE="button" VALUE="bottomright" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOMRIGHT;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-													ID="Button11" TYPE="button" VALUE="center" ONCLICK="rs1.cur_element.dock=DOCK_CENTER;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-														ID="Button12" TYPE="button" VALUE="centerh" ONCLICK="rs1.cur_element.dock=DOCK_CENTERH;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-															ID="Button13" TYPE="button" VALUE="centerv" ONCLICK="rs1.cur_element.dock=DOCK_CENTERV;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" /><INPUT
-																ID="Button6" TYPE="button" VALUE="none" ONCLICK="rs1.cur_element.dock=DOCK_NONE;p.layout(document.getElementById('mainpanel'));rs1.calc_points(rs1.cur_element);" />
+				<INPUT ID="Button1" TYPE="button" VALUE="top" ONCLICK="rs1.cur_element.dock=DOCK_TOP;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+					ID="Button2" TYPE="button" VALUE="bottom" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOM;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+						ID="Button3" TYPE="button" VALUE="left" ONCLICK="rs1.cur_element.dock=DOCK_LEFT;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+							ID="Button4" TYPE="button" VALUE="right" ONCLICK="rs1.cur_element.dock=DOCK_RIGHT;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+								ID="Button5" TYPE="button" VALUE="fill" ONCLICK="rs1.cur_element.dock=DOCK_FILL;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+									ID="Button7" TYPE="button" VALUE="topleft" ONCLICK="rs1.cur_element.dock=DOCK_TOPLEFT;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+										ID="Button8" TYPE="button" VALUE="topright" ONCLICK="rs1.cur_element.dock=DOCK_TOPRIGHT;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+											ID="Button9" TYPE="button" VALUE="bottomleft" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOMLEFT;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+												ID="Button10" TYPE="button" VALUE="bottomright" ONCLICK="rs1.cur_element.dock=DOCK_BOTTOMRIGHT;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+													ID="Button11" TYPE="button" VALUE="center" ONCLICK="rs1.cur_element.dock=DOCK_CENTER;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+														ID="Button12" TYPE="button" VALUE="centerh" ONCLICK="rs1.cur_element.dock=DOCK_CENTERH;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+															ID="Button13" TYPE="button" VALUE="centerv" ONCLICK="rs1.cur_element.dock=DOCK_CENTERV;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" /><INPUT
+																ID="Button6" TYPE="button" VALUE="none" ONCLICK="rs1.cur_element.dock=DOCK_NONE;p.layout(document.getElementById('mainpanel'));rs1.update_select_points(rs1.cur_element);" />
 			</DIV>
 			<DIV STYLE="font-size: 1pt; width: 100px; height: 8px;" ID="__sp2">
 			</DIV>
@@ -1187,7 +1196,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_id" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1195,7 +1204,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_tag" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1203,7 +1212,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_x" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1211,7 +1220,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_y" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1219,7 +1228,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_width" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1227,7 +1236,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_height" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1235,7 +1244,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_padding" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1243,7 +1252,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_margin" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1251,7 +1260,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_color" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1259,7 +1268,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_backcolor" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1267,7 +1276,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_value" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1275,7 +1284,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_innerhtml" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1288,7 +1297,6 @@ function resetborder()
 								<OPTION VALUE="hidden">Content is clipped</OPTION>
 								<OPTION VALUE="visible">Content is not clipped</OPTION>
 							</SELECT>
-							&nbsp;
 						</TD>
 					</TR>
 					<TR>
@@ -1301,7 +1309,6 @@ function resetborder()
 								<OPTION VALUE="true">True</OPTION>
 								<OPTION VALUE="false">False</OPTION>
 							</SELECT>
-							&nbsp;
 						</TD>
 					</TR>
 					<TR>
@@ -1320,7 +1327,6 @@ function resetborder()
 								<OPTION VALUE="groove">Groove</OPTION>
 								<OPTION VALUE="ridge">Ridge</OPTION>
 							</SELECT>
-							&nbsp;
 						</TD>
 					</TR>
 					<TR>
@@ -1329,7 +1335,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_borderwidth" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1337,7 +1343,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_bordercolor" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1345,7 +1351,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onmousedown" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1353,7 +1359,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onmouseup" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1361,7 +1367,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onclick" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1369,7 +1375,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onmouseover" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1377,7 +1383,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onmouseout" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1385,7 +1391,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onmousemove" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1393,7 +1399,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onkeydown" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1401,7 +1407,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_onkeyup" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1416,7 +1422,6 @@ function resetborder()
 								<OPTION VALUE="se-resize" STYLE="cursor: se-resize;">se-resize</OPTION>
 								<OPTION VALUE="sw-resize" STYLE="cursor: sw-resize;">sw-resize</OPTION>
 							</SELECT>
-							&nbsp;
 						</TD>
 					</TR>
 					<TR>
@@ -1425,7 +1430,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_src" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1433,7 +1438,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_href" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1441,7 +1446,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_t_bw" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1449,7 +1454,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_t_bc" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1457,7 +1462,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_t_bcd" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1465,7 +1470,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_t_bcl" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1473,7 +1478,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_t_cs" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1481,7 +1486,7 @@ function resetborder()
 						<TD>
 							<INPUT ID="prop_t_cp" STYLE="border-right: #808080 1px solid; border-top: #808080 1px solid;
 								border-left: #808080 1px solid; width: 100%; border-bottom: #808080 1px solid;"
-								TYPE="text" />&nbsp;</TD>
+								TYPE="text" /></TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1494,7 +1499,7 @@ function resetborder()
 								<OPTION VALUE="right">Right</OPTION>
 								<OPTION VALUE="justify">Justify</OPTION>
 							</SELECT>
-							&nbsp;</TD>
+						</TD>
 					</TR>
 					<TR>
 						<TD STYLE="width: 113px">
@@ -1507,7 +1512,7 @@ function resetborder()
 								<OPTION VALUE="middle">Middle</OPTION>
 								<OPTION VALUE="top">Top</OPTION>
 							</SELECT>
-							&nbsp;</TD>
+						</TD>
 					</TR>
 				</TABLE>
 				<INPUT ID="Button20" TYPE="button" VALUE="Change tag name..." LANGUAGE="javascript"
@@ -1541,24 +1546,23 @@ function resetborder()
 				</TD>
 			</TR>
 		</TABLE>
-		<DIV ID="mainpanel" ONSCROLL="rs1.calc_points(rs1.cur_element);" STYLE="width: 302px;
+		<DIV ID="mainpanel" ONSCROLL="rs1.update_select_points(rs1.cur_element);" STYLE="width: 302px;
 			height: 394px; z-index: 3; position: absolute; left: 459px; top: 116px; overflow: auto;
-			background-color: #ffffff; border-right: #eaeaea 2px solid; border-top: #808080 2px solid;
-			border-left: #808080 2px solid; border-bottom: #eaeaea 2px solid;" LANGUAGE="javascript">
-		</DIV>
+			background-color: #ffffff; border-right: #eaeaea 1px solid; border-top: #808080 1px solid;
+			border-left: #808080 1px solid; border-bottom: #eaeaea 1px solid;" LANGUAGE="javascript"></DIV>
 	</DIV>
-	<IFRAME NAME="ajaxf" ID="ajaxf" STYLE="width: 1px; height: 1px; position: absolute"></IFRAME>
-	<FORM STYLE="width: 1px; height: 1px; position: absolute" ID="sf" NAME="sf" ACTION="savef.aspx"
+	<IFRAME NAME="ajaxf" ID="ajaxf" STYLE="width: 1px; height: 1px; position: absolute;display:none;"></IFRAME>
+	<FORM STYLE="width: 1px; height: 1px; position: absolute;display:none;" ID="sf" NAME="sf" ACTION="savef.aspx"
 		TARGET="ajaxf" METHOD="post">
 		<INPUT TYPE="hidden" ID="fn" NAME="fn" />
 		<TEXTAREA STYLE="width: 1px; height: 1px;" NAME="content" ID="content"></TEXTAREA>
 	</FORM>
-	<FORM STYLE="width: 1px; height: 1px; position: absolute" ID="opf" NAME="opf" ACTION="open_xml.aspx"
+	<FORM STYLE="width: 1px; height: 1px; position: absolute;display:none;" ID="opf" NAME="opf" ACTION="open_xml.aspx"
 		TARGET="ajaxf" METHOD="get">
 		<INPUT TYPE="hidden" ID="op_fn" NAME="fn" />
 		<INPUT TYPE="hidden" ID="op_edit" NAME="edit" VALUE="1" />
 	</FORM>
-	<IFRAME SRC="noscript.htm" STYLE="width: 100%; height: 100%; position: absolute;
+	<IFRAME SRC="noscript.htm" STYLE="display:none; width: 100%; height: 100%; position: absolute;
 		top: 0px; left: 0px; z-index: 98; background-color: #ffffff;" ID="ifr1"></IFRAME>
 </BODY>
 </HTML>

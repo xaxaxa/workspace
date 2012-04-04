@@ -1,0 +1,9 @@
+******TO DO LIST FOR JSF EDITOR*******
+- properties do not apply if you click somewhere inside the editor after changing a property value
+- splitter does not work
+- copy&paste and saving when an element is selected destroys the border of the element
+- ctrl-c and ctrl-v does not work
+- right clicking on the "move" icon does not work
+- update to html5 style layout(position:absolute; top:x; left:x; right:x; bottom:x;)
+
+
