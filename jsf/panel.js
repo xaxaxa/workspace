@@ -57,233 +57,87 @@ var layout_element=function(e,d)
 		mr=e.margin;
 	}
 	var tmpv;
+	e.style.margin=null;
+	if(!e.no_absolute)
+	{
+		e.style.position="absolute";
+	}
 	switch(d)
 	{
 		case DOCK_TOP:
-			//e.style.width="0px";
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			tmpv=(p.d_r - p.d_l - ml - mr);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetWidth-e.clientWidth;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.width=tmpv.toString()+"px";
+			e.style.width=e.style.bottom=null;
 			e.style.top=(p.d_t + mt).toString()+"px";
 			e.style.left=(p.d_l + ml).toString()+"px";
+			e.style.right=(p.d_r - mr).toString()+"px";
 			break;
 		case DOCK_BOTTOM:
-			//e.style.width="0px";
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			tmpv=(p.d_r - p.d_l - ml - mr);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetWidth-e.clientWidth;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.width=tmpv.toString()+"px";
-			e.style.top=(p.d_b - e.offsetHeight - mb).toString()+"px";
+			e.style.top=e.style.width=null;
+			e.style.bottom=(p.d_b - mb).toString()+"px";
 			e.style.left=(p.d_l + ml).toString()+"px";
+			e.style.right=(p.d_r - mr).toString()+"px";
 			break;
 		case DOCK_LEFT:
-			//e.style.height="0px";
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			tmpv=(p.d_b - p.d_t - mt - mb);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetHeight-e.clientHeight;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.height=tmpv.toString()+"px";
+			e.style.height=e.style.right=null;
 			e.style.top=(p.d_t + mt).toString()+"px";
 			e.style.left=(p.d_l + ml).toString()+"px";
+			e.style.bottom=(p.d_b - mb).toString()+"px";
 			break;
 		case DOCK_RIGHT:
-			//e.style.height="0px";
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			tmpv=(p.d_b - p.d_t - mt - mb);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetHeight-e.clientHeight;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.height=tmpv.toString()+"px";
+			e.style.height=e.style.left=null;
 			e.style.top=(p.d_t + mt).toString()+"px";
-			e.style.left=(p.d_r - e.offsetWidth - mr).toString()+"px";
+			e.style.bottom=(p.d_b - mb).toString()+"px";
+			e.style.right=(p.d_r - mr).toString()+"px";
 			break;
 		case DOCK_FILL:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
+			e.style.height=e.style.width=null;
 			e.style.top=(p.d_t + mt).toString()+"px";
 			e.style.left=(p.d_l + ml).toString()+"px";
-			//e.style.width="0px";
-			tmpv=(p.d_r - p.d_l - ml - mr);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetWidth-e.clientWidth;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.width=tmpv.toString()+"px";
-			//e.style.height="0px";
-			tmpv=(p.d_b - p.d_t - mt - mb);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetHeight-e.clientHeight;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.height=tmpv.toString()+"px";
+			e.style.bottom=(p.d_b - mb).toString()+"px";
+			e.style.right=(p.d_r - mr).toString()+"px";
 			break;
 		case DOCK_FILLH:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			//e.style.top=(p.d_t + mt).toString()+"px";
+			e.style.bottom=e.style.width=null;
 			e.style.left=(p.d_l + ml).toString()+"px";
-			//e.style.width="0px";
-			tmpv=(p.d_r - p.d_l - ml - mr);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetWidth-e.clientWidth;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.width=tmpv.toString()+"px";
-			//e.style.height="0px";
-			/*tmpv=(p.d_b - p.d_t - mt - mb);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetHeight-e.clientHeight;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.height=tmpv.toString()+"px";*/
+			e.style.right=(p.d_r - mr).toString()+"px";
 			break;
 		case DOCK_FILLV:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
+			e.style.right=e.style.height=null;
 			e.style.top=(p.d_t + mt).toString()+"px";
-			//e.style.left=(p.d_l + ml).toString()+"px";
-			//e.style.width="0px";
-			/*tmpv=(p.d_r - p.d_l - ml - mr);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetWidth-e.clientWidth;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.width=tmpv.toString()+"px";*/
-			//e.style.height="0px";
-			tmpv=(p.d_b - p.d_t - mt - mb);
-			if(!is_ie)
-			{
-				tmpv-=e.offsetHeight-e.clientHeight;
-			}
-			if(tmpv<0)tmpv=0;
-			e.style.height=tmpv.toString()+"px";
+			e.style.bottom=(p.d_b - mb).toString()+"px";
 			break;
 		case DOCK_TOPLEFT:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
+			e.style.right=e.style.bottom=null;
 			e.style.top=(p.d_t + mt)+"px";
 			e.style.left=(p.d_l + ml)+"px";
 			break;
 		case DOCK_TOPRIGHT:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
+			e.style.bottom=e.style.left=null;
 			e.style.top=(p.d_t + mt)+"px";
-			e.style.left=(p.d_r - e.offsetWidth - mr).toString()+"px";
+			e.style.right=(p.d_r - mr)+"px";
 			break;
 		case DOCK_BOTTOMLEFT:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			e.style.top=(p.d_b - e.offsetHeight - mb).toString()+"px";
+			e.style.top=e.style.right=null;
+			e.style.bottom=(p.d_b - mb)+"px";
 			e.style.left=(p.d_l + ml)+"px";
 			break;
 		case DOCK_BOTTOMRIGHT:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			e.style.top=(p.d_b - e.offsetHeight - mb).toString()+"px";
-			e.style.left=(p.d_r - e.offsetWidth - mr).toString()+"px";
+			e.style.top=e.style.left=null;
+			e.style.bottom=(p.d_b - mb)+"px";
+			e.style.right=(p.d_r - mr)+"px";
 			break;
 		case DOCK_CENTER:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			nv=(p.d_l + (p.d_r - p.d_l)/2 - e.offsetWidth/2 + (ml - mr));
-			if(nv<0)nv=0;
-			e.style.left=nv.toString()+"px";
-			nv=(p.d_t + (p.d_b - p.d_t)/2 - e.offsetHeight/2 + (mt - mb));
-			if(nv<0)nv=0;
-			e.style.top=nv.toString()+"px";
+			e.style.top=e.style.bottom=e.style.left=e.style.right="0px";
+			e.style.margin="auto";
 			break;
 		case DOCK_CENTERH:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			nv=(p.d_l + (p.d_r - p.d_l)/2 - e.offsetWidth/2 + (ml - mr));
-			if(nv<0)nv=0;
-			e.style.left=nv.toString()+"px";
+			e.style.top=e.style.bottom="0px";
+			e.style.right=null;
+			e.style.marginLeft=e.style.marginRight="auto";
 			break;
 		case DOCK_CENTERV:
-			if(e.no_absolute==null)
-			{
-				e.style.position="absolute";
-				e.style.top="";
-				e.style.left="";
-			}
-			nv=(p.d_t + (p.d_b - p.d_t)/2 - e.offsetHeight/2 + (mt - mb));
-			if(nv<0)nv=0;
-			e.style.top=nv.toString()+"px";
+			e.style.left=e.style.right="0px";
+			e.style.bottom=null;
+			e.style.marginTop=e.style.marginBottom="auto";
 			break;
 	}
 	switch(d)
@@ -292,13 +146,13 @@ var layout_element=function(e,d)
 			p.d_t+=(e.offsetHeight + mt + mb);
 			break;
 		case DOCK_BOTTOM:
-			p.d_b-=(e.offsetHeight + mt + mb);
+			p.d_b+=(e.offsetHeight + mt + mb);
 			break;
 		case DOCK_LEFT:
 			p.d_l+=(e.offsetWidth + ml + mr);
 			break;
 		case DOCK_RIGHT:
-			p.d_r-=(e.offsetWidth + ml + mr);
+			p.d_r+=(e.offsetWidth + ml + mr);
 			break;
 	}
 };
@@ -312,8 +166,8 @@ function layout_document()
 			{
 				el[i].d_t=0;
 				el[i].d_l=0;
-				el[i].d_r=el[i].clientWidth;
-				el[i].d_b=el[i].clientHeight;
+				el[i].d_r=0;
+				el[i].d_b=0;
 			}
 		}
 		for(i=0;i<el.length;i++)
@@ -379,8 +233,8 @@ function panel(e,wnd)
 					{
 						el[i].d_t=0;
 						el[i].d_l=0;
-						el[i].d_r=el[i].clientWidth;
-						el[i].d_b=el[i].clientHeight;
+						el[i].d_r=0;
+						el[i].d_b=0;
 						var mt,mb,ml,mr;
 						var e=el[i];
 						mt=((e.paddingtop==null) ? 0 : e.paddingtop);
@@ -406,8 +260,8 @@ function panel(e,wnd)
 						}
 						el[i].d_t+=mt;
 						el[i].d_l+=ml;
-						el[i].d_r-=mr;
-						el[i].d_b-=mb;
+						el[i].d_r+=mr;
+						el[i].d_b+=mb;
 					}
 				}
 			}
@@ -427,8 +281,8 @@ function panel(e,wnd)
 					layout_element(el[i],el[i].dock);
 					e.d_t=0;
 					e.d_l=0;
-					e.d_r=e.clientWidth;
-					e.d_b=e.clientHeight;
+					e.d_r=0;
+					e.d_b=0;
 					var mt,mb,ml,mr;
 					mt=((e.paddingtop==null) ? 0 : e.paddingtop);
 					mb=((e.paddingbottom==null) ? 0 : e.paddingbottom);
@@ -453,8 +307,8 @@ function panel(e,wnd)
 					}
 					e.d_t+=mt;
 					e.d_l+=ml;
-					e.d_r-=mr;
-					e.d_b-=mb;
+					e.d_r+=mr;
+					e.d_b+=mb;
 				}
 			}
 		}

@@ -474,17 +474,19 @@ function l()
 	[//	text			onclick
 		["Cut",		function(item)
 		{
-			resetborder();
-			window.top.cb_data=clone_node2(rs1.cur_element);//rs1.cur_element;
-			var p=rs1.cur_element.parentNode;
-			p.removeChild(rs1.cur_element);
-			p.__tmpf=rs1.ctrl_onmousedown;
-			p.__tmpf(null,true);
+			var aaaaa=rs1.cur_element;
+			rs1.select_element(null);
+			window.top.cb_data=clone_node2(aaaaa);//rs1.cur_element;
+			var p=aaaaa.parentNode;
+			p.removeChild(aaaaa);
+			rs1.select_element(p);
 		}],
 		["Copy",		function(item)
 		{
-			resetborder();
-			window.top.cb_data=clone_node2(rs1.cur_element);//rs1.cur_element;
+			var aaaaa=rs1.cur_element;
+			rs1.select_element(null);
+			window.top.cb_data=clone_node2(aaaaa);//rs1.cur_element;
+			rs1.select_element(aaaaa);
 		}],
 		["Paste",		function(item)
 		{
@@ -500,8 +502,7 @@ function l()
 				//rs1.add(n);
 				addelement(n);
 				p.layout(document.getElementById("mainpanel"));
-				n.__tmpf=rs1.ctrl_onmousedown;
-				n.__tmpf(null,true);
+				rs1.select_element(n);
 			}
 		}],
 		["Paste In Place",	function(item)
@@ -538,6 +539,7 @@ function l()
 	};
 	rs1.onselect=function(th,e)
 	{
+		if(!e)return;
 		p.layout(e);
 		showproperties(e);
 	};
@@ -554,15 +556,15 @@ function l()
 	var f3=new Function("this.style.backgroundColor='';this.style.color='';");
 	var f5=new Function("this.__cmd(this.__item);");
 	var toolboxitems=
-	[//	description	tagname	style												type		innerHTML
-		["Button",	"button",	"width:70px;height:24px",									"button",	null],
-		["Panel",	"div",		"width:100px;height:100px;border:#000000 1px solid;",					null,		null],
-		["Label",	"div",		"",												null,		"Label"],
-		["Image",	"img",		"",												null,		null],
-		["Link",	"a",		"width:70px;height:24px;text-decoration:underline;cursor:hand;",			null,		"Link"],
-		["Table",	"table",	"width:100px;height:100px",									null,		null],
-		["Text Field","input",	"width:100px;height:24px",									"text",	null],
-		["Text Box",	"textarea",	"width:200px;height:150px",									null,		null]
+	[//	description		tagname		style															type		innerHTML
+		["Button",		"button",	"width:70px;height:24px",										"button",	null],
+		["Panel",		"div",		"width:100px;height:100px;border:#000000 1px solid;",			null,		null],
+		["Label",		"div",		"",																null,		"Label"],
+		["Image",		"img",		"",																null,		null],
+		["Link",		"a",		"width:70px;height:24px;text-decoration:underline;cursor:hand;",null,		"Link"],
+		["Table",		"table",	"width:100px;height:100px",										null,		null],
+		["Text Field","	input",		"width:100px;height:24px",										"text",		null],
+		["Text Box",	"textarea",	"width:200px;height:150px",										null,		null]
 	];
 	var toolboxitems2=
 	[//	description	function
@@ -647,6 +649,7 @@ function l()
 	}
 	document.getElementById("properties").style.display="none";
 	try{document.getElementById("ifr1").style.display="none";}catch(ex){}
+	rs1.select_element(document.getElementById("mainpanel"));
 	p.layout();
 	openfile(prompt("page"));
 }
@@ -655,7 +658,7 @@ var w,h;
 function on_rs()
 {
 	if(w==document.getElementById("d").offsetWidth && h==document.getElementById("d").offsetHeight)return;
-	p.layout();
+	//p.layout();
 	rs1.update_select_points(rs1.cur_element);
 	w=document.getElementById("d").offsetWidth;
 	h=document.getElementById("d").offsetHeight;
@@ -831,12 +834,10 @@ function Button17_onclick()
 //save()
 function save()
 {
-	resetborder();
+	var aaaaa=rs1.cur_element;
+	rs1.select_element(null);
 	document.getElementById("content").value=save_e(document.getElementById("mainpanel"));
-	if(rs1.cur_element)
-	{
-		rs1.cur_element.style.border="#000000 1px dotted";
-	}
+	rs1.select_element(aaaaa);
 	var tmp=prompt("filename","a.xht");
 	if(tmp==null)return;
 	document.getElementById("fn").value=tmp;
@@ -956,7 +957,7 @@ function save_e(e)
 		x+=e.innerHTML;
 		x+="]]>";
 	}
-	x+="</control>";
+	x+="<"+"/control>";
 	return x;
 }
 function Button18_onclick()
@@ -979,8 +980,7 @@ function load_callback_done()
 		if(e[i] && e[i].style)e[i].style.margin="0px";
 	}
 	document.getElementById("mainpanel").style.margin="0px";
-	document.getElementById("mainpanel").__tmpf=rs1.ctrl_onmousedown;
-	document.getElementById("mainpanel").__tmpf(null,true);
+	rs1.select_element(document.getElementById("mainpanel"));
 }
 function Button19_onclick()
 {
@@ -1001,12 +1001,10 @@ function savefile(fn)
 {
 	if(fn==null)return;
 	try{document.getElementById("ifr1").style.display="";}catch(ex){};
-	resetborder();
+	var aaaaa=rs1.cur_element;
+	rs1.select_element(null);
 	document.getElementById("content").value=save_e(document.getElementById("mainpanel"));
-	if(rs1.cur_element)
-	{
-		rs1.cur_element.style.border="#000000 1px dotted";
-	}
+	rs1.select_element(aaaaa);
 	document.getElementById("fn").value=fn;
 	document.forms["sf"].submit();
 }
@@ -1016,9 +1014,8 @@ function save_callback()
 }
 function Button20_onclick()
 {
-	resetborder();
-
 	var e=rs1.cur_element;
+	rs1.select_element(null);
 	if(e==null)return;
 	var v=prompt("tagname",e.tagName);
 	if(v==null)return;
@@ -1043,8 +1040,7 @@ function Button20_onclick()
 	newelement.style.cssText=e.style.cssText;
 	newelement.innerHTML=e.innerHTML;
 	e.parentNode.removeChild(e);
-	newelement.__tmpf=newelement.onmousedown;
-	newelement.__tmpf(null,true);
+	rs1.select_element(new_element);
 	//document.body.insertAdjacentElement(
 }
 
@@ -1071,7 +1067,7 @@ function Button22_onclick()
 }
 function resetborder()
 {
-	if(rs1.cur_element)
+	/*if(rs1.cur_element)
 	{
 		rs1.cur_element.style.borderTop=rs1.cur_element.__bordertop;
 		rs1.cur_element.style.borderBottom=rs1.cur_element.__borderbottom;
@@ -1116,10 +1112,10 @@ function resetborder()
 			rs1.cur_element.style.borderColor=rs1.cur_element.__bordercolor;
 			rs1.cur_element.__bordercolor=null;
 		}
-	}
+	}*/
+	rs1.select_element(null);
 }
-
-	</SCRIPT>
+</SCRIPT>
 
 </HEAD>
 <BODY ONLOAD="l();" ONRESIZE="on_rs();" BOTTOMMARGIN="0" LEFTMARGIN="0" SCROLL="no"

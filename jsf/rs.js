@@ -73,7 +73,7 @@ function rspanel(e,wnd)
 	this.recalc_move_points=function(e)
 	{
 		var th=this;
-		var tmp=findPos(e);
+		var tmp=get_pos(e);
 		th.mov.style.top=(offsety+tmp[1]-th.mov.offsetHeight)+"px";
 		th.mov.style.left=(offsetx+tmp[0])+"px";
 	};
@@ -282,43 +282,29 @@ function rspanel(e,wnd)
 		
 		th.recalc_points();
 	};
-	this.ctrl_onmousedown=function(ev,param2)
+	this.select_element=function(e)
 	{
-		var e;
-		if(ev)
-			e=ev;
-		else
-			e=window.event;
-		if(e)e.cancelBubble=true;
-		var th=this.rspanel;
+		var th=this;
 		if(th.rs==9)
 		{
 			th.rs=0;
 			th.update_select_points(th.cur_element);
 			if(th.wnd.on_endresize)
 			{
-				th.wnd.on_endresize(this);
+				th.wnd.on_endresize(e);
 			}
 			if(th.onchange)th.onchange(th,th.cur_element);
 		}
 		else if(th.rs!=0 && th.rs!=null)
 		{
-			this.rspanel.update_select_points(this.rspanel.cur_element);
-			this.rspanel.rs=0;
-			if(this.rspanel.onchange)this.rspanel.onchange(this.rspanel,this.rspanel.cur_element);
+			th.update_select_points(th.cur_element);
+			th.rs=0;
+			if(th.onchange)th.onchange(th,th.cur_element);
 		}
 		if(th.cur_element != null)
 		{
-			if(th.cur_element==this)
-			{
-				if(th.onmousedown)
-					if(!param2)
-						th.onmousedown(th,this);
+			if(th.cur_element==e)
 				return;
-			}
-			/*if(th.cur_element.__border != null)
-			{*/
-			//alert(th.cur_element.__border);
 			th.cur_element.style.borderTop=th.cur_element.__bordertop;
 			th.cur_element.style.borderBottom=th.cur_element.__borderbottom;
 			th.cur_element.style.borderLeft=th.cur_element.__borderleft;
@@ -362,66 +348,33 @@ function rspanel(e,wnd)
 				th.cur_element.style.borderColor=th.cur_element.__bordercolor;
 				th.cur_element.__bordercolor=null;
 			}
-			//}
 		}
-		th.cur_element=this;
-		/*th.rsf[0].style.top=offsety+gety(this)-th.rsf[0].offsetHeight+1;
-		th.rsf[0].style.left=offsetx+getx(this)-th.rsf[0].offsetWidth+1;
-
-		th.rsf[1].style.top=offsety+gety(this)-th.rsf[1].offsetHeight;
-		th.rsf[1].style.left=offsetx+getx(this)+(this.offsetWidth/2)-(th.rsf[1].offsetWidth/2);
-
-		th.rsf[2].style.top=offsety+gety(this)-th.rsf[2].offsetHeight+1;
-		th.rsf[2].style.left=offsetx+getx(this)+this.offsetWidth-1;
-
-		th.rsf[3].style.top=offsety+gety(this)+(this.offsetHeight/2)-(th.rsf[3].offsetHeight/2);
-		th.rsf[3].style.left=offsetx+getx(this)+this.offsetWidth;
-
-		th.rsf[4].style.top=offsety+gety(this)+this.offsetHeight-1;
-		th.rsf[4].style.left=offsetx+getx(this)+this.offsetWidth-1;
-
-		th.rsf[5].style.top=offsety+gety(this)+this.offsetHeight;
-		th.rsf[5].style.left=offsetx+getx(this)+(this.offsetWidth/2)-(th.rsf[5].offsetWidth/2);
-
-		th.rsf[6].style.top=offsety+gety(this)+this.offsetHeight-1;
-		th.rsf[6].style.left=offsetx+getx(this)-th.rsf[6].offsetWidth+1;
-
-		th.rsf[7].style.top=offsety+gety(this)+(this.offsetHeight/2)-(th.rsf[7].offsetHeight/2);
-		th.rsf[7].style.left=offsetx+getx(this)-th.rsf[7].offsetWidth;*/
-		e=this;
-		//if(e.__bordertop==null)
-		//{
-		e.__bordertop=e.style.borderTop;
-		//}
-		//if(e.__borderbottom==null)
-		//{
-		e.__borderbottom=e.style.borderBottom;
-		//}
-		//if(e.__borderleft==null)
-		//{
-		e.__borderleft=e.style.borderLeft;
-		//}
-		//if(e.__borderright==null)
-		//{
-		e.__borderright=e.style.borderRight;
-		//}
-		//if(e.__borderstyle1==null)
-		//{
-		e.__borderstyle1=e.style.borderStyle;
-		//}
-		//if(e.__borderwidth1==null)
-		//{
-		e.__borderwidth1=e.style.borderWidth;
-		//}
-		//if(e.__bordercolor1==null)
-		//{
-		e.__bordercolor1=e.style.borderColor;
-		//}
-		e.style.border="#000000 1px dotted";
-		th.update_select_points(this);
-		//if(e)
+		th.cur_element=e;
+		if(e)
+		{
+			e.__bordertop=e.style.borderTop;
+			e.__borderbottom=e.style.borderBottom;
+			e.__borderleft=e.style.borderLeft;
+			e.__borderright=e.style.borderRight;
+			e.__borderstyle1=e.style.borderStyle;
+			e.__borderwidth1=e.style.borderWidth;
+			e.__bordercolor1=e.style.borderColor;
+			e.style.border="#000000 1px dotted";
+			th.update_select_points(e);
+		}
 		if(th.onselect)
-			th.onselect(th,this);
+			th.onselect(th,e);
+	};
+	this.ctrl_onmousedown=function(ev,param2)
+	{
+		var e;
+		if(ev)
+			e=ev;
+		else
+			e=window.event;
+		if(e)e.cancelBubble=true;
+		var th=this.rspanel;
+		th.select_element(this);
 		if(th.onmousedown)
 			if(!param2)
 				th.onmousedown(th,this);

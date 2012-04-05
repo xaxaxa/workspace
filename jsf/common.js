@@ -21,6 +21,24 @@ function findPos(obj) {
  }
  return [curleft, curtop];
 }
+function get_pos(e,t)
+{
+	var ret = [0,0];
+	var first=true;
+	while( e != null )
+	{
+		ret[0] += e.offsetLeft;
+		ret[1] += e.offsetTop;
+		if(!first)
+		{
+			ret[0] += e.clientLeft-e.scrollLeft;
+			ret[1] += e.clientTop-e.scrollTop;
+		}
+		e = e.offsetParent;
+		first=false;
+	}
+	return ret;
+}
 function get_x(oElement,t)
 {
 	var iReturnValue = 0;
