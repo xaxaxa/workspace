@@ -334,6 +334,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
     <property name="can_focus">False</property>
     <property name="default_width">600</property>
     <property name="default_height">350</property>
+    <property name="icon">trollface200.png</property>
     <child>
       <object class="GtkTable" id="table1">
         <property name="visible">True</property>

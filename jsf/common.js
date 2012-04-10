@@ -77,7 +77,16 @@ function get_y(oElement,t)
 	//if(!is_ie)iReturnValue+=2;
 	return iReturnValue;
 }
-
+function isChild(parent, child) {
+     var node = child.parentNode;
+     while (node != null) {
+         if (node == parent) {
+             return true;
+         }
+         node = node.parentNode;
+     }
+     return false;
+}
 function insertAdjacentElement(p,where,parsedNode)
 {
 	switch (where)

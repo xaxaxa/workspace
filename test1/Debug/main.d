@@ -1,20 +1,7 @@
-main.d: ../main.cpp /home/xaxaxa/workspace/cplib/headers/cplib.hpp \
- /home/xaxaxa/workspace/cplib/headers/lock.hpp \
- /home/xaxaxa/workspace/cplib/headers/asyncsock.hpp \
- /home/xaxaxa/workspace/cplib/headers/cplib.hpp \
- /home/xaxaxa/workspace/cplib/headers/asyncfile.hpp ../JoinStream.h \
- ../socketmux.h
-
-/home/xaxaxa/workspace/cplib/headers/cplib.hpp:
-
-/home/xaxaxa/workspace/cplib/headers/lock.hpp:
-
-/home/xaxaxa/workspace/cplib/headers/asyncsock.hpp:
-
-/home/xaxaxa/workspace/cplib/headers/cplib.hpp:
-
-/home/xaxaxa/workspace/cplib/headers/asyncfile.hpp:
+main.d: ../main.cpp ../JoinStream.h ../socketmux.h ../iptsocks.H
 
 ../JoinStream.h:
 
 ../socketmux.h:
+
+../iptsocks.H:

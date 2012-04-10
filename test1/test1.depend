@@ -1,0 +1,48 @@
+# depslib dependency file v1.0
+1333942594 source:/home/xaxatrollo/workspace/test1/JoinStream.cpp
+	"JoinStream.h"
+	<cplib/cplib.hpp>
+
+1333955913 /home/xaxatrollo/workspace/test1/JoinStream.h
+	<cplib/cplib.hpp>
+
+1331957280 source:/home/xaxatrollo/workspace/test1/asdfghjkl.cpp
+	"asdfghjkl.h"
+
+1331957280 /home/xaxatrollo/workspace/test1/asdfghjkl.h
+
+1333944236 source:/home/xaxatrollo/workspace/test1/main.cpp
+	<iostream>
+	<cplib/cplib.hpp>
+	<cplib/asyncsock.hpp>
+	<cplib/asyncfile.hpp>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<errno.h>
+	"JoinStream.h"
+	"socketmux.h"
+	<boost/shared_ptr.hpp>
+
+1333955948 /home/xaxatrollo/workspace/test1/socketmux.h
+	<cplib/cplib.hpp>
+	<map>
+	<list>
+	<memory>
+
+1333956030 source:/home/xaxatrollo/workspace/test1/socketmux.cpp
+	"socketmux.h"
+
+1333954649 source:/home/xaxatrollo/workspace/test1/iptsocks.C
+	<iostream>
+	<cplib/cplib.hpp>
+	<cplib/asyncsock.hpp>
+	<cplib/asyncfile.hpp>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<errno.h>
+	"JoinStream.h"
+	"socketmux.h"
+	<boost/shared_ptr.hpp>
+

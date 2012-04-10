@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="CacheManager.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="108" topLine="0" />
+	</File>
+	<File name="IStorage.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="213" topLine="0" />
+	</File>
+	<File name="IStorage.h" open="1" top="1" tabpos="3">
+		<Cursor position="1043" topLine="19" />
+	</File>
+	<File name="StorageManager.cpp" open="1" top="0" tabpos="4">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="StorageManager.h" open="1" top="0" tabpos="5">
+		<Cursor position="15236" topLine="98" />
+	</File>
+</CodeBlocks_layout_file>

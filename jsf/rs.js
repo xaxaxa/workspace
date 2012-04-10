@@ -777,9 +777,7 @@ function rspanel(e,wnd)
 	{
 		if(ctrl==null)return;
 		if(p==null)p=this.e;
-		ctrl.onmousedown=this.ctrl_onmousedown;
-		ctrl.onkeypress=this.ctrl_onkeypress;
-		ctrl.rspanel=this;
+		this.add(ctrl);
 		ctrl.style.position="absolute";
 		p.appendChild(ctrl);
 	};
@@ -788,6 +786,7 @@ function rspanel(e,wnd)
 		if(ctrl==null)return;
 		ctrl.onmousedown=this.ctrl_onmousedown;
 		ctrl.onkeypress=this.ctrl_onkeypress;
+		ctrl.onscroll=function(){if(this.rspanel.cur_element && isChild(this,this.rspanel.cur_element))this.rspanel.recalc_points();};
 		ctrl.rspanel=this;
 	};
 	this.intv=wnd.setInterval(new Function("\

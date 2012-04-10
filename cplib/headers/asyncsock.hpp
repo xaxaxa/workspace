@@ -24,7 +24,7 @@ namespace xaxaxa
 {
 	namespace Sockets
 	{
-		typedef int SOCKET;
+		typedef FILEDES SOCKET;
 #define CreateSocket(domain,type,protocol) socket(domain,type,protocol);
 
 		struct IPAddress
@@ -35,7 +35,7 @@ namespace xaxaxa
 			{
 				inet_pton(AF_INET, addr, &a.s_addr);
 			}
-			inline IPAddress(in_addr& a)
+			inline IPAddress(const in_addr& a)
 			{
 				this->a=a;
 			}
@@ -48,7 +48,7 @@ namespace xaxaxa
 			{
 				inet_pton(AF_INET6, addr, &a.__in6_u);
 			}
-			inline IPv6Address(in6_addr& a)
+			inline IPv6Address(const in6_addr& a)
 			{
 				this->a=a;
 			}
@@ -57,9 +57,11 @@ namespace xaxaxa
 		{
 		public:
 			int AddressFamily;
-			virtual void GetSockAddr(sockaddr* addr)=0;
-			virtual int GetSockAddrSize()=0;
-			static EndPoint* FromSockAddr(sockaddr* addr);
+			virtual void GetSockAddr(sockaddr* addr) const=0;
+			virtual void SetSockAddr(const sockaddr* addr)=0;
+			virtual int GetSockAddrSize() const=0;
+			static EndPoint* FromSockAddr(const sockaddr* addr);
+			static EndPoint* CreateNull(int AddressFamily);
 			//static EndPoint Resolve(
 		};
 		class IPEndPoint:public EndPoint
@@ -74,20 +76,29 @@ namespace xaxaxa
 				this->Address=address;
 				this->Port=port;
 			}
-			IPEndPoint(sockaddr_in& addr)
+			void set_addr(const sockaddr_in& addr)
 			{
 				this->AddressFamily=AF_INET;
 				this->Address=IPAddress(addr.sin_addr);
 				this->Port=ntohs(addr.sin_port);
 			}
-			virtual void GetSockAddr(sockaddr* addr)
+			virtual void SetSockAddr(const sockaddr* addr)
+			{
+				if(addr->sa_family!=AF_INET)throw Exception("attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
+				set_addr(*(sockaddr_in*)addr);
+			}
+			IPEndPoint(const sockaddr_in& addr)
+			{
+				set_addr(addr);
+			}
+			virtual void GetSockAddr(sockaddr* addr) const
 			{
 				sockaddr_in* addr_in=(sockaddr_in*)addr;
 				addr_in->sin_family=AF_INET;
 				addr_in->sin_port=htons(Port);
 				addr_in->sin_addr=Address.a;
 			}
-			virtual int GetSockAddrSize()
+			virtual int GetSockAddrSize() const
 			{
 				return sizeof(sockaddr_in);
 			}
@@ -104,20 +115,29 @@ namespace xaxaxa
 				this->Address=address;
 				this->Port=port;
 			}
-			IPv6EndPoint(sockaddr_in6& addr)
+			void set_addr(const sockaddr_in6& addr)
 			{
 				this->AddressFamily=AF_INET6;
 				this->Address=IPv6Address(addr.sin6_addr);
 				this->Port=ntohs(addr.sin6_port);
 			}
-			virtual void GetSockAddr(sockaddr* addr)
+			IPv6EndPoint(const sockaddr_in6& addr)
+			{
+				set_addr(addr);
+			}
+			virtual void SetSockAddr(const sockaddr* addr)
+			{
+				if(addr->sa_family!=AF_INET6)throw Exception("attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
+				set_addr(*(sockaddr_in6*)addr);
+			}
+			virtual void GetSockAddr(sockaddr* addr) const
 			{
 				sockaddr_in6* addr_in=(sockaddr_in6*)addr;
 				addr_in->sin6_family=AF_INET6;
 				addr_in->sin6_port=htons(Port);
 				addr_in->sin6_addr=Address.a;
 			}
-			virtual int GetSockAddrSize()
+			virtual int GetSockAddrSize() const
 			{
 				return sizeof(sockaddr_in);
 			}
@@ -132,26 +152,35 @@ namespace xaxaxa
 				this->AddressFamily=AF_UNIX;
 				Name=name;
 			}
-			UNIXEndPoint(sockaddr_un& addr)
+			void set_addr(const sockaddr_un& addr)
 			{
 				this->AddressFamily=AF_UNIX;
 				this->Name=addr.sun_path;
 			}
-			virtual void GetSockAddr(sockaddr* addr)
+			UNIXEndPoint(const sockaddr_un& addr)
+			{
+				set_addr(addr);
+			}
+			virtual void SetSockAddr(const sockaddr* addr)
+			{
+				if(addr->sa_family!=AF_UNIX)throw Exception("attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
+				set_addr(*(sockaddr_un*)addr);
+			}
+			virtual void GetSockAddr(sockaddr* addr) const
 			{
 				sockaddr_un* a=(sockaddr_un*)addr;
 				a->sun_family=AF_UNIX;
 				strncpy(a->sun_path,Name.c_str(),Name.length());
 				a->sun_path[Name.length()]='\0';
 			}
-			virtual int GetSockAddrSize()
+			virtual int GetSockAddrSize() const
 			{
 				return sizeof(sa_family_t)+Name.length()+1;
 			}
 		};
-		struct Socket
+		struct Socket:public File
 		{
-			SOCKET _s;
+			//SOCKET _s;
 			/*bool autoClose;
 			inline Socket NoDestruct()
 			{
@@ -162,31 +191,35 @@ namespace xaxaxa
 			inline Socket(){}
 			inline Socket(int domain,int type,int protocol)
 			{
-				_s=CreateSocket(domain,type,protocol);
-				if(_s<0)throw Exception(errno);
+				_f=CreateSocket(domain,type,protocol);
+				if(_f<0)throw Exception(errno);
 				//int set = 1;
 				//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-				dbgprint("socket " << _s << " created");
+				dbgprint("socket " << _f << " created");
 				//this->autoClose=autoClose;
 			}
 			inline Socket(SOCKET s)
 			{
-				_s=s;
+				_f=s;
 				//int set = 1;
 				//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 				//this->autoClose=autoClose;
 			}
-			inline void Close()
+			/*inline void Close()
 			{
 				//throw Exception();
-				dbgprint("socket " << _s << " closed");
-				if(_s!=-1)close(_s);
+				dbgprint("socket " << _f << " closed");
+				if(_s!=-1)close(_f);
 				_s=-1;
+			}*/
+			inline void Shutdown(int how)
+			{
+				shutdown(_f,how);
 			}
 			inline int Send(Buffer buf,Int flags=0)
 			{
 			retry:
-				Int tmp=send(_s,buf.Data,buf.Length,flags);
+				Int tmp=send(_f,buf.Data,buf.Length,flags);
 				if(tmp<0)
 				{
 					if(errno==4)goto retry;
@@ -197,7 +230,7 @@ namespace xaxaxa
 			inline int Recv(Buffer buf,Int flags=0)
 			{
 			retry:
-				Int tmp=recv(_s,buf.Data,buf.Length,flags);
+				Int tmp=recv(_f,buf.Data,buf.Length,flags);
 				if(tmp<0)
 				{
 					if(errno==4)goto retry;
@@ -205,10 +238,46 @@ namespace xaxaxa
 				}
 				else return tmp;
 			}
+			inline int RecvFrom(Buffer buf, EndPoint& ep, Int flags=0)
+			{
+				socklen_t size=ep.GetSockAddrSize();
+				uint8_t addr[size];
+				//ep->GetSockAddr((sockaddr*)tmp);
+			retry:
+				Int tmp=recvfrom(_f,buf.Data,buf.Length,flags,(sockaddr*)addr,&size);
+				if(tmp<0)
+				{
+					if(errno==4)goto retry;
+					throw Exception(errno);
+				}
+				else
+				{
+					ep.SetSockAddr((sockaddr*)addr);
+					return tmp;
+				}
+			}
+			inline int SendTo(Buffer buf, const EndPoint& ep, Int flags=0)
+			{
+				socklen_t size=ep.GetSockAddrSize();
+				uint8_t addr[size];
+				ep.GetSockAddr((sockaddr*)addr);
+			retry:
+				Int tmp=sendto(_f,buf.Data,buf.Length,flags,(sockaddr*)addr,size);
+				if(tmp<0)
+				{
+					if(errno==4)goto retry;
+					throw Exception(errno);
+				}
+				else
+				{
+					//ep.SetSockAddr((sockaddr*)addr);
+					return tmp;
+				}
+			}
 			inline Socket Accept(Int flags=0)
 			{
 			retry:
-				SOCKET s=accept4(_s,NULL,NULL,flags);
+				SOCKET s=accept4(_f,NULL,NULL,flags);
 				if(s==-1)
 				{
 					if(errno==4)goto retry;
@@ -219,7 +288,7 @@ namespace xaxaxa
 			inline void Connect(sockaddr *addr,int addr_size=0)
 			{
 			retry:
-				Int tmp=connect(_s,addr,(addr_size==0?sizeof(sockaddr):addr_size));
+				Int tmp=connect(_f,addr,(addr_size==0?sizeof(sockaddr):addr_size));
 				if(tmp!=0 && errno!=115)
 				{
 					if(errno==4)goto retry;
@@ -228,14 +297,22 @@ namespace xaxaxa
 			}
 			inline void Bind(sockaddr *addr,Int addr_size=0)
 			{
-				if(::bind(_s,addr,(Int)(addr_size==0?sizeof(sockaddr):addr_size))!=0)throw Exception(errno);
+				int tmp12345=1;
+				setsockopt(_f,SOL_SOCKET,SO_REUSEADDR,&tmp12345,sizeof(tmp12345));
+				if(::bind(_f,addr,(Int)(addr_size==0?sizeof(sockaddr):addr_size))!=0)throw Exception(errno);
 			}
 			inline void Bind(EndPoint *ep)
 			{
+				int tmp12345=1;
+				setsockopt(_f,SOL_SOCKET,SO_REUSEADDR,&tmp12345,sizeof(tmp12345));
 				Int size=ep->GetSockAddrSize();
 				uint8_t tmp[size];
 				ep->GetSockAddr((sockaddr*)tmp);
-				if(::bind(_s,(sockaddr*)tmp,size)!=0)throw Exception(errno);
+				if(::bind(_f,(sockaddr*)tmp,size)!=0)throw Exception(errno);
+			}
+			inline void Bind(const EndPoint& ep)
+			{
+				Bind((EndPoint*)&ep);
 			}
 			inline void Connect(EndPoint *ep)
 			{
@@ -243,24 +320,28 @@ namespace xaxaxa
 				uint8_t asdf[size];
 				ep->GetSockAddr((sockaddr*)asdf);
 			retry:
-				int tmp=connect(_s,(sockaddr*)asdf,size);
+				int tmp=connect(_f,(sockaddr*)asdf,size);
 				if(tmp!=0 && errno!=115)
 				{
 					if(errno==4)goto retry;
 					throw Exception(errno);
 				}
 			}
+			inline void Connect(const EndPoint& ep)
+			{
+				Connect((EndPoint*)&ep);
+			}
 			inline void Listen(int backlog)
 			{
-				if(listen(_s,backlog)!=0)throw Exception(errno);
+				if(listen(_f,backlog)!=0)throw Exception(errno);
 			}
 			inline int GetFlags()
 			{
-				return fcntl(_s,F_GETFL,0);
+				return fcntl(_f,F_GETFL,0);
 			}
 			inline void SetFlags(int f)
 			{
-				if(fcntl(_s,F_SETFL,f)<0)throw Exception(errno,"could not set socket flags");
+				if(fcntl(_f,F_SETFL,f)<0)throw Exception(errno,"could not set socket flags");
 			}
 			/*inline ~Socket()
 			{
@@ -316,10 +397,12 @@ namespace xaxaxa
 			virtual void EventLoop();
 			void BeginRecv(Socket s, Buffer buf, Callback cb,bool fill=false);
 			int EndRecv(Socket s);
+			int EndRecvFrom(Socket s, EndPoint& ep);
 			void BeginAccept(Socket s, Callback cb);
 			Socket EndAccept(Socket s, int flags=0);
 			void BeginSend(Socket s, Buffer buf, Callback cb,bool fill=false);
 			int EndSend(Socket s);
+			int EndSendTo(Socket s, EndPoint& ep);
 			void BeginConnect(Socket s,EndPoint* ep, Callback cb);
 			void EndConnect(Socket s);
 			taskInfo* __current_task_;
@@ -344,11 +427,11 @@ namespace xaxaxa
 			{
 				Close();
 			}
-			virtual int Read(Buffer buf)
+			virtual int Read(const Buffer& buf)
 			{
 				return socket.Recv(buf,0);
 			}
-			virtual void Write(Buffer buf)
+			virtual void Write(const Buffer& buf)
 			{
 				int bw=0;
 				int off=0;
@@ -373,13 +456,13 @@ namespace xaxaxa
 			{
 				FUNCTION_CALL(((SocketStream*)obj)->w_cb,(SocketStream*)obj);
 			}
-			virtual void BeginRead(Buffer buf,Callback cb)
+			virtual void BeginRead(const Buffer& buf,Callback cb)
 			{
 				dbgprint("SocketStream::BeginRead()");
 				r_cb=cb;
 				m->BeginRecv(socket,buf,SocketManager::Callback(_r_cb,this),false);
 			};
-			virtual void BeginWrite(Buffer buf,Callback cb)
+			virtual void BeginWrite(const Buffer& buf,Callback cb)
 			{
 				dbgprint("SocketStream::BeginWrite()");
 				w_cb=cb;
@@ -410,7 +493,7 @@ namespace xaxaxa
 				Exception ex;
 				//void* state;
 			};
-
+			static void socks_connect(Stream* s, const char* host, uint16_t port, Callback cb, Callback sent_cb);
 			static void socks_connect(Stream* s, EndPoint* ep, Callback cb, Callback sent_cb=Callback::null);
 			static void socks_endconnect(void* v);
 			static void cb1(void* obj, Stream* s);

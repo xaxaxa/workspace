@@ -1,9 +1,3 @@
-socketmux.d: ../socketmux.cpp ../socketmux.h \
- /home/xaxaxa/workspace/cplib/headers/cplib.hpp \
- /home/xaxaxa/workspace/cplib/headers/lock.hpp
+socketmux.d: ../socketmux.cpp ../socketmux.h
 
 ../socketmux.h:
-
-/home/xaxaxa/workspace/cplib/headers/cplib.hpp:
-
-/home/xaxaxa/workspace/cplib/headers/lock.hpp:

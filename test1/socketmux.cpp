@@ -87,7 +87,7 @@ y:
 		}
 		//it=*(items_r.begin());
 		//return;
-x:
+//x:
 		cur_item=items_r.begin();
 		it=*cur_item;
 		s1w_i=it->queue_in.BeginDequeue();
@@ -203,7 +203,7 @@ x:
 		//cmdqueue.Append(it);
 		__add_oobcmd(it);
 	}
-	void __printcmd(__uint8_t* data,char* asdfghj="COMMAND: ")
+	void __printcmd(__uint8_t* data,const char* asdfghj="COMMAND: ")
 		{
 			bool outgoing;
 			__uint8_t tmp_i=data[0];

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="asyncfile.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="asyncsock.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="cplib.cpp" open="1" top="0" tabpos="6">
+		<Cursor position="223" topLine="0" />
+	</File>
+	<File name="epoll.C" open="1" top="0" tabpos="8">
+		<Cursor position="84" topLine="0" />
+	</File>
+	<File name="headers/asyncsock.hpp" open="1" top="0" tabpos="3">
+		<Cursor position="3204" topLine="113" />
+	</File>
+	<File name="headers/epoll.H" open="1" top="0" tabpos="7">
+		<Cursor position="514" topLine="16" />
+	</File>
+</CodeBlocks_layout_file>

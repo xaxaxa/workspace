@@ -7,7 +7,7 @@
 
 
 #include "JoinStream.h"
-#include <cplib.hpp>
+#include <cplib/cplib.hpp>
 using namespace xaxaxa;
 
 JoinStream::JoinStream(Stream* s1, Stream* s2, BufferManager* m, int sendbuffers, int recvbuffers):q1(sendbuffers),q2(recvbuffers) {

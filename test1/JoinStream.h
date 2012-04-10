@@ -7,7 +7,7 @@
 
 #ifndef JOINSTREAM_H_
 #define JOINSTREAM_H_
-#include <cplib.hpp>
+#include <cplib/cplib.hpp>
 #ifdef __debug_print123
 #define dbgprint(msg) cout << msg << endl
 #else
@@ -33,10 +33,10 @@ public:
 	bool dowrite1, dowrite2;
 	BufferCallback ProcessBuffer1;
 	BufferCallback ProcessBuffer2;
-	inline void s1_r(Stream* s);
-	inline void s1_w(Stream* s);
-	inline void s2_r(Stream* s);
-	inline void s2_w(Stream* s);
+	void s1_r(Stream* s);
+	void s1_w(Stream* s);
+	void s2_r(Stream* s);
+	void s2_w(Stream* s);
 	FUNCTION_DECLWRAPPER(_s1_r,void,Stream* s)
 	{((JoinStream*)obj)->s1_r(s);}
 	FUNCTION_DECLWRAPPER(_s1_w,void,Stream* s)

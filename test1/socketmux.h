@@ -8,7 +8,7 @@
 #ifndef SOCKETMUX_H_
 #define SOCKETMUX_H_
 
-#include <cplib.hpp>
+#include <cplib/cplib.hpp>
 #include <map>
 #include <list>
 //#include <boost/shared_ptr.hpp>
@@ -84,11 +84,11 @@ public:
 		}
 		void BeginSend();
 		void BeginRecv();
-		inline void sn_r(Stream* s);
-		inline void sn_w(Stream* s);
-		inline void update_status();
-		inline void Close();
-		inline void Clear();
+		void sn_r(Stream* s);
+		void sn_w(Stream* s);
+		void update_status();
+		void Close();
+		void Clear();
 		FUNCTION_DECLWRAPPER(_sn_r,void,Stream* s)
 		{((item*)obj)->sn_r(s);}
 		FUNCTION_DECLWRAPPER(_sn_w,void,Stream* s)
@@ -144,13 +144,13 @@ public:
 	void Close();
 	inline void Close(shared_ptr<item> it);
 
-	inline void s1_r(Stream* s);
-	inline void s1_r2(Stream* s);
-	inline void s1_w(Stream* s);
-	inline void s1_w2(Stream* s);
+	void s1_r(Stream* s);
+	void s1_r2(Stream* s);
+	void s1_w(Stream* s);
+	void s1_w2(Stream* s);
 	//inline void sn_r(Stream* s);
 	//inline void sn_w(Stream* s);
-	inline void __process_req();
+	void __process_req();
 	FUNCTION_DECLWRAPPER(_s1_r,void,Stream* s)
 	{((socketmux*)obj)->s1_r(s);}
 	FUNCTION_DECLWRAPPER(_s1_r2,void,Stream* s)

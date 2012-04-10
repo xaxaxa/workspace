@@ -64,6 +64,9 @@
 		template<class FGSAFJGFJSA>inline NAME(RETVAL(FGSAFJGFJSA::*f)(__VA_ARGS__),void* obj)\
 		{this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
 		this->obj=obj;}\
+		inline NAME(RETVAL(*f)(void*,__VA_ARGS__))\
+		{this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
+		this->obj=NULL;}\
 		inline NAME(){f=NULL;}\
 		static NAME null;\
 		bool operator==(const NAME& x) const\
@@ -455,12 +458,12 @@ namespace xaxaxa
 		{
 			if (index < 0 || index + length > this->Length)
 				throw Exception("Buffer::Clip() out of range");
-			Data+=index;
-			Length=length;
+			Data += index;
+			Length = length;
 		}
 		inline void Clip(int index)
 		{
-			Clip(index,Length-index);
+			Clip(index, Length - index);
 		}
 		inline void Release()
 		{
@@ -732,6 +735,10 @@ namespace xaxaxa
 			EnsureCapacity(length + 1);
 			((char*) buf)[length] = '\x00';
 			return ((char*) buf);
+		}
+		string ToSTDString()
+		{
+			return string(ToCString(), length);
 		}
 		virtual int Read(const Buffer& buf);
 		virtual void Write(const Buffer& buf);
@@ -1298,8 +1305,7 @@ namespace xaxaxa
 
 		inline static BufferManager* GetDefault()
 		{
-			if (__def_BufferManager == NULL
-			)
+			if (__def_BufferManager == NULL)
 				__def_BufferManager = new BufferManager();
 			return __def_BufferManager;
 		}
@@ -1463,77 +1469,80 @@ namespace xaxaxa
 		CircularQueue(Int size, Int objsize = 1) :
 				b(size), size(size), objsize(objsize), __wrap(size * 2), s1(0), s2(0), e1(0), e2(0)
 		{
-			array = new T[size * objsize];}
-			~CircularQueue()
-			{
-				delete[] array;
-			}
-			inline int __getlength(Int i1, Int i2, Int wrap)
-			{
-				return (i2 < i1 ? i2 + wrap : i2) - i1;
-			}
-			inline T& GetPointer(Int i)
-			{
-				__intwrap1(i, size);
-				if (i >= size || i < 0)
+			array = new T[size * objsize];
+		}
+		~CircularQueue()
+		{
+			delete[] array;
+		}
+		inline int __getlength(Int i1, Int i2, Int wrap)
+		{
+			return (i2 < i1 ? i2 + wrap : i2) - i1;
+		}
+		inline T& GetPointer(Int i)
+		{
+			__intwrap1(i, size);
+			if (i >= size || i < 0)
 				throw new OutOfRangeException("CircularQueue::GetPointer() out of range");
-				return array[i*objsize]; //__intwrap(i,size);
-				}
-				inline bool CanAppend()
+			return array[i * objsize]; //__intwrap(i,size);
+		}
+		inline bool CanAppend()
+		{
+			return __getlength(s1, e2, __wrap) < size;
+		}
+		int BeginAppend()
+		{
+			if (__getlength(s1, e2, __wrap) >= size)
+				return -1;
+			int tmp = e2++;
+			__intwrap1(e2, __wrap);
+			b.Set(__intwrap(tmp,size), true);
+			return tmp;
+		}
+		void EndAppend(Int i)
+		{
+			if (i == e1)
+			{
+				do
 				{
-					return __getlength(s1, e2, __wrap) < size;
-				}
-				int BeginAppend()
+					e1++;
+					__intwrap1(e1, __wrap);
+				} while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
+			}
+			else
+				b.Set(__intwrap(i,size), false);
+		}
+		inline Int Length()
+		{
+			return __getlength(s2, e1, __wrap);
+		}
+		inline bool CanDequeue()
+		{
+			return __getlength(s2, e1, __wrap) > 0;
+		}
+		Int BeginDequeue()
+		{
+			if (__getlength(s2, e1, __wrap) <= 0)
+				return -1;
+			Int tmp = s2++;
+			__intwrap1(s2, __wrap);
+			b.Set(__intwrap(tmp,size), true);
+			return tmp;
+		}
+		void EndDequeue(Int i)
+		{
+			if (i == s1)
+			{
+				do
 				{
-					if (__getlength(s1, e2, __wrap) >= size) return -1;
-					int tmp = e2++;
-					__intwrap1(e2, __wrap);
-					b.Set(__intwrap(tmp,size), true);
-					return tmp;
-				}
-				void EndAppend(Int i)
-				{
-					if (i == e1)
-					{
-						do
-						{
-							e1++;
-							__intwrap1(e1, __wrap);
-						}
-						while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
-					}
-					else b.Set(__intwrap(i,size), false);
-				}
-				inline Int Length()
-				{
-					return __getlength(s2, e1, __wrap);
-				}
-				inline bool CanDequeue()
-				{
-					return __getlength(s2, e1, __wrap) > 0;
-				}
-				Int BeginDequeue()
-				{
-					if (__getlength(s2, e1, __wrap) <= 0) return -1;
-					Int tmp = s2++;
-					__intwrap1(s2, __wrap);
-					b.Set(__intwrap(tmp,size), true);
-					return tmp;
-				}
-				void EndDequeue(Int i)
-				{
-					if (i == s1)
-					{
-						do
-						{
-							s1++;
-							__intwrap1(s1, __wrap);
-						}
-						while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
-					}
-					else b.Set(__intwrap(i,size), false);
-				}
-			};
+					s1++;
+					__intwrap1(s1, __wrap);
+				} while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
+			}
+			else
+				b.Set(__intwrap(i,size), false);
+		}
+	};
 	class PointerException: public Exception
 	{
 	public:
@@ -1598,7 +1607,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -1644,14 +1653,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}

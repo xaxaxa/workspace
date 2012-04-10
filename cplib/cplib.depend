@@ -1,0 +1,71 @@
+# depslib dependency file v1.0
+1331957279 source:/home/xaxatrollo/workspace/cplib/asyncfile.cpp
+	"headers/asyncfile.hpp"
+	"headers/cplib.hpp"
+	<sys/epoll.h>
+	<errno.h>
+
+1331957279 /home/xaxatrollo/workspace/cplib/headers/asyncfile.hpp
+	<map>
+	<iostream>
+	<sys/epoll.h>
+	"cplib.hpp"
+	<errno.h>
+	<fcntl.h>
+	<boost/function.hpp>
+
+1332723090 /home/xaxatrollo/workspace/cplib/headers/cplib.hpp
+	<iostream>
+	<fstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<signal.h>
+	<math.h>
+	<execinfo.h>
+	<typeinfo>
+	<boost/shared_array.hpp>
+	<boost/function.hpp>
+	<boost/bind.hpp>
+	<map>
+	<list>
+	<set>
+	<errno.h>
+	<queue>
+	<sys/eventfd.h>
+	"lock.hpp"
+	<sys/types.h>
+	<fcntl.h>
+	<unistd.h>
+	<ucontext.h>
+	<cxxabi.h>
+	<glibmm.h>
+	<giomm.h>
+
+1331957279 /home/xaxatrollo/workspace/cplib/headers/lock.hpp
+	<pthread.h>
+
+1332721028 source:/home/xaxatrollo/workspace/cplib/cplib.cpp
+	"headers/cplib.hpp"
+
+1334014325 source:/home/xaxatrollo/workspace/cplib/asyncsock.cpp
+	"headers/asyncsock.hpp"
+	"headers/cplib.hpp"
+	<sys/epoll.h>
+	<sys/socket.h>
+	<errno.h>
+
+1334014099 /home/xaxatrollo/workspace/cplib/headers/asyncsock.hpp
+	<map>
+	<iostream>
+	<sys/socket.h>
+	<sys/types.h>
+	<sys/epoll.h>
+	"cplib.hpp"
+	<errno.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<fcntl.h>
+	<sys/un.h>
+	<boost/function.hpp>
+
