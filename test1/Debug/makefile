@@ -8,8 +8,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include obj/Release/subdir.mk
--include obj/Debug/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -42,13 +40,13 @@ endif
 all: test1
 
 dependents:
-	-cd /home/xaxatrollo/workspace/cplib/Debug && $(MAKE) all
+	-cd /home/s-wang_cary/workspace/cplib/Debug && $(MAKE) all
 
 # Tool invocations
-test1: $(OBJS) $(USER_OBJS) /home/xaxatrollo/workspace/cplib/Debug/libcplib.so
+test1: $(OBJS) $(USER_OBJS) /home/s-wang_cary/workspace/cplib/Debug/libcplib.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/home/xaxatrollo/workspace/cplib/Debug" -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/s-wang_cary/workspace/cplib/Debug" -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -59,6 +57,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/xaxatrollo/workspace/cplib/Debug/libcplib.so:
+/home/s-wang_cary/workspace/cplib/Debug/libcplib.so:
 
 -include ../makefile.targets

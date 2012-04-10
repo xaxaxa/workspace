@@ -22,6 +22,7 @@
 #include <errno.h>
 #include "JoinStream.h"
 #include <boost/shared_ptr.hpp>
+#include "DNSServer.H"
 
 #define DEFPORT 6969
 using namespace boost;
@@ -127,6 +128,7 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 	m->BeginAccept(sock, SocketManager::Callback(cb1, NULL));
 }
 
+
 int iptsocks_main(int argc, char **argv)
 {
 	signal(SIGPIPE, SIG_IGN);
@@ -149,6 +151,21 @@ int iptsocks_main(int argc, char **argv)
 	s.Bind(&ep);
 	s.Listen(32);
 	m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
+
+	DNSServer* srv;
+	srv=new DNSServer(IPEndPoint(IPAddress("0.0.0.0"), 5353),[&srv](const DNSServer::dnsreq& req)
+	{
+		IPAddress ip("127.0.0.1");
+		Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
+		DNSServer::dnsreq resp(req.create_answer());
+		for(int i=0;i<(int)resp.queries.size();i++)
+		{
+			DNSServer::answer a{i,resp.queries[i].type,resp.queries[i].cls,1000000,tmpb};
+			resp.answers.push_back(a);
+		}
+		srv->sendreply(resp);
+	});
+
 	m->EventLoop();
 	s.Close();
 	return 0;

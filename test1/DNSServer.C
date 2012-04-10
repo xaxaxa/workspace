@@ -14,11 +14,12 @@
  * */
 #include "DNSServer.H"
 
-DNSServer::DNSServer(const EndPoint& listen_addr, Callback cb) :
-		s(s), cb(cb), buf(4096)
+DNSServer::DNSServer(const EndPoint& listen_addr, const Callback& cb) :
+		s(AF_INET, SOCK_DGRAM, 0), cb(cb), buf(4096), q(s)
 {
 	//ctor
 	tmp_ep = EndPoint::CreateNull(listen_addr.AddressFamily);
+	s.Bind(listen_addr);
 }
 
 DNSServer::~DNSServer()
@@ -26,11 +27,15 @@ DNSServer::~DNSServer()
 	//dtor
 	delete tmp_ep;
 }
-void DNSServer::sendreply(const dnsreq& response)
+void DNSServer::sendreply(const EndPoint& ep, const dnsreq& response)
 {
 	StringBuilder sb;
-	create_dns_packet(response,sb);
-
+	create_dns_packet(response, sb);
+	boost::shared_ptr<EndPoint> ep1 = EndPoint::CreateNull(ep.AddressFamily);
+	ep.Clone(ep);
+	q.Append(
+	{ ep1, sb.ToBuffer() });
+	q.start();
 }
 void DNSServer::cb1(SocketManager* m, Socket s)
 {
@@ -39,7 +44,7 @@ void DNSServer::cb1(SocketManager* m, Socket s)
 		return;
 	dnsreq req;
 	parse_dns_packet(buf.SubBuffer(0, br), req);
-	cb(req);
+	cb(*tmp_ep, req);
 	start();
 }
 void DNSServer::start()

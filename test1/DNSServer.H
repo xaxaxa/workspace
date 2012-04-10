@@ -19,9 +19,11 @@
 #include <cplib/asyncsock.hpp>
 #include <cplib/cplib.hpp>
 #include <map>
+#include "PacketQueue.H"
 using namespace xaxaxa;
 using namespace Sockets;
 using namespace std;
+using namespace boost;
 class DNSServer
 {
 public:
@@ -55,7 +57,7 @@ public:
 		vector<query> queries;
 		vector<answer> answers;
 		UShort transaction_id, flags;
-		dnsreq create_answer()
+		dnsreq create_answer() const
 		{
 			return
 			{	queries,vector<answer>(),transaction_id,0x8180};
@@ -68,12 +70,14 @@ public:
 	void cb1(SocketManager* m, Socket s);
 	void operator=(const DNSServer& other)=delete;
 	DNSServer(const DNSServer& other)=delete;
-	typedef function<void(const dnsreq&)> Callback;
+	typedef std::function<void(const EndPoint& ep, const dnsreq&)> Callback;
 	Socket s;
+	//boost::shared_ptr<SocketStream> ss;
 	Callback cb;
 	Buffer buf;
 	EndPoint* tmp_ep;
-	DNSServer(const EndPoint& listen_addr, Callback cb);
+	UDPQueue q;
+	DNSServer(const EndPoint& listen_addr, const Callback& cb);
 	virtual ~DNSServer();
 	void start();
 	void sendreply(const dnsreq& response);

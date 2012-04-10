@@ -11,11 +11,13 @@ CPP_SRCS += \
 
 C_UPPER_SRCS += \
 ../DNSServer.C \
+../PacketQueue.C \
 ../iptsocks.C 
 
 OBJS += \
 ./DNSServer.o \
 ./JoinStream.o \
+./PacketQueue.o \
 ./asdfghjkl.o \
 ./iptsocks.o \
 ./main.o \
@@ -29,6 +31,7 @@ CPP_DEPS += \
 
 C_UPPER_DEPS += \
 ./DNSServer.d \
+./PacketQueue.d \
 ./iptsocks.d 
 
 
@@ -36,14 +39,14 @@ C_UPPER_DEPS += \
 %.o: ../%.C
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -I"/home/xaxatrollo/workspace/cplib" -I"/home/xaxatrollo/workspace/cplib/headers" -O0 -g3 -p -pg -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -I/home/s-wang_cary/include -O0 -g3 -p -pg -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -I"/home/xaxatrollo/workspace/cplib" -I"/home/xaxatrollo/workspace/cplib/headers" -O0 -g3 -p -pg -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -I/home/s-wang_cary/include -O0 -g3 -p -pg -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

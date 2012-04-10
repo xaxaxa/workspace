@@ -113,7 +113,6 @@
 #define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL){if(LEVEL<=1)cerr << "\x1B[41;1;32m"; else if(LEVEL<=2)cerr << "\x1B[1;1;1m"; cerr << MSG << "\x1B[0;0;0m" << endl;}
 
 using namespace std;
-
 namespace xaxaxa
 {
 //typedef void* Function;
@@ -377,13 +376,14 @@ namespace xaxaxa
 	typedef __int8_t SByte;
 	typedef __int16_t Short;
 	typedef __uint16_t UShort;
-	typedef __int32_t Int;
-	typedef __uint32_t UInt;
-	typedef __int64_t Long;
-	typedef __uint64_t ULong;
+	typedef int Int;
+	typedef unsigned int UInt;
+	typedef long long int Long;
+	typedef unsigned long long int ULong;
 	typedef float Float;
 	typedef double Double;
 	typedef long double Decimal;
+	//typedef boost::shared_ptr shared_ptr;
 	class Buffer
 	{
 	public:
@@ -650,7 +650,8 @@ namespace xaxaxa
 		{
 			return Cap::ReadWrite | Cap::Length | Cap::Seek;
 		}
-		void *buf;
+		//void *buf;
+		Buffer buf;
 		int Capacity;
 		int length;
 		int position;
@@ -661,14 +662,16 @@ namespace xaxaxa
 		}
 		inline void EnsureCapacity(int c)
 		{
-			if (Capacity >= c)
-				return;
+			if (Capacity >= c) return;
 			int tmp = this->Capacity;
 			while (tmp < c)
 			{
 				tmp *= 2;
 			}
-			this->buf = realloc(this->buf, tmp);
+			Byte* new_arr = new Byte[tmp];
+			memcpy(new_arr, buf.Data, length);
+			buf.Data = new_arr;
+			buf.pbuf.reset(new_arr);
 			this->Capacity = tmp;
 		}
 		void Append(const Buffer& buf);
@@ -676,10 +679,9 @@ namespace xaxaxa
 		inline void Append(const char* buf, int length)
 		{
 			this->EnsureCapacity(this->position + length);
-			memcpy((char*) this->buf + this->position, buf, length);
+			memcpy((char*) this->buf.Data + this->position, buf, length);
 			this->position += length;
-			if (this->position > this->length)
-				this->length = this->position;
+			if (this->position > this->length) this->length = this->position;
 		}
 		void Append(const char* buf);
 		void Append(const StringBuilder* s);
@@ -733,8 +735,8 @@ namespace xaxaxa
 		char* ToCString()
 		{
 			EnsureCapacity(length + 1);
-			((char*) buf)[length] = '\x00';
-			return ((char*) buf);
+			((char*) buf.Data)[length] = '\x00';
+			return ((char*) buf.Data);
 		}
 		string ToSTDString()
 		{
@@ -748,19 +750,18 @@ namespace xaxaxa
 		{
 			switch (from)
 			{
-			case SeekFrom::Begin:
-				break;
-			case SeekFrom::Current:
-				n += position;
-				break;
-			case SeekFrom::End:
-				n = length - n;
-				break;
-			default:
-				return;
+				case SeekFrom::Begin:
+					break;
+				case SeekFrom::Current:
+					n += position;
+					break;
+				case SeekFrom::End:
+					n = length - n;
+					break;
+				default:
+					return;
 			}
-			if (n < 0)
-				n = 0;
+			if (n < 0) n = 0;
 			position = n;
 		}
 		virtual Long Position()
@@ -789,8 +790,7 @@ namespace xaxaxa
 		inline File(const char *path, int flags)
 		{
 			_f = CreateFile(path, flags);
-			if (_f < 0)
-				throw Exception(errno);
+			if (_f < 0) throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -799,8 +799,7 @@ namespace xaxaxa
 		inline File(const char *path, int flags, mode_t mode)
 		{
 			_f = CreateFile(path, flags, mode);
-			if (_f < 0)
-				throw Exception(errno);
+			if (_f < 0) throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -817,29 +816,25 @@ namespace xaxaxa
 		{
 			//throw Exception();
 			dbgprint("file " << _f << " closed");
-			if (_f != -1)
-				close(_f);
+			if (_f != -1) close(_f);
 			_f = -1;
 		}
 		inline virtual Int Write(const Buffer& buf)
 		{
 			Int tmp = write(_f, buf.Data, buf.Length);
-			if (tmp < 0)
-				throw Exception(errno);
+			if (tmp < 0) throw Exception(errno);
 			return tmp;
 		}
 		inline virtual Int Read(const Buffer& buf)
 		{
 			Int tmp = read(_f, buf.Data, buf.Length);
-			if (tmp < 0)
-				throw Exception(errno);
+			if (tmp < 0) throw Exception(errno);
 			return tmp;
 		}
 		inline virtual off_t Seek(off_t offset, int whence)
 		{
 			off_t tmp = lseek(_f, offset, whence);
-			if (tmp == (off_t) -1)
-				throw Exception(errno);
+			if (tmp == (off_t) -1) throw Exception(errno);
 			return tmp;
 		}
 		virtual void Flush()
@@ -851,8 +846,7 @@ namespace xaxaxa
 		}
 		inline void SetFlags(Int f)
 		{
-			if (fcntl(_f, F_SETFL, f) < 0)
-				throw Exception(errno, "could not set file flags");
+			if (fcntl(_f, F_SETFL, f) < 0) throw Exception(errno, "could not set file flags");
 		}
 	};
 	class FileStream: public Stream
@@ -1071,8 +1065,7 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return -1;
+				if (tmp <= 0) return -1;
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -1102,15 +1095,13 @@ namespace xaxaxa
 		virtual void Close();
 		void do_flush()
 		{
-			if (wbuf.length <= 0)
-				return;
+			if (wbuf.length <= 0) return;
 			s->Write(wbuf.ToBuffer());
 			wbuf.Clear();
 		}
 		inline void flush_if_full(int space = 0)
 		{
-			if (wbuf.length > (wbuffersize - space))
-				do_flush();
+			if (wbuf.length > (wbuffersize - space)) do_flush();
 		}
 		void Write(void* buf, int len)
 		{
@@ -1276,8 +1267,7 @@ namespace xaxaxa
 	}
 	template<class T> void ArrayList<T>::EnsureCapacity(int c)
 	{
-		if (Capacity >= c)
-			return;
+		if (Capacity >= c) return;
 		int tmp = this->Capacity;
 		while (tmp < c)
 		{
@@ -1305,8 +1295,7 @@ namespace xaxaxa
 
 		inline static BufferManager* GetDefault()
 		{
-			if (__def_BufferManager == NULL)
-				__def_BufferManager = new BufferManager();
+			if (__def_BufferManager == NULL) __def_BufferManager = new BufferManager();
 			return __def_BufferManager;
 		}
 		ArrayList<Buffer> l;
@@ -1334,8 +1323,7 @@ namespace xaxaxa
 		}
 		void Return(Buffer& b)
 		{
-			if (l.Length < maxSpare)
-				l.Append(b);
+			if (l.Length < maxSpare) l.Append(b);
 			//else b->Release();
 		}
 	};
@@ -1461,11 +1449,11 @@ namespace xaxaxa
 	{
 	public:
 		T* array;
+		BitArray b;
 		Int size;
 		Int objsize;
 		Int __wrap;
 		Int s1, s2, e1, e2;
-		BitArray b;
 		CircularQueue(Int size, Int objsize = 1) :
 				b(size), size(size), objsize(objsize), __wrap(size * 2), s1(0), s2(0), e1(0), e2(0)
 		{
@@ -1492,8 +1480,7 @@ namespace xaxaxa
 		}
 		int BeginAppend()
 		{
-			if (__getlength(s1, e2, __wrap) >= size)
-				return -1;
+			if (__getlength(s1, e2, __wrap) >= size) return -1;
 			int tmp = e2++;
 			__intwrap1(e2, __wrap);
 			b.Set(__intwrap(tmp,size), true);
@@ -1507,7 +1494,8 @@ namespace xaxaxa
 				{
 					e1++;
 					__intwrap1(e1, __wrap);
-				} while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
+				}
+				while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
 			}
 			else
 				b.Set(__intwrap(i,size), false);
@@ -1522,8 +1510,7 @@ namespace xaxaxa
 		}
 		Int BeginDequeue()
 		{
-			if (__getlength(s2, e1, __wrap) <= 0)
-				return -1;
+			if (__getlength(s2, e1, __wrap) <= 0) return -1;
 			Int tmp = s2++;
 			__intwrap1(s2, __wrap);
 			b.Set(__intwrap(tmp,size), true);
@@ -1537,7 +1524,8 @@ namespace xaxaxa
 				{
 					s1++;
 					__intwrap1(s1, __wrap);
-				} while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
+				}
+				while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
 			}
 			else
 				b.Set(__intwrap(i,size), false);
@@ -1568,22 +1556,19 @@ namespace xaxaxa
 		string GetDirFromPath(const string path)
 		{
 			Int i = path.rfind("/");
-			if (i < 0)
-				return string();
+			if (i < 0) return string();
 			return path.substr(0, i + 1);
 		}
 		string GetProgramPath()
 		{
 			char buf[256];
 			Int i = readlink("/proc/self/exe", buf, sizeof(buf));
-			if (i < 0)
-				throw Exception(errno);
+			if (i < 0) throw Exception(errno);
 			return string(buf, i);
 		}
 		void ChDir(string dir)
 		{
-			if (chdir(dir.c_str()) < 0)
-				throw Exception(errno);
+			if (chdir(dir.c_str()) < 0) throw Exception(errno);
 		}
 		void RestartOnCrash(int argc, char** argv)
 		{
@@ -1607,7 +1592,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -1653,14 +1638,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}
@@ -1693,8 +1678,7 @@ namespace xaxaxa
 	template<class T> inline T modulus(T number, T modulus)
 	{
 		T result = number % modulus;
-		if (result < 0)
-			result += modulus;
+		if (result < 0) result += modulus;
 		return result;
 	}
 }

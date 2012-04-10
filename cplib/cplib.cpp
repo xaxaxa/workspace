@@ -97,8 +97,7 @@ namespace xaxaxa
 		int br = 0;
 
 		int tmp = buf_length;
-		if (buf.Length < tmp)
-			tmp = buf.Length;
+		if (buf.Length < tmp) tmp = buf.Length;
 		if (tmp > 0)
 		{
 			memcpy(buf.Data, ((Byte*) this->buf) + buf_index, tmp);
@@ -108,9 +107,9 @@ namespace xaxaxa
 			br += tmp;
 		}
 		if (br >= buf.Length) return br;
-		if (buf.Length-br > this->buf_size)
+		if (buf.Length - br > this->buf_size)
 		{
-			while((br >= buf.Length) && (tmp=s->Read(buf.SubBuffer(br))) > 0)
+			while ((br >= buf.Length) && (tmp = s->Read(buf.SubBuffer(br))) > 0)
 			{
 				br += tmp;
 				//buf.Clip(tmp);
@@ -123,15 +122,13 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return br;
+				if (tmp <= 0) return br;
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			tmp = buf_length;
-			if (buf.Length-br < tmp)
-				tmp = buf.Length-br;
-			memcpy(buf.Data+br, ((Byte*) this->buf) + buf_index, tmp);
+			if (buf.Length - br < tmp) tmp = buf.Length - br;
+			memcpy(buf.Data + br, ((Byte*) this->buf) + buf_index, tmp);
 			//buf.Clip(tmp);
 			buf_index += tmp;
 			buf_length -= tmp;
@@ -145,8 +142,7 @@ namespace xaxaxa
 		if (buf_length > 0)
 		{
 			int tmp = buf_length;
-			if (length < tmp)
-				tmp = length;
+			if (length < tmp) tmp = length;
 			Buffer tmpb((char*) this->buf + buf_index, tmp);
 			buf.Append(tmpb);
 			length -= tmp;
@@ -157,7 +153,7 @@ namespace xaxaxa
 		if (length > 0)
 		{
 			buf.EnsureCapacity(buf.length + length);
-			Buffer tmpb((char*) (buf.buf) + buf.length, length);
+			Buffer tmpb((char*) (buf.buf.Data) + buf.length, length);
 			int tmp = s->Read(tmpb);
 			buf.length += tmp;
 			br += tmp;
@@ -173,8 +169,7 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -217,8 +212,7 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -268,8 +262,7 @@ namespace xaxaxa
 			{
 				Buffer tmpb(this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -295,14 +288,12 @@ namespace xaxaxa
 								memcpy(cbuf, cbuf + i, ii);
 								Buffer tmpb1(cbuf + ii, buf_size - ii);
 								int tmp = s->Read(tmpb1);
-								if (tmp <= 0)
-									return (br == 0 ? -1 : br);
+								if (tmp <= 0) return (br == 0 ? -1 : br);
 								buf_index = 0;
 								buf_length = tmp + ii;
 								i = 0;
 							}
-							if (cbuf[i + ii] != delimitors[j].c[ii])
-								goto cont;
+							if (cbuf[i + ii] != delimitors[j].c[ii]) goto cont;
 						}
 						int tmp = i - buf_index;
 						Buffer tmpb(cbuf + buf_index, tmp);
@@ -319,9 +310,7 @@ namespace xaxaxa
 						 }*/
 						buf_index += tmp;
 						buf_length -= tmp;
-						if (delim_index != NULL
-						)
-							*delim_index = j;
+						if (delim_index != NULL) *delim_index = j;
 						return br;
 					}
 					cont: ;
@@ -343,8 +332,7 @@ namespace xaxaxa
 			{
 				Buffer tmpb(cbuf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -354,8 +342,7 @@ namespace xaxaxa
 			{
 				while (i < tmp2 && cbuf[i] != '\n')
 					i++;
-				if (!(i < tmp2))
-					break;
+				if (!(i < tmp2)) break;
 				int tmp = i - buf_index;
 				Buffer tmpb((char*) this->buf + buf_index, tmp);
 				buf.Write(tmpb);
@@ -373,8 +360,7 @@ namespace xaxaxa
 	}
 	int StreamReaderWriter::ReadLine(Stream& buf)
 	{
-		STRING delim[2]
-		{ "\r\n", "\n" };
+		STRING delim[2] { "\r\n", "\n" };
 		return Read(buf, delim, 2);
 		//return Read(buf, "\r\n", 2);
 	}
@@ -403,37 +389,33 @@ namespace xaxaxa
 /////////////////////////////////////////////////////////
 
 	StringBuilder::StringBuilder(int initsize) :
-			position(0)
+			buf(initsize), Capacity(initsize), length(0), position(0)
 	{
-		this->buf = malloc(initsize);
-		this->Capacity = initsize;
-		this->length = 0;
+		//this->buf = malloc(initsize);
 	}
 	StringBuilder::~StringBuilder()
 	{
-		free(buf);
+		//free(buf);
 	}
 	void StringBuilder::Append(const Buffer& buf)
 	{
 		//int tmp=this->Length;
 		this->EnsureCapacity(this->position + buf.Length);
-		memcpy((char*) this->buf + this->position, buf.Data, buf.Length);
+		memcpy((char*) this->buf.Data + this->position, buf.Data, buf.Length);
 		this->position += buf.Length;
-		if (this->position > this->length)
-			this->length = this->position;
+		if (this->position > this->length) this->length = this->position;
 	}
 	void StringBuilder::Append(STRING buf)
 	{
 		//int tmp=this->Length;
 		this->EnsureCapacity(this->position + buf.length);
-		memcpy((char*) this->buf + this->position, buf.c, buf.length);
+		memcpy((char*) this->buf.Data + this->position, buf.c, buf.length);
 		this->position += buf.length;
-		if (this->position > this->length)
-			this->length = this->position;
+		if (this->position > this->length) this->length = this->position;
 	}
 	void StringBuilder::Append(const StringBuilder* s)
 	{
-		Buffer tmpb((char*) s->buf, s->length);
+		Buffer tmpb((char*) s->buf.Data, s->length);
 		Append(tmpb);
 	}
 	void StringBuilder::Append(const char* buf)
@@ -442,34 +424,31 @@ namespace xaxaxa
 	}
 	int StringBuilder::CompareTo(Buffer buf)
 	{
-		if (buf.Length <= 0 || this->length <= 0)
-			return -1;
-		return memcmp(this->buf, buf.Data, buf.Length < this->length ? buf.Length : this->length);
+		if (buf.Length <= 0 || this->length <= 0) return -1;
+		return memcmp(this->buf.Data, buf.Data,
+				buf.Length < this->length ? buf.Length : this->length);
 	}
 	int StringBuilder::CompareTo(const StringBuilder* sb)
 	{
-		if (sb->length <= 0 || this->length <= 0)
-			return -1;
-		return memcmp(buf, sb->buf, sb->length < this->length ? sb->length : this->length);
+		if (sb->length <= 0 || this->length <= 0) return -1;
+		return memcmp(buf.Data, sb->buf.Data, sb->length < this->length ? sb->length : this->length);
 	}
 	STRING StringBuilder::ToString()
 	{
 		return
-		{	(char*) this->buf, length};
+		{	(char*) this->buf.Data, length};
 	}
 	Buffer StringBuilder::ToBuffer()
 	{
-		return Buffer((char*) this->buf, length);
+		return buf.SubBuffer(0, length);
 	}
 
 	int StringBuilder::Read(const Buffer& buf)
 	{
 		int i = length - position;
-		if (i <= 0)
-			return 0;
-		if (buf.Length < i)
-			i = buf.Length;
-		memcpy(buf.Data, ((char*) this->buf) + position, i);
+		if (i <= 0) return 0;
+		if (buf.Length < i) i = buf.Length;
+		memcpy(buf.Data, ((char*) this->buf.Data) + position, i);
 		position += i;
 		return i;
 	}
@@ -496,11 +475,11 @@ namespace xaxaxa
 		//Exception *ex;
 		switch (sig)
 		{
-		case SIGSEGV:
-			throw PointerException();
-			break;
-		default:
-			throw Exception();
+			case SIGSEGV:
+				throw PointerException();
+				break;
+			default:
+				throw Exception();
 		}
 
 	}

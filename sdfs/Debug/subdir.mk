@@ -6,8 +6,7 @@
 CPP_SRCS += \
 ../CacheManager.cpp \
 ../IStorage.cpp \
-../StorageManager.cpp \
-../main.cpp 
+../StorageManager.cpp 
 
 CXX_SRCS += \
 ../main.cxx 
@@ -21,8 +20,7 @@ OBJS += \
 CPP_DEPS += \
 ./CacheManager.d \
 ./IStorage.d \
-./StorageManager.d \
-./main.d 
+./StorageManager.d 
 
 CXX_DEPS += \
 ./main.d 
