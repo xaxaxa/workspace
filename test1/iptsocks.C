@@ -153,7 +153,7 @@ int iptsocks_main(int argc, char **argv)
 	m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
 
 	DNSServer* srv;
-	srv=new DNSServer(IPEndPoint(IPAddress("0.0.0.0"), 5353),[&srv](const DNSServer::dnsreq& req)
+	srv=new DNSServer(IPEndPoint(IPAddress("0.0.0.0"), 5353),[&srv](const EndPoint& ep, const DNSServer::dnsreq& req)
 	{
 		IPAddress ip("127.0.0.1");
 		Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
@@ -163,7 +163,7 @@ int iptsocks_main(int argc, char **argv)
 			DNSServer::answer a{i,resp.queries[i].type,resp.queries[i].cls,1000000,tmpb};
 			resp.answers.push_back(a);
 		}
-		srv->sendreply(resp);
+		srv->sendreply(ep, resp);
 	});
 
 	m->EventLoop();

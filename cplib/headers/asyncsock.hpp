@@ -65,7 +65,7 @@ namespace xaxaxa
 			virtual int GetSockAddrSize() const=0;
 			static EndPoint* FromSockAddr(const sockaddr* addr);
 			static EndPoint* CreateNull(int AddressFamily);
-			virtual void Clone(EndPoint& to)=0;
+			virtual void Clone(EndPoint& to) const=0;
 			//static EndPoint Resolve(
 		};
 		class IPEndPoint: public EndPoint
@@ -111,12 +111,12 @@ namespace xaxaxa
 			{
 				return sizeof(sockaddr_in);
 			}
-			virtual void Clone(EndPoint& to)
+			virtual void Clone(EndPoint& to) const
 			{
 				if (to.AddressFamily != AddressFamily)
 					throw Exception(
 							"attempting to clone an EndPoint to another EndPoint with a different AddressFamily");
-				IPEndPoint& tmp(to);
+				IPEndPoint& tmp((IPEndPoint&)to);
 				tmp.Address = Address;
 				tmp.Port = Port;
 			}
@@ -164,12 +164,12 @@ namespace xaxaxa
 			{
 				return sizeof(sockaddr_in);
 			}
-			virtual void Clone(EndPoint& to)
+			virtual void Clone(EndPoint& to) const
 			{
 				if (to.AddressFamily != AddressFamily)
 					throw Exception(
 							"attempting to clone an EndPoint to another EndPoint with a different AddressFamily");
-				IPv6EndPoint& tmp(to);
+				IPv6EndPoint& tmp((IPv6EndPoint&)to);
 				tmp.Address = Address;
 				tmp.Port = Port;
 			}
@@ -214,12 +214,12 @@ namespace xaxaxa
 			{
 				return sizeof(sa_family_t) + Name.length() + 1;
 			}
-			virtual void Clone(EndPoint& to)
+			virtual void Clone(EndPoint& to) const
 			{
 				if (to.AddressFamily != AddressFamily)
 					throw Exception(
 							"attempting to clone an EndPoint to another EndPoint with a different AddressFamily");
-				UNIXEndPoint& tmp(to);
+				UNIXEndPoint& tmp((UNIXEndPoint&)to);
 				tmp.Name = Name;
 			}
 		};

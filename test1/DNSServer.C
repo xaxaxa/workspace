@@ -31,8 +31,8 @@ void DNSServer::sendreply(const EndPoint& ep, const dnsreq& response)
 {
 	StringBuilder sb;
 	create_dns_packet(response, sb);
-	boost::shared_ptr<EndPoint> ep1 = EndPoint::CreateNull(ep.AddressFamily);
-	ep.Clone(ep);
+	boost::shared_ptr<EndPoint> ep1 = boost::shared_ptr<EndPoint>(EndPoint::CreateNull(ep.AddressFamily));
+	ep.Clone(*ep1.get());
 	q.Append(
 	{ ep1, sb.ToBuffer() });
 	q.start();

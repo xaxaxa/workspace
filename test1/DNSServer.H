@@ -80,7 +80,7 @@ public:
 	DNSServer(const EndPoint& listen_addr, const Callback& cb);
 	virtual ~DNSServer();
 	void start();
-	void sendreply(const dnsreq& response);
+	void sendreply(const EndPoint& ep, const dnsreq& response);
 };
 
 #endif // DNSSERVER_H
