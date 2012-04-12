@@ -40,6 +40,48 @@ namespace xaxaxa
 			{
 				this->a = a;
 			}
+			inline bool operator<(const IPAddress& other) const
+			{
+				return ntohl(a.s_addr) < ntohl(other.a.s_addr);
+			}
+			inline bool operator>(const IPAddress& other) const
+			{
+				return ntohl(a.s_addr) > ntohl(other.a.s_addr);
+			}
+			inline bool operator<=(const IPAddress& other) const
+			{
+				return ntohl(a.s_addr) <= ntohl(other.a.s_addr);
+			}
+			inline bool operator>=(const IPAddress& other) const
+			{
+				return ntohl(a.s_addr) >= ntohl(other.a.s_addr);
+			}
+			inline bool operator==(const IPAddress& other) const
+			{
+				return a.s_addr == other.a.s_addr;
+			}
+			inline IPAddress operator+(const IPAddress& other) const
+			{
+				return IPAddress(
+				{ htonl(ntohl(a.s_addr) + other.a.s_addr) });
+			}
+			inline IPAddress operator-(const IPAddress& other) const
+			{
+				return IPAddress(
+				{ htonl(ntohl(a.s_addr) - other.a.s_addr) });
+			}
+			inline IPAddress operator+(const in_addr_t& other) const
+			{
+				WARN(1,a.s_addr << " " <<ntohl(a.s_addr));
+				cout << "a" << endl;
+				return IPAddress(
+				{ htonl(ntohl(a.s_addr) + other) });
+			}
+			inline IPAddress operator-(const in_addr_t& other) const
+			{
+				return IPAddress(
+				{ htonl(ntohl(a.s_addr) - other) });
+			}
 		};
 		struct IPv6Address
 		{
@@ -55,6 +97,42 @@ namespace xaxaxa
 			{
 				this->a = a;
 			}
+			/*inline bool operator<(const IPv6Address& other) const
+			 {
+			 return a < other.a;
+			 }
+			 inline bool operator>(const IPv6Address& other) const
+			 {
+			 return a > other.a;
+			 }
+			 inline bool operator<=(const IPv6Address& other) const
+			 {
+			 return a <= other.a;
+			 }
+			 inline bool operator>=(const IPv6Address& other) const
+			 {
+			 return a >= other.a;
+			 }
+			 inline bool operator==(const IPv6Address& other) const
+			 {
+			 return a == other.a;
+			 }
+			 inline IPv6Address operator+(const IPv6Address& other) const
+			 {
+			 return IPv6Address(a + other.a);
+			 }
+			 inline IPv6Address operator-(const IPv6Address& other) const
+			 {
+			 return IPv6Address(a - other.a);
+			 }
+			 inline IPv6Address operator+(const in_addr& other) const
+			 {
+			 return IPv6Address(a + other);
+			 }
+			 inline IPv6Address operator-(const in_addr& other) const
+			 {
+			 return IPv6Address(a - other);
+			 }*/
 		};
 		class EndPoint
 		{
@@ -66,6 +144,9 @@ namespace xaxaxa
 			static EndPoint* FromSockAddr(const sockaddr* addr);
 			static EndPoint* CreateNull(int AddressFamily);
 			virtual void Clone(EndPoint& to) const=0;
+			virtual ~EndPoint()
+			{
+			}
 			//static EndPoint Resolve(
 		};
 		class IPEndPoint: public EndPoint
@@ -116,7 +197,7 @@ namespace xaxaxa
 				if (to.AddressFamily != AddressFamily)
 					throw Exception(
 							"attempting to clone an EndPoint to another EndPoint with a different AddressFamily");
-				IPEndPoint& tmp((IPEndPoint&)to);
+				IPEndPoint& tmp((IPEndPoint&) to);
 				tmp.Address = Address;
 				tmp.Port = Port;
 			}
@@ -169,7 +250,7 @@ namespace xaxaxa
 				if (to.AddressFamily != AddressFamily)
 					throw Exception(
 							"attempting to clone an EndPoint to another EndPoint with a different AddressFamily");
-				IPv6EndPoint& tmp((IPv6EndPoint&)to);
+				IPv6EndPoint& tmp((IPv6EndPoint&) to);
 				tmp.Address = Address;
 				tmp.Port = Port;
 			}
@@ -219,7 +300,7 @@ namespace xaxaxa
 				if (to.AddressFamily != AddressFamily)
 					throw Exception(
 							"attempting to clone an EndPoint to another EndPoint with a different AddressFamily");
-				UNIXEndPoint& tmp((UNIXEndPoint&)to);
+				UNIXEndPoint& tmp((UNIXEndPoint&) to);
 				tmp.Name = Name;
 			}
 		};

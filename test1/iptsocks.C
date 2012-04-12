@@ -24,6 +24,9 @@
 #include "JoinStream.h"
 #include <boost/shared_ptr.hpp>
 #include "DNSServer.H"
+#include <map>
+#include <list>
+#include <tuple>
 
 #define DEFPORT 6969
 #define WARNLEVEL 10
@@ -39,27 +42,55 @@ struct tmp123
 	JoinStream* j;
 };
 extern SocketManager *m;
+
+struct ip_pool
+{
+	IPAddress begin, end;
+	pair<IPAddress, bool> get()
+	{
+		if (begin < end)
+		{
+			pair<IPAddress, bool> tmp
+			{ begin, true };
+			begin = begin + 1;
+			return tmp;
+		}
+		return pair<IPAddress, bool>(IPAddress(), false);
+	}
+	bool empty()
+	{
+		return !(begin < end);
+	}
+};
+
+struct host_item
+{
+	string host;
+	int refcount;
+};
+map<IPAddress, host_item> hosts;
+set<IPAddress> unused_hosts;
+
 static void socks_cb1(void* obj, Stream* s, void* v)
 {
-	tmp123* tmp = (tmp123*)obj;
+	tmp123* tmp = (tmp123*) obj;
 	dbgprint("################socks sent_callback##################");
 	tmp->j->dowrite2 = true;
 	tmp->j->begin2w();
 }
 static void socks_cb(void* obj, Stream* s, void* v)
 {
-	tmp123* tmp = (tmp123*)obj;
+	tmp123* tmp = (tmp123*) obj;
 	try
 	{
 		SOCKS5::socks_endconnect(v);
-	}
-	catch(Exception& ex)
+	} catch (Exception& ex)
 	{
 		tmp->j->Close();
 		delete tmp;
 		return;
 	}
-	dbgprint("################socks connected##################");
+	WARN(5, "################socks connected##################");
 	tmp->j->Begin();
 	delete tmp;
 }
@@ -71,7 +102,6 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 	try
 	{
 		m->EndConnect(sock);
-		dbgprint("connected");
 	}
 	catch(Exception& ex)
 	{
@@ -87,8 +117,8 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 		JoinStream *j = new JoinStream(str1, str2);
 		str1->Release();
 		str2->Release();
-		//j->Begin();
-		//delete tmp;
+//j->Begin();
+//delete tmp;
 		tmp->j = j;
 		j->begin1r();
 		SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp), SOCKS5::Callback(socks_cb1, tmp));
@@ -104,13 +134,14 @@ int socks_port = 9999;
 FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 {
 	Socket s = m->EndAccept(sock);
-	dbgprint("accepted: " << s._s);
+	//dbgprint("accepted: " << s._s);
 	//new client(s);
 	Socket s2(AF_INET, SOCK_STREAM, 0);
-	//dbgprint("asdf2");
+//dbgprint("asdf2");
 	tmp123* tmp = NULL;
-	try {
-		sockaddr_in	dstaddr;
+	try
+	{
+		sockaddr_in dstaddr;
 		socklen_t dstlen = sizeof(dstaddr);
 		if(getsockopt(s._f, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr *)&dstaddr, &dstlen) != 0)throw Exception(errno);
 		IPEndPoint ep(dstaddr);
@@ -121,7 +152,8 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 		tmp->s2 = s2;
 		IPEndPoint ep2(IPAddress(socks_host), socks_port);
 		m->BeginConnect(s2, &ep2, SocketManager::Callback(cb_connect, tmp));
-	} catch(Exception& ex)
+	}
+	catch(Exception& ex)
 	{
 		s.Close();
 		s2.Close();
@@ -130,7 +162,6 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 	m->BeginAccept(sock, SocketManager::Callback(cb1, NULL));
 }
 
-
 int iptsocks_main(int argc, char **argv)
 {
 	signal(SIGPIPE, SIG_IGN);
@@ -138,7 +169,7 @@ int iptsocks_main(int argc, char **argv)
 	sa.sa_handler = SIG_IGN;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART; /* Restart functions if
-	                                 interrupted by handler */
+	 interrupted by handler */
 	sigaction(SIGHUP, &sa, NULL);
 	sa.sa_handler = SIG_DFL;
 	//cout<<sigaction(SIGSTOP, &sa, NULL)<<endl;
@@ -155,21 +186,28 @@ int iptsocks_main(int argc, char **argv)
 	m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
 
 	DNSServer* srv;
-	srv=new DNSServer(IPEndPoint(IPAddress("127.0.0.1"), 6953),[&srv](const EndPoint& ep, const DNSServer::dnsreq& req)
-	{
-		WARN(6,"RECEIVED DNS PACKET");
-		IPAddress ip("127.0.0.1");
-		Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
-		DNSServer::dnsreq resp(req.create_answer());
-		for(int i=0;i<(int)resp.queries.size();i++)
-		{
-			DNSServer::answer a{i,resp.queries[i].type,resp.queries[i].cls,100000000,tmpb};
-			resp.answers.push_back(a);
-		}
-		srv->sendreply(ep, resp);
-	});
+	ip_pool p
+	{ IPAddress("127.1.0.1"), IPAddress("127.1.254.254") };
+	srv = new DNSServer(IPEndPoint(IPAddress("127.0.0.1"), 6953),
+			[&srv, &p](const EndPoint& ep, const DNSServer::dnsreq& req)
+			{
+				WARN(6,"RECEIVED DNS PACKET");
+				IPAddress ip;
+				auto tmp=p.get();
+				if(tmp.second)ip=tmp.first;
+				else ip=IPAddress("127.0.0.1");
+				Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
+				DNSServer::dnsreq resp(req.create_answer());
+				for(int i=0;i<(int)resp.queries.size();i++)
+				{
+					DNSServer::answer a
+					{	i,resp.queries[i].type,resp.queries[i].cls,100000000,tmpb};
+					resp.answers.push_back(a);
+				}
+				srv->sendreply(ep, resp);
+			});
 	srv->start();
-	WARN(6,"started.");
+	WARN(6, "started.");
 	m->EventLoop();
 	s.Close();
 	return 0;
