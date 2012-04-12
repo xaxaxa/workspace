@@ -27,19 +27,21 @@ using namespace boost;
 class DNSServer
 {
 public:
+	static const UShort dns_offset_mask=3<<14;
 	struct dnshdr
 	{
 		UShort transaction_id, flags, queries, answers, authority_rr, additional_rr;
-	};
+	} __attribute__((packed));
 	struct dnshdr_q
 	{
 		UShort type, cls;
-	};
+	} __attribute__((packed));
 	struct dnshdr_a
 	{
 		UShort offset, type, cls;
-		UInt ttl, datalen;
-	};
+		UInt ttl;
+		UShort datalen;
+	} __attribute__((packed));
 	struct query
 	{
 		string q;

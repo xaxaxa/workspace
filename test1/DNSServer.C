@@ -31,7 +31,8 @@ void DNSServer::sendreply(const EndPoint& ep, const dnsreq& response)
 {
 	StringBuilder sb;
 	create_dns_packet(response, sb);
-	boost::shared_ptr<EndPoint> ep1 = boost::shared_ptr<EndPoint>(EndPoint::CreateNull(ep.AddressFamily));
+	boost::shared_ptr<EndPoint> ep1 = boost::shared_ptr<EndPoint>(
+			EndPoint::CreateNull(ep.AddressFamily));
 	ep.Clone(*ep1.get());
 	q.Append(
 	{ ep1, sb.ToBuffer() });
@@ -77,16 +78,17 @@ int DNSServer::write_dns_name(const string& name, StringBuilder& sb)
 		sb.Append(ch + last_i, len - last_i);
 		ret += 1 + (len - last_i);
 	}
+	sb.Append((char)0);
 	return ret;
 }
 void DNSServer::create_dns_packet(const dnsreq& req, StringBuilder& sb)
 {
 	dnshdr hdr;
 	hdr.transaction_id = req.transaction_id;
-	hdr.flags = req.flags;
-	hdr.additional_rr = hdr.authority_rr = 0;
-	hdr.queries = req.queries.size();
-	hdr.answers = req.answers.size();
+	hdr.flags = htons(req.flags);
+	hdr.additional_rr = hdr.authority_rr = htons(0);
+	hdr.queries = htons(req.queries.size());
+	hdr.answers = htons(req.answers.size());
 	sb.Append((char*) &hdr, sizeof(hdr));
 	int i, offset = sizeof(hdr);
 	UShort queries[req.queries.size()];
@@ -95,7 +97,7 @@ void DNSServer::create_dns_packet(const dnsreq& req, StringBuilder& sb)
 		queries[i] = offset;
 		offset += write_dns_name(req.queries[i].q, sb);
 		dnshdr_q hdr1
-		{ req.queries[i].type, req.queries[i].cls };
+		{ htons(req.queries[i].type), htons(req.queries[i].cls) };
 		sb.Append((char*) &hdr1, sizeof(hdr1));
 		offset += sizeof(hdr1);
 	}
@@ -104,15 +106,16 @@ void DNSServer::create_dns_packet(const dnsreq& req, StringBuilder& sb)
 		if (req.answers[i].query_index >= (int) req.queries.size())
 			continue;
 		dnshdr_a hdr1
-		{ queries[req.answers[i].query_index], req.answers[i].type, req.answers[i].cls,
-				req.answers[i].ttl, req.answers[i].addr.Length };
+		{ (UShort)(htons(queries[req.answers[i].query_index] | dns_offset_mask)), htons(req.answers[i].type), htons(req.answers[i].cls),
+			htonl(req.answers[i].ttl), htons(req.answers[i].addr.Length) };
 		sb.Append((char*) &hdr1, sizeof(hdr1));
 		sb.Append(req.answers[i].addr);
 	}
 }
-Int DNSServer::read_dns_name(const Buffer& b, StringBuilder& sb, int i)
+Int DNSServer::read_dns_name(const Buffer& b, StringBuilder& sb, int i1)
 {
-	Int br;
+	int i = i1;
+	Int br(0);
 	Byte len;
 	if (i >= b.Length)
 		goto err;
@@ -139,6 +142,7 @@ Int DNSServer::read_dns_name(const Buffer& b, StringBuilder& sb, int i)
 void DNSServer::parse_dns_packet(const Buffer& b, dnsreq& req)
 {
 	StringBuilder sb;
+	UShort qs, as;
 	const dnshdr* hdr;
 	int i, index = sizeof(dnshdr);
 	map<UShort, int> queries;
@@ -146,39 +150,41 @@ void DNSServer::parse_dns_packet(const Buffer& b, dnsreq& req)
 		goto err;
 	hdr = (const dnshdr*) b.Data;
 	req.transaction_id = hdr->transaction_id;
-	req.flags = hdr->flags;
+	req.flags = ntohs(hdr->flags);
 	req.queries = vector<query>();
 	req.answers = vector<answer>();
-	for (i = 0; i < hdr->queries; i++)
+	qs = ntohs(hdr->queries);
+	as = ntohs(hdr->answers);
+	for (i = 0; i < qs; i++)
 	{
 		sb.Clear();
 		queries.insert(std::pair<UShort, int>(index, i));
 		int tmp = read_dns_name(b, sb, index);
 		index += tmp;
-		const dnshdr_q* hdr1 = (const dnshdr_q*) b.Data + index;
+		const dnshdr_q* hdr1 = (const dnshdr_q*) (b.Data + index);
 		if (index + (int) sizeof(dnshdr_q) > b.Length)
 			goto err;
 		query q
-		{ sb.ToSTDString(), hdr1->type, hdr1->cls };
+		{ sb.ToSTDString(), ntohs(hdr1->type), ntohs(hdr1->cls) };
 		req.queries.push_back(q);
 		index += sizeof(dnshdr_q);
 	}
-	for (i = 0; i < hdr->answers; i++)
+	for (i = 0; i < as; i++)
 	{
-		const dnshdr_a* hdr1 = (const dnshdr_a*) b.Data + index;
+		const dnshdr_a* hdr1 = (const dnshdr_a*) (b.Data + index);
 		if (index + (int) sizeof(dnshdr_a) > b.Length)
 			goto err;
-		auto it = queries.find(hdr1->offset);
+		auto it = queries.find(ntohs(hdr1->offset) & ~dns_offset_mask);
 		if (it == queries.end())
 			goto err;
 		index += sizeof(dnshdr_a);
-		int tmp = hdr1->datalen;
-		if (index + tmp > b.Length)
+		UShort tmp = ntohs(hdr1->datalen);
+		if (index + (int)tmp > b.Length)
 			goto err;
 		Buffer buf(tmp);
 		memcpy(buf.Data, b.Data + index, tmp);
 		answer a
-		{ (*it).second, hdr1->type, hdr1->cls, hdr1->ttl, buf };
+		{ (*it).second, ntohs(hdr1->type), ntohs(hdr1->cls), ntohl(hdr1->ttl), buf };
 		req.answers.push_back(a);
 	}
 	return;

@@ -13,6 +13,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
 #include <iostream>
+#define WARNLEVEL 10
 #include <cplib/cplib.hpp>
 #include <cplib/asyncsock.hpp>
 #include <cplib/asyncfile.hpp>
@@ -25,6 +26,7 @@
 #include "DNSServer.H"
 
 #define DEFPORT 6969
+#define WARNLEVEL 10
 using namespace boost;
 using namespace std;
 using namespace xaxaxa;
@@ -153,19 +155,21 @@ int iptsocks_main(int argc, char **argv)
 	m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
 
 	DNSServer* srv;
-	srv=new DNSServer(IPEndPoint(IPAddress("0.0.0.0"), 5353),[&srv](const EndPoint& ep, const DNSServer::dnsreq& req)
+	srv=new DNSServer(IPEndPoint(IPAddress("127.0.0.1"), 6953),[&srv](const EndPoint& ep, const DNSServer::dnsreq& req)
 	{
+		WARN(6,"RECEIVED DNS PACKET");
 		IPAddress ip("127.0.0.1");
 		Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
 		DNSServer::dnsreq resp(req.create_answer());
 		for(int i=0;i<(int)resp.queries.size();i++)
 		{
-			DNSServer::answer a{i,resp.queries[i].type,resp.queries[i].cls,1000000,tmpb};
+			DNSServer::answer a{i,resp.queries[i].type,resp.queries[i].cls,100000000,tmpb};
 			resp.answers.push_back(a);
 		}
 		srv->sendreply(ep, resp);
 	});
-
+	srv->start();
+	WARN(6,"started.");
 	m->EventLoop();
 	s.Close();
 	return 0;
