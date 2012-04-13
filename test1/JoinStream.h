@@ -8,15 +8,18 @@
 #ifndef JOINSTREAM_H_
 #define JOINSTREAM_H_
 #include <cplib/cplib.hpp>
+#include <functional>
 #ifdef __debug_print123
 #define dbgprint(msg) cout << msg << endl
 #else
 #define dbgprint(msg)
 #endif
 using namespace xaxaxa;
+using namespace std;
 class JoinStream:public Object {
 public:
 	FUNCTION_DECLARE(BufferCallback,void,JoinStream*,Buffer*);
+	function<void(JoinStream*)> onclose;
 	struct item
 	{
 		Buffer b;

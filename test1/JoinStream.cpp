@@ -73,6 +73,7 @@ void JoinStream::Close()
 		m->Return(q2.GetPointer(i).b);
 		q2.EndDequeue(i);
 	}
+	onclose(this);
 	this->Release();
 }
 void JoinStream::begin1r()//s1 -->

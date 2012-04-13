@@ -67,9 +67,109 @@ struct host_item
 {
 	string host;
 	int refcount;
+	ULong unused_id;
 };
 map<IPAddress, host_item> hosts;
-set<IPAddress> unused_hosts;
+map<string, IPAddress> hosts2;
+ULong max_id = 0;
+map<ULong, IPAddress> unused_hosts;
+ip_pool pool
+{ IPAddress("127.1.0.1"), IPAddress("127.1.254.254") };
+
+ULong get_id()
+{
+	return ++max_id;
+}
+IPAddress map_host(const string& host)
+{
+	auto it = hosts2.find(host);
+	if (it == hosts2.end())
+	{
+		//not found. add.
+		auto ip1 = pool.get();
+		if (!ip1.second)
+		{
+			//pool empty. get an unused address.
+			auto it1 = unused_hosts.begin();
+			if (it1 == unused_hosts.end())
+				return IPAddress("0.0.0.0");
+			auto& ip = (*it1).second;
+			hosts2.erase(hosts[ip].host);
+			hosts[ip].host = host;
+			hosts2.insert(
+			{ host, ip });
+			unused_hosts.erase(it1);
+			auto id = get_id();
+			unused_hosts.insert(
+			{ id, ip });
+			hosts[ip].unused_id = id;
+			return ip;
+		}
+		else
+		{
+			auto& ip = ip1.first;
+			auto id = get_id();
+			host_item tmp
+			{ host, 0, id };
+			hosts.insert(
+			{ ip, tmp });
+			hosts2.insert(
+			{ host, ip });
+			unused_hosts.insert(
+			{ id, ip });
+			return ip;
+		}
+	}
+	else
+	{
+		return (*it).second;
+	}
+}
+string map_ip(const IPAddress& ip)
+{
+	auto it = hosts.find(ip);
+	if (it == hosts.end())
+		return "";
+	return (*it).second.host;
+}
+void add_unused(const IPAddress& ip)
+{
+	auto& tmp = hosts[ip];
+	if (tmp.unused_id != 0)
+		return;
+	auto id = get_id();
+	unused_hosts.insert(
+	{ id, ip });
+	tmp.unused_id = id;
+}
+void rm_unused(const IPAddress& ip)
+{
+	auto& tmp = hosts[ip];
+	if (tmp.unused_id == 0)
+		return;
+	unused_hosts.erase(tmp.unused_id);
+	tmp.unused_id = 0;
+}
+void increment_host(const IPAddress& ip)
+{
+	auto it = hosts.find(ip);
+	if (it == hosts.end())
+		return;
+	(*it).second.refcount++;
+	rm_unused(ip);
+}
+void decrement_host(const IPAddress& ip)
+{
+	auto it = hosts.find(ip);
+	if (it == hosts.end())
+		return;
+	(*it).second.refcount--;
+	if ((*it).second.refcount <= 0)
+	{
+		(*it).second.refcount = 0;
+		rm_unused(ip);
+	}
+}
 
 static void socks_cb1(void* obj, Stream* s, void* v)
 {
@@ -92,18 +192,18 @@ static void socks_cb(void* obj, Stream* s, void* v)
 	}
 	WARN(5, "################socks connected##################");
 	tmp->j->Begin();
+	increment_host(tmp->ep.Address);
 	delete tmp;
 }
 
 FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 {
-	tmp123* tmp = (tmp123*)obj;
+	tmp123* tmp = (tmp123*) obj;
 	tmp->j = NULL;
 	try
 	{
 		m->EndConnect(sock);
-	}
-	catch(Exception& ex)
+	} catch (Exception& ex)
 	{
 		tmp->s1.Close();
 		tmp->s2.Close();
@@ -121,11 +221,19 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 //delete tmp;
 		tmp->j = j;
 		j->begin1r();
-		SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp), SOCKS5::Callback(socks_cb1, tmp));
-	}
-	catch(Exception& ex)
+		//SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
+		//		SOCKS5::Callback(socks_cb1, tmp));
+		SOCKS5::socks_connect(j->s2, map_ip(tmp->ep.Address).c_str(), tmp->ep.Port,
+				SOCKS5::Callback(socks_cb, tmp), SOCKS5::Callback(socks_cb1, tmp));
+		auto& ip = tmp->ep.Address;
+		j->onclose = [ip](JoinStream* th)
+		{
+			decrement_host(ip);
+		};
+	} catch (Exception& ex)
 	{
-		if(tmp->j != NULL) tmp->j->Close();
+		if (tmp->j != NULL)
+			tmp->j->Close();
 		delete tmp;
 	}
 }
@@ -143,7 +251,8 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 	{
 		sockaddr_in dstaddr;
 		socklen_t dstlen = sizeof(dstaddr);
-		if(getsockopt(s._f, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr *)&dstaddr, &dstlen) != 0)throw Exception(errno);
+		if (getsockopt(s._f, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr *) &dstaddr, &dstlen) != 0)
+			throw Exception(errno);
 		IPEndPoint ep(dstaddr);
 
 		tmp = new tmp123();
@@ -152,12 +261,12 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 		tmp->s2 = s2;
 		IPEndPoint ep2(IPAddress(socks_host), socks_port);
 		m->BeginConnect(s2, &ep2, SocketManager::Callback(cb_connect, tmp));
-	}
-	catch(Exception& ex)
+	} catch (Exception& ex)
 	{
 		s.Close();
 		s2.Close();
-		if(tmp != NULL)delete tmp;
+		if (tmp != NULL)
+			delete tmp;
 	}
 	m->BeginAccept(sock, SocketManager::Callback(cb1, NULL));
 }
@@ -186,20 +295,20 @@ int iptsocks_main(int argc, char **argv)
 	m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
 
 	DNSServer* srv;
-	ip_pool p
-	{ IPAddress("127.1.0.1"), IPAddress("127.1.254.254") };
 	srv = new DNSServer(IPEndPoint(IPAddress("127.0.0.1"), 6953),
-			[&srv, &p](const EndPoint& ep, const DNSServer::dnsreq& req)
+			[&srv, &pool](const EndPoint& ep, const DNSServer::dnsreq& req)
 			{
 				WARN(6,"RECEIVED DNS PACKET");
 				IPAddress ip;
-				auto tmp=p.get();
-				if(tmp.second)ip=tmp.first;
-				else ip=IPAddress("127.0.0.1");
-				Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
+				/*auto tmp=pool.get();
+				 if(tmp.second)ip=tmp.first;
+				 else ip=IPAddress("127.0.0.1");*/
+
 				DNSServer::dnsreq resp(req.create_answer());
 				for(int i=0;i<(int)resp.queries.size();i++)
 				{
+					auto ip=map_host(resp.queries[i].q);
+					Buffer tmpb((Byte*)&ip.a, sizeof(ip.a));
 					DNSServer::answer a
 					{	i,resp.queries[i].type,resp.queries[i].cls,100000000,tmpb};
 					resp.answers.push_back(a);
