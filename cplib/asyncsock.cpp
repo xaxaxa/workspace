@@ -535,7 +535,9 @@ namespace xaxaxa
 			try
 			{
 				sb->Append("\x03");
-				sb->Append((char) strlen(host));
+				int addrlen=strlen(host);
+				tmp1->addrlen=0;
+				sb->Append((char) addrlen);
 				sb->Append(host);
 				port = htons(port);
 				sb->Append((char*) &port, 2);
@@ -550,6 +552,14 @@ namespace xaxaxa
 				delete tmp1;
 			}
 		}
+		void cb2_1(void* obj, Stream* s)
+		{
+			int i = s->EndRead();
+			if (i < 7)
+				throw Exception("SOCKS error occured");
+			tmp* tmp1 = (tmp*) obj;
+			
+		}
 		void SOCKS5::cb1(void* obj, Stream* s)
 		{
 			tmp* tmp1 = (tmp*) obj;
@@ -558,6 +568,15 @@ namespace xaxaxa
 				s->EndWrite();
 				if (!FUNCTION_ISNULL(tmp1->sent_cb))
 					FUNCTION_CALL(tmp1->sent_cb, s, NULL);
+				if(tmp1->addrlen<=0)
+				{
+					tmp1->b = Buffer(7);
+					tmp1->br = 0;
+					//dbgprint("========SOCKS request sent======");
+					s->BeginRead(tmp1->b, Stream::Callback(cb2_1, tmp1));
+					
+					return;
+				}
 				tmp1->b = Buffer(8 + tmp1->addrlen);
 				tmp1->br = 0;
 				dbgprint("========SOCKS request sent======");

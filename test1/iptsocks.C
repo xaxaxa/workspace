@@ -129,7 +129,7 @@ string map_ip(const IPAddress& ip)
 {
 	auto it = hosts.find(ip);
 	if (it == hosts.end())
-		return "";
+		return string();
 	return (*it).second.host;
 }
 void add_unused(const IPAddress& ip)
@@ -223,8 +223,13 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 		j->begin1r();
 		//SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
 		//		SOCKS5::Callback(socks_cb1, tmp));
-		SOCKS5::socks_connect(j->s2, map_ip(tmp->ep.Address).c_str(), tmp->ep.Port,
-				SOCKS5::Callback(socks_cb, tmp), SOCKS5::Callback(socks_cb1, tmp));
+		string h=map_ip(tmp->ep.Address);
+		if(h==string())
+			SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
+					SOCKS5::Callback(socks_cb1, tmp));
+		else
+			SOCKS5::socks_connect(j->s2, h.c_str(), tmp->ep.Port,
+					SOCKS5::Callback(socks_cb, tmp), SOCKS5::Callback(socks_cb1, tmp));
 		auto& ip = tmp->ep.Address;
 		j->onclose = [ip](JoinStream* th)
 		{
@@ -287,6 +292,9 @@ int iptsocks_main(int argc, char **argv)
 	sigaction(SIGTSTP, &sa, NULL);
 	sigaction(SIGTTIN, &sa, NULL);
 	sigaction(SIGTTOU, &sa, NULL);
+	
+	if(argc>1)socks_host=argv[1];
+	if(argc>2)socks_port=atoi(argv[2]);
 
 	Socket s(AF_INET, SOCK_STREAM, 0);
 	IPEndPoint ep(IPAddress("0.0.0.0"), DEFPORT);

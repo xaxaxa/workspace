@@ -72,8 +72,8 @@ namespace xaxaxa
 			}
 			inline IPAddress operator+(const in_addr_t& other) const
 			{
-				WARN(1,a.s_addr << " " <<ntohl(a.s_addr));
-				cout << "a" << endl;
+				//WARN(1,a.s_addr << " " <<ntohl(a.s_addr));
+				//cout << "a" << endl;
 				return IPAddress(
 				{ htonl(ntohl(a.s_addr) + other) });
 			}
