@@ -74,7 +74,7 @@ map<string, IPAddress> hosts2;
 ULong max_id = 0;
 map<ULong, IPAddress> unused_hosts;
 ip_pool pool
-{ IPAddress("127.1.0.1"), IPAddress("127.1.0.5") };
+{ IPAddress("127.1.0.1"), IPAddress("127.1.255.255") };
 
 ULong get_id()
 {
