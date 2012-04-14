@@ -14,8 +14,6 @@ JoinStream::JoinStream(Stream* s1, Stream* s2, BufferManager* m, int sendbuffers
 	this->m=(m==NULL?m=BufferManager::GetDefault():m);
 	this->s1=s1;
 	this->s2=s2;
-	s1->Retain();
-	s2->Retain();
 	s1reading=false;
 	s2reading=false;
 	s1writing=false;
@@ -27,8 +25,6 @@ JoinStream::JoinStream(Stream* s1, Stream* s2, BufferManager* m, int sendbuffers
 }
 
 JoinStream::~JoinStream() {
-	if(this->s1!=NULL)this->s1->Release();
-	if(this->s2!=NULL)this->s2->Release();
 }
 
 void JoinStream::Begin()
@@ -74,7 +70,7 @@ void JoinStream::Close()
 		q2.EndDequeue(i);
 	}
 	onclose(this);
-	this->Release();
+	//this->Release();
 }
 void JoinStream::begin1r()//s1 -->
 {
@@ -184,6 +180,7 @@ inline void JoinStream::s2_r(Stream* s)
 }
 inline void JoinStream::s1_w(Stream* s)
 {
+	//WARN(1,this << "::s1_w()");
 	try{
 	s1->EndWrite();
 	}catch(Exception& ex){s1closed=true;Stop();return;}

@@ -531,15 +531,15 @@ namespace xaxaxa
 			SocketManager();
 			~SocketManager();
 			virtual void EventLoop();
-			void BeginRecv(Socket s, Buffer buf, Callback cb, bool fill = false);
+			void BeginRecv(Socket s, const Buffer& buf, const Callback& cb, bool fill = false);
 			int EndRecv(Socket s);
 			int EndRecvFrom(Socket s, EndPoint& ep);
-			void BeginAccept(Socket s, Callback cb);
+			void BeginAccept(Socket s, const Callback& cb);
 			Socket EndAccept(Socket s, int flags = 0);
-			void BeginSend(Socket s, Buffer buf, Callback cb, bool fill = false);
+			void BeginSend(Socket s, const Buffer& buf, const Callback& cb, bool fill = false);
 			int EndSend(Socket s);
 			int EndSendTo(Socket s, EndPoint& ep);
-			void BeginConnect(Socket s, EndPoint* ep, Callback cb);
+			void BeginConnect(Socket s, EndPoint* ep, const Callback& cb);
 			void EndConnect(Socket s);
 			taskInfo* __current_task_;
 			void Cancel(Socket s);
@@ -551,10 +551,12 @@ namespace xaxaxa
 		public:
 			Socket socket;
 			SocketManager* m;
-			SocketStream()
+			SocketStream() :
+					closed(false)
 			{
 			}
-			SocketStream(Socket socket, SocketManager *m = NULL)
+			SocketStream(Socket socket, SocketManager *m = NULL) :
+					closed(false)
 			{
 				this->socket = socket;
 				if (m == NULL)
@@ -580,13 +582,20 @@ namespace xaxaxa
 			{
 
 			}
+			Callback r_cb;
+			Callback w_cb;
+			bool closed;
 			virtual void Close()
 			{
+				r_cb.obj = NULL;
+				w_cb.obj = NULL;
 				m->Cancel(socket);
+				if (closed)
+					return;
+				closed = true;
 				socket.Close();
 			}
-			Callback r_cb;
-			Callback w_cb;FUNCTION_DECLWRAPPER(_r_cb,void,SocketManager* m,Socket sock)
+			FUNCTION_DECLWRAPPER(_r_cb,void,SocketManager* m,Socket sock)
 			{
 				FUNCTION_CALL(((SocketStream*)obj)->r_cb, (SocketStream*)obj);
 			}
@@ -625,21 +634,32 @@ namespace xaxaxa
 			struct tmp
 			{
 				Buffer b;
-				StringBuilder* sb;
-				int addrlen;
+				//StringBuilder* sb;
+				//int addrlen;
 				Callback cb;
 				Callback sent_cb;
-				int br;
-				Exception ex;
+				//int br;
+				Exception* ex;
 				//void* state;
 			};
+			struct socks_auth_response
+			{
+				Byte version, auth;
+			}__attribute__((packed));
+			struct socks_response
+			{
+				Byte version, status, reserved, addrtype, addrlen;
+			}__attribute__((packed));
 			static void socks_connect(Stream* s, const char* host, uint16_t port, Callback cb,
 					Callback sent_cb);
 			static void socks_connect(Stream* s, EndPoint* ep, Callback cb, Callback sent_cb =
 					Callback::null);
+			static void auth_cb(void* obj, Stream* s);
+			static void auth_received_cb(void* obj, Stream* s);
 			static void socks_endconnect(void* v);
 			static void cb1(void* obj, Stream* s);
 			static void cb2(void* obj, Stream* s);
+			static void cb2_1(void* obj, Stream* s);
 		};
 
 	}

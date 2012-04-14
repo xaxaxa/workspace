@@ -403,6 +403,12 @@ namespace xaxaxa
 			this->Length = length;
 			this->IsRaw = true;
 		}
+		Buffer(const char* buf, int length)
+		{
+			this->Data = (Byte*) buf;
+			this->Length = length;
+			this->IsRaw = true;
+		}
 		Buffer(char* buf)
 		{
 			this->Data = (Byte*) buf;
@@ -415,15 +421,15 @@ namespace xaxaxa
 			this->Length = strlen(buf);
 			this->IsRaw = true;
 		}
-		Buffer(Byte* buf, int length)
+		/*Buffer(Byte* buf, int length)
+		 {
+		 this->Data = (Byte*) buf;
+		 this->Length = length;
+		 this->IsRaw = true;
+		 }*/
+		Buffer(void* buf, int length, boost::shared_array<Byte> orig)
 		{
 			this->Data = (Byte*) buf;
-			this->Length = length;
-			this->IsRaw = true;
-		}
-		Buffer(Byte* buf, int length, boost::shared_array<Byte> orig)
-		{
-			this->Data = buf;
 			this->Length = length;
 			this->IsRaw = false;
 			this->pbuf = orig;
@@ -549,14 +555,15 @@ namespace xaxaxa
 		};
 		virtual Int Read(const Buffer& buf)=0;
 		virtual void Write(const Buffer& buf)=0;
-		bool Fill(Buffer buf)
+		Int Fill(Buffer buf)
 		{
-			int br;
+			Int br,br1=0;
 			while((br=Read(buf))>0)
 			{
 				buf.Clip(br);
+				br1+=br;
 			}
-			return buf.Length<=0;
+			return br1;
 		}
 		virtual void Flush()=0;
 		virtual void Close()=0;
@@ -590,8 +597,53 @@ namespace xaxaxa
 		{
 
 		}
+		struct
+		{
+			Buffer buf;
+			Callback cb;
+			Int br;
+			bool in_progress;
+		}r_state,w_state;
+
+		void cb1(Stream* s)
+		{
+			try
+			{
+				Int tmp=EndRead();
+				if(tmp>0)r_state.br+=tmp;
+				if(tmp<=0 || tmp>=r_state.buf.Length)
+				{
+					r_state.in_progress=false;
+					FUNCTION_CALL(r_state.cb, this);
+					return;
+				}
+				r_state.buf.Clip(tmp);
+				BeginRead(r_state.buf,Callback(&Stream::cb1,this));
+			}
+			catch(Exception& ex)
+			{
+				r_state.in_progress=false;
+				FUNCTION_CALL(r_state.cb, this);
+				return;
+			}
+		}
+		virtual void BeginFill(const Buffer& buf, Callback cb)
+		{
+			if(r_state.in_progress)throw Exception("read operation already in progress");
+			r_state.in_progress=true;
+			r_state.buf=buf;
+			r_state.br=0;
+			r_state.cb=cb;
+			BeginRead(buf,Callback(&Stream::cb1,this));
+		}
+		virtual Int EndFill()
+		{
+			return r_state.br;
+		}
 		Stream()
-		{}
+		{
+			r_state.in_progress=w_state.in_progress=false;
+		}
 		virtual ~Stream()
 		{
 			//if(AutoClose)Close();
@@ -673,7 +725,7 @@ namespace xaxaxa
 			memcpy(new_arr, buf.Data, length);
 			buf.Data = new_arr;
 			buf.pbuf.reset(new_arr);
-			this->Capacity = tmp;
+			buf.Length = this->Capacity = tmp;
 		}
 		void Append(const Buffer& buf);
 		void Append(STRING buf);
@@ -1313,13 +1365,11 @@ namespace xaxaxa
 				__def_BufferManager = new BufferManager();
 			return __def_BufferManager;
 		}
-		ArrayList<Buffer> l;
-		int maxSpare, bufferSize;
+		vector<Buffer> l;
+		int bufferSize, maxSpare;
 		BufferManager(int bufferSize = 65536, int maxSpare = 10) :
-				l(maxSpare > 32 ? 32 : maxSpare)
+				bufferSize(bufferSize), maxSpare(maxSpare)
 		{
-			this->maxSpare = maxSpare;
-			this->bufferSize = bufferSize;
 		}
 		~BufferManager()
 		{
@@ -1331,15 +1381,19 @@ namespace xaxaxa
 		}
 		Buffer Get()
 		{
-			if (l.Length <= 0)
+			if (l.size() <= 0)
 				return Buffer(bufferSize);
 			else
-				return l.array[--l.Length];
+			{
+				auto tmp = l[l.size() - 1];
+				l.pop_back();
+				return tmp;
+			}
 		}
 		void Return(Buffer& b)
 		{
-			if (l.Length < maxSpare)
-				l.Append(b);
+			if ((int) l.size() < maxSpare)
+				l.push_back(b);
 			//else b->Release();
 		}
 	};
@@ -1655,7 +1709,7 @@ namespace xaxaxa
 		{
 			auto& it1 = it.it;
 			auto& v = (*it1).v;
-			v.erase(v.begin()+it.vect_index);
+			v.erase(v.begin() + it.vect_index);
 			if (v.size() <= 0)
 				l.erase(it1);
 		}

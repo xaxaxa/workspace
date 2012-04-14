@@ -71,12 +71,12 @@ namespace xaxaxa
 						continue;dbgprint("s=" << s);
 					taskInfo& __current_task = this->info[s];
 					__current_task_ = &__current_task;
-					/*if(!(__current_task.bits&1))
-					 {
-					 dbgprint(s << "not initialized");
-					 this->info.erase(s);
-					 continue;
-					 }*/
+					if (!(__current_task.bits & 1))
+					{
+						dbgprint(s << "not initialized");
+						this->info.erase(s);
+						continue;
+					}
 					bool hup = (ev.events & EPOLLHUP) || (ev.events & EPOLLERR);
 					__current_task.new_events = __current_task.events & (~ev.events);
 					if (hup)
@@ -177,7 +177,7 @@ namespace xaxaxa
 				__current_task_ = NULL;
 			}
 		}
-		void SocketManager::BeginRecv(Socket s, Buffer buf, Callback cb, bool fill)
+		void SocketManager::BeginRecv(Socket s, const Buffer& buf, const Callback& cb, bool fill)
 		{
 			if (__current_task_ != NULL && s._f == __current_task_->s)
 			{
@@ -298,7 +298,7 @@ namespace xaxaxa
 			}
 		}
 
-		void SocketManager::BeginSend(Socket s, Buffer buf, Callback cb, bool fill)
+		void SocketManager::BeginSend(Socket s, const Buffer& buf, const Callback& cb, bool fill)
 		{
 			if (__current_task_ != NULL && s._f == __current_task_->s)
 			{
@@ -375,7 +375,7 @@ namespace xaxaxa
 					return tmp;
 			}
 		}
-		void SocketManager::BeginAccept(Socket s, Callback cb)
+		void SocketManager::BeginAccept(Socket s, const Callback& cb)
 		{
 			BeginRecv(s, Buffer(), cb);
 		}
@@ -383,7 +383,7 @@ namespace xaxaxa
 		{
 			return s.Accept(flags);
 		}
-		void SocketManager::BeginConnect(Socket s, EndPoint* ep, Callback cb)
+		void SocketManager::BeginConnect(Socket s, EndPoint* ep, const Callback& cb)
 		{
 			s.SetFlags(s.GetFlags() | O_NONBLOCK);
 			s.Connect(ep);
@@ -472,13 +472,13 @@ namespace xaxaxa
 		}
 		void SOCKS5::socks_connect(Stream* s, EndPoint* ep, Callback cb, Callback sent_cb)
 		{
-			StringBuilder* sb = new StringBuilder(32);
-			char c[] = "\x05\x01\x00\x05\x01\x00";
-			sb->Append(Buffer((Byte*) c, 6));
+			StringBuilder sb(32);
+			char c[] = "\x05\x01\x00";
+			sb.Append(Buffer((Byte*) c, 3));
 			int port;
 			tmp* tmp1 = new tmp();
 			//tmp1->state=state;
-			tmp1->sb = sb;
+			//tmp1->sb = sb;
 			tmp1->cb = cb;
 			tmp1->sent_cb = sent_cb;
 			try
@@ -487,78 +487,137 @@ namespace xaxaxa
 				{
 				case AF_INET:
 				{
-					sb->Append("\x01");
+					sb.Append("\x01");
 					port = dynamic_cast<IPEndPoint*>(ep)->Port;
-					tmp1->addrlen = 4;
+					//tmp1->addrlen = 4;
 					sockaddr_in addr;
 					ep->GetSockAddr((sockaddr*) &addr);
-					sb->Append((char*) &(addr.sin_addr.s_addr), 4);
+					sb.Append((char*) &(addr.sin_addr.s_addr), 4);
 					break;
 				}
 				case AF_INET6:
 				{
-					sb->Append("\x04");
+					sb.Append("\x04");
 					port = dynamic_cast<IPv6EndPoint*>(ep)->Port;
-					tmp1->addrlen = 16;
+					//tmp1->addrlen = 16;
 					sockaddr_in6 addr;
 					ep->GetSockAddr((sockaddr*) &addr);
-					sb->Append((char*) &(addr.sin6_addr.__in6_u.__u6_addr8), 16);
+					sb.Append((char*) &(addr.sin6_addr.__in6_u.__u6_addr8), 16);
 					break;
 				}
 				default:
 					throw Exception("SOCKS does not support the requested address family");
 				}
 				port = htons(port);
-				sb->Append((char*) &port, 2);
+				sb.Append((char*) &port, 2);
 
-				STRING tmp = sb->ToString();
-				s->BeginWrite(Buffer(tmp.c, tmp.length), Stream::Callback(cb1, tmp1));
+				//STRING tmp = sb->ToString();
+				tmp1->b = sb.ToBuffer();
+				//s->BeginWrite(sb.ToBuffer(), Stream::Callback(cb1, tmp1));
+				s->BeginWrite(Buffer("\x05\x01\x00", 3), Stream::Callback(auth_cb, tmp1));
 			} catch (Exception& ex)
 			{
-				tmp1->ex = ex;
+				tmp1->ex = &ex;
 				FUNCTION_CALL(tmp1->cb, s, tmp1);
-				delete tmp1->sb;
+				//delete tmp1->sb;
 				delete tmp1;
 			}
 		}
 		void SOCKS5::socks_connect(Stream* s, const char* host, uint16_t port, Callback cb,
 				Callback sent_cb)
 		{
-			StringBuilder* sb = new StringBuilder(32);
-			char c[] = "\x05\x01\x00\x05\x01\x00";
-			sb->Append(Buffer((Byte*) c, 6));
+			StringBuilder sb(32);
+			char c[] = "\x05\x01\x00";
+			sb.Append(Buffer((Byte*) c, 3));
 			tmp* tmp1 = new tmp();
 			//tmp1->state=state;
-			tmp1->sb = sb;
+			//tmp1->sb = sb;
 			tmp1->cb = cb;
 			tmp1->sent_cb = sent_cb;
 			try
 			{
-				sb->Append("\x03");
-				int addrlen=strlen(host);
-				tmp1->addrlen=0;
-				sb->Append((char) addrlen);
-				sb->Append(host);
+				sb.Append("\x03");
+				int addrlen = strlen(host);
+				//tmp1->addrlen = 0;
+				sb.Append((char) addrlen);
+				sb.Append(host);
 				port = htons(port);
-				sb->Append((char*) &port, 2);
+				sb.Append((char*) &port, 2);
 
-				STRING tmp = sb->ToString();
-				s->BeginWrite(Buffer(tmp.c, tmp.length), Stream::Callback(cb1, tmp1));
+				//STRING tmp = sb->ToString();
+				tmp1->b = sb.ToBuffer();
+				//s->BeginWrite(sb.ToBuffer(), Stream::Callback(cb1, tmp1));
+				s->BeginWrite(Buffer("\x05\x01\x00", 3), Stream::Callback(auth_cb, tmp1));
 			} catch (Exception& ex)
 			{
-				tmp1->ex = ex;
+				tmp1->ex = &ex;
 				FUNCTION_CALL(tmp1->cb, s, tmp1);
-				delete tmp1->sb;
+				//delete tmp1->sb;
 				delete tmp1;
 			}
 		}
-		void cb2_1(void* obj, Stream* s)
+		void SOCKS5::auth_cb(void* obj, Stream* s)
 		{
-			int i = s->EndRead();
-			if (i < 7)
-				throw Exception("SOCKS error occured");
 			tmp* tmp1 = (tmp*) obj;
-			
+			try
+			{
+				s->EndWrite();
+				s->BeginFill(Buffer(2), Stream::Callback(&SOCKS5::auth_received_cb, tmp1));
+			} catch (Exception& ex)
+			{
+				tmp1->ex = &ex;
+				FUNCTION_CALL(tmp1->cb, s, tmp1);
+				delete tmp1;
+			}
+		}
+		void SOCKS5::auth_received_cb(void* obj, Stream* s)
+		{
+			tmp* tmp1 = (tmp*) obj;
+			try
+			{
+				s->EndFill();
+				s->BeginWrite(tmp1->b, Stream::Callback(cb1, tmp1));
+			} catch (Exception& ex)
+			{
+				tmp1->ex = &ex;
+				FUNCTION_CALL(tmp1->cb, s, tmp1);
+				delete tmp1;
+			}
+		}
+		void SOCKS5::cb2_1(void* obj, Stream* s)
+		{
+			tmp* tmp1 = (tmp*) obj;
+			try
+			{
+				int i = s->EndFill();
+				if (i < 5)
+					throw Exception("SOCKS error occurred");
+
+				socks_response* resp = (socks_response*) tmp1->b.Data;
+				int addrlen;
+				switch (resp->addrtype)
+				{
+				case 1: //ipv4
+					addrlen = 4;
+					break;
+				case 3: //hostname
+					addrlen = resp->addrlen + 1;
+					break;
+				case 4: //ipv6
+					addrlen = 16;
+					break;
+				default:
+					throw Exception("SOCKS error occurred");
+				}
+				//addrlen = addrlen - 1 + 2;
+				tmp1->b = Buffer(addrlen - 1 + 2);
+				s->BeginFill(tmp1->b, Stream::Callback(cb2, tmp1));
+			} catch (Exception& ex)
+			{
+				tmp1->ex = &ex;
+				FUNCTION_CALL(tmp1->cb, s, tmp1);
+				delete tmp1;
+			}
 		}
 		void SOCKS5::cb1(void* obj, Stream* s)
 		{
@@ -566,26 +625,28 @@ namespace xaxaxa
 			try
 			{
 				s->EndWrite();
+				//delete tmp1->sb;
+				//tmp1->sb=NULL;
 				if (!FUNCTION_ISNULL(tmp1->sent_cb))
 					FUNCTION_CALL(tmp1->sent_cb, s, NULL);
-				if(tmp1->addrlen<=0)
-				{
-					tmp1->b = Buffer(7);
-					tmp1->br = 0;
-					//dbgprint("========SOCKS request sent======");
-					s->BeginRead(tmp1->b, Stream::Callback(cb2_1, tmp1));
-					
-					return;
-				}
-				tmp1->b = Buffer(8 + tmp1->addrlen);
-				tmp1->br = 0;
-				dbgprint("========SOCKS request sent======");
-				s->BeginRead(tmp1->b, Stream::Callback(cb2, tmp1));
+				/*if(tmp1->addrlen<=0)
+				 {*/
+				tmp1->b = Buffer(5);
+				//tmp1->br = 0;
+				//dbgprint("========SOCKS request sent======");
+				s->BeginFill(tmp1->b, Stream::Callback(cb2_1, tmp1));
+				/*
+				 return;
+				 }
+				 tmp1->b = Buffer(8 + tmp1->addrlen);
+				 tmp1->br = 0;
+				 dbgprint("========SOCKS request sent======");
+				 s->BeginRead(tmp1->b, Stream::Callback(cb2, tmp1));*/
 			} catch (Exception& ex)
 			{
-				tmp1->ex = ex;
+				tmp1->ex = &ex;
 				FUNCTION_CALL(tmp1->cb, s, tmp1);
-				delete tmp1->sb;
+				//if(tmp1->sb!=NULL)delete tmp1->sb;
 				//tmp1->b.Release();
 				delete tmp1;
 			}
@@ -595,29 +656,23 @@ namespace xaxaxa
 			tmp* tmp1 = (tmp*) obj;
 			try
 			{
-				int i = s->EndRead();
+				int i = s->EndFill();
 				if (i <= 0)
-					throw Exception("SOCKS error occured");
+					throw Exception("SOCKS error occurred");
 				dbgprint("========SOCKS response read====== "<<i<<" bytes received");
-				tmp1->br += i;
-				if (tmp1->br >= tmp1->b.Length)
+				//tmp1->br += i;
+				try
 				{
 					FUNCTION_CALL(tmp1->cb, s, tmp1);
-					delete tmp1->sb;
-					//tmp1->b.Release();
-					delete tmp1;
-				}
-				else
+				} catch (Exception& ex1)
 				{
-					//tmp1->b=tmp1->b.SubBuffer(tmp1->br,tmp1->b.length-tmp1->br,false);
-					s->BeginRead(tmp1->b.SubBuffer(tmp1->br, tmp1->b.Length - tmp1->br),
-							Stream::Callback(cb2, tmp1));
 				}
+				delete tmp1;
 			} catch (Exception& ex)
 			{
-				tmp1->ex = ex;
+				tmp1->ex = &ex;
 				FUNCTION_CALL(tmp1->cb, s, tmp1);
-				delete tmp1->sb;
+				//delete tmp1->sb;
 				//tmp1->b.Release();
 				delete tmp1;
 			}
@@ -625,8 +680,8 @@ namespace xaxaxa
 		void SOCKS5::socks_endconnect(void* v)
 		{
 			tmp* tmp1 = (tmp*) v;
-			if (tmp1->ex.Code != 0)
-				throw tmp1->ex;
+			if (tmp1->ex != NULL)
+				throw(Exception&) *(tmp1->ex);
 		}
 	}
 }

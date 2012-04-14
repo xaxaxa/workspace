@@ -13,7 +13,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
 #include <iostream>
-#define WARNLEVEL 10
+#define WARNLEVEL 3
 #include <cplib/cplib.hpp>
 #include <cplib/asyncsock.hpp>
 #include <cplib/asyncfile.hpp>
@@ -29,7 +29,7 @@
 #include <tuple>
 
 #define DEFPORT 6969
-#define WARNLEVEL 10
+//#define WARNLEVEL 10
 using namespace boost;
 using namespace std;
 using namespace xaxaxa;
@@ -74,7 +74,7 @@ map<string, IPAddress> hosts2;
 ULong max_id = 0;
 map<ULong, IPAddress> unused_hosts;
 ip_pool pool
-{ IPAddress("127.1.0.1"), IPAddress("127.1.254.254") };
+{ IPAddress("127.1.0.1"), IPAddress("127.1.0.5") };
 
 ULong get_id()
 {
@@ -93,15 +93,16 @@ IPAddress map_host(const string& host)
 			auto it1 = unused_hosts.begin();
 			if (it1 == unused_hosts.end())
 				return IPAddress("0.0.0.0");
-			auto& ip = (*it1).second;
+			auto ip = (*it1).second;
 			hosts2.erase(hosts[ip].host);
-			hosts[ip].host = host;
+			hosts[ip]=
+			{	host,0,0};
 			hosts2.insert(
 			{ host, ip });
-			unused_hosts.erase(it1);
 			auto id = get_id();
 			unused_hosts.insert(
 			{ id, ip });
+			unused_hosts.erase(it1);
 			hosts[ip].unused_id = id;
 			return ip;
 		}
@@ -141,6 +142,7 @@ void add_unused(const IPAddress& ip)
 	unused_hosts.insert(
 	{ id, ip });
 	tmp.unused_id = id;
+	//WARN(2, inet_ntoa(ip.a) << " freed");
 }
 void rm_unused(const IPAddress& ip)
 {
@@ -149,6 +151,7 @@ void rm_unused(const IPAddress& ip)
 		return;
 	unused_hosts.erase(tmp.unused_id);
 	tmp.unused_id = 0;
+	//WARN(2, inet_ntoa(ip.a) << " acquired");
 }
 void increment_host(const IPAddress& ip)
 {
@@ -156,6 +159,7 @@ void increment_host(const IPAddress& ip)
 	if (it == hosts.end())
 		return;
 	(*it).second.refcount++;
+	//WARN(2, inet_ntoa(ip.a) << " incremented to " << (*it).second.refcount);
 	rm_unused(ip);
 }
 void decrement_host(const IPAddress& ip)
@@ -164,10 +168,11 @@ void decrement_host(const IPAddress& ip)
 	if (it == hosts.end())
 		return;
 	(*it).second.refcount--;
+	//WARN(2, inet_ntoa(ip.a) << " decremented to " << (*it).second.refcount);
 	if ((*it).second.refcount <= 0)
 	{
 		(*it).second.refcount = 0;
-		rm_unused(ip);
+		add_unused(ip);
 	}
 }
 
@@ -215,26 +220,31 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 		SocketStream* str1 = new SocketStream(tmp->s1);
 		SocketStream* str2 = new SocketStream(tmp->s2);
 		JoinStream *j = new JoinStream(str1, str2);
-		str1->Release();
-		str2->Release();
 //j->Begin();
 //delete tmp;
 		tmp->j = j;
 		j->begin1r();
 		//SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
 		//		SOCKS5::Callback(socks_cb1, tmp));
-		string h=map_ip(tmp->ep.Address);
-		if(h==string())
+		string h = map_ip(tmp->ep.Address);
+		if (h == string())
 			SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
 					SOCKS5::Callback(socks_cb1, tmp));
 		else
-			SOCKS5::socks_connect(j->s2, h.c_str(), tmp->ep.Port,
-					SOCKS5::Callback(socks_cb, tmp), SOCKS5::Callback(socks_cb1, tmp));
-		auto& ip = tmp->ep.Address;
-		j->onclose = [ip](JoinStream* th)
+			SOCKS5::socks_connect(j->s2, h.c_str(), tmp->ep.Port, SOCKS5::Callback(socks_cb, tmp),
+					SOCKS5::Callback(socks_cb1, tmp));
+		auto ip = tmp->ep.Address;
+		j->onclose = [ip,j](JoinStream* th)
 		{
-			decrement_host(ip);
-		};
+			//WARN(2,inet_ntoa(ip.a)<<" closed");
+				decrement_host(ip);
+				j->s1->Close();
+				j->s2->Close();
+				delete j->s1;
+				delete j->s2;
+				//WARN(1,j << " deleted");
+				delete j;
+			};
 	} catch (Exception& ex)
 	{
 		if (tmp->j != NULL)
@@ -292,9 +302,11 @@ int iptsocks_main(int argc, char **argv)
 	sigaction(SIGTSTP, &sa, NULL);
 	sigaction(SIGTTIN, &sa, NULL);
 	sigaction(SIGTTOU, &sa, NULL);
-	
-	if(argc>1)socks_host=argv[1];
-	if(argc>2)socks_port=atoi(argv[2]);
+
+	if (argc > 1)
+		socks_host = argv[1];
+	if (argc > 2)
+		socks_port = atoi(argv[2]);
 
 	Socket s(AF_INET, SOCK_STREAM, 0);
 	IPEndPoint ep(IPAddress("0.0.0.0"), DEFPORT);
