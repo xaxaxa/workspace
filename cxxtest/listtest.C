@@ -12,12 +12,22 @@ int main()
 	cout << "appending" << endl;
 	for(i=0;i<256*256*256;i++)
 		l.push_back(i);
-	cout << "done; traversing list." << endl;
+	cout << "done." << endl;
+	cout << " traversing list." << endl;
 	for(auto it=l.begin();it!=l.end();it++)
 	{
 		int tmp=*it;
 		if(tmp<0)break;
-	}*/
+	}
+	cout << "done." << endl;
+	cout << "deleting list." << endl;
+	while(true)
+	{
+		auto it=l.begin();
+		if(it==l.end())break;
+		l.erase(it);
+	}
+	cout << "done" << endl;*/
 	
 	/*list< vector<int> > l2;
 	int i;
@@ -41,25 +51,27 @@ int main()
 	
 	
 	
-	int i;
+	/*int i;
 	xaxaxa::vectorlist<int> l(32);
 	cout << "appending" << endl;
 	for(i=0;i<256*256*256;i++)
 		l.push_back(i);
-	cout << "done; traversing list." << endl;
+	cout << "done." << endl;
+	cout << " traversing list." << endl;
 	for(auto it=l.begin();!it.is_end();it++)
 	{
 		int tmp=*it;
 		if(tmp<0)break;
 	}
-	/*cout << "done; deleting list." << endl;
+	cout << "done." << endl;
+	cout << "deleting list." << endl;
 	while(true)
 	{
 		auto it=l.begin();
 		if(it.is_end())break;
 		l.erase(it);
-	}*/
-	cout << "done" << endl;
+	}
+	cout << "done" << endl;*/
 	
 	//while(1)sleep(1);
 }
