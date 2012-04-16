@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-	/*list<int> l;
+	list<int> l;
 	int i;
 	cout << "appending" << endl;
 	for(i=0;i<256*256*256;i++)
@@ -27,7 +27,7 @@ int main()
 		if(it==l.end())break;
 		l.erase(it);
 	}
-	cout << "done" << endl;*/
+	cout << "done" << endl;
 	
 	/*list< vector<int> > l2;
 	int i;
