@@ -46,6 +46,7 @@
 #include <unistd.h>
 #include <ucontext.h>
 #include <cxxabi.h>
+#include <functional>
 #ifdef cplib_glib_wrappers
 #include <glibmm.h>
 #include <giomm.h>
@@ -54,7 +55,7 @@
 //RETVAL(*)(__VA_ARGS__)
 
 #define FUNCTION_ISNULL(fn) ((fn).f==NULL)
-#define FUNCTION_DECLARE(NAME,RETVAL,...) \
+/*#define FUNCTION_DECLARE(NAME,RETVAL,...) \
 	struct NAME;struct NAME{\
 		RETVAL(*f)(void*,__VA_ARGS__);\
 		void* obj;\
@@ -81,23 +82,45 @@
 		{return !(*this>X);}\
 		bool operator>=(const NAME& X) const\
 		{return !(*this<X);}\
+	}*/
+#define FUNCTION_DECLARE(NAME,RETVAL,...) \
+	struct NAME;struct NAME{\
+		std::function<RETVAL(void*,__VA_ARGS__)> f;\
+		void* obj;int __id;\
+		inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj)\
+		{__id=rand();this->f=f;\
+		 this->obj=obj;}\
+		template<class FGSAFJGFJSA>inline NAME(RETVAL(FGSAFJGFJSA::*f)(__VA_ARGS__),void* obj)\
+		{__id=rand();this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
+		this->obj=obj;}\
+		inline NAME(RETVAL(*f)(void*,__VA_ARGS__))\
+		{__id=rand();this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
+		this->obj=NULL;}\
+		inline NAME(){}\
+		static NAME null;\
+		bool operator<(const NAME& X) const\
+		{return __id>X.__id;}\
 	}
 /*#define FUNCTION_DECLARE(NAME,RETVAL,...) \
-	struct NAME;\
-	struct NAME{\
-	boost::function<RETVAL (void*,__VA_ARGS__)> f;\
-	void* obj;\
-	template<class X>inline NAME(boost::function<RETVAL (X,__VA_ARGS__)> f,void* obj)\
-	{this->f=*(reinterpret_cast<boost::function<RETVAL (void*,__VA_ARGS__)>*>(&f));this->obj=obj;}\
-	inline NAME(){f=NULL;}\
-	static NAME null;}*/
+	struct NAME;struct NAME{\
+		std::function<RETVAL(__VA_ARGS__)> f;\
+		inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj)\
+		{this->f=std::bind(std::function<RETVAL(void*,__VA_ARGS__)>(f), obj);}\
+		template<class FGSAFJGFJSA>inline NAME(RETVAL(FGSAFJGFJSA::*f)(__VA_ARGS__),void* obj)\
+		{this->f=std::bind(std::function<RETVAL(void*,__VA_ARGS__)>(reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f)), obj);\
+		}\
+		inline NAME(RETVAL(*f)(void*,__VA_ARGS__))\
+		{this->f=std::bind(std::function<RETVAL(void*,__VA_ARGS__)>(reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f)), (void*)NULL);\
+		}\
+		inline NAME(){}\
+	}*/
 //#define FUNCTION_EXPORT(CLASS,NAME,FNAME,RETVAL,...) static RETVAL NAME(void* obj,__VA_ARGS__){return ((CLASS*)obj)->FNAME(__VA_ARGS__);}
 #define FUNCTION_DECLWRAPPER(NAME,RETVAL,...) static inline RETVAL NAME(void* obj,__VA_ARGS__)
 //#define FUNCTION_GET(TYPE,WRAPPER_NAME) {TYPE __func;__func.f=WRAPPER_NAME;__func.obj=this;}
 //#define FUNCTION_GETSTATIC(TYPE,WRAPPER_NAME) (TYPE __func,__func.f=WRAPPER_NAME,__func.obj=NULL)
 //#define FUNCTION_GET1(TYPE,OBJ,WRAPPER_NAME) {TYPE __func;__func.f=OBJ->WRAPPER_NAME;__func.obj=OBJ;}
-#define FUNCTION_CALL(FUNC,...) FUNCTION_ISNULL(FUNC)?throw Exception("attempting to call null function"):(FUNC).f((FUNC).obj,__VA_ARGS__)
-
+//#define FUNCTION_CALL(FUNC,...) FUNCTION_ISNULL(FUNC)?throw Exception("attempting to call null function"):(FUNC).f((FUNC).obj,__VA_ARGS__)
+#define FUNCTION_CALL(FUNC,...) (FUNC).f((FUNC).obj,__VA_ARGS__)
 #define DELEGATE(RETVAL,NAME,...) FUNCTION_DECLARE(NAME,RETVAL,__VA_ARGS__)
 #define CALL FUNCTION_CALL
 /*#define FUNCTION_ISNULL(FUNC) (FUNC==NULL)
@@ -384,18 +407,74 @@ namespace xaxaxa
 	typedef double Double;
 	typedef long double Decimal;
 	//typedef boost::shared_ptr shared_ptr;
-	class Buffer
+	//does NOT do reference counting; this is a simple struct to pass around buffers
+	//to functions that do not store them; this avoids the overhead of Buffer
+	class Buffer;
+	struct BufferRef
+	{
+		Byte* Data;
+		Int Length;
+		inline BufferRef() :
+				Length(0)
+		{
+		}
+		inline BufferRef(const Buffer& b);
+		inline BufferRef(Byte* Data, Int Length) :
+				Data(Data), Length(Length)
+		{
+		}
+		/*BufferRef(const Buffer& b) :
+		 Data(b.Data), Length(b.Length)
+		 {
+		 }*/
+		inline BufferRef SubBuffer(int index, int length) const
+		{
+			if (index < 0 || index + length > this->Length)
+				throw Exception("SubBuffer() out of range");
+			return BufferRef
+			{ Data + index, length };
+		}
+		inline BufferRef SubBuffer(int index) const
+		{
+			return SubBuffer(index, Length - index);
+		}
+		inline void Clip(int index, int length)
+		{
+			if (index < 0 || index + length > this->Length)
+				throw Exception("BufferRef::Clip() out of range");
+			Data += index;
+			Length = length;
+		}
+		inline void Clip(int index)
+		{
+			//Clip(index, Length - index);
+			if (index < 0 || index > this->Length)
+				throw Exception("BufferRef::Clip() out of range");
+			Data += index;
+			Length -= index;
+		}
+	};
+	class Buffer: public BufferRef
 	{
 	public:
-		boost::shared_array<Byte> pbuf;
-		Byte* Data;
+		//boost::shared_array<Byte> pbuf;
+		typedef int refc_t;
+		refc_t* pbuf;
+		//Byte* Data;
 		bool IsRaw;
-		Int Length;
-		inline Buffer()
+		//Int Length;
+		inline void __inc()
 		{
-			Data = NULL;
-			IsRaw = true;
-			Length = 0;
+			++*pbuf;
+		}
+		inline void __dec_autofree()
+		{
+			if (--*pbuf <= 0)
+				delete[] (Byte*) pbuf;
+		}
+		inline Buffer() :
+				IsRaw(true)
+		{
 		}
 		Buffer(void* buf, int length)
 		{
@@ -427,12 +506,23 @@ namespace xaxaxa
 		 this->Length = length;
 		 this->IsRaw = true;
 		 }*/
-		Buffer(void* buf, int length, boost::shared_array<Byte> orig)
+		Buffer(void* buf, int length, refc_t* orig)
 		{
 			this->Data = (Byte*) buf;
 			this->Length = length;
 			this->IsRaw = false;
 			this->pbuf = orig;
+			__inc();
+		}
+		inline void Release()
+		{
+			if (IsRaw)
+				throw Exception(
+						"Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
+			__dec_autofree();
+			Data = NULL;
+			Length = 0;
+			IsRaw = true;
 		}
 		Buffer(int length)
 		{
@@ -443,9 +533,38 @@ namespace xaxaxa
 				this->IsRaw = true;
 				return;
 			}
-			this->Data = new Byte[length];
-			this->pbuf = boost::shared_array<Byte>(this->Data);
+			this->pbuf = (refc_t*) new Byte[length + sizeof(refc_t)];
+			*this->pbuf = 1;
+			this->Data = (Byte*) (this->pbuf + 1);
+			//this->Data = new Byte[length];
+			//this->pbuf = boost::shared_array<Byte>(this->Data);
 			this->IsRaw = false;
+		}
+		Buffer(const Buffer& b) :
+				BufferRef(b), IsRaw(b.IsRaw)
+		{
+			if (!b.IsRaw)
+			{
+				pbuf = b.pbuf;
+				__inc();
+			}
+		}
+		Buffer& operator=(const Buffer& b)
+		{
+			BufferRef::operator=(b);
+			if (!IsRaw)
+				__dec_autofree();
+			if (!(IsRaw = b.IsRaw))
+			{
+				pbuf = b.pbuf;
+				__inc();
+			}
+			return *this;
+		}
+		inline ~Buffer()
+		{
+			if (!IsRaw)
+				__dec_autofree();
 		}
 		inline Buffer SubBuffer(int index, int length) const
 		{
@@ -469,17 +588,19 @@ namespace xaxaxa
 		}
 		inline void Clip(int index)
 		{
-			Clip(index, Length - index);
+			//Clip(index, Length - index);
+			if (index < 0 || index > this->Length)
+				throw Exception("Buffer::Clip() out of range");
+			Data += index;
+			Length -= index;
 		}
-		inline void Release()
-		{
-			if (IsRaw)
-				throw Exception(
-						"Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
-			pbuf.reset();
-		}
-	};
 
+	};
+	BufferRef::BufferRef(const Buffer& b) :
+			Data(b.Data), Length(b.Length)
+	{
+
+	}
 	template<class T> class __event: public Object
 	{
 	public:
@@ -553,9 +674,9 @@ namespace xaxaxa
 			End=SEEK_END,
 			Current=SEEK_CUR
 		};
-		virtual Int Read(const Buffer& buf)=0;
-		virtual void Write(const Buffer& buf)=0;
-		Int Fill(Buffer buf)
+		virtual Int Read(const BufferRef& buf)=0;
+		virtual void Write(const BufferRef& buf)=0;
+		Int Fill(BufferRef buf)
 		{
 			Int br,br1=0;
 			while((br=Read(buf))>0)
@@ -666,11 +787,11 @@ namespace xaxaxa
 		{
 			return Cap::Read | Cap::Write | Cap::Close;
 		}
-		virtual Int Read(const Buffer& buf)
+		virtual Int Read(const BufferRef& buf)
 		{
 			return 0;
 		}
-		virtual void Write(const Buffer& buf)
+		virtual void Write(const BufferRef& buf)
 		{
 		}
 		virtual void Flush()
@@ -721,13 +842,17 @@ namespace xaxaxa
 			{
 				tmp *= 2;
 			}
-			Byte* new_arr = new Byte[tmp];
-			memcpy(new_arr, buf.Data, length);
-			buf.Data = new_arr;
-			buf.pbuf.reset(new_arr);
-			buf.Length = this->Capacity = tmp;
+			/*Byte* new_arr = new Byte[tmp];
+			 memcpy(new_arr, buf.Data, length);
+			 buf.Data = new_arr;
+			 buf.pbuf.reset(new_arr);
+			 buf.Length = this->Capacity = tmp;*/
+			Buffer tmpb(tmp);
+			memcpy(tmpb.Data, buf.Data, length);
+			buf = tmpb;
+			this->Capacity = tmp;
 		}
-		void Append(const Buffer& buf);
+		void Append(const BufferRef& buf);
 		void Append(STRING buf);
 		inline void Append(const char* buf, int length)
 		{
@@ -782,8 +907,8 @@ namespace xaxaxa
 		 int i = snprintf(c, sizeof(c), "%f", n);
 		 Append(c, i);
 		 }*/
-		int CompareTo(Buffer buf);
-		int CompareTo(const StringBuilder* sb);
+		int CompareTo(const BufferRef& buf);
+		int CompareTo(const StringBuilder& sb);
 		STRING ToString();
 		Buffer ToBuffer();
 		char* ToCString()
@@ -796,8 +921,8 @@ namespace xaxaxa
 		{
 			return string(ToCString(), length);
 		}
-		virtual int Read(const Buffer& buf);
-		virtual void Write(const Buffer& buf);
+		virtual int Read(const BufferRef& buf);
+		virtual void Write(const BufferRef& buf);
 		virtual void Flush();
 		virtual void Close();
 		virtual void Seek(Long n, SeekFrom from = SeekFrom::Begin)
@@ -877,14 +1002,14 @@ namespace xaxaxa
 				close(_f);
 			_f = -1;
 		}
-		inline virtual Int Write(const Buffer& buf)
+		inline virtual Int Write(const BufferRef& buf)
 		{
 			Int tmp = write(_f, buf.Data, buf.Length);
 			if (tmp < 0)
 				throw Exception(errno);
 			return tmp;
 		}
-		inline virtual Int Read(const Buffer& buf)
+		inline virtual Int Read(const BufferRef& buf)
 		{
 			Int tmp = read(_f, buf.Data, buf.Length);
 			if (tmp < 0)
@@ -917,8 +1042,8 @@ namespace xaxaxa
 		File f;
 		FileStream(File f);
 		virtual ~FileStream();
-		virtual int Read(const Buffer& buf);
-		virtual void Write(const Buffer& buf);
+		virtual int Read(const BufferRef& buf);
+		virtual void Write(const BufferRef& buf);
 		virtual void Flush();
 		virtual void Close();
 		virtual Long Position()
@@ -942,11 +1067,11 @@ namespace xaxaxa
 				in(File(0)), out(File(1))
 		{
 		}
-		virtual int Read(const Buffer& buf)
+		virtual int Read(const BufferRef& buf)
 		{
 			return in.Read(buf);
 		}
-		virtual void Write(const Buffer& buf)
+		virtual void Write(const BufferRef& buf)
 		{
 			out.Write(buf);
 		}
@@ -1004,7 +1129,7 @@ namespace xaxaxa
 		{	CheckCaps();}
 		virtual ~GIOGenericStream()
 		{}
-		virtual int Read(const Buffer& buf)
+		virtual int Read(const BufferRef& buf)
 		{
 			if((c&Cap::Read)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::InputStream> s;
@@ -1016,7 +1141,7 @@ namespace xaxaxa
 			else s=Glib::RefPtr<Gio::InputStream>::cast_static(this->f);
 			return s->read(buf.Data,buf.Length);
 		}
-		virtual void Write(const Buffer& buf)
+		virtual void Write(const BufferRef& buf)
 		{
 			if((c&Cap::Write)==Cap::None)throw NotSupportedException();
 			Glib::RefPtr<Gio::OutputStream> s;
@@ -1114,7 +1239,7 @@ namespace xaxaxa
 		int buf_length;
 		StreamReaderWriter(Stream& s, int rbuffersize = 4096, int wbuffersize = 4096);
 		virtual ~StreamReaderWriter();
-		virtual int Read(const Buffer& buf);
+		virtual int Read(const BufferRef& buf);
 		virtual int Read(StringBuilder& buf, int length);
 		virtual int Read(StringBuilder& buf, const char* delimitors, int delimitor_count);
 		//virtual int read(Stream *buf,int length);
@@ -1153,7 +1278,7 @@ namespace xaxaxa
 		int fast_readline(Stream& buf);
 		virtual int ReadLine(Stream& buf);
 
-		virtual void Write(const Buffer& buf);
+		virtual void Write(const BufferRef& buf);
 		virtual void Flush();
 		virtual void Close();
 		void do_flush()

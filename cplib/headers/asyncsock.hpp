@@ -345,7 +345,7 @@ namespace xaxaxa
 			{
 				shutdown(_f, how);
 			}
-			inline int Send(Buffer buf, Int flags = 0)
+			inline int Send(const BufferRef& buf, Int flags = 0)
 			{
 				retry: Int tmp = send(_f, buf.Data, buf.Length, flags);
 				if (tmp < 0)
@@ -357,7 +357,7 @@ namespace xaxaxa
 				else
 					return tmp;
 			}
-			inline int Recv(Buffer buf, Int flags = 0)
+			inline int Recv(const BufferRef& buf, Int flags = 0)
 			{
 				retry: Int tmp = recv(_f, buf.Data, buf.Length, flags);
 				if (tmp < 0)
@@ -369,7 +369,7 @@ namespace xaxaxa
 				else
 					return tmp;
 			}
-			inline int RecvFrom(Buffer buf, EndPoint& ep, Int flags = 0)
+			inline int RecvFrom(const BufferRef& buf, EndPoint& ep, Int flags = 0)
 			{
 				socklen_t size = ep.GetSockAddrSize();
 				uint8_t addr[size];
@@ -387,7 +387,7 @@ namespace xaxaxa
 					return tmp;
 				}
 			}
-			inline int SendTo(Buffer buf, const EndPoint& ep, Int flags = 0)
+			inline int SendTo(const BufferRef& buf, const EndPoint& ep, Int flags = 0)
 			{
 				socklen_t size = ep.GetSockAddrSize();
 				uint8_t addr[size];
@@ -567,11 +567,11 @@ namespace xaxaxa
 			{
 				Close();
 			}
-			virtual int Read(const Buffer& buf)
+			virtual int Read(const BufferRef& buf)
 			{
 				return socket.Recv(buf, 0);
 			}
-			virtual void Write(const Buffer& buf)
+			virtual void Write(const BufferRef& buf)
 			{
 				int bw = 0;
 				int off = 0;

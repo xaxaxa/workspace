@@ -57,11 +57,11 @@ namespace xaxaxa
 	{
 		//Close();
 	}
-	int FileStream::Read(const Buffer& buf)
+	int FileStream::Read(const BufferRef& buf)
 	{
 		return f.Read(buf);
 	}
-	void FileStream::Write(const Buffer& buf)
+	void FileStream::Write(const BufferRef& buf)
 	{
 		int bw = 0;
 		int off = 0;
@@ -92,7 +92,7 @@ namespace xaxaxa
 	{
 		free(buf);
 	}
-	int StreamReaderWriter::Read(const Buffer& buf)
+	int StreamReaderWriter::Read(const BufferRef& buf)
 	{
 		int br = 0;
 
@@ -364,7 +364,7 @@ namespace xaxaxa
 		return Read(buf, delim, 2);
 		//return Read(buf, "\r\n", 2);
 	}
-	void StreamReaderWriter::Write(const Buffer& buf)
+	void StreamReaderWriter::Write(const BufferRef& buf)
 	{
 		if (buf.Length > max_wbuffer_copy)
 		{
@@ -397,7 +397,7 @@ namespace xaxaxa
 	{
 		//free(buf);
 	}
-	void StringBuilder::Append(const Buffer& buf)
+	void StringBuilder::Append(const BufferRef& buf)
 	{
 		//int tmp=this->Length;
 		this->EnsureCapacity(this->position + buf.Length);
@@ -422,16 +422,16 @@ namespace xaxaxa
 	{
 		Append(buf, strlen(buf));
 	}
-	int StringBuilder::CompareTo(Buffer buf)
+	int StringBuilder::CompareTo(const BufferRef& buf)
 	{
 		if (buf.Length <= 0 || this->length <= 0) return -1;
 		return memcmp(this->buf.Data, buf.Data,
 				buf.Length < this->length ? buf.Length : this->length);
 	}
-	int StringBuilder::CompareTo(const StringBuilder* sb)
+	int StringBuilder::CompareTo(const StringBuilder& sb)
 	{
-		if (sb->length <= 0 || this->length <= 0) return -1;
-		return memcmp(buf.Data, sb->buf.Data, sb->length < this->length ? sb->length : this->length);
+		if (sb.length <= 0 || this->length <= 0) return -1;
+		return memcmp(buf.Data, sb.buf.Data, sb.length < this->length ? sb.length : this->length);
 	}
 	STRING StringBuilder::ToString()
 	{
@@ -443,7 +443,7 @@ namespace xaxaxa
 		return buf.SubBuffer(0, length);
 	}
 
-	int StringBuilder::Read(const Buffer& buf)
+	int StringBuilder::Read(const BufferRef& buf)
 	{
 		int i = length - position;
 		if (i <= 0) return 0;
@@ -452,7 +452,7 @@ namespace xaxaxa
 		position += i;
 		return i;
 	}
-	void StringBuilder::Write(const Buffer& buf)
+	void StringBuilder::Write(const BufferRef& buf)
 	{
 		Append(buf);
 	}
