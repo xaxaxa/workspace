@@ -8,7 +8,7 @@ int counter=0;
 StringBuilder sb;
 struct tmp_s
 {
-	Buffer b;
+	//Buffer b;
 	SocketManager::Callback cb;
 };
 FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
@@ -24,33 +24,22 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 			try
 			{
 				m->EndSend(sock);
-				m->BeginSend(sock, sb.ToBuffer(), SocketManager::Callback([](void* v, SocketManager* m, Socket sock)
+				tmp_s* zxcv=new tmp_s();
+				zxcv->cb=SocketManager::Callback([](void* v, SocketManager* m, Socket sock)
 				{
+					tmp_s* zxcv=(tmp_s*)v;
 					try
 					{
-						m->EndSend(sock);
-						WARN(1,"SEND COMPLETE");
-						tmp_s* zxcv=new tmp_s();
-						zxcv->cb=SocketManager::Callback([](void* v, SocketManager* m, Socket sock)
-						{
-							tmp_s* zxcv=(tmp_s*)v;
-							try
-							{
-								int br=m->EndRecv(sock);
-								if(br<=0)goto close;
-								m->BeginRecv(sock, zxcv->b, zxcv->cb);
-							}catch(Exception& ex){goto close;}
-							return;
-						close:
-							m->Cancel(sock);
-							sock.Close();
-							delete zxcv;
-						}, zxcv);
-						zxcv->b=Buffer(4096);
-						sock.Shutdown(SHUT_WR);
-						m->BeginRecv(sock, zxcv->b, zxcv->cb);
-					}catch(Exception& ex){sock.Close();}
-				}, NULL), true);
+						if(m->EndSend(sock)<=0)goto close;
+						m->BeginSend(sock, sb.ToBuffer(), zxcv->cb, true);
+					}catch(Exception& ex){goto close;}
+					return;
+				close:
+					m->Cancel(sock);
+					sock.Close();
+					delete zxcv;
+				}, zxcv);
+				m->BeginSend(sock, sb.ToBuffer(), zxcv->cb, true);
 			}catch(Exception& ex){sock.Close();}
 		}, NULL), true);
 	}catch(Exception& ex){}

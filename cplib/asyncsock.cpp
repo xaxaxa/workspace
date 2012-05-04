@@ -88,7 +88,7 @@ namespace xaxaxa
 					{
 						if (hup)
 						{
-							__current_task.r_errno = 104;
+							//__current_task.r_errno = 104;
 						}
 						else
 						{
@@ -123,7 +123,7 @@ namespace xaxaxa
 					{
 						if (hup)
 						{
-							__current_task.w_errno = 104;
+							//__current_task.w_errno = 104;
 						}
 						else
 						{
