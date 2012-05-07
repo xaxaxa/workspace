@@ -97,7 +97,8 @@ namespace xaxaxa
 		int br = 0;
 
 		int tmp = buf_length;
-		if (buf.Length < tmp) tmp = buf.Length;
+		if (buf.Length < tmp)
+			tmp = buf.Length;
 		if (tmp > 0)
 		{
 			memcpy(buf.Data, ((Byte*) this->buf) + buf_index, tmp);
@@ -106,7 +107,8 @@ namespace xaxaxa
 			buf_length -= tmp;
 			br += tmp;
 		}
-		if (br >= buf.Length) return br;
+		if (br >= buf.Length)
+			return br;
 		if (buf.Length - br > this->buf_size)
 		{
 			while ((br >= buf.Length) && (tmp = s->Read(buf.SubBuffer(br))) > 0)
@@ -122,18 +124,21 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				tmp = s->Read(tmpb);
-				if (tmp <= 0) return br;
+				if (tmp <= 0)
+					return br;
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			tmp = buf_length;
-			if (buf.Length - br < tmp) tmp = buf.Length - br;
+			if (buf.Length - br < tmp)
+				tmp = buf.Length - br;
 			memcpy(buf.Data + br, ((Byte*) this->buf) + buf_index, tmp);
 			//buf.Clip(tmp);
 			buf_index += tmp;
 			buf_length -= tmp;
 			br += tmp;
-			if (br >= buf.Length) return br;
+			if (br >= buf.Length)
+				return br;
 		}
 	}
 	int StreamReaderWriter::Read(StringBuilder& buf, int length)
@@ -142,7 +147,8 @@ namespace xaxaxa
 		if (buf_length > 0)
 		{
 			int tmp = buf_length;
-			if (length < tmp) tmp = length;
+			if (length < tmp)
+				tmp = length;
 			Buffer tmpb((char*) this->buf + buf_index, tmp);
 			buf.Append(tmpb);
 			length -= tmp;
@@ -169,7 +175,8 @@ namespace xaxaxa
 			{
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -203,16 +210,18 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	int StreamReaderWriter::Read(Stream& buf, const char* delimitors, int delimitor_count)
+	int StreamReaderWriter::Read(Stream& out,
+			const char* delimitors, int delimitor_count)
 	{
 		int br = 0;
 		while (1)
 		{
 			if (buf_length <= 0)
 			{
-				Buffer tmpb((char*) this->buf, buf_size);
+				BufferRef tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -223,8 +232,8 @@ namespace xaxaxa
 					if (((char*) (this->buf))[i] == delimitors[j])
 					{
 						int tmp = i - buf_index;
-						Buffer tmpb((char*) this->buf + buf_index, tmp);
-						buf.Write(tmpb);
+						BufferRef tmpb((char*) this->buf + buf_index, tmp);
+						out.Write(tmpb);
 						br += tmp;
 						tmp++;
 						while (tmp < buf_length)
@@ -240,14 +249,14 @@ namespace xaxaxa
 						return br;
 					}
 			}
-			Buffer tmpb((char*) this->buf + buf_index, buf_length);
-			buf.Write(tmpb);
+			BufferRef tmpb((char*) this->buf + buf_index, buf_length);
+			out.Write(tmpb);
 			br += buf_length;
 			buf_length = 0;
 		}
 	}
-	int StreamReaderWriter::Read(Stream& buf, const STRING* delimitors, int delimitor_count,
-			int* delim_index)
+	int StreamReaderWriter::Read(Stream& out,
+			const STRING* delimitors, int delimitor_count, int* delim_index)
 	{
 		int br = 0;
 		char* cbuf = (char*) this->buf;
@@ -260,9 +269,10 @@ namespace xaxaxa
 		{
 			if (buf_length <= 0)
 			{
-				Buffer tmpb(this->buf, buf_size);
+				BufferRef tmpb(this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -281,23 +291,25 @@ namespace xaxaxa
 							if (i + ii >= tmp2)
 							{
 								//goto cont;
-								Buffer tmpb(cbuf + buf_index, buf_length - ii);
-								buf.Write(tmpb);
+								BufferRef tmpb(cbuf + buf_index, buf_length - ii);
+								out.Write(tmpb);
 								br += tmpb.Length;
 
 								memcpy(cbuf, cbuf + i, ii);
 								Buffer tmpb1(cbuf + ii, buf_size - ii);
 								int tmp = s->Read(tmpb1);
-								if (tmp <= 0) return (br == 0 ? -1 : br);
+								if (tmp <= 0)
+									return (br == 0 ? -1 : br);
 								buf_index = 0;
 								buf_length = tmp + ii;
 								i = 0;
 							}
-							if (cbuf[i + ii] != delimitors[j].c[ii]) goto cont;
+							if (cbuf[i + ii] != delimitors[j].c[ii])
+								goto cont;
 						}
 						int tmp = i - buf_index;
-						Buffer tmpb(cbuf + buf_index, tmp);
-						buf.Write(tmpb);
+						BufferRef tmpb(cbuf + buf_index, tmp);
+						out.Write(tmpb);
 						br += tmp;
 						tmp += delimitors[j].length;
 						/*while (tmp < buf_length)
@@ -310,29 +322,31 @@ namespace xaxaxa
 						 }*/
 						buf_index += tmp;
 						buf_length -= tmp;
-						if (delim_index != NULL) *delim_index = j;
+						if (delim_index != NULL)
+							*delim_index = j;
 						return br;
 					}
 					cont: ;
 				}
 			}
-			Buffer tmpb((char*) this->buf + buf_index, buf_length);
-			buf.Write(tmpb);
+			BufferRef tmpb((char*) this->buf + buf_index, buf_length);
+			out.Write(tmpb);
 			br += buf_length;
 			buf_length = 0;
 		}
 	}
-	int StreamReaderWriter::fast_readline(Stream& buf)
+	int StreamReaderWriter::fast_readline(Stream& out)
 	{
 		int br = 0;
-		char* cbuf = (char*) this->buf;
+		Byte* cbuf = (Byte*) this->buf;
+		BufferRef tmpb(cbuf, buf_size);
 		while (1)
 		{
 			if (buf_length <= 0)
 			{
-				Buffer tmpb(cbuf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0) return (br == 0 ? -1 : br);
+				if (tmp <= 0)
+					return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -342,25 +356,28 @@ namespace xaxaxa
 			{
 				while (i < tmp2 && cbuf[i] != '\n')
 					i++;
-				if (!(i < tmp2)) break;
+				if (!(i < tmp2))
+					break;
 				int tmp = i - buf_index;
-				Buffer tmpb((char*) this->buf + buf_index, tmp);
-				buf.Write(tmpb);
+				//Buffer tmpb((char*) this->buf + buf_index, tmp);
+				//cb({(Byte*) this->buf + buf_index, tmp});
+				out.Write(tmpb.SubBuffer(buf_index, tmp));
 				br += tmp;
 				tmp++;
 				buf_index += tmp;
 				buf_length -= tmp;
 				return br;
 			}
-			Buffer tmpb((char*) this->buf + buf_index, buf_length);
-			buf.Write(tmpb);
+			//Buffer tmpb((char*) this->buf + buf_index, buf_length);
+			out.Write(tmpb.SubBuffer(buf_index, buf_length));
 			br += buf_length;
 			buf_length = 0;
 		}
 	}
-	int StreamReaderWriter::ReadLine(Stream& buf)
+	inline int StreamReaderWriter::ReadLine(Stream& buf)
 	{
-		STRING delim[2] { "\r\n", "\n" };
+		STRING delim[2]
+		{ "\r\n", "\n" };
 		return Read(buf, delim, 2);
 		//return Read(buf, "\r\n", 2);
 	}
@@ -403,7 +420,8 @@ namespace xaxaxa
 		this->EnsureCapacity(this->position + buf.Length);
 		memcpy((char*) this->buf.Data + this->position, buf.Data, buf.Length);
 		this->position += buf.Length;
-		if (this->position > this->length) this->length = this->position;
+		if (this->position > this->length)
+			this->length = this->position;
 	}
 	void StringBuilder::Append(STRING buf)
 	{
@@ -411,7 +429,8 @@ namespace xaxaxa
 		this->EnsureCapacity(this->position + buf.length);
 		memcpy((char*) this->buf.Data + this->position, buf.c, buf.length);
 		this->position += buf.length;
-		if (this->position > this->length) this->length = this->position;
+		if (this->position > this->length)
+			this->length = this->position;
 	}
 	void StringBuilder::Append(const StringBuilder* s)
 	{
@@ -424,13 +443,15 @@ namespace xaxaxa
 	}
 	int StringBuilder::CompareTo(const BufferRef& buf)
 	{
-		if (buf.Length <= 0 || this->length <= 0) return -1;
+		if (buf.Length <= 0 || this->length <= 0)
+			return -1;
 		return memcmp(this->buf.Data, buf.Data,
 				buf.Length < this->length ? buf.Length : this->length);
 	}
 	int StringBuilder::CompareTo(const StringBuilder& sb)
 	{
-		if (sb.length <= 0 || this->length <= 0) return -1;
+		if (sb.length <= 0 || this->length <= 0)
+			return -1;
 		return memcmp(buf.Data, sb.buf.Data, sb.length < this->length ? sb.length : this->length);
 	}
 	STRING StringBuilder::ToString()
@@ -446,8 +467,10 @@ namespace xaxaxa
 	int StringBuilder::Read(const BufferRef& buf)
 	{
 		int i = length - position;
-		if (i <= 0) return 0;
-		if (buf.Length < i) i = buf.Length;
+		if (i <= 0)
+			return 0;
+		if (buf.Length < i)
+			i = buf.Length;
 		memcpy(buf.Data, ((char*) this->buf.Data) + position, i);
 		position += i;
 		return i;
@@ -475,11 +498,11 @@ namespace xaxaxa
 		//Exception *ex;
 		switch (sig)
 		{
-			case SIGSEGV:
-				throw PointerException();
-				break;
-			default:
-				throw Exception();
+		case SIGSEGV:
+			throw PointerException();
+			break;
+		default:
+			throw Exception();
 		}
 
 	}

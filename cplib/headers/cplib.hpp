@@ -140,6 +140,95 @@ namespace xaxaxa
 {
 //typedef void* Function;
 
+	template<class SIGNATURE> struct Delegate;
+	template<class RET, class ... ARGS> struct Delegate<RET(ARGS...)>
+	{
+		virtual RET operator()(ARGS...)=0;
+	};
+
+	//for the following 3 function wrapper classes, if they are initialized
+	//with the default constructor(without any parameters), calling the object
+	//results in undefined behavior
+	template<class SIGNATURE> struct StaticFunction;
+	template<class RET, class ... ARGS> struct StaticFunction<RET(ARGS...)> : public Delegate<
+			RET(ARGS...)>
+	{
+		RET (*func)(ARGS...);
+		virtual RET operator()(ARGS ... a)
+		{
+			return func(a...);
+		}
+		StaticFunction(RET (*func)(ARGS...)) :
+				func(func)
+		{
+		}
+		StaticFunction(){}
+	};
+
+	template<class SIGNATURE> struct MemberFunction;
+	template<class RET, class ... ARGS> struct MemberFunction<RET(ARGS...)> : public Delegate<
+			RET(ARGS...)>
+	{
+		RET (*func)(void*, ARGS...);
+		void* this_ptr;
+		virtual RET operator()(ARGS ... a)
+		{
+			return func(this_ptr, a...);
+		}
+		template<class c> MemberFunction(RET (c::*func)(ARGS...), c* obj)
+		//:func((RET (*)(void*, ARGS...))func), this_ptr(obj)
+		{
+			this->func = (RET (*)(void*, ARGS...))func;this->this_ptr=obj;
+		}
+		MemberFunction(){}
+	};
+
+			//uncomment to allow hybrid functions to distinguish between a member
+			//function pointer with a NULL thisptr and a static function.
+			//this adds overhead.
+			//#define XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
+
+	template<class SIGNATURE> struct Function;
+	template<class RET, class ... ARGS> struct Function<RET(ARGS...)> : public Delegate<RET(ARGS...)>
+	{
+		//RET (*func)(void*, ARGS...);
+		void* func;
+		void* this_ptr;
+#ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
+		bool is_mem_func;
+#endif
+		virtual RET operator()(ARGS ... a)
+		{
+#ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
+			if(is_mem_func)
+			return ((RET (*)(void*, ARGS...))func)(this_ptr, a...);
+			else
+			return ((RET (*)(ARGS...))func)(a...);
+#endif
+			if (this_ptr != NULL)
+				return ((RET (*)(void*, ARGS...)) func)(this_ptr, a...);
+			else
+				return ((RET (*)(ARGS...)) func)(a...);
+		}
+		template<class c> Function(RET (c::*func)(ARGS...), c* obj) :
+				func((void*)func), this_ptr(obj)
+		{
+#ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
+			this->is_mem_func = true;
+#endif
+		}
+		Function(RET (*func)(ARGS...)) :
+				func((void*)func)
+		{
+#ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
+			this->is_mem_func = false;
+#else
+			this->this_ptr = NULL;
+#endif
+		}
+		Function(){}
+	};
+
 	void __objs_inc();
 	void __objs_dec();
 	int __objs_get();
@@ -421,6 +510,10 @@ namespace xaxaxa
 		inline BufferRef(const Buffer& b);
 		inline BufferRef(Byte* Data, Int Length) :
 				Data(Data), Length(Length)
+		{
+		}
+		inline BufferRef(void* Data, Int Length) :
+				Data((Byte*) Data), Length(Length)
 		{
 		}
 		/*BufferRef(const Buffer& b) :
@@ -1240,12 +1333,24 @@ namespace xaxaxa
 		StreamReaderWriter(Stream& s, int rbuffersize = 4096, int wbuffersize = 4096);
 		virtual ~StreamReaderWriter();
 		virtual int Read(const BufferRef& buf);
-		virtual int Read(StringBuilder& buf, int length);
-		virtual int Read(StringBuilder& buf, const char* delimitors, int delimitor_count);
+		int Read(StringBuilder& buf, int length);
+		int Read(StringBuilder& buf, const char* delimitors, int delimitor_count);
+
 		//virtual int read(Stream *buf,int length);
 
 		//skips over any extra delimitors
-		virtual int Read(Stream& buf, const char* delimitors, int delimitor_count);
+		int Read(Stream& out, const char* delimitors, int delimitor_count);
+		/*{
+		 return Read([&out](const BufferRef& data)
+		 {
+		 out.Write(data);
+		 }, delimitors, delimitor_count);
+		 }*/
+		void BeginRead(const function<void(const BufferRef& data, bool isLast)>& cb,
+				const char* delimitors, int delimitor_count)
+		{
+
+		}
 		inline Short ReadByte()
 		{
 			if (buf_length <= 0)
@@ -1271,12 +1376,25 @@ namespace xaxaxa
 		//the delimitor will be consumed.
 		//RETURN VALUE: -1 if no data was read; 0 if delimitor was read but there
 		//was no data in between;
-		virtual int Read(Stream& buf, const STRING* delimitors, int delimitor_count,
+		int Read(Stream& out, const STRING* delimitors, int delimitor_count,
 				int* delim_index = NULL);
+		/*{
+		 return Read([&out](const BufferRef& data)
+		 {
+		 out.Write(data);
+		 }, delimitors, delimitor_count, delim_index);
+		 }*/
 
 		//delimitors have to be 1, 2, 4, or 8 bytes
-		int fast_readline(Stream& buf);
-		virtual int ReadLine(Stream& buf);
+		//int fast_readline(const function<void(const BufferRef& data)>& cb);
+		int fast_readline(Stream& out);
+		/*{
+		 return fast_readline([&out](const BufferRef& data)
+		 {
+		 out.Write(data);
+		 });
+		 }*/
+		int ReadLine(Stream& buf);
 
 		virtual void Write(const BufferRef& buf);
 		virtual void Flush();

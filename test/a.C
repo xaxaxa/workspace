@@ -28,16 +28,30 @@ int main(int c, char** v)
 		buffer.Clear();
 	}*/
 	
-	FileStream s(File("/tmp/data1",O_RDONLY));
+	int i2(0);
+	struct:public Stream
+	{
+		virtual void Write(const BufferRef& buf)
+		{
+			int tmp1=i2+1;
+			tmp1++;
+		}
+		virtual Int Read(const BufferRef& buf){return 0;}
+		virtual void Close(){}
+		virtual void Flush(){}
+	} tmp_s;
+	//FileStream s(File("/tmp/data1",O_RDONLY));
+	StandardStream s;
 	StreamReader r(s,1024*32);
 	StringBuilder buffer;
 	//NullStream ns;
-	while(r.fast_readline(buffer)>=0)
+	while(r.fast_readline(tmp_s)>=0)
+	//while(r.ReadLine(buffer)>=0)
 	{
 		//r.Write(buffer.ToBuffer());
 		//r.Write("\n");
 		i++;
-		buffer.Clear();
+		//buffer.Clear();
 	}
 	//r.Flush();
 	
@@ -48,7 +62,8 @@ int main(int c, char** v)
 		i++;
 	}*/
 	
-	/*FILE* f=fdopen(0,"rb");
+	/*
+	FILE* f=fdopen(0,"rb");
 	char* line=NULL;
 	size_t tmp;
 	while(getline(&line,&tmp,f)>=0)
@@ -56,7 +71,8 @@ int main(int c, char** v)
 		i++;
 		free(line);
 		line=NULL;
-	}*/
+	}
+	//*/
 	/*StandardStream s;
 	StreamWriter w(s);
 	for(i=0;i<10000000;i++)
