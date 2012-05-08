@@ -143,14 +143,14 @@ void client::s1_r(SocketManager* m, Socket s)
 		int i = m->EndRecv(s);
 		if (i == 0)
 		{
-			this->Release();
+			this->RefCount_dec();
 			return;
 		}
 		//fwrite(buf.buf,i,1,stdout);
 		m->BeginSend(this->s2, buf1.SubBuffer(0, i), SocketManager::Callback(&client::s2_w, this));
 	} catch (Exception& ex)
 	{
-		this->Release();
+		this->RefCount_dec();
 	}
 }
 void client::s1_w(SocketManager* m, Socket s)
@@ -162,7 +162,7 @@ void client::s1_w(SocketManager* m, Socket s)
 		m->BeginRecv(this->s2, buf2, SocketManager::Callback(&client::s2_r, this));
 	} catch (Exception& ex)
 	{
-		this->Release();
+		this->RefCount_dec();
 	}
 }
 void client::s2_r(SocketManager* m, Socket s)
@@ -173,7 +173,7 @@ void client::s2_r(SocketManager* m, Socket s)
 		int i = m->EndRecv(s);
 		if (i == 0)
 		{
-			this->Release();
+			this->RefCount_dec();
 			return;
 		}
 		//fwrite(buf.buf,i,1,stdout);
@@ -181,7 +181,7 @@ void client::s2_r(SocketManager* m, Socket s)
 		//m.BeginRecv(s,buf,SocketManager::Callback(cb1,this));
 	} catch (Exception& ex)
 	{
-		this->Release();
+		this->RefCount_dec();
 	}
 }
 void client::s2_w(SocketManager* m, Socket s)
@@ -193,7 +193,7 @@ void client::s2_w(SocketManager* m, Socket s)
 		m->BeginRecv(this->s1, buf1, SocketManager::Callback(&client::s1_r, this));
 	} catch (Exception& ex)
 	{
-		this->Release();
+		this->RefCount_dec();
 	}
 }
 void client::cb3(SocketManager* m, Socket s)
@@ -205,7 +205,7 @@ void client::cb3(SocketManager* m, Socket s)
 		m->BeginRecv(this->s2, buf2, SocketManager::Callback(&client::s2_r, this));
 	} catch (Exception& ex)
 	{
-		this->Release();
+		this->RefCount_dec();
 	}
 }
 
@@ -260,8 +260,8 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 		j->ProcessBuffer1 = JoinStream::BufferCallback(procbuffer, NULL);
 		j->ProcessBuffer2 = j->ProcessBuffer1;
 #endif
-		str1->Release();
-		str2->Release();
+		str1->RefCount_dec();
+		str2->RefCount_dec();
 		//j->Begin();
 		//delete tmp;
 		tmp->j = j;

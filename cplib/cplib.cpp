@@ -7,8 +7,9 @@ using namespace std;
 //////////////////////////////////////////////////////////////
 namespace xaxaxa
 {
+	int objs=0;
 #ifdef __debug_obj123
-	static int objs;
+
 	void __objs_inc()
 	{
 		objs++;

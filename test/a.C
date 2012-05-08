@@ -28,13 +28,13 @@ int main(int c, char** v)
 		buffer.Clear();
 	}*/
 	
-	int i2(0);
+	//int i2(0);
 	struct:public Stream
 	{
 		virtual void Write(const BufferRef& buf)
 		{
-			int tmp1=i2+1;
-			tmp1++;
+			//int tmp1=i2+1;
+			//tmp1++;
 		}
 		virtual Int Read(const BufferRef& buf){return 0;}
 		virtual void Close(){}

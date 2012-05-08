@@ -158,11 +158,13 @@ namespace xaxaxa
 		{
 			return func(a...);
 		}
-		StaticFunction(RET (*func)(ARGS...)) :
+		StaticFunction(RET(*func)(ARGS...)) :
 				func(func)
 		{
 		}
-		StaticFunction(){}
+		StaticFunction()
+		{
+		}
 	};
 
 	template<class SIGNATURE> struct MemberFunction;
@@ -175,12 +177,13 @@ namespace xaxaxa
 		{
 			return func(this_ptr, a...);
 		}
-		template<class c> MemberFunction(RET (c::*func)(ARGS...), c* obj)
+		template<class c> MemberFunction(RET(c::*func)(ARGS...), c* obj)
 		//:func((RET (*)(void*, ARGS...))func), this_ptr(obj)
 		{
-			this->func = (RET (*)(void*, ARGS...))func;this->this_ptr=obj;
+			this->func = (RET(*)(void*, ARGS...))func;this->this_ptr=obj;
 		}
-		MemberFunction(){}
+		MemberFunction()
+		{}
 	};
 
 			//uncomment to allow hybrid functions to distinguish between a member
@@ -206,19 +209,19 @@ namespace xaxaxa
 			return ((RET (*)(ARGS...))func)(a...);
 #endif
 			if (this_ptr != NULL)
-				return ((RET (*)(void*, ARGS...)) func)(this_ptr, a...);
+				return ((RET(*)(void*, ARGS...)) func)(this_ptr, a...);
 			else
-				return ((RET (*)(ARGS...)) func)(a...);
+				return ((RET(*)(ARGS...)) func)(a...);
 		}
-		template<class c> Function(RET (c::*func)(ARGS...), c* obj) :
-				func((void*)func), this_ptr(obj)
+		template<class c> Function(RET(c::*func)(ARGS...), c* obj) :
+				func((void*) func), this_ptr(obj)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 			this->is_mem_func = true;
 #endif
 		}
-		Function(RET (*func)(ARGS...)) :
-				func((void*)func)
+		Function(RET(*func)(ARGS...)) :
+				func((void*) func)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 			this->is_mem_func = false;
@@ -226,53 +229,162 @@ namespace xaxaxa
 			this->this_ptr = NULL;
 #endif
 		}
-		Function(){}
+		Function()
+		{
+		}
 	};
-
-	void __objs_inc();
-	void __objs_dec();
-	int __objs_get();
+	extern int objs;
 	class Object
 	{
 	public:
 
-		int RetainCount; //reference counter
+		int RefCount; //reference counter
 		Object()
 		{
-			RetainCount = 1;
+			RefCount = 1;
 #ifdef __debug_obj123
-			__objs_inc();
-			cout<<"construct<"<<typeid(*this).name()<<">; "<<__objs_get()<<" objects total"<<endl;
+			objs++;
+			cout<<"construct<"<<typeid(*this).name()<<">; "<<objs<<" objects total"<<endl;
 #endif
+		}
+		Object(const Object& other)
+		{
+			RefCount = 1;
 		}
 		virtual ~Object()
 		{
 #ifdef __debug_obj123
-			__objs_dec();
-			cout<<"destruct<"<<typeid(*this).name()<<">; "<<__objs_get()<<" objects total"<<endl;
+			objs--;
+			cout<<"destruct<"<<typeid(*this).name()<<">; "<<objs<<" objects total"<<endl;
 #endif
 		}
-		inline void Retain()
+		inline void RefCount_inc()
 		{
-			RetainCount++;
+			RefCount++;
 #ifdef __debug_obj123
-			cout<<"retain<"<<typeid(*this).name()<<"> = "<<RetainCount<<"; "<<__objs_get()<<" objects total"<<endl;
+			cout<<"retain<"<<typeid(this).name()<<"> = "<<RefCount << "; "<<objs<<" objects total"<<endl;
 #endif
 		}
-		inline void Release()
+		inline void RefCount_dec()
 		{
-			RetainCount--;
+			RefCount--;
 #ifdef __debug_obj123
-			cout<<"release<"<<typeid(*this).name()<<"> = "<<RetainCount<<"; "<<__objs_get()<<" objects total"<<endl;
+			cout<<"release<"<<typeid(this).name()<<"> = "<<RefCount << "; "<<objs<<" objects total"<<endl;
 #endif
-			dbgprint("retaincount=" << RetainCount);
-			if (RetainCount == 0)
+			dbgprint("refcount=" << RefCount);
+			if (RefCount <= 0)
 			{
 				delete this;
 				//cout << o;
 			}
 		}
+		Object& operator=(const Object& other)=delete;
 	};
+	template<class T> struct objref;
+	template<class T> struct Property
+	{
+		T* obj;
+		inline Property() :
+				obj(NULL)
+		{
+		}
+		inline Property(const objref<T>& other);
+		inline Property(T* obj) :
+				obj(obj)
+		{
+			if (obj != NULL)
+				obj->RefCount_inc();
+		}
+		inline ~Property()
+		{
+			if (this->obj != NULL)
+				this->obj->RefCount_dec();
+		}
+		Property(const Property<T>& other) :
+				obj(other.obj)
+		{
+			if (obj != NULL)
+				obj->RefCount_inc();
+		}
+		T* operator=(T* obj)
+		{
+			if (this->obj != NULL)
+				this->obj->RefCount_dec();
+			this->obj = obj;
+			if (obj != NULL)
+				obj->RefCount_inc();
+			return obj;
+		}
+		Property& operator=(const Property& other)
+		{
+			if (this->obj != NULL)
+				this->obj->RefCount_dec();
+			this->obj = other.obj;
+			if (obj != NULL)
+				obj->RefCount_inc();
+			return *this;
+		}
+		inline T* operator()()
+		{
+			return obj;
+		}
+		inline T* operator->()
+		{
+			return obj;
+		}
+		inline T* get()
+		{
+			return obj;
+		}
+	};
+	template<class T> struct objref
+	{
+		T* obj;
+		objref(T* obj) :
+				obj(obj)
+		{
+		}
+		template<class ... ARGS> objref(ARGS ... args) :
+				obj(new T(args...))
+		{
+		}
+		~objref()
+		{
+			obj->RefCount_dec();
+		}
+		inline T* operator()()
+		{
+			return obj;
+		}
+		inline T* operator->()
+		{
+			return obj;
+		}
+		inline T* get()
+		{
+			return obj;
+		}
+	};
+	template<class T> Property<T>::Property(const objref<T>& other) :
+			obj(other.obj)
+	{
+		if (obj != NULL)
+			obj->RefCount_inc();
+	}
+
+	//creates a new instance, but disowns it
+	template<class T, class ... ARGS> T* newobj(ARGS ... args)
+	{
+		T* tmp = new T(args...);
+		tmp->RefCount = 0;
+		return tmp;
+	}
+	//*/
+	/*template<class T> T* operator=(T*& a, const Property<T>& b)
+	 {
+	 a = b.obj;
+	 return a;
+	 }*/
 	class Exception: public Object
 	{
 	public:
@@ -484,6 +596,7 @@ namespace xaxaxa
 	 }
 	 }
 	 };*/
+
 	typedef __uint8_t Byte;
 	typedef __int8_t SByte;
 	typedef __int16_t Short;
@@ -1322,7 +1435,7 @@ namespace xaxaxa
 	class StreamReaderWriter: public Stream
 	{
 	public:
-		Stream* s;
+		Property<Stream> s;
 		void* buf;
 		StringBuilder wbuf;
 		int wbuffersize;
@@ -2031,7 +2144,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -2077,14 +2190,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}
