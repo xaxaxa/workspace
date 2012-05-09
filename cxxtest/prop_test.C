@@ -24,7 +24,7 @@ void func1()
 }
 void call10times(function<void()> func)
 {
-	for(int i=0;i<10;i++)
+	for(int i=0;i<10000000;i++)
 		func();
 }
 void aaaaa()
@@ -41,7 +41,6 @@ void aaaaa()
 }
 int main(int argc, char **argv)
 {
-	call10times([](){cout << "aaa" << endl;});
-	
+	aaaaa();
 	
 }

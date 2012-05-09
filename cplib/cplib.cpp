@@ -7,7 +7,7 @@ using namespace std;
 //////////////////////////////////////////////////////////////
 namespace xaxaxa
 {
-	int objs=0;
+	int objs = 0;
 #ifdef __debug_obj123
 
 	void __objs_inc()
@@ -38,45 +38,8 @@ namespace xaxaxa
 		return __Buffer_bytes_allocated;
 	}
 #endif
-	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2)
-	{
-		return (Stream::Cap) ((Byte) c1 | (Byte) c2);
-	}
-	Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2)
-	{
-		return (Stream::Cap) ((Byte) c1 & (Byte) c2);
-	}
-	Stream::Cap operator~(Stream::Cap c)
-	{
-		return (Stream::Cap) (~(Byte) c);
-	}
-	FileStream::FileStream(File f) :
-			f(f)
-	{
-	}
-	FileStream::~FileStream()
-	{
-		//Close();
-	}
-	int FileStream::Read(const BufferRef& buf)
-	{
-		return f.Read(buf);
-	}
-	void FileStream::Write(const BufferRef& buf)
-	{
-		int bw = 0;
-		int off = 0;
-		while (off < buf.Length && (bw = f.Write(buf.SubBuffer(off))) > 0)
-			off += bw;
-	}
-	void FileStream::Flush()
-	{
-		//::fflush(f);
-	}
-	void FileStream::Close()
-	{
-		f.Close();
-	}
+
+
 
 ///////////////////////////////////////////////////////////
 
@@ -211,8 +174,7 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	int StreamReaderWriter::Read(Stream& out,
-			const char* delimitors, int delimitor_count)
+	int StreamReaderWriter::Read(Stream& out, const char* delimitors, int delimitor_count)
 	{
 		int br = 0;
 		while (1)
@@ -256,8 +218,8 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	int StreamReaderWriter::Read(Stream& out,
-			const STRING* delimitors, int delimitor_count, int* delim_index)
+	int StreamReaderWriter::Read(Stream& out, const STRING* delimitors, int delimitor_count,
+			int* delim_index)
 	{
 		int br = 0;
 		char* cbuf = (char*) this->buf;

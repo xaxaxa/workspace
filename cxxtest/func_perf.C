@@ -16,10 +16,14 @@ int func(int a, int b)
 {
 	return a+b;
 }
+int func2(int a, int b)
+{
+	return a-b;
+}
 
 int main(int argc, char** argv)
 {
-	const long long funcs=50000000;
+	const long long funcs=500000000;
 	
 	/*cout << "constructing functions" << endl;
 	function<int(int,int)>* f=new function<int(int,int)>[funcs];
@@ -50,7 +54,7 @@ int main(int argc, char** argv)
 		(f[i])(i,i+5);
 	cout << "done" << endl;
 	//*/
-	
+	/*
 	cout << "constructing functions" << endl;
 	Delegate<int(int,int)>** f=new Delegate<int(int,int)>*[funcs];
 	cout << "done" << endl;
@@ -103,4 +107,21 @@ int main(int argc, char** argv)
 	
 	
 	
+	function<int(int, int)>* funct=new function<int(int, int)>[5];
+	funct[1]=[](int a, int b){return a+b;};
+	funct[2]=[](int a, int b){return a-b;};
+	//call10times([](){cout << "aaa" << endl;});
+	//*/
+	/*typedef int (*func_t)(int, int);
+	func_t* funct=new func_t[5];
+	funct[1]=&func;
+	funct[2]=&func2;
+	//*/
+	
+	int aaa=2;
+	for(int i=0;i<funcs;i++)
+	{
+		aaa=funct[argc](i,aaa);
+	}
+	//*/
 }

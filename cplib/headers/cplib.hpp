@@ -158,7 +158,7 @@ namespace xaxaxa
 		{
 			return func(a...);
 		}
-		StaticFunction(RET(*func)(ARGS...)) :
+		StaticFunction(RET (*func)(ARGS...)) :
 				func(func)
 		{
 		}
@@ -177,10 +177,10 @@ namespace xaxaxa
 		{
 			return func(this_ptr, a...);
 		}
-		template<class c> MemberFunction(RET(c::*func)(ARGS...), c* obj)
+		template<class c> MemberFunction(RET (c::*func)(ARGS...), c* obj)
 		//:func((RET (*)(void*, ARGS...))func), this_ptr(obj)
 		{
-			this->func = (RET(*)(void*, ARGS...))func;this->this_ptr=obj;
+			this->func = (RET (*)(void*, ARGS...))func;this->this_ptr=obj;
 		}
 		MemberFunction()
 		{}
@@ -209,18 +209,18 @@ namespace xaxaxa
 			return ((RET (*)(ARGS...))func)(a...);
 #endif
 			if (this_ptr != NULL)
-				return ((RET(*)(void*, ARGS...)) func)(this_ptr, a...);
+				return ((RET (*)(void*, ARGS...)) func)(this_ptr, a...);
 			else
-				return ((RET(*)(ARGS...)) func)(a...);
+				return ((RET (*)(ARGS...)) func)(a...);
 		}
-		template<class c> Function(RET(c::*func)(ARGS...), c* obj) :
+		template<class c> Function(RET (c::*func)(ARGS...), c* obj) :
 				func((void*) func), this_ptr(obj)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 			this->is_mem_func = true;
 #endif
 		}
-		Function(RET(*func)(ARGS...)) :
+		Function(RET (*func)(ARGS...)) :
 				func((void*) func)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
@@ -679,32 +679,32 @@ namespace xaxaxa
 				delete[] (Byte*) pbuf;
 		}
 		inline Buffer() :
-				IsRaw(true)
+				pbuf(NULL)
 		{
 		}
-		Buffer(void* buf, int length)
+		Buffer(void* buf, int length) :
+				pbuf(NULL)
 		{
 			this->Data = (Byte*) buf;
 			this->Length = length;
-			this->IsRaw = true;
 		}
-		Buffer(const char* buf, int length)
+		Buffer(const char* buf, int length) :
+				pbuf(NULL)
 		{
 			this->Data = (Byte*) buf;
 			this->Length = length;
-			this->IsRaw = true;
 		}
-		Buffer(char* buf)
+		Buffer(char* buf) :
+				pbuf(NULL)
 		{
 			this->Data = (Byte*) buf;
 			this->Length = strlen(buf);
-			this->IsRaw = true;
 		}
-		Buffer(const char* buf)
+		Buffer(const char* buf) :
+				pbuf(NULL)
 		{
 			this->Data = (Byte*) buf;
 			this->Length = strlen(buf);
-			this->IsRaw = true;
 		}
 		/*Buffer(Byte* buf, int length)
 		 {
@@ -712,23 +712,22 @@ namespace xaxaxa
 		 this->Length = length;
 		 this->IsRaw = true;
 		 }*/
-		Buffer(void* buf, int length, refc_t* orig)
+		Buffer(void* buf, int length, refc_t* orig) :
+				pbuf(orig)
 		{
 			this->Data = (Byte*) buf;
 			this->Length = length;
-			this->IsRaw = false;
-			this->pbuf = orig;
 			__inc();
 		}
 		inline void Release()
 		{
-			if (IsRaw)
+			if (pbuf == NULL)
 				throw Exception(
 						"Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
 			__dec_autofree();
 			Data = NULL;
 			Length = 0;
-			IsRaw = true;
+			pbuf = NULL;
 		}
 		Buffer(int length)
 		{
@@ -736,7 +735,7 @@ namespace xaxaxa
 			if (length <= 0)
 			{
 				this->Data = NULL;
-				this->IsRaw = true;
+				this->pbuf = NULL;
 				return;
 			}
 			this->pbuf = (refc_t*) new Byte[length + sizeof(refc_t)];
@@ -744,39 +743,32 @@ namespace xaxaxa
 			this->Data = (Byte*) (this->pbuf + 1);
 			//this->Data = new Byte[length];
 			//this->pbuf = boost::shared_array<Byte>(this->Data);
-			this->IsRaw = false;
 		}
 		Buffer(const Buffer& b) :
-				BufferRef(b), IsRaw(b.IsRaw)
+				BufferRef(b), pbuf(b.pbuf)
 		{
-			if (!b.IsRaw)
-			{
-				pbuf = b.pbuf;
+			if (b.pbuf != NULL)
 				__inc();
-			}
 		}
 		Buffer& operator=(const Buffer& b)
 		{
 			BufferRef::operator=(b);
-			if (!IsRaw)
+			if (pbuf != NULL)
 				__dec_autofree();
-			if (!(IsRaw = b.IsRaw))
-			{
-				pbuf = b.pbuf;
+			if ((pbuf = b.pbuf) != NULL)
 				__inc();
-			}
 			return *this;
 		}
 		inline ~Buffer()
 		{
-			if (!IsRaw)
+			if (pbuf != NULL)
 				__dec_autofree();
 		}
 		inline Buffer SubBuffer(int index, int length) const
 		{
 			if (index < 0 || index + length > this->Length)
 				throw Exception("SubBuffer() out of range");
-			if (IsRaw)
+			if (pbuf == NULL)
 				return Buffer(Data + index, length);
 			else
 				return Buffer(Data + index, length, pbuf);
@@ -976,9 +968,18 @@ namespace xaxaxa
 			//if(AutoClose)Close();
 		}
 	};
-	Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2);
-	Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2);
-	Stream::Cap operator~(Stream::Cap c);
+	inline Stream::Cap operator|(Stream::Cap c1, Stream::Cap c2)
+	{
+		return (Stream::Cap) ((Byte) c1 | (Byte) c2);
+	}
+	inline Stream::Cap operator&(Stream::Cap c1, Stream::Cap c2)
+	{
+		return (Stream::Cap) ((Byte) c1 & (Byte) c2);
+	}
+	inline Stream::Cap operator~(Stream::Cap c)
+	{
+		return (Stream::Cap) (~(Byte) c);
+	}
 	class StreamSource: public Object
 	{
 	public:
@@ -1170,7 +1171,7 @@ namespace xaxaxa
 		inline File()
 		{
 		}
-		virtual inline ~File()
+		inline ~File()
 		{
 		}
 		inline File(const char *path, int flags)
@@ -1200,7 +1201,7 @@ namespace xaxaxa
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			//this->autoClose=autoClose;
 		}
-		inline virtual void Close()
+		inline void Close()
 		{
 			//throw Exception();
 			dbgprint("file " << _f << " closed");
@@ -1208,28 +1209,28 @@ namespace xaxaxa
 				close(_f);
 			_f = -1;
 		}
-		inline virtual Int Write(const BufferRef& buf)
+		inline Int Write(const BufferRef& buf)
 		{
 			Int tmp = write(_f, buf.Data, buf.Length);
 			if (tmp < 0)
 				throw Exception(errno);
 			return tmp;
 		}
-		inline virtual Int Read(const BufferRef& buf)
+		inline Int Read(const BufferRef& buf)
 		{
 			Int tmp = read(_f, buf.Data, buf.Length);
 			if (tmp < 0)
 				throw Exception(errno);
 			return tmp;
 		}
-		inline virtual off_t Seek(off_t offset, int whence)
+		inline off_t Seek(off_t offset, int whence)
 		{
 			off_t tmp = lseek(_f, offset, whence);
 			if (tmp == (off_t) -1)
 				throw Exception(errno);
 			return tmp;
 		}
-		virtual void Flush()
+		void Flush()
 		{
 		}
 		inline Int GetFlags()
@@ -1246,12 +1247,38 @@ namespace xaxaxa
 	{
 	public:
 		File f;
-		FileStream(File f);
-		virtual ~FileStream();
-		virtual int Read(const BufferRef& buf);
-		virtual void Write(const BufferRef& buf);
-		virtual void Flush();
-		virtual void Close();
+		bool closed;
+		FileStream(File f) :
+				f(f), closed(false)
+		{
+		}
+
+		virtual int Read(const BufferRef& buf)
+		{
+			return f.Read(buf);
+		}
+		virtual void Write(const BufferRef& buf)
+		{
+			int bw = 0;
+			int off = 0;
+			while (off < buf.Length && (bw = f.Write(buf.SubBuffer(off))) > 0)
+				off += bw;
+		}
+		virtual void Flush()
+		{
+			//::fflush(f);
+		}
+		virtual void Close()
+		{
+			if (closed)
+				return;
+			closed = true;
+			f.Close();
+		}
+		virtual ~FileStream()
+		{
+			Close();
+		}
 		virtual Long Position()
 		{
 			return f.Seek(0, SEEK_CUR);
@@ -2144,7 +2171,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -2190,14 +2217,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}

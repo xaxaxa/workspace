@@ -60,7 +60,7 @@ int main()
 		sb1 << " lol";
 	sb1 << "\n";
 	//sb << ' ';
-	for(int i=0;i<1000;i++)
+	for(int i=0;i<5000;i++)
 	{
 		sb << sb1.ToBuffer();
 	}
