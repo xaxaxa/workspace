@@ -337,13 +337,7 @@ namespace xaxaxa
 			buf_length = 0;
 		}
 	}
-	inline int StreamReaderWriter::ReadLine(Stream& buf)
-	{
-		STRING delim[2]
-		{ "\r\n", "\n" };
-		return Read(buf, delim, 2);
-		//return Read(buf, "\r\n", 2);
-	}
+
 	void StreamReaderWriter::Write(const BufferRef& buf)
 	{
 		if (buf.Length > max_wbuffer_copy)

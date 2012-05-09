@@ -190,7 +190,7 @@ FUNCTION_DECLWRAPPER(cb_accept,void,SocketManager* m,Socket sock)
 	ucred credentials;
 	socklen_t ucred_Length = sizeof(ucred);
 	/* fill in the user data structure */
-	if(getsockopt(s._s, SOL_SOCKET, SO_PEERCRED, &credentials, &ucred_Length))
+	if(getsockopt(s._f, SOL_SOCKET, SO_PEERCRED, &credentials, &ucred_Length))
 	{
 		printf("could obtain credentials from unix domain socket");
 		(*(iter)).uid=-1;
@@ -229,7 +229,7 @@ asdf:
 				//IPEndPoint ep(IPAddress("0.0.0.0"),port);
 				UNIXEndPoint ep(name1);
 				int tmp12345=1;
-				setsockopt(sock._s,SOL_SOCKET,SO_REUSEADDR,&tmp12345,sizeof(tmp12345));
+				setsockopt(sock._f,SOL_SOCKET,SO_REUSEADDR,&tmp12345,sizeof(tmp12345));
 				sock.Bind(&ep);
 				sock.Listen(10);
 				SocketManager m;

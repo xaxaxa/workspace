@@ -1534,7 +1534,13 @@ namespace xaxaxa
 		 out.Write(data);
 		 });
 		 }*/
-		int ReadLine(Stream& buf);
+		int ReadLine(Stream& buf)
+		{
+			STRING delim[2]
+			{ "\r\n", "\n" };
+			return Read(buf, delim, 2);
+			//return Read(buf, "\r\n", 2);
+		}
 
 		virtual void Write(const BufferRef& buf);
 		virtual void Flush();
