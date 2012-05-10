@@ -54,7 +54,7 @@ namespace chat
 			sb << "<br /><span class=\"nickname\">" << ((nickname == string()) ? "someone" :
 			HTMLEscape1(nickname));
 			if (isverified)
-				sb << "<img src=\"http://ictp.us.to:12480/bw3/checked.gif\" />";
+				sb << "<img src=\"http://vz2.us.to:12480/bw3/checked.gif\" />";
 			sb << "</span> wrote at " << formatDateTime(createdate) << "</div>";
 			w->addWidget(new WText(WString::fromUTF8(sb.ToCString(), false)));
 			WText* c = new WText(WString::fromUTF8(body, false));
@@ -103,7 +103,7 @@ namespace Wt
 namespace chat
 {
 	const string conn_str =
-			"hostaddr='192.168.5.62' dbname='fb_app' user='fb_app' password='passw0rd!'";
+			"hostaddr='192.168.5.12' dbname='fb_app' user='fb_app' password='passw0rd!'";
 	class bw3_chatserver: public GenericServer
 	{
 	public:

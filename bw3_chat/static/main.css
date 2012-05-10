@@ -1,5 +1,5 @@
 body,textarea,input,table,td
-{margin:0px;padding:0px;}
+{margin:0px;padding:0px;font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;}
 .chatbox
 {
 	overflow-y:scroll;
