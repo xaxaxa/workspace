@@ -134,7 +134,7 @@ namespace xaxaxa
 			 return IPv6Address(a - other);
 			 }*/
 		};
-		class EndPoint
+		class EndPoint: public Object
 		{
 		public:
 			int AddressFamily;
@@ -435,6 +435,7 @@ namespace xaxaxa
 			}
 			inline void Bind(EndPoint *ep)
 			{
+				//cout << _f << endl;
 				int tmp12345 = 1;
 				setsockopt(_f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
 				Int size = ep->GetSockAddrSize();
@@ -484,11 +485,11 @@ namespace xaxaxa
 			 }*/
 		};
 		class SocketManager;
-		static SocketManager* __def_sockmanager;
+
 		class SocketManager: public Object
 		{
 		public:
-
+			static SocketManager* __def_sockmanager;
 			inline static SocketManager* GetDefault()
 			{
 				if (__def_sockmanager == NULL)

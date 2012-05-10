@@ -21,13 +21,14 @@ int main(int argc, char** argv)
 	
 	StandardStream ss;
 	Socket s(AF_INET,SOCK_STREAM,0);
+	//s.Bind(IPEndPoint(IPAddress(argv[1]),atoi(argv[2])));
 	s.Connect(IPEndPoint(IPAddress(argv[1]),atoi(argv[2])));
 	Buffer b(1024*64);
 	int br;
 	while((br=s.Recv(b))>0)
 	//while((br=recv(s._f,b.Data,b.Length,0))>0)
 	{
-		ss.Write(b);
+		ss.Write(b.SubBuffer(0,br));
 		//write(1,b.Data,b.Length);
 	}
 	ss.Close();

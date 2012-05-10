@@ -12,8 +12,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
+#include "defines.H"
 #include <iostream>
-#define WARNLEVEL 3
 #include <cplib/cplib.hpp>
 #include <cplib/asyncsock.hpp>
 #include <cplib/asyncfile.hpp>
@@ -182,6 +182,7 @@ static void socks_cb1(void* obj, Stream* s, void* v)
 	dbgprint("################socks sent_callback##################");
 	tmp->j->dowrite2 = true;
 	tmp->j->begin2w();
+	//delete tmp;
 }
 static void socks_cb(void* obj, Stream* s, void* v)
 {
@@ -217,9 +218,9 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 	}
 	try
 	{
-		SocketStream* str1 = new SocketStream(tmp->s1);
-		SocketStream* str2 = new SocketStream(tmp->s2);
-		JoinStream *j = new JoinStream(str1, str2);
+		objref<SocketStream> str1(tmp->s1);
+		objref<SocketStream> str2(tmp->s2);
+		JoinStream *j = new JoinStream(str1(), str2());
 //j->Begin();
 //delete tmp;
 		tmp->j = j;
@@ -228,23 +229,23 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 		//		SOCKS5::Callback(socks_cb1, tmp));
 		string h = map_ip(tmp->ep.Address);
 		if (h == string())
-			SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
+			SOCKS5::socks_connect(j->s2(), &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
 					SOCKS5::Callback(socks_cb1, tmp));
 		else
-			SOCKS5::socks_connect(j->s2, h.c_str(), tmp->ep.Port, SOCKS5::Callback(socks_cb, tmp),
+			SOCKS5::socks_connect(j->s2(), h.c_str(), tmp->ep.Port, SOCKS5::Callback(socks_cb, tmp),
 					SOCKS5::Callback(socks_cb1, tmp));
 		auto ip = tmp->ep.Address;
 		j->onclose = [ip,j](JoinStream* th)
 		{
 			//WARN(2,inet_ntoa(ip.a)<<" closed");
 				decrement_host(ip);
-				j->s1->Close();
-				j->s2->Close();
-				delete j->s1;
-				delete j->s2;
+				/*j->s1->Close();
+				 j->s2->Close();
+				 delete j->s1;
+				 delete j->s2;*/
 				//WARN(1,j << " deleted");
 				delete j;
-			};
+		};
 	} catch (Exception& ex)
 	{
 		if (tmp->j != NULL)

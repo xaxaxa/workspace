@@ -8,6 +8,7 @@ namespace xaxaxa
 {
 	namespace Sockets
 	{
+		SocketManager* SocketManager::__def_sockmanager(NULL);
 		EndPoint* EndPoint::FromSockAddr(const sockaddr* addr)
 		{
 			switch (addr->sa_family)

@@ -278,7 +278,11 @@ namespace xaxaxa
 				//cout << o;
 			}
 		}
-		Object& operator=(const Object& other)=delete;
+		Object& operator=(const Object& other)
+		{
+			//RefCount = 1;
+			return *this;
+		}
 	};
 	template<class T> struct objref;
 	template<class T> struct Property
@@ -1930,7 +1934,7 @@ namespace xaxaxa
 		{
 			__intwrap1(i, size);
 			if (i >= size || i < 0)
-				throw new OutOfRangeException("CircularQueue::GetPointer() out of range");
+				throw OutOfRangeException("CircularQueue::GetPointer() out of range");
 			return array[i * objsize]; //__intwrap(i,size);
 		}
 		inline bool CanAppend()

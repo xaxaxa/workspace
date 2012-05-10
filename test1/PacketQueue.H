@@ -7,7 +7,7 @@
 
 #ifndef PACKETQUEUE_H_
 #define PACKETQUEUE_H_
-
+#include "defines.H"
 #include <cplib/cplib.hpp>
 #include <cplib/asyncsock.hpp>
 #include <queue>

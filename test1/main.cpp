@@ -12,6 +12,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
+#include "defines.H"
 #include <iostream>
 #include <cplib/cplib.hpp>
 #include <cplib/asyncsock.hpp>
@@ -25,9 +26,9 @@
 #include <boost/shared_ptr.hpp>
 #include "iptsocks.H"
 using namespace boost;
-//#define nosocks
+#define nosocks
 //#define sshp
-
+//template <typename T> using shared_ptr = boost::shared_ptr<T>;
 #define SO_ORIGINAL_DST 80
 #ifdef __debug_print123
 #define dbgprint(msg) cout << msg << endl
@@ -40,6 +41,8 @@ using namespace boost;
 #define LISTENPORT 6969
 #endif
 
+bool socket_mux = false;
+bool __client = false;
 //#define __asdf
 //#define __client
 using namespace std;
@@ -270,7 +273,7 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 		delete tmp;
 #else
 		j->begin1r();
-		SOCKS5::socks_connect(j->s2, &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
+		SOCKS5::socks_connect(j->s2(), &(tmp->ep), SOCKS5::Callback(socks_cb, tmp),
 				SOCKS5::Callback(socks_cb1, tmp));
 #endif
 	} catch (Exception& ex)
@@ -305,7 +308,8 @@ FUNCTION_DECLWRAPPER(cb1, void, SocketManager* m, Socket sock)
 		IPEndPoint ep(IPAddress("127.0.0.1"), 22);
 #endif
 		tmp = new tmp123();
-		tmp->ep = ep;
+		//tmp->ep = ep;
+		ep.Clone(tmp->ep);
 		//IPEndPoint ep(IPAddress("127.0.0.1"),9999);
 		//dbgprint("asdf1");
 		tmp->s1 = s;
@@ -353,11 +357,10 @@ public:
 };
 void segvh(int i)
 {
-	throw new PointerException();
+	throw PointerException();
 }
-#ifdef __asdf
-#ifdef __client
-shared_ptr<socketmux> asdfg(new socketmux());
+
+boost::shared_ptr<socketmux> asdfg(new socketmux());
 
 FUNCTION_DECLWRAPPER(cb3, void, SocketManager* m, Socket sock)
 {
@@ -366,23 +369,23 @@ FUNCTION_DECLWRAPPER(cb3, void, SocketManager* m, Socket sock)
 	asdfg->BeginRecv();
 	asdfg->BeginSend();
 }
-#endif
+
 FUNCTION_DECLWRAPPER(srvc_cb, void, SocketManager* m, Socket sock)
 {
-	shared_ptr<socketmux::item> item = *((shared_ptr<socketmux::item>*)obj);
+	boost::shared_ptr<socketmux::item> item = *((boost::shared_ptr<socketmux::item>*) obj);
 	item->dorecv = item->dosend = true;
 	item->BeginRecv();
 	item->BeginSend();
 }
-FUNCTION_DECLWRAPPER(handle_request, void, socketmux* asdfg, Buffer* Data, shared_ptr<socketmux::item>& it)
+FUNCTION_DECLWRAPPER(handle_request, void, socketmux* asdfg, Buffer* Data, boost::shared_ptr<socketmux::item>& it)
 {
-	//shared_ptr<socketmux::item> item=(*iter).second;
+	//boost::shared_ptr<socketmux::item> item=(*iter).second;
 	it->dorecv = false;
 	it->dosend = false;
-	sockaddr* addr = (sockaddr*)Data->Data;
+	sockaddr* addr = (sockaddr*) Data->Data;
 	Sockets::EndPoint* ep = Sockets::EndPoint::FromSockAddr(addr);
 	Socket s(addr->sa_family, SOCK_STREAM, 0);
-	it->s = shared_ptr<SocketStream>(new SocketStream(s));
+	it->s = boost::shared_ptr<Stream>(new SocketStream(s));
 	m->BeginConnect(s, ep, SocketManager::Callback(srvc_cb, &it));
 	delete ep;
 }
@@ -392,34 +395,39 @@ FUNCTION_DECLWRAPPER(cb2, void, SocketManager* m, Socket sock)
 	m->BeginAccept(sock, SocketManager::Callback(cb2, NULL));
 	try
 	{
-#ifdef __client
-		sockaddr_in dstaddr;
-		socklen_t dstlen = sizeof(dstaddr);
-		if(getsockopt(s._s, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr *)&dstaddr, &dstlen) != 0)throw Exception(errno);
-		IPEndPoint ep(dstaddr);
-		int size = ep.GetSockAddrSize();
-		char tmp[size];
-		ep.GetSockAddr((sockaddr*)tmp);
-		Buffer tmp1((void*)tmp, size);
-		map<int, shared_ptr<socketmux::item> >::iterator iter = asdfg->AddStream(shared_ptr<Stream>(new SocketStream(s)), &tmp1);
-		shared_ptr<socketmux::item> it = (*iter).second;
-		it->BeginSend();
-		it->BeginRecv();
-		dbgprint("fuckkkkkkkkkkkkk");
-#else
-		shared_ptr<socketmux> tmp(new socketmux());
-		tmp->main = shared_ptr<SocketStream>(new SocketStream(s));
-		tmp->ProcessBuffer = socketmux::BufferCallback(procbuffer_n, NULL);
-		tmp->BeginRecv();
-		tmp->BeginSend();
-		tmp->ConnectionRequest = socketmux::RequestCallback(handle_request, NULL);
-#endif
+		if (__client)
+		{
+			sockaddr_in dstaddr;
+			socklen_t dstlen = sizeof(dstaddr);
+			if (getsockopt(s._f, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr *) &dstaddr, &dstlen)
+					!= 0)
+				throw Exception(errno);
+			IPEndPoint ep(dstaddr);
+			int size = ep.GetSockAddrSize();
+			char tmp[size];
+			ep.GetSockAddr((sockaddr*) tmp);
+			Buffer tmp1((void*) tmp, size);
+			map<int, boost::shared_ptr<socketmux::item> >::iterator iter = asdfg->AddStream(
+					boost::shared_ptr<Stream>(new SocketStream(s)), &tmp1);
+			boost::shared_ptr<socketmux::item> it = (*iter).second;
+			it->BeginSend();
+			it->BeginRecv();
+			dbgprint("fuckkkkkkkkkkkkk");
+		}
+		else
+		{
+			boost::shared_ptr<socketmux> tmp(new socketmux());
+			tmp->main = boost::shared_ptr<SocketStream>(new SocketStream(s));
+			tmp->ProcessBuffer = socketmux::BufferCallback(procbuffer_n, NULL);
+			tmp->BeginRecv();
+			tmp->BeginSend();
+			tmp->ConnectionRequest = socketmux::RequestCallback(handle_request, NULL);
+		}
+	} catch (Exception ex)
+	{
 	}
-	catch(Exception ex)
-	{}
 }
 
-#endif
 int main(int argc, char** argv)
 {
 	if (argc > 0 && strcmp(argv[0], "iptsocks") == 0)
@@ -440,6 +448,18 @@ int main(int argc, char** argv)
 	sigaction(SIGTSTP, &sa, NULL);
 	sigaction(SIGTTIN, &sa, NULL);
 	sigaction(SIGTTOU, &sa, NULL);
+	bool socket_mux = false;
+	bool __client = false;
+	if (argc > 1 && strcmp(argv[1], "c") == 0)
+	{
+		socket_mux = true;
+		__client = true;
+	}
+	else if (argc > 1 && strcmp(argv[1], "s") == 0)
+	{
+		socket_mux = true;
+	}
+
 	//signal(SIGSEGV,segvh);
 	//int i=5;
 	//cout<<(++i)<<endl;
@@ -467,43 +487,48 @@ int main(int argc, char** argv)
 	//m->Release();
 	//SocketManager m;
 	//cout << "m=" << m;
-#ifdef __asdf
-	Socket s(AF_INET, SOCK_STREAM, 0);
-#ifdef __client
-	IPEndPoint ep(IPAddress("0.0.0.0"), 6970);
-#else
-	IPEndPoint ep(IPAddress("0.0.0.0"), 2012);
-#endif
-	int tmp12345 = 1;
-	setsockopt(s._s, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
-	s.Bind(&ep);
-	s.Listen(10);
-#ifdef __client
-	asdfg->ProcessBuffer = socketmux::BufferCallback(procbuffer_n, NULL);
-	IPEndPoint ep1(IPAddress("24.83.197.188"), 2012);
-	Socket ctrlsock(AF_INET, SOCK_STREAM, 0);
-	asdfg->main = shared_ptr<SocketStream>(new SocketStream(ctrlsock));
-	asdfg->dosend = asdfg->dorecv = false;
-	m->BeginConnect(ctrlsock, &ep1, SocketManager::Callback(cb3, NULL));
-#endif
-	m->BeginAccept(s, SocketManager::Callback(cb2, NULL));
-	//cout << s._s;
-	//Object *o=&m;
-	//o->Dispose();
-	m->EventLoop();
-	s.Close();
-#else
-	Socket s(AF_INET, SOCK_STREAM, 0);
-	IPEndPoint ep(IPAddress("0.0.0.0"), LISTENPORT);
-	s.Bind(&ep);
-	s.Listen(10);
-	m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
-	//cout << s._s;
-	//Object *o=&m;
-	//o->Dispose();
-	m->EventLoop();
-	s.Close();
-#endif
+	if (socket_mux)
+	{
+		Socket s(AF_INET, SOCK_STREAM, 0);
+		Property<EndPoint> ep;
+		if (__client)
+			ep = newobj<IPEndPoint>(IPAddress("0.0.0.0"), 6970);
+		else
+			ep = newobj<IPEndPoint>(IPAddress("0.0.0.0"), 2012);
+		int tmp12345 = 1;
+		setsockopt(s._f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
+		s.Bind(*ep());
+		s.Listen(10);
+		if (__client)
+		{
+			asdfg->ProcessBuffer = socketmux::BufferCallback(procbuffer_n, NULL);
+			//IPEndPoint ep1(IPAddress("24.83.197.188"), 2012);
+			IPEndPoint ep1(IPAddress(argv[2]), 2012);
+			Socket ctrlsock(AF_INET, SOCK_STREAM, 0);
+			asdfg->main = boost::shared_ptr<SocketStream>(new SocketStream(ctrlsock));
+			asdfg->dosend = asdfg->dorecv = false;
+			m->BeginConnect(ctrlsock, &ep1, SocketManager::Callback(cb3, NULL));
+		}
+		m->BeginAccept(s, SocketManager::Callback(cb2, NULL));
+		//cout << s._s;
+		//Object *o=&m;
+		//o->Dispose();
+		m->EventLoop();
+		s.Close();
+	}
+	else
+	{
+		Socket s(AF_INET, SOCK_STREAM, 0);
+		IPEndPoint ep(IPAddress("0.0.0.0"), LISTENPORT);
+		s.Bind(ep);
+		s.Listen(10);
+		m->BeginAccept(s, SocketManager::Callback(cb1, NULL));
+		//cout << s._s;
+		//Object *o=&m;
+		//o->Dispose();
+		m->EventLoop();
+		s.Close();
+	}
 	return 0;
 }
 

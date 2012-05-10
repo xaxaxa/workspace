@@ -7,7 +7,7 @@
 
 #ifndef IPTSOCKS_H_
 #define IPTSOCKS_H_
-
+#include "defines.H"
 
 int iptsocks_main(int argc, char **argv);
 

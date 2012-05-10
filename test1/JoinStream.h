@@ -7,6 +7,7 @@
 
 #ifndef JOINSTREAM_H_
 #define JOINSTREAM_H_
+#include "defines.H"
 #include <cplib/cplib.hpp>
 #include <functional>
 #ifdef __debug_print123
@@ -25,9 +26,9 @@ public:
 		Buffer b;
 		int length;
 	};
-	Stream* s1;
-	Stream* s2;
-	BufferManager* m;
+	Property<Stream> s1;
+	Property<Stream> s2;
+	Property<BufferManager> m;
 	CircularQueue<item> q1;//s1 --> s2
 	CircularQueue<item> q2;//s2 --> s1
 	int s1r_i,s1w_i,s2r_i,s2w_i;

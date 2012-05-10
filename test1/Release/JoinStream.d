@@ -1,6 +1,5 @@
-JoinStream.d: ../JoinStream.cpp ../JoinStream.h \
- /home/xaxaxa/workspace/cplib/headers/cplib.hpp
+JoinStream.d: ../JoinStream.cpp ../JoinStream.h ../defines.H
 
 ../JoinStream.h:
 
-/home/xaxaxa/workspace/cplib/headers/cplib.hpp:
+../defines.H:

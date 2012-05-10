@@ -42,13 +42,13 @@ endif
 all: test1
 
 dependents:
-	-cd /home/xaxatrollo/workspace/cplib/Debug && $(MAKE) clean all
+	-cd /home/xaxatrollo/workspace/cplib/Debug && $(MAKE) all
 
 # Tool invocations
 test1: $(OBJS) $(USER_OBJS) /home/xaxatrollo/workspace/cplib/Debug/libcplib.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/home/xaxatrollo/workspace/cplib/Debug" -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/xaxatrollo/workspace/cplib/Debug" -fPIE -pie -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

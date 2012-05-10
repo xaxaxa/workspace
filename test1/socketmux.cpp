@@ -59,8 +59,8 @@ namespace xaxaxa
 			update_status();
 			return;
 		}
-		//map<int,shared_ptr<item> >* m=sending_i?&items_i:&items_o;
-		shared_ptr<item> it;
+		//map<int,boost::shared_ptr<item> >* m=sending_i?&items_i:&items_o;
+		boost::shared_ptr<item> it;
 		//int i;
 		/*while(next_item!=items_r->end())
 		{
@@ -139,20 +139,20 @@ y:
 		}
 		retain=nretain;
 	}
-	void socketmux::BeginSend(shared_ptr<item> it)
+	void socketmux::BeginSend(boost::shared_ptr<item> it)
 	{
-		//shared_ptr<item> it=(*i).second;
+		//boost::shared_ptr<item> it=(*i).second;
 		it->BeginSend();
 	}
-	void socketmux::BeginRecv(shared_ptr<item> it)
+	void socketmux::BeginRecv(boost::shared_ptr<item> it)
 	{
-		//shared_ptr<item> it=(*i).second;
+		//boost::shared_ptr<item> it=(*i).second;
 		it->BeginRecv();
 	}
-	map<int,shared_ptr<socketmux::item> >::iterator socketmux::AddStream(shared_ptr<Stream> s, Buffer* cmddata)
+	map<int,boost::shared_ptr<socketmux::item> >::iterator socketmux::AddStream(boost::shared_ptr<Stream> s, Buffer* cmddata)
 	{
 		dbgprint("socketmux::AddStream()");
-		shared_ptr<item> it(new socketmux::item(512,256));
+		boost::shared_ptr<item> it(new socketmux::item(512,256));
 		it->id=++max_id;
 		it->s=s;
 		it->owner=shared_from_this();
@@ -161,12 +161,12 @@ y:
 
 		//it.queue=new xaxaxa::CircularQueue<b>(64);
 		//dbgprint("penissssssssssss");
-		//pair<int,shared_ptr<item> > p=;
+		//pair<int,boost::shared_ptr<item> > p=;
 		//dbgprint("xxxxxxxxxxxxxxxxxxxx");
 
 		//return map<int,socketmux::item>::iterator();
 
-		pair<map<int,shared_ptr<item> >::iterator,bool> ret=items_o.insert({it->id,it});
+		pair<map<int,boost::shared_ptr<item> >::iterator,bool> ret=items_o.insert({it->id,it});
 		dbgprint("zxcvbnmzxcvbnm");
 		if(ret.second)
 		{
@@ -291,15 +291,15 @@ y:
 		case cmd_close:
 		{
 			int id=*((int*)(tmpbuf1+1));
-			map<int,shared_ptr<item> >& m=outgoing?items_i:items_o;
-			map<int,shared_ptr<item> >::iterator iter=m.find(id);
+			map<int,boost::shared_ptr<item> >& m=outgoing?items_i:items_o;
+			map<int,boost::shared_ptr<item> >::iterator iter=m.find(id);
 			if(iter==m.end())
 			{
 				errprint("========CMD_CLOSE: item id "<<id<<" not found [outgoing="<<outgoing<<"]========");
 			}
 			else
 			{
-				shared_ptr<item> it=(*iter).second;
+				boost::shared_ptr<item> it=(*iter).second;
 				it->closed_r=true;
 				it->Close();
 			}
@@ -345,14 +345,14 @@ y:
 				__sendclose(id,false);
 				break;
 			}
-			shared_ptr<item> it(new item(512,256));
+			boost::shared_ptr<item> it(new item(512,256));
 			it->id=id;
 			//it->s=NULL;
 			it->outgoing=false;
 			it->owner=shared_from_this();
 			it->wptr=it;
 			//it.queue=new xaxaxa::CircularQueue<b>(64);
-			pair<map<int,shared_ptr<item> >::iterator,bool> ret=items_i.insert({id,it});
+			pair<map<int,boost::shared_ptr<item> >::iterator,bool> ret=items_i.insert({id,it});
 			if(ret.second)
 			{
 				FUNCTION_CALL(ConnectionRequest,this,&recvbuf,(*(ret.first)).second);
@@ -365,14 +365,14 @@ y:
 		break;
 		case cmd_send:
 		{
-			map<int,shared_ptr<item> >& m=outgoing?items_i:items_o;
-			map<int,shared_ptr<item> >::iterator iter=m.find(id);
+			map<int,boost::shared_ptr<item> >& m=outgoing?items_i:items_o;
+			map<int,boost::shared_ptr<item> >::iterator iter=m.find(id);
 			if(iter==m.end())
 			{
 				dbgprint("========PROTOCOL VIOLATION: item id "<<id<<" not found========");
 				break;
 			}
-			shared_ptr<item> it=(*iter).second;
+			boost::shared_ptr<item> it=(*iter).second;
 			int index;
 			if((index=it->queue_out.BeginAppend())>=0)
 			{
@@ -411,7 +411,7 @@ y:
 		}
 		else
 		{
-			shared_ptr<item> it=*cur_item;
+			boost::shared_ptr<item> it=*cur_item;
 			b& buf=it->queue_in.GetPointer(s1w_i);
 			main->BeginWrite(buf.b.SubBuffer(0,buf.length),Stream::Callback(_s1_w2,this));
 		}
@@ -424,7 +424,7 @@ y:
 		catch(Exception ex)
 		{closed=true;Close();return;}
 		sending=false;
-		shared_ptr<item> it=*cur_item;
+		boost::shared_ptr<item> it=*cur_item;
 		bm.Return(it->queue_in.GetPointer(s1w_i).b);
 		it->queue_in.EndDequeue(s1w_i);
 		it->update_status();
@@ -437,7 +437,7 @@ y:
 		main->Close();
 		if(sending&&!sending_oob)
 		{
-			shared_ptr<item> it=*cur_item;
+			boost::shared_ptr<item> it=*cur_item;
 			bm.Return(it->queue_in.GetPointer(s1w_i).b);
 			it->queue_in.EndDequeue(s1w_i);
 		}
@@ -447,9 +447,9 @@ y:
 		sending=receiving=false;
 		update_status();
 	}
-	void socketmux::Close(shared_ptr<item> it)
+	void socketmux::Close(boost::shared_ptr<item> it)
 	{
-		//shared_ptr<item> it=(*i).second;
+		//boost::shared_ptr<item> it=(*i).second;
 		it->Close();
 	}
 
@@ -462,7 +462,7 @@ y:
 		{
 			dbgprint("sr_i>=0");
 			receiving=true;
-			shared_ptr<socketmux> _owner(owner);
+			boost::shared_ptr<socketmux> _owner(owner);
 			Buffer b=_owner->bm.Get();
 			queue_in.GetPointer(sr_i).b=b;
 			try{
@@ -481,9 +481,9 @@ y:
 			b& buf=queue_out.GetPointer(sw_i);
 			try{
 				Buffer buf1=buf.b.SubBuffer(0,buf.length);
-				shared_ptr<socketmux> _owner(owner);
+				boost::shared_ptr<socketmux> _owner(owner);
 				if(!FUNCTION_ISNULL(_owner->ProcessBuffer))
-					FUNCTION_CALL(_owner->ProcessBuffer,_owner,shared_ptr<item>(wptr),true,buf1);
+					FUNCTION_CALL(_owner->ProcessBuffer,_owner,boost::shared_ptr<item>(wptr),true,buf1);
 				//if(!FUNCTION_ISNULL(ProcessBuffer1))FUNCTION_CALL(ProcessBuffer1,this,&buf1);
 				s->BeginWrite(buf1,Stream::Callback(_sn_w,this));
 			}catch(Exception ex){closed=true;Close();return;}
@@ -499,9 +499,9 @@ y:
 		//cout<<l<<" bytes read from s1"<<endl;
 		dbgprint("sn_r()");
 		if(l<=0) {closed=true;Close();return;}
-		shared_ptr<socketmux> _owner(owner);
+		boost::shared_ptr<socketmux> _owner(owner);
 		if(!FUNCTION_ISNULL(_owner->ProcessBuffer))
-			FUNCTION_CALL(_owner->ProcessBuffer,_owner,shared_ptr<item>(wptr),false,queue_in.GetPointer(sr_i).b.SubBuffer(0,l));
+			FUNCTION_CALL(_owner->ProcessBuffer,_owner,boost::shared_ptr<item>(wptr),false,queue_in.GetPointer(sr_i).b.SubBuffer(0,l));
 		queue_in.GetPointer(sr_i).length=l;
 		queue_in.EndAppend(sr_i);
 		receiving=false;
@@ -529,10 +529,10 @@ y:
 			{
 				//cout<<"sent cmd_close on item "<<id<<" [outgoing="<<this->outgoing<<"]"<<endl;
 				closed_r=true;
-				shared_ptr<socketmux> _owner(owner);
+				boost::shared_ptr<socketmux> _owner(owner);
 				_owner->__sendclose(this->id,this->outgoing);
 				s->Close();
-				map<int,shared_ptr<item> >& m=outgoing?_owner->items_o:_owner->items_i;
+				map<int,boost::shared_ptr<item> >& m=outgoing?_owner->items_o:_owner->items_i;
 				m.erase(this->id);
 				//Clear();
 			}
@@ -544,8 +544,8 @@ y:
 				//cout<<"received cmd_close on item "<<id<<" [outgoing="<<this->outgoing<<"]"<<endl;
 				closed=true;
 				s->Close();
-				shared_ptr<socketmux> _owner(owner);
-				map<int,shared_ptr<item> >& m=outgoing?_owner->items_o:_owner->items_i;
+				boost::shared_ptr<socketmux> _owner(owner);
+				map<int,boost::shared_ptr<item> >& m=outgoing?_owner->items_o:_owner->items_i;
 				m.erase(this->id);
 				//Clear();
 			}
@@ -554,7 +554,7 @@ y:
 	void socketmux::item::Clear()
 	{
 		//return;
-		shared_ptr<socketmux> _owner(owner);
+		boost::shared_ptr<socketmux> _owner(owner);
 		if(receiving) {queue_in.EndAppend(sr_i);}
 		if(sending) {queue_out.GetPointer(sw_i).b.Release();queue_out.EndDequeue(sw_i);}
 		int i;
@@ -576,13 +576,13 @@ y:
 		if(tmp&&!hasData)
 		{
 			//add to linked list
-			shared_ptr<socketmux> _owner(owner);
-			iter=_owner->items_r.insert(_owner->items_r.end(),shared_ptr<item>(wptr));
+			boost::shared_ptr<socketmux> _owner(owner);
+			iter=_owner->items_r.insert(_owner->items_r.end(),boost::shared_ptr<item>(wptr));
 		}
 		else if(hasData&&!tmp)
 		{
 			//remove
-			shared_ptr<socketmux> _owner(owner);
+			boost::shared_ptr<socketmux> _owner(owner);
 			_owner->items_r.erase(iter);
 		}
 		hasData=tmp;

@@ -43,15 +43,22 @@ void DNSServer::cb1(SocketManager* m, Socket s)
 	Int br = m->EndRecvFrom(s, *tmp_ep);
 	if (br <= 0)
 		return;
-	dnsreq req;
-	parse_dns_packet(buf.SubBuffer(0, br), req);
-	cb(*tmp_ep, req);
+	WARN(6, "got dns packet");
+	try
+	{
+		dnsreq req;
+		parse_dns_packet(buf.SubBuffer(0, br), req);
+		cb(*tmp_ep, req);
+	} catch (Exception& ex)
+	{
+	}
 	start();
 }
 void DNSServer::start()
 {
 	SocketManager::GetDefault()->BeginRecv(s, buf, SocketManager::Callback(&DNSServer::cb1, this),
 			false);
+	WARN(8, "receiving...");
 }
 
 int DNSServer::write_dns_name(const string& name, StringBuilder& sb)
@@ -78,7 +85,7 @@ int DNSServer::write_dns_name(const string& name, StringBuilder& sb)
 		sb.Append(ch + last_i, len - last_i);
 		ret += 1 + (len - last_i);
 	}
-	sb.Append((char)0);
+	sb.Append((char) 0);
 	return ret;
 }
 void DNSServer::create_dns_packet(const dnsreq& req, StringBuilder& sb)
@@ -106,8 +113,9 @@ void DNSServer::create_dns_packet(const dnsreq& req, StringBuilder& sb)
 		if (req.answers[i].query_index >= (int) req.queries.size())
 			continue;
 		dnshdr_a hdr1
-		{ (UShort)(htons(queries[req.answers[i].query_index] | dns_offset_mask)), htons(req.answers[i].type), htons(req.answers[i].cls),
-			htonl(req.answers[i].ttl), htons(req.answers[i].addr.Length) };
+		{ (UShort) (htons(queries[req.answers[i].query_index] | dns_offset_mask)), htons(
+				req.answers[i].type), htons(req.answers[i].cls), htonl(req.answers[i].ttl), htons(
+				req.answers[i].addr.Length) };
 		sb.Append((char*) &hdr1, sizeof(hdr1));
 		sb.Append(req.answers[i].addr);
 	}
@@ -179,7 +187,7 @@ void DNSServer::parse_dns_packet(const Buffer& b, dnsreq& req)
 			goto err;
 		index += sizeof(dnshdr_a);
 		UShort tmp = ntohs(hdr1->datalen);
-		if (index + (int)tmp > b.Length)
+		if (index + (int) tmp > b.Length)
 			goto err;
 		Buffer buf(tmp);
 		memcpy(buf.Data, b.Data + index, tmp);

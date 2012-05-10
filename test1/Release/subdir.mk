@@ -9,9 +9,17 @@ CPP_SRCS += \
 ../main.cpp \
 ../socketmux.cpp 
 
+C_UPPER_SRCS += \
+../DNSServer.C \
+../PacketQueue.C \
+../iptsocks.C 
+
 OBJS += \
+./DNSServer.o \
 ./JoinStream.o \
+./PacketQueue.o \
 ./asdfghjkl.o \
+./iptsocks.o \
 ./main.o \
 ./socketmux.o 
 
@@ -21,16 +29,24 @@ CPP_DEPS += \
 ./main.d \
 ./socketmux.d 
 
+C_UPPER_DEPS += \
+./DNSServer.d \
+./PacketQueue.d \
+./iptsocks.d 
+
 
 # Each subdirectory must supply rules for building sources it contributes
+%.o: ../%.C
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ -I/home/s-wang_cary/include -O3 -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-<<<<<<< HEAD
-	g++ -I"/home/xaxaxa/workspace/cplib/headers" -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
-=======
-	g++ -I"/home/user1/workspace/cplib/headers" -O3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
->>>>>>> ff921a1ddfc3fa60272a036ba466a64b53033796
+	g++ -I/home/s-wang_cary/include -O3 -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -7,13 +7,13 @@
 
 #ifndef SOCKETMUX_H_
 #define SOCKETMUX_H_
-
+#include "defines.H"
 #include <cplib/cplib.hpp>
 #include <map>
 #include <list>
-//#include <boost/shared_ptr.hpp>
-//#include <boost/weak_ptr.hpp>
-//#include <boost/enable_shared_from_this.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <memory>
 
 using namespace std;
@@ -21,13 +21,13 @@ using namespace std;
 //using boost::shared_ptr;
 namespace xaxaxa
 {
-class socketmux: public xaxaxa::Object, public enable_shared_from_this<socketmux> {
+class socketmux: public xaxaxa::Object, public boost::enable_shared_from_this<socketmux> {
 public:
 
 
 	socketmux();
 	//weak_ptr<socketmux> _this;
-	shared_ptr<socketmux> __this;
+	boost::shared_ptr<socketmux> __this;
 	bool retain;
 	virtual ~socketmux();
 	const static int maxbufsize=1024*1024*32;
@@ -53,10 +53,10 @@ public:
 	};
 	struct item
 	{
-		weak_ptr<item> wptr;
-		list<shared_ptr<item> >::iterator iter;
-		shared_ptr<Stream> s;
-		weak_ptr<socketmux> owner;
+		boost::weak_ptr<item> wptr;
+		list<boost::shared_ptr<item> >::iterator iter;
+		boost::shared_ptr<Stream> s;
+		boost::weak_ptr<socketmux> owner;
 		xaxaxa::CircularQueue<b> queue_in;
 		xaxaxa::CircularQueue<b> queue_out;
 
@@ -101,24 +101,24 @@ public:
 		int id;
 		Buffer data;
 	};
-	FUNCTION_DECLARE(BufferCallback,void,shared_ptr<socketmux>,shared_ptr<item>,bool/*direction_out*/,const Buffer&);
+	FUNCTION_DECLARE(BufferCallback,void,boost::shared_ptr<socketmux>,boost::shared_ptr<item>,bool/*direction_out*/,const Buffer&);
 	BufferCallback ProcessBuffer;
 	int max_id;//(outgoing)
 	BufferManager bm;
 	//ArrayList<cmditem> cmdqueue;//out of band commands
-	shared_ptr<Stream> main;
+	boost::shared_ptr<Stream> main;
 	//list<item> items;
 	//list<item>::iterator next_item;
-	map<int,shared_ptr<item> > items_o;//outgoing
-	map<int,shared_ptr<item> > items_i;//incoming
-	list<shared_ptr<item> > items_r;//has data
+	map<int,boost::shared_ptr<item> > items_o;//outgoing
+	map<int,boost::shared_ptr<item> > items_i;//incoming
+	list<boost::shared_ptr<item> > items_r;//has data
 	bool sending_i;//whether we're sending data from the incoming queue
-	//map<int,shared_ptr<item> >::iterator next_item;
-	list<shared_ptr<item> >::iterator cur_item;
+	//map<int,boost::shared_ptr<item> >::iterator next_item;
+	list<boost::shared_ptr<item> >::iterator cur_item;
 	bool sending, receiving, dosend, dorecv, closed;
 	bool sending_oob;
 	int s1r_i,s1w_i;
-	FUNCTION_DECLARE(RequestCallback,void,socketmux*,Buffer*,shared_ptr<socketmux::item>&);
+	FUNCTION_DECLARE(RequestCallback,void,socketmux*,Buffer*,boost::shared_ptr<socketmux::item>&);
 	RequestCallback ConnectionRequest;//event
 
 	__uint8_t tmpbuf1[9];
@@ -134,15 +134,15 @@ public:
 
 	void BeginSend();
 	void BeginRecv();
-	void BeginSend(shared_ptr<item> it);
-	void BeginRecv(shared_ptr<item> it);
+	void BeginSend(boost::shared_ptr<item> it);
+	void BeginRecv(boost::shared_ptr<item> it);
 	inline void update_status();
-	map<int,shared_ptr<item> >::iterator AddStream(shared_ptr<Stream> s, Buffer* cmddata=NULL); //requests the server to open a stream; attach stream to s
+	map<int,boost::shared_ptr<item> >::iterator AddStream(boost::shared_ptr<Stream> s, Buffer* cmddata=NULL); //requests the server to open a stream; attach stream to s
 	inline void __sendclose(int id, bool outgoing);
 	inline void __sendcreate(int id, Buffer* cmddata);
 	inline void __add_oobcmd(cmditem& it);
 	void Close();
-	inline void Close(shared_ptr<item> it);
+	inline void Close(boost::shared_ptr<item> it);
 
 	void s1_r(Stream* s);
 	void s1_r2(Stream* s);

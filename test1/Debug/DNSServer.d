@@ -1,5 +1,7 @@
-DNSServer.d: ../DNSServer.C ../DNSServer.H ../PacketQueue.H
+DNSServer.d: ../DNSServer.C ../DNSServer.H ../defines.H ../PacketQueue.H
 
 ../DNSServer.H:
+
+../defines.H:
 
 ../PacketQueue.H:
