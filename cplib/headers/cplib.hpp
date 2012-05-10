@@ -47,6 +47,7 @@
 #include <ucontext.h>
 #include <cxxabi.h>
 #include <functional>
+#include <utility>
 #ifdef cplib_glib_wrappers
 #include <glibmm.h>
 #include <giomm.h>
@@ -156,9 +157,9 @@ namespace xaxaxa
 		RET (*func)(ARGS...);
 		virtual RET operator()(ARGS ... a)
 		{
-			return func(a...);
+			return func(std::forward<ARGS...>(a...));
 		}
-		StaticFunction(RET (*func)(ARGS...)) :
+		StaticFunction(RET(*func)(ARGS...)) :
 				func(func)
 		{
 		}
@@ -175,12 +176,12 @@ namespace xaxaxa
 		void* this_ptr;
 		virtual RET operator()(ARGS ... a)
 		{
-			return func(this_ptr, a...);
+			return func(this_ptr, std::forward<ARGS...>(a...));
 		}
-		template<class c> MemberFunction(RET (c::*func)(ARGS...), c* obj)
+		template<class c> MemberFunction(RET(c::*func)(ARGS...), c* obj)
 		//:func((RET (*)(void*, ARGS...))func), this_ptr(obj)
 		{
-			this->func = (RET (*)(void*, ARGS...))func;this->this_ptr=obj;
+			this->func = (RET(*)(void*, ARGS...))func;this->this_ptr=obj;
 		}
 		MemberFunction()
 		{}
@@ -209,18 +210,18 @@ namespace xaxaxa
 			return ((RET (*)(ARGS...))func)(a...);
 #endif
 			if (this_ptr != NULL)
-				return ((RET (*)(void*, ARGS...)) func)(this_ptr, a...);
+				return ((RET(*)(void*, ARGS...)) func)(this_ptr, std::forward<ARGS...>(a...));
 			else
-				return ((RET (*)(ARGS...)) func)(a...);
+				return ((RET(*)(ARGS...)) func)(std::forward<ARGS...>(a...));
 		}
-		template<class c> Function(RET (c::*func)(ARGS...), c* obj) :
+		template<class c> Function(RET(c::*func)(ARGS...), c* obj) :
 				func((void*) func), this_ptr(obj)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 			this->is_mem_func = true;
 #endif
 		}
-		Function(RET (*func)(ARGS...)) :
+		Function(RET(*func)(ARGS...)) :
 				func((void*) func)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
@@ -231,6 +232,24 @@ namespace xaxaxa
 		}
 		Function()
 		{
+		}
+	};
+	template<class SIGNATURE> struct FunctionWrapper;
+	template<class RET, class ... ARGS> struct FunctionWrapper<RET(ARGS...)>
+	{
+		function<RET(ARGS...)> func;
+		typedef RET (*func_t)(void*, ARGS...);
+		FunctionWrapper(const function<RET(ARGS...)>& f) :
+				func(f)
+		{
+		}
+		RET operator()(ARGS ... a)
+		{
+			return func(a...);
+		}
+		func_t Get()
+		{
+			return (func_t) &FunctionWrapper<RET(ARGS...)>::operator();
 		}
 	};
 	extern int objs;
@@ -2181,7 +2200,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -2227,14 +2246,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}
