@@ -54,7 +54,7 @@
 								</option>
 								<option id="gnu.cpp.link.option.debugging.gprof.282939609" name="Generate gprof information (-pg)" superClass="gnu.cpp.link.option.debugging.gprof" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.debugging.prof.1387985427" name="Generate prof information (-p)" superClass="gnu.cpp.link.option.debugging.prof" value="true" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.flags.172025286" superClass="gnu.cpp.link.option.flags" value="-fPIE -pie" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.172025286" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-fPIC" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1091967665" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

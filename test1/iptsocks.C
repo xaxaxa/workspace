@@ -244,7 +244,7 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 				 delete j->s1;
 				 delete j->s2;*/
 				//WARN(1,j << " deleted");
-				delete j;
+				j->RefCount_dec();
 		};
 	} catch (Exception& ex)
 	{

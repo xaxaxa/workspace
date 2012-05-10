@@ -256,18 +256,20 @@ FUNCTION_DECLWRAPPER(cb_connect, void, SocketManager* m, Socket sock)
 	}
 	try
 	{
-		SocketStream* str1 = new SocketStream(tmp->s1);
-		SocketStream* str2 = new SocketStream(tmp->s2);
-		JoinStream* j = new JoinStream(str1, str2);
+		objref<SocketStream> str1(tmp->s1);
+		objref<SocketStream> str2(tmp->s2);
+		JoinStream* j = new JoinStream(str1(), str2());
 #ifdef sshp
 		j->ProcessBuffer1 = JoinStream::BufferCallback(procbuffer, NULL);
 		j->ProcessBuffer2 = j->ProcessBuffer1;
 #endif
-		str1->RefCount_dec();
-		str2->RefCount_dec();
 		//j->Begin();
 		//delete tmp;
 		tmp->j = j;
+		j->onclose = [](JoinStream* th)
+		{
+			th->RefCount_dec();
+		};
 #ifdef nosocks
 		j->Begin();
 		delete tmp;
