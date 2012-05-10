@@ -1,4 +1,4 @@
-#define __debug_obj123
+//#define __debug_obj123
 
 #include <iostream>
 #include <cplib/cplib.hpp>
@@ -34,13 +34,26 @@ void aaaaa()
 	
 	
 	
-	/*c1 obj;
-	obj.a=tmp();
-	obj.a=newobj<Object>();*/
+	c1 obj;
+	obj.a=tmp;
+	obj.a=newobj<Object>();
 	//tmp=new Object();
 }
+
+
+
+
+
+
+
 int main(int argc, char **argv)
 {
-	aaaaa();
-	
+	//aaaaa();
+	objref<FileStream> fs(File("/dev/urandom",O_RDONLY));
+	objref<StreamReader> sr(*(fs.get()));
+	//StreamReader sr(*(fs()));
+	objref<StringBuilder> sb(1024);
+	cout << fs() << endl;
+	sr->ReadLine(*(sb()));
+	cout << sb->ToCString() << endl;
 }

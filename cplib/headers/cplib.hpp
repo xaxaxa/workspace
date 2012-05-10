@@ -363,12 +363,8 @@ namespace xaxaxa
 	template<class T> struct objref
 	{
 		T* obj;
-		objref(T* obj) :
-				obj(obj)
-		{
-		}
 		template<class ... ARGS> objref(ARGS ... args) :
-				obj(new T(args...))
+				obj(new T(std::forward<ARGS>(args)...))
 		{
 		}
 		~objref()
