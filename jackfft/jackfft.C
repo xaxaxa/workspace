@@ -20,6 +20,7 @@
  *
  *
  */
+#define WARNLEVEL 3
 #define cplib_glib_wrappers
 #include <iostream>
 #include <jack/jack.h>
@@ -37,6 +38,9 @@
 #include <math.h>
 
 using namespace std;
+
+
+
 vector<jack_port_t *> inputs;
 vector<jack_port_t *> outputs;
 #define CHANNELS 2
@@ -48,7 +52,7 @@ bool display_spectrum = false;
 using namespace xaxaxa;
 using namespace std;
 
-
+File efd(eventfd(0,0));
 FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
 FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
 struct timespec last_refreshed;
@@ -84,12 +88,14 @@ inline double scale_freq_r(double x)
 	//cout << x << endl;
 	return x < 0 ? -x : x;
 }
-double logn(double n, double x)
+inline double logn(double n, double x)
 {
 	return log(x) / log(n);
 }
+
+//graph to coefficient
 //x: [0.0,2.0]
-double scale_value(double x)
+inline double scale_value(double x)
 {
 	//return x*x;
 	double tmp = x - 1.;
@@ -106,7 +112,7 @@ double scale_value(double x)
  * -19x=1/y-1
  * x=-(1/y-1)/19
  * */
-double scale_value_r(double x)
+inline double scale_value_r(double x)
 {
 	//return x*x;
 	//cout << x << endl;
@@ -118,9 +124,9 @@ double scale_value_r(double x)
 	else return x+1.0;*/
 }
 
-long long get_nsec(const timespec& t)
+inline Long get_nsec(const timespec& t)
 {
-	return ((long long)t.tv_sec) * 1000000000 + (long long)t.tv_nsec;
+	return ((Long)t.tv_sec) * 1000000000 + (Long)t.tv_nsec;
 }
 template<class t> inline double complex_to_real(const t& x)
 {
@@ -179,6 +185,18 @@ asdfghjkl:
 	{
 		last_refreshed = t;
 		trololo->didprocess = false;
+		Long tmp_i=1;
+		efd.Write(BufferRef(&tmp_i,sizeof(tmp_i)));
+	}
+	return 0;
+}
+void* thread1(void* v)
+{
+	while(true)
+	{
+		Long tmp;
+		efd.Read(BufferRef(&tmp,sizeof(tmp)));
+		WARN(8,tmp);
 		//refresh
 		for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
 			c2->data[i] = 0;
@@ -192,9 +210,11 @@ asdfghjkl:
 				c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
 			}
 		}
-		c2->queue_draw();
+		gdk_threads_enter();
+		c2->do_draw();
+		gdk_threads_leave();
 	}
-	return 0;
+	return NULL;
 }
 void error(const char *desc)
 {
@@ -576,11 +596,33 @@ int main(int argc, char *argv[])
 		}
 		update_fft(tmp);
 		apply_pitchshift1(tmp);
-		filt2 = tmp;
+		filt2 = tmp; //assumed to be atomic on all cpus, otherwise the cpu sucks and is not supported
 hhhhh:
 		d->hide();
 	});
 
+	b->get_widget("b_shift", bt);
+	bt->signal_clicked().connect([]()
+	{
+		Gtk::Window* w1;
+		Gtk::Dialog* d;
+		b->get_widget("window1", w1);
+		b->get_widget("dialog_shift", d);
+		d->set_transient_for(*w1);
+		if(d->run() != RESPONSE_OK)goto hhhhh;
+		Gtk::Entry* ent;
+		b->get_widget("t_x", ent);
+		double x;
+		x = atof(ent->get_text().c_str());
+		for(Int i=0;i<EQ_POINTS;i++)
+		{
+			c->data[i]=scale_value_r(scale_value(c->data[i])*pow(2,x));
+		}
+		c->do_draw();
+		update_fft();
+	hhhhh:
+		d->hide();
+	});
 	Gtk::FileChooserDialog* d;
 	b->get_widget("filechooserdialog1", d);
 	//d->signal_response().connect(&on_response);
@@ -646,6 +688,12 @@ hhhhh:
 		fprintf(stderr, "cannot activate client");
 		return 1;
 	}
+	g_thread_init (NULL);
+	gdk_threads_init();
+	//glib_threads_init();
+	
+	pthread_t thr;
+	pthread_create(&thr,NULL,&thread1,NULL);
 	kit.run(*w);
 
 	jack_client_close(client);

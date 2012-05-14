@@ -49,11 +49,10 @@ void aaaaa()
 int main(int argc, char **argv)
 {
 	//aaaaa();
-	objref<FileStream> fs(File("/dev/urandom",O_RDONLY));
-	objref<StreamReader> sr(*(fs.get()));
-	//StreamReader sr(*(fs()));
-	objref<StringBuilder> sb(1024);
+	objref<FileStream> fs("/dev/urandom",O_RDONLY);
+	objref<StreamReader> sr(*fs);
+	objref<StringBuilder> sb;
 	cout << fs() << endl;
-	sr->ReadLine(*(sb()));
+	sr->ReadLine(*sb);
 	cout << sb->ToCString() << endl;
 }

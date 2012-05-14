@@ -20,7 +20,14 @@ int func2(int a, int b)
 {
 	return a-b;
 }
-
+struct tmp_struct
+{
+	int data;
+	int func(int a, int b)
+	{
+		return data+a+b;
+	}
+};
 int main(int argc, char** argv)
 {
 	const long long funcs=500000000;
@@ -106,10 +113,11 @@ int main(int argc, char** argv)
 	//*/
 	
 	
-	
+	tmp_struct* asdf=new tmp_struct();
 	function<int(int, int)>* funct=new function<int(int, int)>[5];
 	funct[1]=[](int a, int b){return a+b;};
 	funct[2]=[](int a, int b){return a-b;};
+	funct[3]=[asdf](int a, int b){return asdf->data+a;};
 	//call10times([](){cout << "aaa" << endl;});
 	//*/
 	/*typedef int (*func_t)(int, int);
