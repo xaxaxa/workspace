@@ -126,7 +126,8 @@ public partial class MainWindow: Gtk.Window
 			JObject obj1 = (JObject)obj;
 			foreach (JProperty pr in obj1.Properties()) {
 				if (p.expand.Contains (pr.Name)) {
-					dump_fb_object (graph_base + pr.Value.Value<string> (), p);
+					if(graph_path.Trim ('/')!=pr.Value.Value<string> ().Trim ('/'))
+						dump_fb_object (graph_base + pr.Value.Value<string> (), p);
 				}
 			}
 		}

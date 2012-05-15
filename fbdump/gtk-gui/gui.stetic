@@ -6,7 +6,7 @@
   </configuration>
   <import>
     <widget-library name="glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <widget-library name="../bin/Debug/fbdump.exe" internal="true" />
+    <widget-library name="../bin/Release/fbdump.exe" internal="true" />
   </import>
   <widget class="Gtk.Window" id="MainWindow" design-size="670 523">
     <property name="MemberName" />
