@@ -140,7 +140,17 @@ using namespace std;
 namespace xaxaxa
 {
 //typedef void* Function;
-
+	typedef  volatile int atomic_t;
+#define atomic_read(v)                  v
+#define	atomic_set(v,i)                 v = i
+#define	atomic_add(i,v)                 v += i
+#define	atomic_sub(i,v)                 v -= i
+#define	atomic_sub_and_test(i,v)        (v -= i) == 0
+#define	atomic_inc(v)                   v++
+#define	atomic_dec(v)                   v--
+#define	atomic_dec_and_test(v)          --v == 0
+#define	atomic_inc_and_test(v)          ++v == 0
+#define	atomic_add_negative(i,v)        (v += i) < 0
 	template<class SIGNATURE> struct Delegate;
 	template<class RET, class ... ARGS> struct Delegate<RET(ARGS...)>
 	{
@@ -155,12 +165,12 @@ namespace xaxaxa
 			RET(ARGS...)>
 	{
 		RET (*func)(ARGS...);
-		virtual RET operator()(ARGS ... a)
+		virtual RET operator()(ARGS&& ... a)
 		{
 			return func(std::forward<ARGS...>(a...));
 		}
-		StaticFunction(RET(*func)(ARGS...)) :
-				func(func)
+		StaticFunction(RET (*func)(ARGS...)) :
+		func(func)
 		{
 		}
 		StaticFunction()
@@ -174,23 +184,23 @@ namespace xaxaxa
 	{
 		RET (*func)(void*, ARGS...);
 		void* this_ptr;
-		virtual RET operator()(ARGS ... a)
+		virtual RET operator()(ARGS&& ... a)
 		{
 			return func(this_ptr, std::forward<ARGS...>(a...));
 		}
-		template<class c> MemberFunction(RET(c::*func)(ARGS...), c* obj)
+		template<class c> MemberFunction(RET (c::*func)(ARGS...), c* obj)
 		//:func((RET (*)(void*, ARGS...))func), this_ptr(obj)
-		{
-			this->func = (RET(*)(void*, ARGS...))func;this->this_ptr=obj;
-		}
-		MemberFunction()
-		{}
-	};
+				{
+					this->func = (RET (*)(void*, ARGS...))func;this->this_ptr=obj;
+				}
+				MemberFunction()
+				{}
+			};
 
-			//uncomment to allow hybrid functions to distinguish between a member
-			//function pointer with a NULL thisptr and a static function.
-			//this adds overhead.
-			//#define XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
+		//uncomment to allow hybrid functions to distinguish between a member
+		//function pointer with a NULL thisptr and a static function.
+		//this adds overhead.
+		//#define XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 
 	template<class SIGNATURE> struct Function;
 	template<class RET, class ... ARGS> struct Function<RET(ARGS...)> : public Delegate<RET(ARGS...)>
@@ -201,28 +211,28 @@ namespace xaxaxa
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 		bool is_mem_func;
 #endif
-		virtual RET operator()(ARGS ... a)
+		virtual RET operator()(ARGS&& ... a)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
-			if(is_mem_func)
-			return ((RET (*)(void*, ARGS...))func)(this_ptr, a...);
-			else
-			return ((RET (*)(ARGS...))func)(a...);
+				if(is_mem_func)
+				return ((RET (*)(void*, ARGS...))func)(this_ptr, a...);
+				else
+				return ((RET (*)(ARGS...))func)(a...);
 #endif
-			if (this_ptr != NULL)
-				return ((RET(*)(void*, ARGS...)) func)(this_ptr, std::forward<ARGS...>(a...));
+				if (this_ptr != NULL)
+				return ((RET (*)(void*, ARGS...)) func)(this_ptr, std::forward<ARGS...>(a...));
 			else
-				return ((RET(*)(ARGS...)) func)(std::forward<ARGS...>(a...));
+				return ((RET (*)(ARGS...)) func)(std::forward<ARGS...>(a...));
 		}
-		template<class c> Function(RET(c::*func)(ARGS...), c* obj) :
-				func((void*) func), this_ptr(obj)
+		template<class c> Function(RET (c::*func)(ARGS...), c* obj) :
+		func((void*) func), this_ptr(obj)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 			this->is_mem_func = true;
 #endif
 		}
-		Function(RET(*func)(ARGS...)) :
-				func((void*) func)
+		Function(RET (*func)(ARGS...)) :
+		func((void*) func)
 		{
 #ifdef XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 			this->is_mem_func = false;
@@ -234,7 +244,8 @@ namespace xaxaxa
 		{
 		}
 	};
-	template<class SIGNATURE> struct FunctionWrapper;
+	template<class SIGNATURE> struct FunctionWrapper
+	;
 	template<class RET, class ... ARGS> struct FunctionWrapper<RET(ARGS...)>
 	{
 		function<RET(ARGS...)> func;
@@ -243,9 +254,9 @@ namespace xaxaxa
 				func(f)
 		{
 		}
-		RET operator()(ARGS ... a)
+		RET operator()(ARGS&& ... a)
 		{
-			return func(a...);
+			return func(std::forward<ARGS...>(a...));
 		}
 		func_t Get()
 		{
@@ -257,7 +268,7 @@ namespace xaxaxa
 	{
 	public:
 
-		int RefCount; //reference counter
+		atomic_t RefCount; //reference counter
 		Object()
 		{
 			RefCount = 1;
@@ -279,14 +290,14 @@ namespace xaxaxa
 		}
 		inline void RefCount_inc()
 		{
-			RefCount++;
+			atomic_inc(RefCount);
 #ifdef __debug_obj123
 			cout<<"retain<"<<typeid(this).name()<<"> = "<<RefCount << "; "<<objs<<" objects total"<<endl;
 #endif
 		}
 		inline void RefCount_dec()
 		{
-			RefCount--;
+			atomic_dec(RefCount);
 #ifdef __debug_obj123
 			cout<<"release<"<<typeid(this).name()<<"> = "<<RefCount << "; "<<objs<<" objects total"<<endl;
 #endif
@@ -302,8 +313,10 @@ namespace xaxaxa
 			//RefCount = 1;
 			return *this;
 		}
-	};
-	template<class T> struct objref;
+	}
+	;
+	template<class T> struct objref
+	;
 	template<class T> struct Property
 	{
 		T* obj;
@@ -317,6 +330,12 @@ namespace xaxaxa
 		{
 			if (obj != NULL)
 				obj->RefCount_inc();
+		}
+		inline Property(T& obj) :
+				obj(&obj)
+		{
+			if (&obj != NULL)
+				obj.RefCount_inc();
 		}
 		inline ~Property()
 		{
@@ -338,6 +357,10 @@ namespace xaxaxa
 				obj->RefCount_inc();
 			return obj;
 		}
+		T* operator=(T& obj)
+		{
+			return operator=(*obj);
+		}
 		Property& operator=(const Property& other)
 		{
 			if (this->obj != NULL)
@@ -351,6 +374,10 @@ namespace xaxaxa
 		{
 			return obj;
 		}
+		inline T& operator*()
+		{
+			return *obj;
+		}
 		inline T* operator->()
 		{
 			return obj;
@@ -359,13 +386,18 @@ namespace xaxaxa
 		{
 			return obj;
 		}
-	};
+	}
+	;
 	template<class T> struct objref
 	{
 		T* obj;
-		template<class ... ARGS> objref(ARGS ... args) :
-				obj(new T(std::forward<ARGS>(args)...))
+		template<class ... ARGS> inline objref(ARGS&& ... args)
+		:obj(new T(std::forward<ARGS>(args)...))
 		{
+		}
+		objref(const Property<T>& prop):obj(prop.obj)
+		{
+			obj->RefCount_inc();
 		}
 		~objref()
 		{
@@ -378,6 +410,10 @@ namespace xaxaxa
 		inline T* operator->()
 		{
 			return obj;
+		}
+		inline T& operator*()
+		{
+			return *obj;
 		}
 		inline T* get()
 		{
@@ -446,7 +482,8 @@ namespace xaxaxa
 		{
 			Code = 0;
 		}
-	};
+	}
+	;
 	class OutOfRangeException: public Exception
 	{
 	public:
@@ -460,7 +497,8 @@ namespace xaxaxa
 		{
 
 		}
-	};
+	}
+	;
 	class NotSupportedException: public Exception
 	{
 	public:
@@ -474,7 +512,8 @@ namespace xaxaxa
 		{
 
 		}
-	};
+	}
+	;
 	struct STRING
 	{
 		char* c;
@@ -498,7 +537,8 @@ namespace xaxaxa
 		STRING()
 		{
 		}
-	};
+	}
+	;
 #ifdef __debug_print123
 	void __Buffer_bytes_inc(int i);
 	void __Buffer_bytes_dec(int i);
@@ -630,7 +670,8 @@ namespace xaxaxa
 	//typedef boost::shared_ptr shared_ptr;
 	//does NOT do reference counting; this is a simple struct to pass around buffers
 	//to functions that do not store them; this avoids the overhead of Buffer
-	class Buffer;
+	class Buffer
+	;
 	struct BufferRef
 	{
 		Byte* Data;
@@ -678,7 +719,8 @@ namespace xaxaxa
 			Data += index;
 			Length -= index;
 		}
-	};
+	}
+	;
 	class Buffer: public BufferRef
 	{
 	public:
@@ -1271,7 +1313,10 @@ namespace xaxaxa
 				f(f), closed(false)
 		{
 		}
-
+		template<class ... ARGS> FileStream(ARGS&& ... a)
+		:f(std::forward<ARGS>(a)...), closed(false)
+		{
+		}
 		virtual int Read(const BufferRef& buf)
 		{
 			return f.Read(buf);
@@ -1281,36 +1326,36 @@ namespace xaxaxa
 			int bw = 0;
 			int off = 0;
 			while (off < buf.Length && (bw = f.Write(buf.SubBuffer(off))) > 0)
-				off += bw;
+			off += bw;
 		}
 		virtual void Flush()
 		{
 			//::fflush(f);
-		}
-		virtual void Close()
-		{
-			if (closed)
+			}
+			virtual void Close()
+			{
+				if (closed)
 				return;
-			closed = true;
-			f.Close();
-		}
-		virtual ~FileStream()
-		{
-			Close();
-		}
-		virtual Long Position()
-		{
-			return f.Seek(0, SEEK_CUR);
-		}
-		virtual void Seek(Long n, SeekFrom from)
-		{
-			f.Seek(n, (int) from);
-		}
-		virtual Cap Capabilities()
-		{
-			return Cap::All;
-		}
-	};
+				closed = true;
+				f.Close();
+			}
+			virtual ~FileStream()
+			{
+				Close();
+			}
+			virtual Long Position()
+			{
+				return f.Seek(0, SEEK_CUR);
+			}
+			virtual void Seek(Long n, SeekFrom from)
+			{
+				f.Seek(n, (int) from);
+			}
+			virtual Cap Capabilities()
+			{
+				return Cap::All;
+			}
+		};
 	class StandardStream: public Stream
 	{
 	public:
@@ -2196,7 +2241,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -2242,14 +2287,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}

@@ -139,7 +139,7 @@ namespace xaxaxa
 			d=false;
 			return true;
 		}
-		virtual bool on_expose_event(GdkEventExpose* evt)
+		void do_draw(GdkEventExpose* evt=NULL)
 		{
 			Glib::RefPtr<Gdk::Window> window = get_window();
 			if(window)
@@ -152,6 +152,10 @@ namespace xaxaxa
 				}
 				do_draw(ctx);
 			}
+		}
+		virtual bool on_expose_event(GdkEventExpose* evt)
+		{
+			do_draw(evt);
 			return true;
 		}
 		EQControl(UInt datalen): Gtk::DrawingArea(), datalen(datalen), last_i(-1), last_v(-1.0), d(false)

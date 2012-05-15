@@ -1,0 +1,1082 @@
+                              1 ;--------------------------------------------------------
+                              2 ; File Created by SDCC : free open source ANSI-C Compiler
+                              3 ; Version 2.9.0 #5416 (Feb  3 2010) (UNIX)
+                              4 ; This file was generated Sun May 13 19:22:03 2012
+                              5 ;--------------------------------------------------------
+                              6 	.module test3
+                              7 	.optsdcc -mmcs51 --model-small
+                              8 	
+                              9 ;--------------------------------------------------------
+                             10 ; Public variables in this module
+                             11 ;--------------------------------------------------------
+                             12 	.globl _seg_position
+                             13 	.globl _display_seg
+                             14 	.globl _timer
+                             15 	.globl _main
+                             16 	.globl _display
+                             17 	.globl _delay
+                             18 	.globl _CY
+                             19 	.globl _AC
+                             20 	.globl _F0
+                             21 	.globl _RS1
+                             22 	.globl _RS0
+                             23 	.globl _OV
+                             24 	.globl _F1
+                             25 	.globl _P
+                             26 	.globl _PS
+                             27 	.globl _PT1
+                             28 	.globl _PX1
+                             29 	.globl _PT0
+                             30 	.globl _PX0
+                             31 	.globl _RD
+                             32 	.globl _WR
+                             33 	.globl _T1
+                             34 	.globl _T0
+                             35 	.globl _INT1
+                             36 	.globl _INT0
+                             37 	.globl _TXD
+                             38 	.globl _RXD
+                             39 	.globl _P3_7
+                             40 	.globl _P3_6
+                             41 	.globl _P3_5
+                             42 	.globl _P3_4
+                             43 	.globl _P3_3
+                             44 	.globl _P3_2
+                             45 	.globl _P3_1
+                             46 	.globl _P3_0
+                             47 	.globl _EA
+                             48 	.globl _ES
+                             49 	.globl _ET1
+                             50 	.globl _EX1
+                             51 	.globl _ET0
+                             52 	.globl _EX0
+                             53 	.globl _P2_7
+                             54 	.globl _P2_6
+                             55 	.globl _P2_5
+                             56 	.globl _P2_4
+                             57 	.globl _P2_3
+                             58 	.globl _P2_2
+                             59 	.globl _P2_1
+                             60 	.globl _P2_0
+                             61 	.globl _SM0
+                             62 	.globl _SM1
+                             63 	.globl _SM2
+                             64 	.globl _REN
+                             65 	.globl _TB8
+                             66 	.globl _RB8
+                             67 	.globl _TI
+                             68 	.globl _RI
+                             69 	.globl _P1_7
+                             70 	.globl _P1_6
+                             71 	.globl _P1_5
+                             72 	.globl _P1_4
+                             73 	.globl _P1_3
+                             74 	.globl _P1_2
+                             75 	.globl _P1_1
+                             76 	.globl _P1_0
+                             77 	.globl _TF1
+                             78 	.globl _TR1
+                             79 	.globl _TF0
+                             80 	.globl _TR0
+                             81 	.globl _IE1
+                             82 	.globl _IT1
+                             83 	.globl _IE0
+                             84 	.globl _IT0
+                             85 	.globl _P0_7
+                             86 	.globl _P0_6
+                             87 	.globl _P0_5
+                             88 	.globl _P0_4
+                             89 	.globl _P0_3
+                             90 	.globl _P0_2
+                             91 	.globl _P0_1
+                             92 	.globl _P0_0
+                             93 	.globl _B
+                             94 	.globl _ACC
+                             95 	.globl _PSW
+                             96 	.globl _IP
+                             97 	.globl _P3
+                             98 	.globl _IE
+                             99 	.globl _P2
+                            100 	.globl _SBUF
+                            101 	.globl _SCON
+                            102 	.globl _P1
+                            103 	.globl _TH1
+                            104 	.globl _TH0
+                            105 	.globl _TL1
+                            106 	.globl _TL0
+                            107 	.globl _TMOD
+                            108 	.globl _TCON
+                            109 	.globl _PCON
+                            110 	.globl _DPH
+                            111 	.globl _DPL
+                            112 	.globl _SP
+                            113 	.globl _P0
+                            114 	.globl _i
+                            115 ;--------------------------------------------------------
+                            116 ; special function registers
+                            117 ;--------------------------------------------------------
+                            118 	.area RSEG    (DATA)
+                    0080    119 _P0	=	0x0080
+                    0081    120 _SP	=	0x0081
+                    0082    121 _DPL	=	0x0082
+                    0083    122 _DPH	=	0x0083
+                    0087    123 _PCON	=	0x0087
+                    0088    124 _TCON	=	0x0088
+                    0089    125 _TMOD	=	0x0089
+                    008A    126 _TL0	=	0x008a
+                    008B    127 _TL1	=	0x008b
+                    008C    128 _TH0	=	0x008c
+                    008D    129 _TH1	=	0x008d
+                    0090    130 _P1	=	0x0090
+                    0098    131 _SCON	=	0x0098
+                    0099    132 _SBUF	=	0x0099
+                    00A0    133 _P2	=	0x00a0
+                    00A8    134 _IE	=	0x00a8
+                    00B0    135 _P3	=	0x00b0
+                    00B8    136 _IP	=	0x00b8
+                    00D0    137 _PSW	=	0x00d0
+                    00E0    138 _ACC	=	0x00e0
+                    00F0    139 _B	=	0x00f0
+                            140 ;--------------------------------------------------------
+                            141 ; special function bits
+                            142 ;--------------------------------------------------------
+                            143 	.area RSEG    (DATA)
+                    0080    144 _P0_0	=	0x0080
+                    0081    145 _P0_1	=	0x0081
+                    0082    146 _P0_2	=	0x0082
+                    0083    147 _P0_3	=	0x0083
+                    0084    148 _P0_4	=	0x0084
+                    0085    149 _P0_5	=	0x0085
+                    0086    150 _P0_6	=	0x0086
+                    0087    151 _P0_7	=	0x0087
+                    0088    152 _IT0	=	0x0088
+                    0089    153 _IE0	=	0x0089
+                    008A    154 _IT1	=	0x008a
+                    008B    155 _IE1	=	0x008b
+                    008C    156 _TR0	=	0x008c
+                    008D    157 _TF0	=	0x008d
+                    008E    158 _TR1	=	0x008e
+                    008F    159 _TF1	=	0x008f
+                    0090    160 _P1_0	=	0x0090
+                    0091    161 _P1_1	=	0x0091
+                    0092    162 _P1_2	=	0x0092
+                    0093    163 _P1_3	=	0x0093
+                    0094    164 _P1_4	=	0x0094
+                    0095    165 _P1_5	=	0x0095
+                    0096    166 _P1_6	=	0x0096
+                    0097    167 _P1_7	=	0x0097
+                    0098    168 _RI	=	0x0098
+                    0099    169 _TI	=	0x0099
+                    009A    170 _RB8	=	0x009a
+                    009B    171 _TB8	=	0x009b
+                    009C    172 _REN	=	0x009c
+                    009D    173 _SM2	=	0x009d
+                    009E    174 _SM1	=	0x009e
+                    009F    175 _SM0	=	0x009f
+                    00A0    176 _P2_0	=	0x00a0
+                    00A1    177 _P2_1	=	0x00a1
+                    00A2    178 _P2_2	=	0x00a2
+                    00A3    179 _P2_3	=	0x00a3
+                    00A4    180 _P2_4	=	0x00a4
+                    00A5    181 _P2_5	=	0x00a5
+                    00A6    182 _P2_6	=	0x00a6
+                    00A7    183 _P2_7	=	0x00a7
+                    00A8    184 _EX0	=	0x00a8
+                    00A9    185 _ET0	=	0x00a9
+                    00AA    186 _EX1	=	0x00aa
+                    00AB    187 _ET1	=	0x00ab
+                    00AC    188 _ES	=	0x00ac
+                    00AF    189 _EA	=	0x00af
+                    00B0    190 _P3_0	=	0x00b0
+                    00B1    191 _P3_1	=	0x00b1
+                    00B2    192 _P3_2	=	0x00b2
+                    00B3    193 _P3_3	=	0x00b3
+                    00B4    194 _P3_4	=	0x00b4
+                    00B5    195 _P3_5	=	0x00b5
+                    00B6    196 _P3_6	=	0x00b6
+                    00B7    197 _P3_7	=	0x00b7
+                    00B0    198 _RXD	=	0x00b0
+                    00B1    199 _TXD	=	0x00b1
+                    00B2    200 _INT0	=	0x00b2
+                    00B3    201 _INT1	=	0x00b3
+                    00B4    202 _T0	=	0x00b4
+                    00B5    203 _T1	=	0x00b5
+                    00B6    204 _WR	=	0x00b6
+                    00B7    205 _RD	=	0x00b7
+                    00B8    206 _PX0	=	0x00b8
+                    00B9    207 _PT0	=	0x00b9
+                    00BA    208 _PX1	=	0x00ba
+                    00BB    209 _PT1	=	0x00bb
+                    00BC    210 _PS	=	0x00bc
+                    00D0    211 _P	=	0x00d0
+                    00D1    212 _F1	=	0x00d1
+                    00D2    213 _OV	=	0x00d2
+                    00D3    214 _RS0	=	0x00d3
+                    00D4    215 _RS1	=	0x00d4
+                    00D5    216 _F0	=	0x00d5
+                    00D6    217 _AC	=	0x00d6
+                    00D7    218 _CY	=	0x00d7
+                            219 ;--------------------------------------------------------
+                            220 ; overlayable register banks
+                            221 ;--------------------------------------------------------
+                            222 	.area REG_BANK_0	(REL,OVR,DATA)
+   0000                     223 	.ds 8
+                            224 ;--------------------------------------------------------
+                            225 ; internal ram data
+                            226 ;--------------------------------------------------------
+                            227 	.area DSEG    (DATA)
+   0000                     228 _display_i_1_1:
+   0000                     229 	.ds 4
+   0004                     230 _display_d1_1_1:
+   0004                     231 	.ds 1
+   0005                     232 _display_d2_1_1:
+   0005                     233 	.ds 1
+   0006                     234 _display_d3_1_1:
+   0006                     235 	.ds 1
+   0007                     236 _display_sloc0_1_0:
+   0007                     237 	.ds 4
+   000B                     238 _i::
+   000B                     239 	.ds 4
+                            240 ;--------------------------------------------------------
+                            241 ; overlayable items in internal ram 
+                            242 ;--------------------------------------------------------
+                            243 	.area	OSEG    (OVR,DATA)
+                            244 ;--------------------------------------------------------
+                            245 ; Stack segment in internal ram 
+                            246 ;--------------------------------------------------------
+                            247 	.area	SSEG	(DATA)
+   0000                     248 __start__stack:
+   0000                     249 	.ds	1
+                            250 
+                            251 ;--------------------------------------------------------
+                            252 ; indirectly addressable internal ram data
+                            253 ;--------------------------------------------------------
+                            254 	.area ISEG    (DATA)
+                            255 ;--------------------------------------------------------
+                            256 ; absolute internal ram data
+                            257 ;--------------------------------------------------------
+                            258 	.area IABS    (ABS,DATA)
+                            259 	.area IABS    (ABS,DATA)
+                            260 ;--------------------------------------------------------
+                            261 ; bit data
+                            262 ;--------------------------------------------------------
+                            263 	.area BSEG    (BIT)
+                            264 ;--------------------------------------------------------
+                            265 ; paged external ram data
+                            266 ;--------------------------------------------------------
+                            267 	.area PSEG    (PAG,XDATA)
+                            268 ;--------------------------------------------------------
+                            269 ; external ram data
+                            270 ;--------------------------------------------------------
+                            271 	.area XSEG    (XDATA)
+                            272 ;--------------------------------------------------------
+                            273 ; absolute external ram data
+                            274 ;--------------------------------------------------------
+                            275 	.area XABS    (ABS,XDATA)
+                            276 ;--------------------------------------------------------
+                            277 ; external initialized ram data
+                            278 ;--------------------------------------------------------
+                            279 	.area XISEG   (XDATA)
+                            280 	.area HOME    (CODE)
+                            281 	.area GSINIT0 (CODE)
+                            282 	.area GSINIT1 (CODE)
+                            283 	.area GSINIT2 (CODE)
+                            284 	.area GSINIT3 (CODE)
+                            285 	.area GSINIT4 (CODE)
+                            286 	.area GSINIT5 (CODE)
+                            287 	.area GSINIT  (CODE)
+                            288 	.area GSFINAL (CODE)
+                            289 	.area CSEG    (CODE)
+                            290 ;--------------------------------------------------------
+                            291 ; interrupt vector 
+                            292 ;--------------------------------------------------------
+                            293 	.area HOME    (CODE)
+   0000                     294 __interrupt_vect:
+   0000 02s00r00            295 	ljmp	__sdcc_gsinit_startup
+   0003 32                  296 	reti
+   0004                     297 	.ds	7
+   000B 02s05r1C            298 	ljmp	_timer
+                            299 ;--------------------------------------------------------
+                            300 ; global & static initialisations
+                            301 ;--------------------------------------------------------
+                            302 	.area HOME    (CODE)
+                            303 	.area GSINIT  (CODE)
+                            304 	.area GSFINAL (CODE)
+                            305 	.area GSINIT  (CODE)
+                            306 	.globl __sdcc_gsinit_startup
+                            307 	.globl __sdcc_program_startup
+                            308 	.globl __start__stack
+                            309 	.globl __mcs51_genXINIT
+                            310 	.globl __mcs51_genXRAMCLEAR
+                            311 	.globl __mcs51_genRAMCLEAR
+                            312 ;	test3.c:84: unsigned long int i=0;
+   0000 E4                  313 	clr	a
+   0001 F5*0B               314 	mov	_i,a
+   0003 F5*0C               315 	mov	(_i + 1),a
+   0005 F5*0D               316 	mov	(_i + 2),a
+   0007 F5*0E               317 	mov	(_i + 3),a
+                            318 	.area GSFINAL (CODE)
+   0000 02s00r0E            319 	ljmp	__sdcc_program_startup
+                            320 ;--------------------------------------------------------
+                            321 ; Home
+                            322 ;--------------------------------------------------------
+                            323 	.area HOME    (CODE)
+                            324 	.area HOME    (CODE)
+   000E                     325 __sdcc_program_startup:
+   000E 12s04rFE            326 	lcall	_main
+                            327 ;	return from main will lock up
+   0011 80 FE               328 	sjmp .
+                            329 ;--------------------------------------------------------
+                            330 ; code
+                            331 ;--------------------------------------------------------
+                            332 	.area CSEG    (CODE)
+                            333 ;------------------------------------------------------------
+                            334 ;Allocation info for local variables in function 'delay'
+                            335 ;------------------------------------------------------------
+                            336 ;i                         Allocated to registers r2 r3 
+                            337 ;a                         Allocated to registers r4 r5 
+                            338 ;b                         Allocated to registers r6 r7 
+                            339 ;------------------------------------------------------------
+                            340 ;	test3.c:6: void delay(int i)
+                            341 ;	-----------------------------------------
+                            342 ;	 function delay
+                            343 ;	-----------------------------------------
+   0000                     344 _delay:
+                    0002    345 	ar2 = 0x02
+                    0003    346 	ar3 = 0x03
+                    0004    347 	ar4 = 0x04
+                    0005    348 	ar5 = 0x05
+                    0006    349 	ar6 = 0x06
+                    0007    350 	ar7 = 0x07
+                    0000    351 	ar0 = 0x00
+                    0001    352 	ar1 = 0x01
+   0000 AA 82               353 	mov	r2,dpl
+   0002 AB 83               354 	mov	r3,dph
+                            355 ;	test3.c:9: for(a=0;a<i;a++)
+   0004 7C 00               356 	mov	r4,#0x00
+   0006 7D 00               357 	mov	r5,#0x00
+   0008                     358 00104$:
+   0008 C3                  359 	clr	c
+   0009 EC                  360 	mov	a,r4
+   000A 9A                  361 	subb	a,r2
+   000B ED                  362 	mov	a,r5
+   000C 64 80               363 	xrl	a,#0x80
+   000E 8B F0               364 	mov	b,r3
+   0010 63 F0 80            365 	xrl	b,#0x80
+   0013 95 F0               366 	subb	a,b
+   0015 50 14               367 	jnc	00108$
+                            368 ;	test3.c:11: for(b=0;b<120;b++);
+   0017 7E 78               369 	mov	r6,#0x78
+   0019 7F 00               370 	mov	r7,#0x00
+   001B                     371 00103$:
+   001B 1E                  372 	dec	r6
+   001C BE FF 01            373 	cjne	r6,#0xff,00117$
+   001F 1F                  374 	dec	r7
+   0020                     375 00117$:
+   0020 EE                  376 	mov	a,r6
+   0021 4F                  377 	orl	a,r7
+   0022 70 F7               378 	jnz	00103$
+                            379 ;	test3.c:9: for(a=0;a<i;a++)
+   0024 0C                  380 	inc	r4
+   0025 BC 00 E0            381 	cjne	r4,#0x00,00104$
+   0028 0D                  382 	inc	r5
+   0029 80 DD               383 	sjmp	00104$
+   002B                     384 00108$:
+   002B 22                  385 	ret
+                            386 ;------------------------------------------------------------
+                            387 ;Allocation info for local variables in function 'display'
+                            388 ;------------------------------------------------------------
+                            389 ;i                         Allocated with name '_display_i_1_1'
+                            390 ;d0                        Allocated to registers 
+                            391 ;d1                        Allocated with name '_display_d1_1_1'
+                            392 ;d2                        Allocated with name '_display_d2_1_1'
+                            393 ;d3                        Allocated with name '_display_d3_1_1'
+                            394 ;sloc0                     Allocated with name '_display_sloc0_1_0'
+                            395 ;------------------------------------------------------------
+                            396 ;	test3.c:21: void display(unsigned long int i)
+                            397 ;	-----------------------------------------
+                            398 ;	 function display
+                            399 ;	-----------------------------------------
+   002C                     400 _display:
+   002C 85 82*00            401 	mov	_display_i_1_1,dpl
+   002F 85 83*01            402 	mov	(_display_i_1_1 + 1),dph
+   0032 85 F0*02            403 	mov	(_display_i_1_1 + 2),b
+   0035 F5*03               404 	mov	(_display_i_1_1 + 3),a
+                            405 ;	test3.c:25: unsigned char d1=0xFF;
+   0037 75*04 FF            406 	mov	_display_d1_1_1,#0xFF
+                            407 ;	test3.c:26: unsigned char d2=0x7F;
+   003A 75*05 7F            408 	mov	_display_d2_1_1,#0x7F
+                            409 ;	test3.c:27: unsigned char d3=0xFF;
+   003D 75*06 FF            410 	mov	_display_d3_1_1,#0xFF
+                            411 ;	test3.c:29: if(i/600>=60*100)
+   0040 75*00 58            412 	mov	__divulong_PARM_2,#0x58
+   0043 75*01 02            413 	mov	(__divulong_PARM_2 + 1),#0x02
+   0046 75*02 00            414 	mov	(__divulong_PARM_2 + 2),#0x00
+   0049 75*03 00            415 	mov	(__divulong_PARM_2 + 3),#0x00
+   004C 85*00 82            416 	mov	dpl,_display_i_1_1
+   004F 85*01 83            417 	mov	dph,(_display_i_1_1 + 1)
+   0052 85*02 F0            418 	mov	b,(_display_i_1_1 + 2)
+   0055 E5*03               419 	mov	a,(_display_i_1_1 + 3)
+   0057 12s00r00            420 	lcall	__divulong
+   005A A9 82               421 	mov	r1,dpl
+   005C A8 83               422 	mov	r0,dph
+   005E AF F0               423 	mov	r7,b
+   0060 FE                  424 	mov	r6,a
+   0061 C3                  425 	clr	c
+   0062 E9                  426 	mov	a,r1
+   0063 94 70               427 	subb	a,#0x70
+   0065 E8                  428 	mov	a,r0
+   0066 94 17               429 	subb	a,#0x17
+   0068 EF                  430 	mov	a,r7
+   0069 94 00               431 	subb	a,#0x00
+   006B EE                  432 	mov	a,r6
+   006C 94 00               433 	subb	a,#0x00
+   006E 50 03               434 	jnc	00118$
+   0070 02s01r2D            435 	ljmp	00110$
+   0073                     436 00118$:
+                            437 ;	test3.c:31: i=i/60/60/100*1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/6000*10000;
+   0073 75*00 00            438 	mov	__divulong_PARM_2,#0x00
+   0076 75*01 97            439 	mov	(__divulong_PARM_2 + 1),#0x97
+   0079 75*02 FF            440 	mov	(__divulong_PARM_2 + 2),#0xFF
+   007C 75*03 FF            441 	mov	(__divulong_PARM_2 + 3),#0xFF
+   007F 85*00 82            442 	mov	dpl,_display_i_1_1
+   0082 85*01 83            443 	mov	dph,(_display_i_1_1 + 1)
+   0085 85*02 F0            444 	mov	b,(_display_i_1_1 + 2)
+   0088 E5*03               445 	mov	a,(_display_i_1_1 + 3)
+   008A 12s00r00            446 	lcall	__divulong
+   008D 85 82*00            447 	mov	__mullong_PARM_2,dpl
+   0090 85 83*01            448 	mov	(__mullong_PARM_2 + 1),dph
+   0093 85 F0*02            449 	mov	(__mullong_PARM_2 + 2),b
+   0096 F5*03               450 	mov	(__mullong_PARM_2 + 3),a
+   0098 90 42 40            451 	mov	dptr,#0x4240
+   009B 75 F0 0F            452 	mov	b,#0x0F
+   009E E4                  453 	clr	a
+   009F 12s00r00            454 	lcall	__mullong
+   00A2 85 82*07            455 	mov	_display_sloc0_1_0,dpl
+   00A5 85 83*08            456 	mov	(_display_sloc0_1_0 + 1),dph
+   00A8 85 F0*09            457 	mov	(_display_sloc0_1_0 + 2),b
+   00AB F5*0A               458 	mov	(_display_sloc0_1_0 + 3),a
+   00AD 75*00 40            459 	mov	__modulong_PARM_2,#0x40
+   00B0 75*01 7E            460 	mov	(__modulong_PARM_2 + 1),#0x7E
+   00B3 75*02 05            461 	mov	(__modulong_PARM_2 + 2),#0x05
+   00B6 75*03 00            462 	mov	(__modulong_PARM_2 + 3),#0x00
+   00B9 85*00 82            463 	mov	dpl,_display_i_1_1
+   00BC 85*01 83            464 	mov	dph,(_display_i_1_1 + 1)
+   00BF 85*02 F0            465 	mov	b,(_display_i_1_1 + 2)
+   00C2 E5*03               466 	mov	a,(_display_i_1_1 + 3)
+   00C4 12s00r00            467 	lcall	__modulong
+   00C7 75*00 70            468 	mov	__divulong_PARM_2,#0x70
+   00CA 75*01 17            469 	mov	(__divulong_PARM_2 + 1),#0x17
+   00CD 75*02 00            470 	mov	(__divulong_PARM_2 + 2),#0x00
+   00D0 75*03 00            471 	mov	(__divulong_PARM_2 + 3),#0x00
+   00D3 12s00r00            472 	lcall	__divulong
+   00D6 85 82*00            473 	mov	__mullong_PARM_2,dpl
+   00D9 85 83*01            474 	mov	(__mullong_PARM_2 + 1),dph
+   00DC 85 F0*02            475 	mov	(__mullong_PARM_2 + 2),b
+   00DF F5*03               476 	mov	(__mullong_PARM_2 + 3),a
+   00E1 90 27 10            477 	mov	dptr,#0x2710
+   00E4 E4                  478 	clr	a
+   00E5 F5 F0               479 	mov	b,a
+   00E7 12s00r00            480 	lcall	__mullong
+   00EA AE 82               481 	mov	r6,dpl
+   00EC AF 83               482 	mov	r7,dph
+   00EE A8 F0               483 	mov	r0,b
+   00F0 F9                  484 	mov	r1,a
+   00F1 EE                  485 	mov	a,r6
+   00F2 25*07               486 	add	a,_display_sloc0_1_0
+   00F4 F5*00               487 	mov	_display_i_1_1,a
+   00F6 EF                  488 	mov	a,r7
+   00F7 35*08               489 	addc	a,(_display_sloc0_1_0 + 1)
+   00F9 F5*01               490 	mov	(_display_i_1_1 + 1),a
+   00FB E8                  491 	mov	a,r0
+   00FC 35*09               492 	addc	a,(_display_sloc0_1_0 + 2)
+   00FE F5*02               493 	mov	(_display_i_1_1 + 2),a
+   0100 E9                  494 	mov	a,r1
+   0101 35*0A               495 	addc	a,(_display_sloc0_1_0 + 3)
+   0103 F5*03               496 	mov	(_display_i_1_1 + 3),a
+                            497 ;	test3.c:32: i/=10000;
+   0105 75*00 10            498 	mov	__divulong_PARM_2,#0x10
+   0108 75*01 27            499 	mov	(__divulong_PARM_2 + 1),#0x27
+   010B 75*02 00            500 	mov	(__divulong_PARM_2 + 2),#0x00
+   010E 75*03 00            501 	mov	(__divulong_PARM_2 + 3),#0x00
+   0111 85*00 82            502 	mov	dpl,_display_i_1_1
+   0114 85*01 83            503 	mov	dph,(_display_i_1_1 + 1)
+   0117 85*02 F0            504 	mov	b,(_display_i_1_1 + 2)
+   011A E5*03               505 	mov	a,(_display_i_1_1 + 3)
+   011C 12s00r00            506 	lcall	__divulong
+   011F 85 82*00            507 	mov	_display_i_1_1,dpl
+   0122 85 83*01            508 	mov	(_display_i_1_1 + 1),dph
+   0125 85 F0*02            509 	mov	(_display_i_1_1 + 2),b
+   0128 F5*03               510 	mov	(_display_i_1_1 + 3),a
+   012A 02s03rD0            511 	ljmp	00111$
+   012D                     512 00110$:
+                            513 ;	test3.c:37: else if(i/60>=60*100)
+   012D 75*00 3C            514 	mov	__divulong_PARM_2,#0x3C
+   0130 E4                  515 	clr	a
+   0131 F5*01               516 	mov	(__divulong_PARM_2 + 1),a
+   0133 F5*02               517 	mov	(__divulong_PARM_2 + 2),a
+   0135 F5*03               518 	mov	(__divulong_PARM_2 + 3),a
+   0137 85*00 82            519 	mov	dpl,_display_i_1_1
+   013A 85*01 83            520 	mov	dph,(_display_i_1_1 + 1)
+   013D 85*02 F0            521 	mov	b,(_display_i_1_1 + 2)
+   0140 E5*03               522 	mov	a,(_display_i_1_1 + 3)
+   0142 12s00r00            523 	lcall	__divulong
+   0145 AE 82               524 	mov	r6,dpl
+   0147 AF 83               525 	mov	r7,dph
+   0149 A8 F0               526 	mov	r0,b
+   014B F9                  527 	mov	r1,a
+   014C C3                  528 	clr	c
+   014D EE                  529 	mov	a,r6
+   014E 94 70               530 	subb	a,#0x70
+   0150 EF                  531 	mov	a,r7
+   0151 94 17               532 	subb	a,#0x17
+   0153 E8                  533 	mov	a,r0
+   0154 94 00               534 	subb	a,#0x00
+   0156 E9                  535 	mov	a,r1
+   0157 94 00               536 	subb	a,#0x00
+   0159 50 03               537 	jnc	00119$
+   015B 02s02r66            538 	ljmp	00107$
+   015E                     539 00119$:
+                            540 ;	test3.c:39: i=i/60/60/100*1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/6000*10000 + i%6000;
+   015E 75*00 00            541 	mov	__divulong_PARM_2,#0x00
+   0161 75*01 97            542 	mov	(__divulong_PARM_2 + 1),#0x97
+   0164 75*02 FF            543 	mov	(__divulong_PARM_2 + 2),#0xFF
+   0167 75*03 FF            544 	mov	(__divulong_PARM_2 + 3),#0xFF
+   016A 85*00 82            545 	mov	dpl,_display_i_1_1
+   016D 85*01 83            546 	mov	dph,(_display_i_1_1 + 1)
+   0170 85*02 F0            547 	mov	b,(_display_i_1_1 + 2)
+   0173 E5*03               548 	mov	a,(_display_i_1_1 + 3)
+   0175 12s00r00            549 	lcall	__divulong
+   0178 85 82*00            550 	mov	__mullong_PARM_2,dpl
+   017B 85 83*01            551 	mov	(__mullong_PARM_2 + 1),dph
+   017E 85 F0*02            552 	mov	(__mullong_PARM_2 + 2),b
+   0181 F5*03               553 	mov	(__mullong_PARM_2 + 3),a
+   0183 90 42 40            554 	mov	dptr,#0x4240
+   0186 75 F0 0F            555 	mov	b,#0x0F
+   0189 E4                  556 	clr	a
+   018A 12s00r00            557 	lcall	__mullong
+   018D AE 82               558 	mov	r6,dpl
+   018F AF 83               559 	mov	r7,dph
+   0191 A8 F0               560 	mov	r0,b
+   0193 F9                  561 	mov	r1,a
+   0194 75*00 40            562 	mov	__modulong_PARM_2,#0x40
+   0197 75*01 7E            563 	mov	(__modulong_PARM_2 + 1),#0x7E
+   019A 75*02 05            564 	mov	(__modulong_PARM_2 + 2),#0x05
+   019D 75*03 00            565 	mov	(__modulong_PARM_2 + 3),#0x00
+   01A0 85*00 82            566 	mov	dpl,_display_i_1_1
+   01A3 85*01 83            567 	mov	dph,(_display_i_1_1 + 1)
+   01A6 85*02 F0            568 	mov	b,(_display_i_1_1 + 2)
+   01A9 E5*03               569 	mov	a,(_display_i_1_1 + 3)
+   01AB C0 06               570 	push	ar6
+   01AD C0 07               571 	push	ar7
+   01AF C0 00               572 	push	ar0
+   01B1 C0 01               573 	push	ar1
+   01B3 12s00r00            574 	lcall	__modulong
+   01B6 75*00 70            575 	mov	__divulong_PARM_2,#0x70
+   01B9 75*01 17            576 	mov	(__divulong_PARM_2 + 1),#0x17
+   01BC 75*02 00            577 	mov	(__divulong_PARM_2 + 2),#0x00
+   01BF 75*03 00            578 	mov	(__divulong_PARM_2 + 3),#0x00
+   01C2 12s00r00            579 	lcall	__divulong
+   01C5 85 82*00            580 	mov	__mullong_PARM_2,dpl
+   01C8 85 83*01            581 	mov	(__mullong_PARM_2 + 1),dph
+   01CB 85 F0*02            582 	mov	(__mullong_PARM_2 + 2),b
+   01CE F5*03               583 	mov	(__mullong_PARM_2 + 3),a
+   01D0 90 27 10            584 	mov	dptr,#0x2710
+   01D3 E4                  585 	clr	a
+   01D4 F5 F0               586 	mov	b,a
+   01D6 12s00r00            587 	lcall	__mullong
+   01D9 AA 82               588 	mov	r2,dpl
+   01DB AB 83               589 	mov	r3,dph
+   01DD AC F0               590 	mov	r4,b
+   01DF FD                  591 	mov	r5,a
+   01E0 D0 01               592 	pop	ar1
+   01E2 D0 00               593 	pop	ar0
+   01E4 D0 07               594 	pop	ar7
+   01E6 D0 06               595 	pop	ar6
+   01E8 EA                  596 	mov	a,r2
+   01E9 2E                  597 	add	a,r6
+   01EA FE                  598 	mov	r6,a
+   01EB EB                  599 	mov	a,r3
+   01EC 3F                  600 	addc	a,r7
+   01ED FF                  601 	mov	r7,a
+   01EE EC                  602 	mov	a,r4
+   01EF 38                  603 	addc	a,r0
+   01F0 F8                  604 	mov	r0,a
+   01F1 ED                  605 	mov	a,r5
+   01F2 39                  606 	addc	a,r1
+   01F3 F9                  607 	mov	r1,a
+   01F4 75*00 70            608 	mov	__modulong_PARM_2,#0x70
+   01F7 75*01 17            609 	mov	(__modulong_PARM_2 + 1),#0x17
+   01FA 75*02 00            610 	mov	(__modulong_PARM_2 + 2),#0x00
+   01FD 75*03 00            611 	mov	(__modulong_PARM_2 + 3),#0x00
+   0200 85*00 82            612 	mov	dpl,_display_i_1_1
+   0203 85*01 83            613 	mov	dph,(_display_i_1_1 + 1)
+   0206 85*02 F0            614 	mov	b,(_display_i_1_1 + 2)
+   0209 E5*03               615 	mov	a,(_display_i_1_1 + 3)
+   020B C0 06               616 	push	ar6
+   020D C0 07               617 	push	ar7
+   020F C0 00               618 	push	ar0
+   0211 C0 01               619 	push	ar1
+   0213 12s00r00            620 	lcall	__modulong
+   0216 AA 82               621 	mov	r2,dpl
+   0218 AB 83               622 	mov	r3,dph
+   021A AC F0               623 	mov	r4,b
+   021C FD                  624 	mov	r5,a
+   021D D0 01               625 	pop	ar1
+   021F D0 00               626 	pop	ar0
+   0221 D0 07               627 	pop	ar7
+   0223 D0 06               628 	pop	ar6
+   0225 EA                  629 	mov	a,r2
+   0226 2E                  630 	add	a,r6
+   0227 F5*00               631 	mov	_display_i_1_1,a
+   0229 EB                  632 	mov	a,r3
+   022A 3F                  633 	addc	a,r7
+   022B F5*01               634 	mov	(_display_i_1_1 + 1),a
+   022D EC                  635 	mov	a,r4
+   022E 38                  636 	addc	a,r0
+   022F F5*02               637 	mov	(_display_i_1_1 + 2),a
+   0231 ED                  638 	mov	a,r5
+   0232 39                  639 	addc	a,r1
+   0233 F5*03               640 	mov	(_display_i_1_1 + 3),a
+                            641 ;	test3.c:40: i/=1000;
+   0235 75*00 E8            642 	mov	__divulong_PARM_2,#0xE8
+   0238 75*01 03            643 	mov	(__divulong_PARM_2 + 1),#0x03
+   023B 75*02 00            644 	mov	(__divulong_PARM_2 + 2),#0x00
+   023E 75*03 00            645 	mov	(__divulong_PARM_2 + 3),#0x00
+   0241 85*00 82            646 	mov	dpl,_display_i_1_1
+   0244 85*01 83            647 	mov	dph,(_display_i_1_1 + 1)
+   0247 85*02 F0            648 	mov	b,(_display_i_1_1 + 2)
+   024A E5*03               649 	mov	a,(_display_i_1_1 + 3)
+   024C 12s00r00            650 	lcall	__divulong
+   024F 85 82*00            651 	mov	_display_i_1_1,dpl
+   0252 85 83*01            652 	mov	(_display_i_1_1 + 1),dph
+   0255 85 F0*02            653 	mov	(_display_i_1_1 + 2),b
+   0258 F5*03               654 	mov	(_display_i_1_1 + 3),a
+                            655 ;	test3.c:41: d2=0xFF;
+   025A 75*05 FF            656 	mov	_display_d2_1_1,#0xFF
+                            657 ;	test3.c:42: d1=0x7F;
+   025D 75*04 7F            658 	mov	_display_d1_1_1,#0x7F
+                            659 ;	test3.c:43: d3=0x7F;
+   0260 75*06 7F            660 	mov	_display_d3_1_1,#0x7F
+   0263 02s03rD0            661 	ljmp	00111$
+   0266                     662 00107$:
+                            663 ;	test3.c:45: else if(i>=60000)
+   0266 C3                  664 	clr	c
+   0267 E5*00               665 	mov	a,_display_i_1_1
+   0269 94 60               666 	subb	a,#0x60
+   026B E5*01               667 	mov	a,(_display_i_1_1 + 1)
+   026D 94 EA               668 	subb	a,#0xEA
+   026F E5*02               669 	mov	a,(_display_i_1_1 + 2)
+   0271 94 00               670 	subb	a,#0x00
+   0273 E5*03               671 	mov	a,(_display_i_1_1 + 3)
+   0275 94 00               672 	subb	a,#0x00
+   0277 50 03               673 	jnc	00120$
+   0279 02s03r18            674 	ljmp	00104$
+   027C                     675 00120$:
+                            676 ;	test3.c:47: i=i/6000*10000+i%6000;
+   027C 75*00 70            677 	mov	__divulong_PARM_2,#0x70
+   027F 75*01 17            678 	mov	(__divulong_PARM_2 + 1),#0x17
+   0282 75*02 00            679 	mov	(__divulong_PARM_2 + 2),#0x00
+   0285 75*03 00            680 	mov	(__divulong_PARM_2 + 3),#0x00
+   0288 85*00 82            681 	mov	dpl,_display_i_1_1
+   028B 85*01 83            682 	mov	dph,(_display_i_1_1 + 1)
+   028E 85*02 F0            683 	mov	b,(_display_i_1_1 + 2)
+   0291 E5*03               684 	mov	a,(_display_i_1_1 + 3)
+   0293 12s00r00            685 	lcall	__divulong
+   0296 85 82*00            686 	mov	__mullong_PARM_2,dpl
+   0299 85 83*01            687 	mov	(__mullong_PARM_2 + 1),dph
+   029C 85 F0*02            688 	mov	(__mullong_PARM_2 + 2),b
+   029F F5*03               689 	mov	(__mullong_PARM_2 + 3),a
+   02A1 90 27 10            690 	mov	dptr,#0x2710
+   02A4 E4                  691 	clr	a
+   02A5 F5 F0               692 	mov	b,a
+   02A7 12s00r00            693 	lcall	__mullong
+   02AA AA 82               694 	mov	r2,dpl
+   02AC AB 83               695 	mov	r3,dph
+   02AE AC F0               696 	mov	r4,b
+   02B0 FD                  697 	mov	r5,a
+   02B1 75*00 70            698 	mov	__modulong_PARM_2,#0x70
+   02B4 75*01 17            699 	mov	(__modulong_PARM_2 + 1),#0x17
+   02B7 75*02 00            700 	mov	(__modulong_PARM_2 + 2),#0x00
+   02BA 75*03 00            701 	mov	(__modulong_PARM_2 + 3),#0x00
+   02BD 85*00 82            702 	mov	dpl,_display_i_1_1
+   02C0 85*01 83            703 	mov	dph,(_display_i_1_1 + 1)
+   02C3 85*02 F0            704 	mov	b,(_display_i_1_1 + 2)
+   02C6 E5*03               705 	mov	a,(_display_i_1_1 + 3)
+   02C8 C0 02               706 	push	ar2
+   02CA C0 03               707 	push	ar3
+   02CC C0 04               708 	push	ar4
+   02CE C0 05               709 	push	ar5
+   02D0 12s00r00            710 	lcall	__modulong
+   02D3 AE 82               711 	mov	r6,dpl
+   02D5 AF 83               712 	mov	r7,dph
+   02D7 A8 F0               713 	mov	r0,b
+   02D9 F9                  714 	mov	r1,a
+   02DA D0 05               715 	pop	ar5
+   02DC D0 04               716 	pop	ar4
+   02DE D0 03               717 	pop	ar3
+   02E0 D0 02               718 	pop	ar2
+   02E2 EE                  719 	mov	a,r6
+   02E3 2A                  720 	add	a,r2
+   02E4 F5*00               721 	mov	_display_i_1_1,a
+   02E6 EF                  722 	mov	a,r7
+   02E7 3B                  723 	addc	a,r3
+   02E8 F5*01               724 	mov	(_display_i_1_1 + 1),a
+   02EA E8                  725 	mov	a,r0
+   02EB 3C                  726 	addc	a,r4
+   02EC F5*02               727 	mov	(_display_i_1_1 + 2),a
+   02EE E9                  728 	mov	a,r1
+   02EF 3D                  729 	addc	a,r5
+   02F0 F5*03               730 	mov	(_display_i_1_1 + 3),a
+                            731 ;	test3.c:48: i/=100;
+   02F2 75*00 64            732 	mov	__divulong_PARM_2,#0x64
+   02F5 E4                  733 	clr	a
+   02F6 F5*01               734 	mov	(__divulong_PARM_2 + 1),a
+   02F8 F5*02               735 	mov	(__divulong_PARM_2 + 2),a
+   02FA F5*03               736 	mov	(__divulong_PARM_2 + 3),a
+   02FC 85*00 82            737 	mov	dpl,_display_i_1_1
+   02FF 85*01 83            738 	mov	dph,(_display_i_1_1 + 1)
+   0302 85*02 F0            739 	mov	b,(_display_i_1_1 + 2)
+   0305 E5*03               740 	mov	a,(_display_i_1_1 + 3)
+   0307 12s00r00            741 	lcall	__divulong
+   030A 85 82*00            742 	mov	_display_i_1_1,dpl
+   030D 85 83*01            743 	mov	(_display_i_1_1 + 1),dph
+   0310 85 F0*02            744 	mov	(_display_i_1_1 + 2),b
+   0313 F5*03               745 	mov	(_display_i_1_1 + 3),a
+   0315 02s03rD0            746 	ljmp	00111$
+   0318                     747 00104$:
+                            748 ;	test3.c:53: else if(i>=6000)
+   0318 C3                  749 	clr	c
+   0319 E5*00               750 	mov	a,_display_i_1_1
+   031B 94 70               751 	subb	a,#0x70
+   031D E5*01               752 	mov	a,(_display_i_1_1 + 1)
+   031F 94 17               753 	subb	a,#0x17
+   0321 E5*02               754 	mov	a,(_display_i_1_1 + 2)
+   0323 94 00               755 	subb	a,#0x00
+   0325 E5*03               756 	mov	a,(_display_i_1_1 + 3)
+   0327 94 00               757 	subb	a,#0x00
+   0329 50 03               758 	jnc	00121$
+   032B 02s03rD0            759 	ljmp	00111$
+   032E                     760 00121$:
+                            761 ;	test3.c:56: i=i/6000*10000+i%6000;
+   032E 75*00 70            762 	mov	__divulong_PARM_2,#0x70
+   0331 75*01 17            763 	mov	(__divulong_PARM_2 + 1),#0x17
+   0334 75*02 00            764 	mov	(__divulong_PARM_2 + 2),#0x00
+   0337 75*03 00            765 	mov	(__divulong_PARM_2 + 3),#0x00
+   033A 85*00 82            766 	mov	dpl,_display_i_1_1
+   033D 85*01 83            767 	mov	dph,(_display_i_1_1 + 1)
+   0340 85*02 F0            768 	mov	b,(_display_i_1_1 + 2)
+   0343 E5*03               769 	mov	a,(_display_i_1_1 + 3)
+   0345 12s00r00            770 	lcall	__divulong
+   0348 85 82*00            771 	mov	__mullong_PARM_2,dpl
+   034B 85 83*01            772 	mov	(__mullong_PARM_2 + 1),dph
+   034E 85 F0*02            773 	mov	(__mullong_PARM_2 + 2),b
+   0351 F5*03               774 	mov	(__mullong_PARM_2 + 3),a
+   0353 90 27 10            775 	mov	dptr,#0x2710
+   0356 E4                  776 	clr	a
+   0357 F5 F0               777 	mov	b,a
+   0359 12s00r00            778 	lcall	__mullong
+   035C AA 82               779 	mov	r2,dpl
+   035E AB 83               780 	mov	r3,dph
+   0360 AC F0               781 	mov	r4,b
+   0362 FD                  782 	mov	r5,a
+   0363 75*00 70            783 	mov	__modulong_PARM_2,#0x70
+   0366 75*01 17            784 	mov	(__modulong_PARM_2 + 1),#0x17
+   0369 75*02 00            785 	mov	(__modulong_PARM_2 + 2),#0x00
+   036C 75*03 00            786 	mov	(__modulong_PARM_2 + 3),#0x00
+   036F 85*00 82            787 	mov	dpl,_display_i_1_1
+   0372 85*01 83            788 	mov	dph,(_display_i_1_1 + 1)
+   0375 85*02 F0            789 	mov	b,(_display_i_1_1 + 2)
+   0378 E5*03               790 	mov	a,(_display_i_1_1 + 3)
+   037A C0 02               791 	push	ar2
+   037C C0 03               792 	push	ar3
+   037E C0 04               793 	push	ar4
+   0380 C0 05               794 	push	ar5
+   0382 12s00r00            795 	lcall	__modulong
+   0385 AE 82               796 	mov	r6,dpl
+   0387 AF 83               797 	mov	r7,dph
+   0389 A8 F0               798 	mov	r0,b
+   038B F9                  799 	mov	r1,a
+   038C D0 05               800 	pop	ar5
+   038E D0 04               801 	pop	ar4
+   0390 D0 03               802 	pop	ar3
+   0392 D0 02               803 	pop	ar2
+   0394 EE                  804 	mov	a,r6
+   0395 2A                  805 	add	a,r2
+   0396 F5*00               806 	mov	_display_i_1_1,a
+   0398 EF                  807 	mov	a,r7
+   0399 3B                  808 	addc	a,r3
+   039A F5*01               809 	mov	(_display_i_1_1 + 1),a
+   039C E8                  810 	mov	a,r0
+   039D 3C                  811 	addc	a,r4
+   039E F5*02               812 	mov	(_display_i_1_1 + 2),a
+   03A0 E9                  813 	mov	a,r1
+   03A1 3D                  814 	addc	a,r5
+   03A2 F5*03               815 	mov	(_display_i_1_1 + 3),a
+                            816 ;	test3.c:57: i/=10;
+   03A4 75*00 0A            817 	mov	__divulong_PARM_2,#0x0A
+   03A7 E4                  818 	clr	a
+   03A8 F5*01               819 	mov	(__divulong_PARM_2 + 1),a
+   03AA F5*02               820 	mov	(__divulong_PARM_2 + 2),a
+   03AC F5*03               821 	mov	(__divulong_PARM_2 + 3),a
+   03AE 85*00 82            822 	mov	dpl,_display_i_1_1
+   03B1 85*01 83            823 	mov	dph,(_display_i_1_1 + 1)
+   03B4 85*02 F0            824 	mov	b,(_display_i_1_1 + 2)
+   03B7 E5*03               825 	mov	a,(_display_i_1_1 + 3)
+   03B9 12s00r00            826 	lcall	__divulong
+   03BC 85 82*00            827 	mov	_display_i_1_1,dpl
+   03BF 85 83*01            828 	mov	(_display_i_1_1 + 1),dph
+   03C2 85 F0*02            829 	mov	(_display_i_1_1 + 2),b
+   03C5 F5*03               830 	mov	(_display_i_1_1 + 3),a
+                            831 ;	test3.c:58: d2=0xFF;
+   03C7 75*05 FF            832 	mov	_display_d2_1_1,#0xFF
+                            833 ;	test3.c:59: d1=0x7F;
+   03CA 75*04 7F            834 	mov	_display_d1_1_1,#0x7F
+                            835 ;	test3.c:60: d3=0x7F;
+   03CD 75*06 7F            836 	mov	_display_d3_1_1,#0x7F
+   03D0                     837 00111$:
+                            838 ;	test3.c:62: P0=255;
+   03D0 75 80 FF            839 	mov	_P0,#0xFF
+                            840 ;	test3.c:64: P2 = seg_position[3];
+   03D3 90s00r0E            841 	mov	dptr,#(_seg_position + 0x0003)
+   03D6 E4                  842 	clr	a
+   03D7 93                  843 	movc	a,@a+dptr
+   03D8 F5 A0               844 	mov	_P2,a
+                            845 ;	test3.c:65: P0=display_seg[i/1000] & d3;
+   03DA 75*00 E8            846 	mov	__divulong_PARM_2,#0xE8
+   03DD 75*01 03            847 	mov	(__divulong_PARM_2 + 1),#0x03
+   03E0 75*02 00            848 	mov	(__divulong_PARM_2 + 2),#0x00
+   03E3 75*03 00            849 	mov	(__divulong_PARM_2 + 3),#0x00
+   03E6 85*00 82            850 	mov	dpl,_display_i_1_1
+   03E9 85*01 83            851 	mov	dph,(_display_i_1_1 + 1)
+   03EC 85*02 F0            852 	mov	b,(_display_i_1_1 + 2)
+   03EF E5*03               853 	mov	a,(_display_i_1_1 + 3)
+   03F1 12s00r00            854 	lcall	__divulong
+   03F4 AA 82               855 	mov	r2,dpl
+   03F6 AB 83               856 	mov	r3,dph
+   03F8 EA                  857 	mov	a,r2
+   03F9 24r00               858 	add	a,#_display_seg
+   03FB F5 82               859 	mov	dpl,a
+   03FD EB                  860 	mov	a,r3
+   03FE 34s00               861 	addc	a,#(_display_seg >> 8)
+   0400 F5 83               862 	mov	dph,a
+   0402 E4                  863 	clr	a
+   0403 93                  864 	movc	a,@a+dptr
+   0404 FA                  865 	mov	r2,a
+   0405 E5*06               866 	mov	a,_display_d3_1_1
+   0407 5A                  867 	anl	a,r2
+   0408 F5 80               868 	mov	_P0,a
+                            869 ;	test3.c:66: delay(2);
+   040A 90 00 02            870 	mov	dptr,#0x0002
+   040D 12s00r00            871 	lcall	_delay
+                            872 ;	test3.c:68: P0=255;
+   0410 75 80 FF            873 	mov	_P0,#0xFF
+                            874 ;	test3.c:69: P2 = seg_position[2];
+   0413 90s00r0D            875 	mov	dptr,#(_seg_position + 0x0002)
+   0416 E4                  876 	clr	a
+   0417 93                  877 	movc	a,@a+dptr
+   0418 F5 A0               878 	mov	_P2,a
+                            879 ;	test3.c:70: P0=display_seg[i%1000/100] & d2;
+   041A 75*00 E8            880 	mov	__modulong_PARM_2,#0xE8
+   041D 75*01 03            881 	mov	(__modulong_PARM_2 + 1),#0x03
+   0420 75*02 00            882 	mov	(__modulong_PARM_2 + 2),#0x00
+   0423 75*03 00            883 	mov	(__modulong_PARM_2 + 3),#0x00
+   0426 85*00 82            884 	mov	dpl,_display_i_1_1
+   0429 85*01 83            885 	mov	dph,(_display_i_1_1 + 1)
+   042C 85*02 F0            886 	mov	b,(_display_i_1_1 + 2)
+   042F E5*03               887 	mov	a,(_display_i_1_1 + 3)
+   0431 12s00r00            888 	lcall	__modulong
+   0434 AA 82               889 	mov	r2,dpl
+   0436 AB 83               890 	mov	r3,dph
+   0438 AC F0               891 	mov	r4,b
+   043A FD                  892 	mov	r5,a
+   043B 75*00 64            893 	mov	__divulong_PARM_2,#0x64
+   043E E4                  894 	clr	a
+   043F F5*01               895 	mov	(__divulong_PARM_2 + 1),a
+   0441 F5*02               896 	mov	(__divulong_PARM_2 + 2),a
+   0443 F5*03               897 	mov	(__divulong_PARM_2 + 3),a
+   0445 8A 82               898 	mov	dpl,r2
+   0447 8B 83               899 	mov	dph,r3
+   0449 8C F0               900 	mov	b,r4
+   044B ED                  901 	mov	a,r5
+   044C 12s00r00            902 	lcall	__divulong
+   044F AA 82               903 	mov	r2,dpl
+   0451 AB 83               904 	mov	r3,dph
+   0453 EA                  905 	mov	a,r2
+   0454 24r00               906 	add	a,#_display_seg
+   0456 F5 82               907 	mov	dpl,a
+   0458 EB                  908 	mov	a,r3
+   0459 34s00               909 	addc	a,#(_display_seg >> 8)
+   045B F5 83               910 	mov	dph,a
+   045D E4                  911 	clr	a
+   045E 93                  912 	movc	a,@a+dptr
+   045F FA                  913 	mov	r2,a
+   0460 E5*05               914 	mov	a,_display_d2_1_1
+   0462 5A                  915 	anl	a,r2
+   0463 F5 80               916 	mov	_P0,a
+                            917 ;	test3.c:71: delay(2);
+   0465 90 00 02            918 	mov	dptr,#0x0002
+   0468 12s00r00            919 	lcall	_delay
+                            920 ;	test3.c:72: P0=255;
+   046B 75 80 FF            921 	mov	_P0,#0xFF
+                            922 ;	test3.c:73: P2 = seg_position[1];
+   046E 90s00r0C            923 	mov	dptr,#(_seg_position + 0x0001)
+   0471 E4                  924 	clr	a
+   0472 93                  925 	movc	a,@a+dptr
+   0473 F5 A0               926 	mov	_P2,a
+                            927 ;	test3.c:74: P0=display_seg[i%100/10] & d1;
+   0475 75*00 64            928 	mov	__modulong_PARM_2,#0x64
+   0478 E4                  929 	clr	a
+   0479 F5*01               930 	mov	(__modulong_PARM_2 + 1),a
+   047B F5*02               931 	mov	(__modulong_PARM_2 + 2),a
+   047D F5*03               932 	mov	(__modulong_PARM_2 + 3),a
+   047F 85*00 82            933 	mov	dpl,_display_i_1_1
+   0482 85*01 83            934 	mov	dph,(_display_i_1_1 + 1)
+   0485 85*02 F0            935 	mov	b,(_display_i_1_1 + 2)
+   0488 E5*03               936 	mov	a,(_display_i_1_1 + 3)
+   048A 12s00r00            937 	lcall	__modulong
+   048D AA 82               938 	mov	r2,dpl
+   048F AB 83               939 	mov	r3,dph
+   0491 AC F0               940 	mov	r4,b
+   0493 FD                  941 	mov	r5,a
+   0494 75*00 0A            942 	mov	__divulong_PARM_2,#0x0A
+   0497 E4                  943 	clr	a
+   0498 F5*01               944 	mov	(__divulong_PARM_2 + 1),a
+   049A F5*02               945 	mov	(__divulong_PARM_2 + 2),a
+   049C F5*03               946 	mov	(__divulong_PARM_2 + 3),a
+   049E 8A 82               947 	mov	dpl,r2
+   04A0 8B 83               948 	mov	dph,r3
+   04A2 8C F0               949 	mov	b,r4
+   04A4 ED                  950 	mov	a,r5
+   04A5 12s00r00            951 	lcall	__divulong
+   04A8 AA 82               952 	mov	r2,dpl
+   04AA AB 83               953 	mov	r3,dph
+   04AC EA                  954 	mov	a,r2
+   04AD 24r00               955 	add	a,#_display_seg
+   04AF F5 82               956 	mov	dpl,a
+   04B1 EB                  957 	mov	a,r3
+   04B2 34s00               958 	addc	a,#(_display_seg >> 8)
+   04B4 F5 83               959 	mov	dph,a
+   04B6 E4                  960 	clr	a
+   04B7 93                  961 	movc	a,@a+dptr
+   04B8 FA                  962 	mov	r2,a
+   04B9 E5*04               963 	mov	a,_display_d1_1_1
+   04BB 5A                  964 	anl	a,r2
+   04BC F5 80               965 	mov	_P0,a
+                            966 ;	test3.c:75: delay(2);
+   04BE 90 00 02            967 	mov	dptr,#0x0002
+   04C1 12s00r00            968 	lcall	_delay
+                            969 ;	test3.c:76: P0=255;
+   04C4 75 80 FF            970 	mov	_P0,#0xFF
+                            971 ;	test3.c:77: P2 = seg_position[0];
+   04C7 90s00r0B            972 	mov	dptr,#_seg_position
+   04CA E4                  973 	clr	a
+   04CB 93                  974 	movc	a,@a+dptr
+   04CC F5 A0               975 	mov	_P2,a
+                            976 ;	test3.c:78: P0=display_seg[i%10] & d0;
+   04CE 75*00 0A            977 	mov	__modulong_PARM_2,#0x0A
+   04D1 E4                  978 	clr	a
+   04D2 F5*01               979 	mov	(__modulong_PARM_2 + 1),a
+   04D4 F5*02               980 	mov	(__modulong_PARM_2 + 2),a
+   04D6 F5*03               981 	mov	(__modulong_PARM_2 + 3),a
+   04D8 85*00 82            982 	mov	dpl,_display_i_1_1
+   04DB 85*01 83            983 	mov	dph,(_display_i_1_1 + 1)
+   04DE 85*02 F0            984 	mov	b,(_display_i_1_1 + 2)
+   04E1 E5*03               985 	mov	a,(_display_i_1_1 + 3)
+   04E3 12s00r00            986 	lcall	__modulong
+   04E6 AA 82               987 	mov	r2,dpl
+   04E8 AB 83               988 	mov	r3,dph
+   04EA EA                  989 	mov	a,r2
+   04EB 24r00               990 	add	a,#_display_seg
+   04ED F5 82               991 	mov	dpl,a
+   04EF EB                  992 	mov	a,r3
+   04F0 34s00               993 	addc	a,#(_display_seg >> 8)
+   04F2 F5 83               994 	mov	dph,a
+   04F4 E4                  995 	clr	a
+   04F5 93                  996 	movc	a,@a+dptr
+   04F6 F5 80               997 	mov	_P0,a
+                            998 ;	test3.c:79: delay(2);
+   04F8 90 00 02            999 	mov	dptr,#0x0002
+   04FB 02s00r00           1000 	ljmp	_delay
+                           1001 ;------------------------------------------------------------
+                           1002 ;Allocation info for local variables in function 'main'
+                           1003 ;------------------------------------------------------------
+                           1004 ;------------------------------------------------------------
+                           1005 ;	test3.c:85: void main()
+                           1006 ;	-----------------------------------------
+                           1007 ;	 function main
+                           1008 ;	-----------------------------------------
+   04FE                    1009 _main:
+                           1010 ;	test3.c:88: IE=0x8a;
+   04FE 75 A8 8A           1011 	mov	_IE,#0x8A
+                           1012 ;	test3.c:89: TMOD=0x11;
+   0501 75 89 11           1013 	mov	_TMOD,#0x11
+                           1014 ;	test3.c:90: TH0=(65536-10000)/256;
+   0504 75 8C D8           1015 	mov	_TH0,#0xD8
+                           1016 ;	test3.c:91: TL0=(65536-10000)%256;
+   0507 75 8A F0           1017 	mov	_TL0,#0xF0
+                           1018 ;	test3.c:92: TR0=1;
+   050A D2 8C              1019 	setb	_TR0
+                           1020 ;	test3.c:93: while(1)
+   050C                    1021 00102$:
+                           1022 ;	test3.c:97: display(i);
+   050C 85*0B 82           1023 	mov	dpl,_i
+   050F 85*0C 83           1024 	mov	dph,(_i + 1)
+   0512 85*0D F0           1025 	mov	b,(_i + 2)
+   0515 E5*0E              1026 	mov	a,(_i + 3)
+   0517 12s00r2C           1027 	lcall	_display
+   051A 80 F0              1028 	sjmp	00102$
+                           1029 ;------------------------------------------------------------
+                           1030 ;Allocation info for local variables in function 'timer'
+                           1031 ;------------------------------------------------------------
+                           1032 ;------------------------------------------------------------
+                           1033 ;	test3.c:102: void timer() interrupt 1
+                           1034 ;	-----------------------------------------
+                           1035 ;	 function timer
+                           1036 ;	-----------------------------------------
+   051C                    1037 _timer:
+   051C C0 E0              1038 	push	acc
+   051E C0 D0              1039 	push	psw
+   0520 75 D0 00           1040 	mov	psw,#0x00
+                           1041 ;	test3.c:104: TH0=(65536-10000)/256;
+   0523 75 8C D8           1042 	mov	_TH0,#0xD8
+                           1043 ;	test3.c:105: TL0=(65536-10000)%256;
+   0526 75 8A F0           1044 	mov	_TL0,#0xF0
+                           1045 ;	test3.c:106: i++;
+   0529 05*0B              1046 	inc	_i
+   052B E4                 1047 	clr	a
+   052C B5*0B 0C           1048 	cjne	a,_i,00103$
+   052F 05*0C              1049 	inc	(_i + 1)
+   0531 B5*0C 07           1050 	cjne	a,(_i + 1),00103$
+   0534 05*0D              1051 	inc	(_i + 2)
+   0536 B5*0D 02           1052 	cjne	a,(_i + 2),00103$
+   0539 05*0E              1053 	inc	(_i + 3)
+   053B                    1054 00103$:
+   053B D0 D0              1055 	pop	psw
+   053D D0 E0              1056 	pop	acc
+   053F 32                 1057 	reti
+                           1058 ;	eliminated unneeded push/pop dpl
+                           1059 ;	eliminated unneeded push/pop dph
+                           1060 ;	eliminated unneeded push/pop b
+                           1061 	.area CSEG    (CODE)
+                           1062 	.area CONST   (CODE)
+   0000                    1063 _display_seg:
+   0000 C0                 1064 	.db #0xC0
+   0001 F9                 1065 	.db #0xF9
+   0002 A4                 1066 	.db #0xA4
+   0003 B0                 1067 	.db #0xB0
+   0004 99                 1068 	.db #0x99
+   0005 92                 1069 	.db #0x92
+   0006 82                 1070 	.db #0x82
+   0007 F8                 1071 	.db #0xF8
+   0008 80                 1072 	.db #0x80
+   0009 90                 1073 	.db #0x90
+   000A 7F                 1074 	.db #0x7F
+   000B                    1075 _seg_position:
+   000B FE                 1076 	.db #0xFE
+   000C FD                 1077 	.db #0xFD
+   000D FB                 1078 	.db #0xFB
+   000E F7                 1079 	.db #0xF7
+   000F F0                 1080 	.db #0xF0
+                           1081 	.area XINIT   (CODE)
+                           1082 	.area CABS    (ABS,CODE)
