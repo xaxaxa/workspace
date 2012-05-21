@@ -74,7 +74,7 @@ public:
 	void cb1(SocketManager* m, Socket s);
 	void operator=(const DNSServer& other)=delete;
 	DNSServer(const DNSServer& other)=delete;
-	typedef std::function<void(const EndPoint& ep, const dnsreq&)> Callback;
+	typedef std::function<void(DNSServer& srv, const EndPoint& ep, const dnsreq&)> Callback;
 	Socket s;
 	//boost::shared_ptr<SocketStream> ss;
 	Callback cb;

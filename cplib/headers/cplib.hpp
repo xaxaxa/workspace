@@ -134,13 +134,13 @@
 #ifndef WARNLEVEL
 #define WARNLEVEL 10
 #endif
-#define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL){if(LEVEL<=1)cerr << "\x1B[41;1;32m"; else if(LEVEL<=2)cerr << "\x1B[1;1;1m"; cerr << MSG << "\x1B[0;0;0m" << endl;}
+#define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL){if(LEVEL<=1)cerr << "\x1B[41;1;33m"; else if(LEVEL<=2)cerr << "\x1B[1;1;1m"; cerr << MSG << "\x1B[0;0;0m" << endl;}
 
 using namespace std;
 namespace xaxaxa
 {
 //typedef void* Function;
-	typedef  volatile int atomic_t;
+	typedef volatile int atomic_t;
 #define atomic_read(v)                  v
 #define	atomic_set(v,i)                 v = i
 #define	atomic_add(i,v)                 v += i
@@ -307,6 +307,14 @@ namespace xaxaxa
 				delete this;
 				//cout << o;
 			}
+		}
+		inline void Release()
+		{
+			RefCount_dec();
+		}
+		virtual string ToStr()
+		{
+			return string(typeid(*this).name());
 		}
 		Object& operator=(const Object& other)
 		{
@@ -1229,7 +1237,7 @@ namespace xaxaxa
 	struct File
 	{
 		FILEDES _f;
-		inline File()
+		inline File():_f(0)
 		{
 		}
 		inline ~File()
@@ -2231,6 +2239,30 @@ namespace xaxaxa
 			else if (pid < 0)
 			{
 				throw Exception(errno);
+			}
+		}
+		void ParseArgs(int argc, char** argv,
+				const function<void(char*, const function<char*()>&)>& cb)
+		{
+			int i = 1;
+			function<char*()> func = [&]()->char*
+			{
+				if(i+1>=argc)return NULL;
+				return argv[(++i)];
+			};
+			for (; i < argc; i++)
+			{
+				if (argv[i][0] == '\x00')
+					continue;
+				if (argv[i][0] == '-')
+				{
+					cb(argv[i] + 1, func);
+				}
+				else
+				{
+					cb(NULL, [argv,i]()
+					{	return argv[i];});
+				}
 			}
 		}
 #if __x86_64__
