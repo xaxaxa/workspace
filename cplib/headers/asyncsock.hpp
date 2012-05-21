@@ -1,3 +1,17 @@
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
 #ifndef __ASYNCSOCK_H
 #define __ASYNCSOCK_H
 
@@ -6,6 +20,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/epoll.h>
+#include <netdb.h>
+#include <unistd.h>
 #include "cplib.hpp"
 #include <errno.h>
 #include <netinet/in.h>
@@ -13,6 +29,7 @@
 #include <fcntl.h>
 #include <sys/un.h>
 #include <boost/function.hpp>
+#include <sstream>
 #ifdef __debug_print123
 #define dbgprint(msg) cout << msg << endl
 #else
@@ -82,6 +99,13 @@ namespace xaxaxa
 				return IPAddress(
 				{ htonl(ntohl(a.s_addr) - other) });
 			}
+			string ToStr()
+			{
+				char tmp[INET_ADDRSTRLEN];
+				if (inet_ntop(AF_INET, &a, tmp, INET_ADDRSTRLEN) == NULL)
+					throw Exception(errno);
+				return string(tmp);
+			}
 		};
 		struct IPv6Address
 		{
@@ -133,6 +157,13 @@ namespace xaxaxa
 			 {
 			 return IPv6Address(a - other);
 			 }*/
+			string ToStr()
+						{
+							char tmp[INET_ADDRSTRLEN];
+							if (inet_ntop(AF_INET6, &a, tmp, INET6_ADDRSTRLEN) == NULL)
+								throw Exception(errno);
+							return string(tmp);
+						}
 		};
 		class EndPoint: public Object
 		{
@@ -146,6 +177,31 @@ namespace xaxaxa
 			virtual void Clone(EndPoint& to) const=0;
 			virtual ~EndPoint()
 			{
+			}
+			static vector<Property<EndPoint> > LookupHost(const char* hostname, const char* port,
+					int flags = 0, int socktype = 0, int proto = 0)
+			{
+				vector<Property<EndPoint> > tmp;
+				addrinfo hints, *result, *rp;
+				memset(&hints, 0, sizeof(struct addrinfo));
+				hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+				hints.ai_socktype = socktype;
+				hints.ai_flags = flags;
+				hints.ai_protocol = proto;
+
+				int s = getaddrinfo(hostname, port, &hints, &result);
+				if (s != 0)
+				{
+					throw Exception(gai_strerror(s));
+				}
+				for (rp = result; rp != NULL; rp = rp->ai_next)
+				{
+					EndPoint* ep = FromSockAddr(rp->ai_addr);
+					tmp.push_back(ep);
+					ep->Release();
+				}
+				freeaddrinfo(result);
+				return tmp;
 			}
 			//static EndPoint Resolve(
 		};
@@ -201,17 +257,25 @@ namespace xaxaxa
 				tmp.Address = Address;
 				tmp.Port = Port;
 			}
+			virtual string ToStr()
+			{
+				stringstream s;
+				s << Address.ToStr() << ':' << Port;
+				return s.str();
+			}
 		};
 		class IPv6EndPoint: public EndPoint
 		{
 		public:
 			IPv6Address Address;
-			int Port;
+			in_port_t Port;
+			uint32_t FlowInfo;
+			uint32_t ScopeID;
 			IPv6EndPoint()
 			{
 				this->AddressFamily = AF_INET6;
 			}
-			IPv6EndPoint(IPv6Address address, int port)
+			IPv6EndPoint(IPv6Address address, in_port_t port)
 			{
 				this->AddressFamily = AF_INET6;
 				this->Address = address;
@@ -222,6 +286,8 @@ namespace xaxaxa
 				this->AddressFamily = AF_INET6;
 				this->Address = IPv6Address(addr.sin6_addr);
 				this->Port = ntohs(addr.sin6_port);
+				FlowInfo = addr.sin6_flowinfo;
+				ScopeID = addr.sin6_scope_id;
 			}
 			IPv6EndPoint(const sockaddr_in6& addr)
 			{
@@ -240,6 +306,8 @@ namespace xaxaxa
 				addr_in->sin6_family = AF_INET6;
 				addr_in->sin6_port = htons(Port);
 				addr_in->sin6_addr = Address.a;
+				addr_in->sin6_flowinfo = FlowInfo;
+				addr_in->sin6_scope_id = ScopeID;
 			}
 			virtual int GetSockAddrSize() const
 			{
@@ -253,6 +321,14 @@ namespace xaxaxa
 				IPv6EndPoint& tmp((IPv6EndPoint&) to);
 				tmp.Address = Address;
 				tmp.Port = Port;
+				tmp.FlowInfo = FlowInfo;
+				tmp.ScopeID = ScopeID;
+			}
+			virtual string ToStr()
+			{
+				stringstream s;
+				s << '[' << Address.ToStr() << "]:" << Port;
+				return s.str();
 			}
 		};
 		class UNIXEndPoint: public EndPoint
@@ -317,7 +393,7 @@ namespace xaxaxa
 			inline Socket()
 			{
 			}
-			inline Socket(int domain, int type, int protocol)
+			inline Socket(int domain, int type, int protocol = 0)
 			{
 				_f = CreateSocket(domain,type,protocol);
 				if (_f < 0)
@@ -447,6 +523,60 @@ namespace xaxaxa
 			inline void Bind(const EndPoint& ep)
 			{
 				Bind((EndPoint*) &ep);
+			}
+			inline void Bind(const char* hostname, const char* port, int socktype, int proto = 0)
+			{
+				if (_f != 0)
+					throw Exception(
+							"Socket::Bind(const char* hostname, const char* port) creates a socket, but the socket is already constructed; use the default constructor instead.");
+				auto hosts = EndPoint::LookupHost(hostname, port, AI_PASSIVE, socktype, proto);
+				UInt i;
+				for (i = 0; i < hosts.size(); i++)
+				{
+					_f = CreateSocket(hosts[i]->AddressFamily,socktype,proto);
+					if (_f < 0)
+						continue;
+					int tmp12345 = 1;
+					setsockopt(_f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
+					Int size = hosts[i]->GetSockAddrSize();
+					uint8_t tmp[size];
+					hosts[i]->GetSockAddr((sockaddr*) tmp);
+					if (::bind(_f, (sockaddr*) tmp, size) == 0)
+						goto aaaaa;
+					else
+					{
+						close(_f);
+						continue;
+					}
+				}
+				throw Exception(errno);
+				aaaaa: ;
+			}
+			inline void Connect(const char* hostname, const char* port, int socktype, int proto = 0)
+			{
+				if (_f != 0)
+					throw Exception(
+							"Socket::Connect(const char* hostname, const char* port) creates a socket, but the socket is already constructed; use the default constructor instead.");
+				auto hosts = EndPoint::LookupHost(hostname, port, 0, socktype, proto);
+				UInt i;
+				for (i = 0; i < hosts.size(); i++)
+				{
+					_f = CreateSocket(hosts[i]->AddressFamily,socktype,proto);
+					if (_f < 0)
+						continue;
+					Int size = hosts[i]->GetSockAddrSize();
+					uint8_t tmp[size];
+					hosts[i]->GetSockAddr((sockaddr*) tmp);
+					if (::connect(_f, (sockaddr*) tmp, size) == 0)
+						goto aaaaa;
+					else
+					{
+						close(_f);
+						continue;
+					}
+				}
+				throw Exception(errno);
+				aaaaa: ;
 			}
 			inline void Connect(EndPoint *ep)
 			{

@@ -15,7 +15,7 @@
 #include "DNSServer.H"
 
 DNSServer::DNSServer(const EndPoint& listen_addr, const Callback& cb) :
-		s(AF_INET, SOCK_DGRAM, 0), cb(cb), buf(4096), q(s)
+		s(listen_addr.AddressFamily, SOCK_DGRAM, IPPROTO_UDP), cb(cb), buf(4096), q(s)
 {
 	//ctor
 	tmp_ep = EndPoint::CreateNull(listen_addr.AddressFamily);
@@ -48,7 +48,7 @@ void DNSServer::cb1(SocketManager* m, Socket s)
 	{
 		dnsreq req;
 		parse_dns_packet(buf.SubBuffer(0, br), req);
-		cb(*tmp_ep, req);
+		cb(*this, *tmp_ep, req);
 	} catch (Exception& ex)
 	{
 	}
