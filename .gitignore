@@ -5,3 +5,11 @@
 a.out
 *~
 sdfs/cplib
+jackfft/jackfft
+jackfft/jackfftc
+*/Debug/*.o
+*/Release/*.o
+test1/*/test1
+tcpsdump/tcpsdump
+tcpsdump/rmhttphdr
+
