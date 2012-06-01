@@ -9,12 +9,14 @@ CPP_SRCS += \
 ../cplib.cpp 
 
 C_UPPER_SRCS += \
+../cplib_func.C \
 ../epoll.C 
 
 OBJS += \
 ./asyncfile.o \
 ./asyncsock.o \
 ./cplib.o \
+./cplib_func.o \
 ./epoll.o 
 
 CPP_DEPS += \
@@ -23,6 +25,7 @@ CPP_DEPS += \
 ./cplib.d 
 
 C_UPPER_DEPS += \
+./cplib_func.d \
 ./epoll.d 
 
 
@@ -30,14 +33,14 @@ C_UPPER_DEPS += \
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -O3 -g3 -rdynamic -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -O0 -g3 -rdynamic -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
 %.o: ../%.C
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -O3 -g3 -rdynamic -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -O0 -g3 -rdynamic -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

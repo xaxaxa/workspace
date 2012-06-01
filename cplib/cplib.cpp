@@ -39,8 +39,6 @@ namespace xaxaxa
 	}
 #endif
 
-
-
 ///////////////////////////////////////////////////////////
 
 	StreamReaderWriter::StreamReaderWriter(Stream& s, int rbuffersize, int wbuffersize) :
@@ -248,9 +246,6 @@ namespace xaxaxa
 					{
 						for (int ii = 0; ii < delimitors[j].length; ii++)
 						{
-							//TODO: BUG: when end-of-buffer is encountered
-							//in the middle of a delimitor, that delimitor
-							//is not dealt with correctly.
 							if (i + ii >= tmp2)
 							{
 								//goto cont;
@@ -360,7 +355,85 @@ namespace xaxaxa
 		Flush();
 		s->Close();
 	}
-/////////////////////////////////////////////////////////
+
+	/*void StreamReader_async::begin()
+	{
+
+	}
+	void StreamReader_async::check_buffer()
+	{
+		if (sr->buf_length <= 0)
+		{
+			BufferRef tmpb(sr->buf, sr->buf_size);
+			int tmp = sr->s->Read(tmpb);
+			if (tmp <= 0)
+			{
+				completed(br == 0 ? -1 : br);
+				return;
+			}
+			sr->buf_index = 0;
+			sr->buf_length = tmp;
+		}
+		do_process();
+	}
+	void StreamReader_async::do_process()
+	{
+		Int tmp2 = sr->buf_length + sr->buf_index;
+		Int i;
+		char* cbuf = (char*) sr->buf;
+		for (i = sr->buf_index; i < tmp2; i++)
+		{
+			for (int j = 0; j < delimitor_count; j++)
+			{
+				if (cbuf[i] == delimitors[j].c[0])
+				{
+					for (int ii = 0; ii < delimitors[j].length; ii++)
+					{
+						if (i + ii >= tmp2)
+						{
+							//goto cont;
+							BufferRef tmpb(cbuf + sr->buf_index, sr->buf_length - ii);
+							out->Write(tmpb);
+							br += tmpb.Length;
+
+							memcpy(cbuf, cbuf + i, ii);
+							Buffer tmpb1(cbuf + ii, sr->buf_size - ii);
+							int tmp = sr->s->Read(tmpb1);
+							if (tmp <= 0)
+								return (br == 0 ? -1 : br);
+							sr->buf_index = 0;
+							sr->buf_length = tmp + ii;
+							i = 0;
+						}
+						if (cbuf[i + ii] != delimitors[j].c[ii])
+							goto cont;
+					}
+					int tmp = i - sr->buf_index;
+					BufferRef tmpb(cbuf + sr->buf_index, tmp);
+					out->Write(tmpb);
+					br += tmp;
+					tmp += delimitors[j].length;
+					
+					sr->buf_index += tmp;
+					sr->buf_length -= tmp;
+					if (delim_index != NULL)
+						*delim_index = j;
+					return br;
+				}
+				cont: ;
+			}
+		}
+		BufferRef tmpb((char*) this->buf + buf_index, buf_length);
+		out->Write(tmpb);
+		br += sr->buf_length;
+		sr->buf_length = 0;
+		check_buffer();
+	}
+	void StreamReader_async::completed(Int ret)
+	{
+
+	}*/
+	/////////////////////////////////////////////////////////
 
 	StringBuilder::StringBuilder(int initsize) :
 			buf(initsize), Capacity(initsize), length(0), position(0)

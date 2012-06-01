@@ -99,7 +99,7 @@ namespace xaxaxa
 				return IPAddress(
 				{ htonl(ntohl(a.s_addr) - other) });
 			}
-			string ToStr()
+			string ToStr() const
 			{
 				char tmp[INET_ADDRSTRLEN];
 				if (inet_ntop(AF_INET, &a, tmp, INET_ADDRSTRLEN) == NULL)
@@ -157,7 +157,7 @@ namespace xaxaxa
 			 {
 			 return IPv6Address(a - other);
 			 }*/
-			string ToStr()
+			string ToStr() const
 						{
 							char tmp[INET_ADDRSTRLEN];
 							if (inet_ntop(AF_INET6, &a, tmp, INET6_ADDRSTRLEN) == NULL)
@@ -257,7 +257,7 @@ namespace xaxaxa
 				tmp.Address = Address;
 				tmp.Port = Port;
 			}
-			virtual string ToStr()
+			virtual string ToStr() const
 			{
 				stringstream s;
 				s << Address.ToStr() << ':' << Port;
@@ -324,7 +324,7 @@ namespace xaxaxa
 				tmp.FlowInfo = FlowInfo;
 				tmp.ScopeID = ScopeID;
 			}
-			virtual string ToStr()
+			virtual string ToStr() const
 			{
 				stringstream s;
 				s << '[' << Address.ToStr() << "]:" << Port;
@@ -608,6 +608,13 @@ namespace xaxaxa
 			{
 				if (fcntl(_f, F_SETFL, f) < 0)
 					throw Exception(errno, "could not set socket flags");
+			}
+			inline void GetPeerEndPoint(EndPoint& ep)
+			{
+				socklen_t size = ep.GetSockAddrSize();
+				uint8_t addr[size];
+				getpeername(_f, (sockaddr*)&addr, &size);
+				ep.SetSockAddr((sockaddr*)&addr);
 			}
 			/*inline ~Socket()
 			 {

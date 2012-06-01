@@ -88,15 +88,18 @@
 	struct NAME;struct NAME{\
 		std::function<RETVAL(void*,__VA_ARGS__)> f;\
 		void* obj;int __id;\
-		inline NAME(RETVAL(*f)(void*,__VA_ARGS__),void* obj)\
-		{__id=rand();this->f=f;\
-		 this->obj=obj;}\
 		template<class FGSAFJGFJSA>inline NAME(RETVAL(FGSAFJGFJSA::*f)(__VA_ARGS__),void* obj)\
 		{__id=rand();this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
 		this->obj=obj;}\
 		inline NAME(RETVAL(*f)(void*,__VA_ARGS__))\
 		{__id=rand();this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
 		this->obj=NULL;}\
+		inline NAME(const function<RETVAL(void*,__VA_ARGS__)>& func)\
+		{__id=rand();f=func;\
+		this->obj=NULL;}\
+		inline NAME(const function<RETVAL(void*,__VA_ARGS__)>& func, void* obj)\
+		{__id=rand();f=func;\
+		this->obj=obj;}\
 		inline NAME(){}\
 		static NAME null;\
 		bool operator<(const NAME& X) const\
@@ -312,7 +315,7 @@ namespace xaxaxa
 		{
 			RefCount_dec();
 		}
-		virtual string ToStr()
+		virtual string ToStr() const
 		{
 			return string(typeid(*this).name());
 		}
@@ -448,11 +451,15 @@ namespace xaxaxa
 	 a = b.obj;
 	 return a;
 	 }*/
-	class Exception: public Object
+	class Exception: public Object, public exception
 	{
 	public:
 		int Code;
 		std::string Message;
+		virtual const char* what() const throw()
+		{
+			return Message.c_str();
+		}
 		virtual void init(int code, std::string message)
 		{
 			this->Code = code;
@@ -490,6 +497,8 @@ namespace xaxaxa
 		{
 			Code = 0;
 		}
+		virtual ~Exception() throw ()
+		{}
 	}
 	;
 	class OutOfRangeException: public Exception
@@ -696,6 +705,16 @@ namespace xaxaxa
 		inline BufferRef(void* Data, Int Length) :
 				Data((Byte*) Data), Length(Length)
 		{
+		}
+		inline BufferRef(char* buf)
+		{
+			this->Data = (Byte*) buf;
+			this->Length = strlen(buf);
+		}
+		inline BufferRef(const char* buf)
+		{
+			this->Data = (Byte*) buf;
+			this->Length = strlen(buf);
 		}
 		/*BufferRef(const Buffer& b) :
 		 Data(b.Data), Length(b.Length)
@@ -1077,14 +1096,11 @@ namespace xaxaxa
 		{
 		}
 	};
-	class Poller;
-	inline Poller* GetDefaultPoller();
-	class Pollable
-	{ //represents something that needs to wait for events but doesn't know how
+	class Waitable
+	{ //represents something that needs to wait for events
 	public:
 		typedef uint32_t event_t;
-		Poller* p;
-		virtual ~Pollable()
+		virtual ~Waitable()
 		{
 		}
 		virtual int GetFileDesc()=0;
@@ -1237,7 +1253,8 @@ namespace xaxaxa
 	struct File
 	{
 		FILEDES _f;
-		inline File():_f(0)
+		inline File() :
+				_f(0)
 		{
 		}
 		inline ~File()
@@ -1367,22 +1384,19 @@ namespace xaxaxa
 	class StandardStream: public Stream
 	{
 	public:
-		FileStream in, out;
-		StandardStream() :
-				in(File(0)), out(File(1))
+		StandardStream()
 		{
 		}
 		virtual int Read(const BufferRef& buf)
 		{
-			return in.Read(buf);
+			return File(0).Read(buf);
 		}
 		virtual void Write(const BufferRef& buf)
 		{
-			out.Write(buf);
+			File(1).Write(buf);
 		}
 		virtual void Flush()
 		{
-			out.Flush();
 		}
 		virtual void Close()
 		{
@@ -1669,7 +1683,24 @@ namespace xaxaxa
 			flush_if_full();
 		}
 	};
-
+	struct StreamReader_async
+	{
+		Property<StreamReaderWriter> sr;
+		Property<Stream> out;
+		const STRING* delimitors;
+		int delimitor_count;
+		int* delim_index;
+		Int br;
+		StreamReader_async() :
+				delim_index(NULL)
+		{
+		}
+		void begin();
+		void check_buffer();
+		void do_process();
+		void found_char();
+		void completed(Int ret);
+	};
 	typedef StreamReaderWriter StreamWriter;
 	typedef StreamReaderWriter StreamReader;
 	template<class X> inline StringBuilder& operator<<(StringBuilder& sb, const X& x)
@@ -2273,7 +2304,7 @@ namespace xaxaxa
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
 
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
+					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 
 			void * array[50];
 			int size = backtrace(array, 50);
@@ -2319,14 +2350,14 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-						<< "+" << offset_begin << offset_end << std::endl;
+								<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}

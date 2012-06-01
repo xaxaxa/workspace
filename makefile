@@ -7,6 +7,8 @@ termchat:
 	g++ -o "termchat" "termchat.cxx" -Wall -lncurses --std=c++0x -lpthread -lcplib $(CFLAGS)
 termchat_install:
 	cp -f termchat /usr/local/bin/
+server123:
+	g++ server123.C -o server123 --std=c++0x -lcplib -O3 $(CFLAGS)
 tmp:
 	g++ tmp.C -o tmp --std=c++0x -lcplib -O3 $(CFLAGS)
 tmp1:
