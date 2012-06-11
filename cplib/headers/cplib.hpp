@@ -2110,6 +2110,16 @@ namespace xaxaxa
 				b.Set(__intwrap(i,size), false);
 		}
 	};
+	class CircularBuffer: public Stream
+	{
+	public:
+		Buffer b;
+		Int rpos, wpos, len;
+		CircularBuffer(Int size=4096):b(size),rpos(0),wpos(0),len(0)
+		{
+
+		}
+	};
 	template<class T, class Allocator = allocator<T> > class vectorlist
 	{
 	public:
