@@ -1,5 +1,6 @@
 #include <iostream>
 #include <functional>
+#include <string.h>
 using namespace std;
 struct s
 {
@@ -20,8 +21,18 @@ void setfunc()
 	auto tmp=[](){};
 	tmp();
 }
+function<void()> get_f()
+{
+	function<void()> f=[&f]()
+	{
+		cout << "a" << endl;
+		f();
+	};
+	return f;
+}
 int main()
 {
+	/*
 	setfunc();
 	cout << f(5,6) << endl;
 	s s1;
@@ -29,4 +40,13 @@ int main()
 	auto f2=&s::func;
 	cout << (s1.*f2)(32) << endl;
 	cout << s1.data << endl;
+	//*/
+	
+	function<void()> f=get_f();
+	{
+		long asdf[100];
+		memset(asdf,100,123);
+	}
+	//cout <<a<<b<<c<<d<<e<<endl;
+	f();
 }

@@ -122,7 +122,18 @@ int main()
 			s.Close();
 		}
 	}*/
-	const char* motd="You are now connected to the chat server.\nPlease enter a nickname: ";
+	StringBuilder motd_sb;
+	Buffer motd;
+	motd_sb << "You are now connected to the chat server.\n";
+	try
+	{
+		FileStream fs("motd",O_RDONLY);
+		motd_sb.Clear();
+		while(motd_sb.Append(fs,4096)>0);
+	}
+	catch(Exception& ex){}
+	motd_sb << "Please enter a nickname: ";
+	motd=motd_sb.ToBuffer();
 	IPEndPoint ep(IPAddress("0.0.0.0"),16969);
 	Socket s1(AF_INET,SOCK_STREAM,0);
 	s1.Bind(ep);
