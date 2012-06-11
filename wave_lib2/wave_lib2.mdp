@@ -1,0 +1,29 @@
+<Project name="wave_lib2" fileversion="2.0" DefaultNamespace="wave_lib2" language="C#" Configuration="Debug" Platform="AnyCPU" AppDesignerFolder="Properties" AssemblyName="wave_lib2" targetFramework="3.5" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" Optimize="false" DefineConstants="DEBUG;TRACE" WarningLevel="4" AllowUnsafeBlocks="true" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Debug/" assembly="wave_lib2" />
+      <Build debugmode="True" target="Library" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="False" unsafecodeallowed="True" generateoverflowchecks="False" definesymbols="DEBUG;TRACE" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" Optimize="true" DefineConstants="TRACE" WarningLevel="4" AllowUnsafeBlocks="true" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Release/" assembly="wave_lib2" />
+      <Build debugmode="False" target="Library" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration compiler="Mcs" warninglevel="4" optimize="True" unsafecodeallowed="True" generateoverflowchecks="False" definesymbols="TRACE" generatexmldocumentation="False" ctype="CSharpCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File subtype="Code" buildaction="Compile" name="Class1.cs" />
+    <File subtype="Code" buildaction="Compile" name="Class2.cs" />
+    <File subtype="Code" buildaction="Compile" name="FFT.cs" />
+    <File subtype="Code" buildaction="Compile" name="FFTFilter.cs" />
+    <File subtype="Code" buildaction="Compile" name="Properties/AssemblyInfo.cs" />
+    <File subtype="Code" buildaction="Compile" name="WaveIn.cs" />
+    <File subtype="Code" buildaction="Compile" name="WaveNative.cs" />
+    <File subtype="Code" buildaction="Compile" name="WaveStream.cs" />
+  </Contents>
+  <References>
+    <ProjectReference specificVersion="False" type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  </References>
+</Project>
