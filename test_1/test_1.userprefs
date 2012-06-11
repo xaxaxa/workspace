@@ -1,0 +1,31 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Form4.vb">
+    <Files>
+      <File FileName="Form1.vb" Line="35" Column="39" />
+      <File FileName="eq.vb" Line="185" Column="11" />
+      <File FileName="Form2.vb" Line="89" Column="54" />
+      <File FileName="alsa_test/MainWindow.cs" Line="22" Column="4" />
+      <File FileName="../wave_lib2/Class1.cs" Line="488" Column="28" />
+      <File FileName="../wave_lib2/WaveNative.cs" Line="415" Column="61" />
+      <File FileName="../wave_lib2/Class2.cs" Line="600" Column="7" />
+      <File FileName="Form4.vb" Line="265" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="alsa_test" expanded="True" />
+          <Node name="test_1" expanded="True" selected="True">
+            <Node name="References" expanded="True" />
+            <Node name="Form4.vb" expanded="True" />
+          </Node>
+          <Node name="wave_lib2" expanded="True" />
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

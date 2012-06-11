@@ -34,8 +34,8 @@ int process (jack_nframes_t length, void *arg)
 					(jack_default_audio_sample_t *)
 					jack_port_get_buffer (inputs[i], length);
 
-		filt[i]->PutData(in, length);
-		filt[i]->GetData(out, length);
+		filt[i]->Process(in, out, length);
+		//filt[i]->GetData(out, length);
 		/*Int a;
 		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
 		{

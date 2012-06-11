@@ -1,8 +1,8 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="MainWindow.cs">
     <Files>
-      <File FileName="MainWindow.cs" Line="131" Column="5" />
+      <File FileName="MainWindow.cs" Line="311" Column="2" />
       <File FileName="Main.cs" Line="10" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
