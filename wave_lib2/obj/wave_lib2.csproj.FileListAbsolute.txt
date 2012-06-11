@@ -1,0 +1,15 @@
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\bin\Debug\wave_lib2.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\bin\Debug\wave_lib2.pdb
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\obj\Debug\wave_lib2.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\obj\Debug\wave_lib2.pdb
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\obj\Release\ResolveAssemblyReference.cache
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\bin\Release\wave_lib2.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\bin\Release\wave_lib2.pdb
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\obj\Release\wave_lib2.dll
+C:\Documents and Settings\Administrator\My Documents\Visual Studio 2005\Projects\wave_lib2\obj\Release\wave_lib2.pdb
+D:\projects\wave_lib2\obj\Debug\ResolveAssemblyReference.cache
+D:\projects\wave_lib2\obj\Debug\wave_lib2.dll
+D:\projects\wave_lib2\bin\Debug\wave_lib2.dll
+D:\projects\wave_lib2\bin\Debug\wave_lib2.pdb
+D:\projects\wave_lib2\obj\Debug\wave_lib2.pdb

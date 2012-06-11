@@ -1,0 +1,24 @@
+<Combine fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry build="True" name="test_1" configuration="Debug" />
+      <Entry build="True" name="wave_lib2" configuration="Debug" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry build="True" name="test_1" configuration="Release" />
+      <Entry build="True" name="wave_lib2" configuration="Release" />
+    </Configuration>
+    <Configuration name="release2" ctype="CombineConfiguration">
+      <Entry build="True" name="test_1" configuration="release2" />
+      <Entry build="True" name="wave_lib2" configuration="release2" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="test_1" single="True">
+    <Execute type="None" entry="test_1" />
+    <Execute type="None" entry="wave_lib2" />
+  </StartMode>
+  <Entries>
+    <Entry filename="test_1.mdp" />
+    <Entry filename="../wave_lib2/wave_lib2.mdp" />
+  </Entries>
+</Combine>
