@@ -69,10 +69,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Content Include="trollface100.png">
-      <DeployService-UseProjectRelativePath>true</DeployService-UseProjectRelativePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="trollface200.png">
       <DeployService-UseProjectRelativePath>true</DeployService-UseProjectRelativePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

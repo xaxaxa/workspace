@@ -137,14 +137,19 @@ template<class t> inline double complex_to_real(const t& x)
 }
 int process(jack_nframes_t length, void *arg)
 {
+	jack_default_audio_sample_t* in_samples[inputs.size()];
+	jack_default_audio_sample_t* out_samples[inputs.size()];
 	for(size_t i = 0; i < inputs.size(); i++)
 	{
-		jack_default_audio_sample_t *out =
-			(jack_default_audio_sample_t *)
-			jack_port_get_buffer(outputs[i], length);
-		jack_default_audio_sample_t *in =
-			(jack_default_audio_sample_t *)
+		in_samples[i]=(jack_default_audio_sample_t *)
 			jack_port_get_buffer(inputs[i], length);
+		out_samples[i]=(jack_default_audio_sample_t *)
+			jack_port_get_buffer(outputs[i], length);
+	}
+	for(size_t i = 0; i < inputs.size(); i++)
+	{
+		jack_default_audio_sample_t *out = out_samples[i];
+		jack_default_audio_sample_t *in = in_samples[i];
 
 		if(filt2 != NULL && filt2[i] != NULL)
 		{
@@ -156,8 +161,7 @@ int process(jack_nframes_t length, void *arg)
 				continue;
 			}
 		}
-		filt[i]->PutData(in, length);
-		filt[i]->GetData(out, length);
+		filt[i]->Process(in, out, length);
 		/*Int a;
 		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
 		{
@@ -167,6 +171,14 @@ int process(jack_nframes_t length, void *arg)
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
+	/*for(size_t i=0; i<length; i++)
+	{
+		double avg=0;
+		for(register unsigned int ii=0;ii<CHANNELS;ii++)
+			avg+=((double)out_samples[ii][i])/CHANNELS;
+		for(register unsigned int ii=0;ii<CHANNELS;ii++)
+			out_samples[ii][i]=avg+(out_samples[ii][i]-avg)*3;
+	}*/
 	for(size_t i = 0; i < inputs.size(); i++)
 	{
 		if(filt[i] != NULL)goto asdfghjkl;
@@ -179,11 +191,8 @@ int process(jack_nframes_t length, void *arg)
 	filt2 = NULL;
 asdfghjkl:
 	FFTFilter<jack_default_audio_sample_t>* trololo = ((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
-	struct timespec t;
-	clock_gettime(CLOCK_MONOTONIC, &t);
-	if(display_spectrum && get_nsec(last_refreshed) + (50 * 1000000) < get_nsec(t) && trololo->didprocess)
+	if(display_spectrum && trololo->didprocess)
 	{
-		last_refreshed = t;
 		trololo->didprocess = false;
 		Long tmp_i=1;
 		efd.Write(BufferRef(&tmp_i,sizeof(tmp_i)));
@@ -197,22 +206,28 @@ void* thread1(void* v)
 		Long tmp;
 		efd.Read(BufferRef(&tmp,sizeof(tmp)));
 		WARN(8,tmp);
-		//refresh
-		for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
-			c2->data[i] = 0;
-		for(size_t ii = 0; ii < inputs.size(); ii++)
+		struct timespec t;
+		clock_gettime(CLOCK_MONOTONIC, &t);
+		if(get_nsec(last_refreshed) + (60 * 1000000) < get_nsec(t))
 		{
-			if(filt[ii] == NULL)continue;
-			UInt complexsize = ((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->ComplexSize();
+			last_refreshed = t;
+			//refresh
 			for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
+				c2->data[i] = 0;
+			for(size_t ii = 0; ii < inputs.size(); ii++)
 			{
-				UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
-				c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
+				if(filt[ii] == NULL)continue;
+				UInt complexsize = ((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->ComplexSize();
+				for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
+				{
+					UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
+					c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
+				}
 			}
+			gdk_threads_enter();
+			c2->do_draw();
+			gdk_threads_leave();
 		}
-		gdk_threads_enter();
-		c2->do_draw();
-		gdk_threads_leave();
 	}
 	return NULL;
 }
