@@ -1,5 +1,5 @@
 CFLAGS=-L ~/bin -I ~/include
-all: termchat tmp tmp1 tmp2 nc.xaxaxa
+all: termchat tmp tmp1 tmp2 nc.xaxaxa server123
 install: termchat_install nc.xaxaxa_install
 clean:
 	rm -rf termchat servertroll tmp tmp1 tmp2 nc.xaxaxa
