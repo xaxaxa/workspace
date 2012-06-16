@@ -27,9 +27,10 @@ int main(int c, char** v)
 		i++;
 		buffer.Clear();
 	}*/
-	
+	StreamReader r(*(newobj<StandardStream>()),1024*32);
+	StringBuilder buffer;
 	//int i2(0);
-	struct:public Stream
+	/*struct:public Stream
 	{
 		virtual void Write(const BufferRef& buf)
 		{
@@ -42,16 +43,16 @@ int main(int c, char** v)
 	} tmp_s;
 	//FileStream s(File("/tmp/data1",O_RDONLY));
 	StandardStream s;
-	StreamReader r(s,1024*32);
-	StringBuilder buffer;
+	
+	
 	//NullStream ns;
-	while(r.fast_readline(tmp_s)>=0)
-	//while(r.ReadLine(buffer)>=0)
+	while(r.fast_readline(tmp_s)>=0)*/
+	while(r.ReadLine(buffer)>=0)
 	{
 		//r.Write(buffer.ToBuffer());
 		//r.Write("\n");
 		i++;
-		//buffer.Clear();
+		buffer.Clear();
 	}
 	//r.Flush();
 	

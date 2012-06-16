@@ -1,0 +1,5 @@
+bin\Debug\wave_lib2.dll
+bin\Debug\wave_lib2.pdb
+obj\Debug\ResolveAssemblyReference.cache
+obj\Debug\wave_lib2.dll
+obj\Debug\wave_lib2.pdb

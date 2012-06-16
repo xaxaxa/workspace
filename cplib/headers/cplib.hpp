@@ -456,7 +456,7 @@ namespace xaxaxa
 	public:
 		int Code;
 		std::string Message;
-		virtual const char* what() const throw()
+		virtual const char* what() const throw ()
 		{
 			return Message.c_str();
 		}
@@ -498,7 +498,8 @@ namespace xaxaxa
 			Code = 0;
 		}
 		virtual ~Exception() throw ()
-		{}
+		{
+		}
 	}
 	;
 	class OutOfRangeException: public Exception
@@ -1192,6 +1193,17 @@ namespace xaxaxa
 		{
 			Append(s.data(), s.length());
 		}
+		int Append(Stream& s, Int n)
+		{
+			if (n <= 0)
+				return 0;
+			EnsureCapacity(position + n);
+			Int tmp = s.Read(buf.SubBuffer(position, n));
+			position += tmp;
+			if (position > length)
+				length = position;
+			return tmp;
+		}
 		/*inline void Append(Float n)
 		 {
 		 //char c[log10(0xFFFFFFFF)+2];
@@ -1696,10 +1708,15 @@ namespace xaxaxa
 		{
 		}
 		void begin();
-		void check_buffer();
-		void do_process();
-		void found_char();
-		void completed(Int ret);
+		void check_buffer(); //make sure the buffer is not empty. if it is, begin a read operation
+		void check_buffer_cb();
+		void do_process(); //called after check_buffer() or check_buffer_cb
+		void shift_buffer(); //if end-of-buffer is found while comparing against a delimitor, flush existing data
+							 //before the start of the delimitor, shift everything after the delimitor forward, and
+							 //read more data into the buffer
+		void found_char(); //after a matching substring is found
+		void completed(Int ret); //calls the callback function
+
 	};
 	typedef StreamReaderWriter StreamWriter;
 	typedef StreamReaderWriter StreamReader;
@@ -2091,6 +2108,16 @@ namespace xaxaxa
 			}
 			else
 				b.Set(__intwrap(i,size), false);
+		}
+	};
+	class CircularBuffer: public Stream
+	{
+	public:
+		Buffer b;
+		Int rpos, wpos, len;
+		CircularBuffer(Int size=4096):b(size),rpos(0),wpos(0),len(0)
+		{
+
 		}
 	};
 	template<class T, class Allocator = allocator<T> > class vectorlist
