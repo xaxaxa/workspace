@@ -1,15 +1,15 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Form4.vb">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../wave_lib2/Class1.cs">
     <Files>
       <File FileName="Form1.vb" Line="35" Column="39" />
       <File FileName="eq.vb" Line="185" Column="11" />
       <File FileName="Form2.vb" Line="89" Column="54" />
       <File FileName="alsa_test/MainWindow.cs" Line="1" Column="1" />
-      <File FileName="../wave_lib2/Class1.cs" Line="488" Column="28" />
-      <File FileName="../wave_lib2/WaveNative.cs" Line="415" Column="61" />
-      <File FileName="../wave_lib2/Class2.cs" Line="600" Column="7" />
-      <File FileName="Form4.vb" Line="265" Column="1" />
+      <File FileName="../wave_lib2/Class1.cs" Line="473" Column="18" />
+      <File FileName="../wave_lib2/WaveNative.cs" Line="438" Column="40" />
+      <File FileName="../wave_lib2/Class2.cs" Line="37" Column="2" />
+      <File FileName="Form4.vb" Line="292" Column="37" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">

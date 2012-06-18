@@ -150,7 +150,7 @@ namespace wave_lib3
 {
 	public class WaveNative
 	{
-		private const string alsa_lib = "libasound.so";
+		private const string alsa_lib = "libasound.so.2";
 		public enum snd_pcm_stream_t
 		{
 			/** Playback stream */
