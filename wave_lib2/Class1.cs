@@ -511,6 +511,7 @@ namespace wave_lib3
 				
 				}
 				WaveNative.snd_pcm_drop (pcm);
+				WaveNative.snd_pcm_close (pcm);
 			}
 		}
 
