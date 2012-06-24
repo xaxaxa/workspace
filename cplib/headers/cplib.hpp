@@ -429,9 +429,9 @@ namespace xaxaxa
 	}
 
 //creates a new instance, but disowns it
-	template<class T, class ... ARGS> T* newobj(ARGS ... args)
+	template<class T, class ... ARGS> T* newobj(ARGS&& ... args)
 	{
-		T* tmp = new T(args...);
+		T* tmp = new T(std::forward<ARGS...>(args...));
 		tmp->RefCount = 0;
 		return tmp;
 	}
@@ -1628,7 +1628,29 @@ namespace xaxaxa
 			return Read(buf, delim, 2);
 			//return Read(buf, "\r\n", 2);
 		}
-
+		int ReadLine(string s)
+		{
+			struct :public Stream
+			{
+				string s;
+				virtual int Read(const BufferRef& buf)
+				{
+					return 0;
+				}
+				virtual void Write(const BufferRef& buf)
+				{
+					s.append((char*) buf.Data, buf.Length);
+				}
+				virtual void Flush()
+				{
+				}
+				virtual void Close()
+				{
+				}
+			} tmp;
+			tmp.s = s;
+			return ReadLine(tmp);
+		}
 		virtual void Write(const BufferRef& buf);
 		virtual void Flush();
 		virtual void Close();
@@ -2217,126 +2239,207 @@ namespace xaxaxa
 			s2 = s1 = __intwrap(s1 + c, __wrap);
 		}
 	};
-	/*class CircularBuffer: public Stream
-	 {
-	 public:
-	 Buffer b;
-	 Int rpos, len; //0 <= len <= b.Length; 0 <= rpos < b.Length
-	 CircularBuffer(Int size = 4096) :
-	 b(size), rpos(0), len(0)
-	 {
+	class CircularStream: public Stream
+	{
+	public:
+		Buffer b;
+		Int rpos, len; //0 <= len <= b.Length; 0 <= rpos < b.Length
+		CircularStream(Int size = 4096) :
+				b(size), rpos(0), len(0)
+		{
 
-	 }
-	 virtual Int Read(const BufferRef& buf)
-	 {
-	 Int l(buf.Length);
-	 Int l2;
-	 if (l > len) l = len;
-	 if (l <= 0) return 0;
-	 l2 = b.Length - rpos;
-	 if (l2 > l) l2 = l;
-	 memcpy(buf.Data, b.Data + rpos, l2);
-	 rpos += l2;
-	 if (rpos >= b.Length) {
-	 memcpy(buf.Data + l2, b.Data, l - l2);
-	 rpos = l - l2;
-	 }
-	 len -= l;
-	 return l;
-	 }
-	 virtual Int Read(Stream& s, Int length)
-	 {
-	 Int l(length);
-	 Int l2;
-	 if (l > len) l = len;
-	 if (l <= 0) return 0;
-	 l2 = b.Length - rpos;
-	 if (l2 > l) l2 = l;
-	 //memcpy(buf.Data, b.Data + rpos, l2);
-	 s.Write(b.SubBuffer(rpos, l2));
-	 rpos += l2;
-	 if (rpos >= b.Length) {
-	 //memcpy(buf.Data + l2, b.Data, l - l2);
-	 s.Write(b.SubBuffer(0, l - l2));
-	 rpos = l - l2;
-	 }
-	 len -= l;
-	 return l;
-	 }
-	 virtual void Write(const BufferRef& buf)
-	 {
-	 BufferRef buf2(buf);
-	 if (buf2.Length > b.Length) buf2.Clip(buf2.Length - b.Length, b.Length);
-	 Int wpos((rpos + len) % b.Length);
-	 Int l2(b.Length - wpos);
-	 if (l2 > buf2.Length) l2 = buf2.Length;
-	 memcpy(b.Data + wpos, buf2.Data, l2);
-	 if ((wpos = (wpos + l2)) >= b.Length) {
-	 memcpy(b.Data, buf2.Data + l2, buf2.Length - l2);
-	 wpos = buf2.Length - l2;
-	 }
-	 len += buf2.Length;
-	 if (len > b.Length) len = b.Length;
-	 rpos = modulus(wpos - len, b.Length);
-	 }
-	 virtual Int Write(Stream& s, Int length)
-	 {
-	 //BufferRef buf2(buf);
-	 if (length > b.Length) s.Skip(length - b.Length);
-	 Int wpos((rpos + len) % b.Length);
-	 Int l2(b.Length - wpos);
-	 if (l2 > length) l2 = length;
-	 //memcpy(b.Data + wpos, buf2.Data, l2);
-	 Int br = s.Fill(b.SubBuffer(wpos, l2));
-	 if (br < l2) {
-	 length -= (l2 - br);
-	 l2 = br;
-	 }
-	 if ((wpos = (wpos + l2)) >= b.Length) {
-	 //memcpy(b.Data, buf2.Data + l2, buf2.Length - l2);
-	 wpos = s.Fill(b.SubBuffer(0, length - l2));
-	 if (wpos < (length - l2)) len -= (length - l2) - wpos; //compensate for buffer short-read
-	 //wpos = length - l2;
-	 }
-	 len += length;
-	 if (len > b.Length) len = b.Length;
-	 rpos = modulus(wpos - len, b.Length);
-	 return length;
-	 }
-	 virtual void Flush()
-	 {
-	 }
-	 virtual void Close()
-	 {
-	 }
-	 virtual void Seek(Long n, SeekFrom from = SeekFrom::Begin)
-	 {
-	 }
-	 virtual Long Position()
-	 {
-	 return 0;
-	 }
-	 virtual Long Length(Long newlen = -1)
-	 {
-	 if (newlen >= 0 && newlen < len) {
-	 rpos = (rpos + len - newlen) % b.Length;
-	 len = newlen;
-	 }
-	 return len;
-	 } //set or get length
-	 virtual Cap Capabilities()
-	 {
-	 return Cap::ReadWrite | Cap::Length;
-	 }
-	 };
-	 inline Long Splice(Stream& from, CircularBuffer& to, Long c)
-	 {
-	 return to.Write(from, c);
-	 }
-	 inline Long Splice(CircularBuffer& from, Stream& to, Long c)
-	 {
-	 return from.Read(to, c);
-	 }*/
+		}
+		virtual Int Read(const BufferRef& buf)
+		{
+			Int l(buf.Length);
+			Int l2;
+			if (l > len) l = len;
+			if (l <= 0) return 0;
+			l2 = b.Length - rpos;
+			if (l2 > l) l2 = l;
+			memcpy(buf.Data, b.Data + rpos, l2);
+			rpos += l2;
+			if (rpos >= b.Length) {
+				memcpy(buf.Data + l2, b.Data, l - l2);
+				rpos = l - l2;
+			}
+			len -= l;
+			return l;
+		}
+		void Clear()
+		{
+			len = 0;
+		}
+		virtual Int Read(Stream& s, Int length)
+		{
+			Int l(length);
+			Int l2;
+			if (l > len) l = len;
+			if (l <= 0) return 0;
+			l2 = b.Length - rpos;
+			if (l2 > l) l2 = l;
+			//memcpy(buf.Data, b.Data + rpos, l2);
+			s.Write(b.SubBuffer(rpos, l2));
+			rpos += l2;
+			if (rpos >= b.Length) {
+				//memcpy(buf.Data + l2, b.Data, l - l2);
+				s.Write(b.SubBuffer(0, l - l2));
+				rpos = l - l2;
+			}
+			len -= l;
+			return l;
+		}
+		virtual void Write(const BufferRef& buf)
+		{
+			BufferRef buf2(buf);
+			if (buf2.Length > b.Length) buf2.Clip(buf2.Length - b.Length, b.Length);
+			Int wpos((rpos + len) % b.Length);
+			Int l2(b.Length - wpos);
+			if (l2 > buf2.Length) l2 = buf2.Length;
+			memcpy(b.Data + wpos, buf2.Data, l2);
+			if ((wpos = (wpos + l2)) >= b.Length) {
+				memcpy(b.Data, buf2.Data + l2, buf2.Length - l2);
+				wpos = buf2.Length - l2;
+			}
+			len += buf2.Length;
+			if (len > b.Length) len = b.Length;
+			rpos = modulus(wpos - len, b.Length);
+		}
+		virtual Int Write(Stream& s, Int length)
+		{
+			//BufferRef buf2(buf);
+			if (length > b.Length) s.Skip(length - b.Length);
+			Int wpos((rpos + len) % b.Length);
+			Int l2(b.Length - wpos);
+			if (l2 > length) l2 = length;
+			//memcpy(b.Data + wpos, buf2.Data, l2);
+			Int br = s.Fill(b.SubBuffer(wpos, l2));
+			if (br < l2) {
+				length -= (l2 - br);
+				l2 = br;
+			}
+			if ((wpos = (wpos + l2)) >= b.Length) {
+				//memcpy(b.Data, buf2.Data + l2, buf2.Length - l2);
+				wpos = s.Fill(b.SubBuffer(0, length - l2));
+				if (wpos < (length - l2)) len -= (length - l2) - wpos; //compensate for buffer short-read
+				//wpos = length - l2;
+			}
+			len += length;
+			if (len > b.Length) len = b.Length;
+			rpos = modulus(wpos - len, b.Length);
+			return length;
+		}
+		virtual void Flush()
+		{
+		}
+		virtual void Close()
+		{
+		}
+		virtual void Seek(Long n, SeekFrom from = SeekFrom::Begin)
+		{
+		}
+		virtual Long Position()
+		{
+			return 0;
+		}
+		virtual Long Length(Long newlen = -1)
+		{
+			if (newlen >= 0 && newlen < len) {
+				rpos = (rpos + len - newlen) % b.Length;
+				len = newlen;
+			}
+			return len;
+		} //set or get length
+		virtual Cap Capabilities()
+		{
+			return Cap::ReadWrite | Cap::Length;
+		}
+		struct iterator
+		{
+			CircularStream& s;
+			Int pos;
+			iterator(CircularStream& s, Int pos) :
+					s(s), pos(pos)
+			{
+			}
+			inline Byte operator*()
+			{
+				return s.b.Data[pos % s.b.Length];
+			}
+			inline void operator++(int i)
+			{
+				pos = (pos + 1) % (s.b.Length * 2);
+			}
+			inline void operator--(int i)
+			{
+				if (--pos < 0) pos += (s.b.Length * 2);
+			}
+			inline bool operator==(const iterator& other)
+			{
+				return pos == other.pos;
+			}
+			inline bool operator!=(const iterator& other)
+			{
+				return pos != other.pos;
+			}
+			inline iterator operator+(int i)
+			{
+				return {s,(pos+i)%(s.b.Length*2)};
+			}
+			inline iterator operator-(int i)
+			{
+				return {s,modulus(pos-i,s.b.Length*2)};
+			}
+			inline void operator+=(int i)
+			{
+				pos = (pos + i) % (s.b.Length * 2);
+			}
+			inline void operator-=(int i)
+			{
+				pos = modulus(pos - i, s.b.Length * 2);
+			}
+		};
+		inline iterator begin()
+		{
+			return {*this,rpos};
+		}
+		inline iterator end()
+		{
+			return {*this,(rpos+len)%(b.Length*2)};
+		}
+		void Clip(const iterator& begin, const iterator& end)
+		{
+			if (begin.pos % b.Length > rpos) rpos = begin.pos % b.Length;
+			//Int tmp_l = modulus(end.pos - begin.pos, b.Length * 2);
+			Int endpos = (rpos + len) % (b.Length * 2);
+			if (end.pos < endpos) len = modulus(end.pos - rpos, b.Length * 2);
+		}
+		void GetData(const iterator& begin, const iterator& end, Stream& s)
+		{
+			Int l = modulus(end.pos - begin.pos, b.Length * 2);
+			Int p = begin.pos % b.Length;
+			//Int l(length);
+			Int l2;
+			if (l <= 0) return;
+			l2 = b.Length - p;
+			if (l2 > l) l2 = l;
+			//memcpy(buf.Data, b.Data + rpos, l2);
+			s.Write(b.SubBuffer(p, l2));
+			p += l2;
+			if (p >= b.Length) {
+				//memcpy(buf.Data + l2, b.Data, l - l2);
+				s.Write(b.SubBuffer(0, l - l2));
+			}
+		}
+	};
+	inline Long Splice(Stream& from, CircularStream& to, Long c)
+	{
+		return to.Write(from, c);
+	}
+	inline Long Splice(CircularStream& from, Stream& to, Long c)
+	{
+		return from.Read(to, c);
+	}
 	template<class T, class Allocator = allocator<T> > class vectorlist
 	{
 	public:
