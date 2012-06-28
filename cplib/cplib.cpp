@@ -69,6 +69,7 @@ namespace xaxaxa
 	}
 	StreamReaderWriter::~StreamReaderWriter()
 	{
+		Close();
 		free(buf);
 	}
 	int StreamReaderWriter::Read(const BufferRef& buf)
@@ -409,6 +410,11 @@ namespace xaxaxa
 	/////////////////////////////////////////////////////////
 	StringBuilder::StringBuilder(int initsize) :
 			buf(initsize), Capacity(initsize), length(0), position(0)
+	{
+		//this->buf = malloc(initsize);
+	}
+	StringBuilder::StringBuilder(const Buffer& b) :
+			buf(b), Capacity(b.Length), length(0), position(0)
 	{
 		//this->buf = malloc(initsize);
 	}

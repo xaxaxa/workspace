@@ -145,15 +145,15 @@ namespace xaxaxa
 //typedef void* Function;
 	typedef volatile int atomic_t;
 #define atomic_read(v)                  v
-#define	atomic_set(v,i)                 v = i
-#define	atomic_add(i,v)                 v += i
-#define	atomic_sub(i,v)                 v -= i
-#define	atomic_sub_and_test(i,v)        (v -= i) == 0
-#define	atomic_inc(v)                   v++
-#define	atomic_dec(v)                   v--
-#define	atomic_dec_and_test(v)          --v == 0
-#define	atomic_inc_and_test(v)          ++v == 0
-#define	atomic_add_negative(i,v)        (v += i) < 0
+#define atomic_set(v,i)                 v = i
+#define atomic_add(i,v)                 v += i
+#define atomic_sub(i,v)                 v -= i
+#define atomic_sub_and_test(i,v)        (v -= i) == 0
+#define atomic_inc(v)                   v++
+#define atomic_dec(v)                   v--
+#define atomic_dec_and_test(v)          --v == 0
+#define atomic_inc_and_test(v)          ++v == 0
+#define atomic_add_negative(i,v)        (v += i) < 0
 	template<class SIGNATURE> struct Delegate;
 	template<class RET, class ... ARGS> struct Delegate<RET(ARGS...)>
 	{
@@ -1113,10 +1113,15 @@ namespace xaxaxa
 		virtual int GetFileDesc()=0;
 		virtual void Trigger(event_t events)=0;
 	};
+	class TextWriter: public Stream
+	{
+
+	};
 	class StringBuilder: public Stream
 	{
 	public:
 		StringBuilder(int initsize = 4096);
+		StringBuilder(const Buffer& b);
 		virtual ~StringBuilder();
 		virtual Cap Capabilities()
 		{
@@ -1548,6 +1553,7 @@ namespace xaxaxa
 		{	return c;}
 	};
 #endif
+
 	class StreamReaderWriter: public Stream
 	{
 	public:
@@ -1628,11 +1634,15 @@ namespace xaxaxa
 			return Read(buf, delim, 2);
 			//return Read(buf, "\r\n", 2);
 		}
-		int ReadLine(string s)
+		int ReadLine(string& s)
 		{
-			struct :public Stream
+			struct asdf: public Stream
 			{
-				string s;
+				string& s;
+				asdf(string& s) :
+						s(s)
+				{
+				}
 				virtual int Read(const BufferRef& buf)
 				{
 					return 0;
@@ -1647,8 +1657,7 @@ namespace xaxaxa
 				virtual void Close()
 				{
 				}
-			} tmp;
-			tmp.s = s;
+			} tmp(s);
 			return ReadLine(tmp);
 		}
 		virtual void Write(const BufferRef& buf);
@@ -1756,16 +1765,46 @@ namespace xaxaxa
 		s.Write(x);
 		return s;
 	}
-	template<class S, class X> inline S& operator<<(S& os, const vector<X>& dt)
+	template<class S, class X> inline S& operator<<(S&& os, const vector<X>& dt)
 	{
-		os << "[";
+		os << "vector[";
 		bool notfirst = false;
-		for (typename vector<X>::const_iterator it = dt.begin(); it != dt.end(); it++)
-			(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		for (auto it = dt.begin(); it != dt.end(); it++)
+		(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		os << "]";
+		return os;
+	}
+	template<class S, class X> inline S& operator<<(S&& os, const list<X>& dt)
+	{
+		os << "list[";
+		bool notfirst = false;
+		for (auto it = dt.begin(); it != dt.end(); it++)
+		(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		os << "]";
+		return os;
+	}
+	template<class S, class X> inline S& operator<<(S&& os, const set<X>& dt)
+	{
+		os << "set[";
+		bool notfirst = false;
+		for (auto it = dt.begin(); it != dt.end(); it++)
+		(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
 		os << "]";
 		return os;
 	}
 
+	template<class T> inline T& operator<<(T& out, void* obj)
+	{
+		out << "&{...}";
+		return out;
+	}
+	template<class T, class X> T& operator<<(T& out, X* obj)
+	{
+		out << "&(";
+		out << *obj;
+		out << ')';
+		return out;
+	}
 	class BitArray64
 	{
 	public:
