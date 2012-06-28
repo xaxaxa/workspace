@@ -94,10 +94,10 @@
 		inline NAME(RETVAL(*f)(void*,__VA_ARGS__))\
 		{__id=rand();this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
 		this->obj=NULL;}\
-		inline NAME(const function<RETVAL(void*,__VA_ARGS__)>& func)\
+		inline NAME(const std::function<RETVAL(void*,__VA_ARGS__)>& func)\
 		{__id=rand();f=func;\
 		this->obj=NULL;}\
-		inline NAME(const function<RETVAL(void*,__VA_ARGS__)>& func, void* obj)\
+		inline NAME(const std::function<RETVAL(void*,__VA_ARGS__)>& func, void* obj)\
 		{__id=rand();f=func;\
 		this->obj=obj;}\
 		inline NAME(){}\
@@ -429,9 +429,9 @@ namespace xaxaxa
 	}
 
 //creates a new instance, but disowns it
-	template<class T, class ... ARGS> T* newobj(ARGS&& ... args)
+	template<class T, class ... ARGS> T* newobj(ARGS&&... args)
 	{
-		T* tmp = new T(std::forward<ARGS...>(args...));
+		T* tmp = new T(std::forward<ARGS>(args)...);
 		tmp->RefCount = 0;
 		return tmp;
 	}
