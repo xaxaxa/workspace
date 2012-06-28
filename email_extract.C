@@ -165,18 +165,20 @@ int main(int ac, char** av)
 	StandardStream ss;
 	StreamReader sr(ss);
 	StreamWriter sw(ss);
-	Buffer b(4096);
+	Buffer b(1024*16);
 	int br;
 	email_finder f;
-	f.email_found=[&sw](const Buffer& e)
+	bool b1(false);
+	f.email_found=[&](const Buffer& e)
 	{
 		sw.WriteLine(e);
 		sw.Flush();
+		b1=true;
 	};
 	while((br=ss.Read(b))>0)
 	{
 		f.ProcessBuffer(b.SubBuffer(0,br));
 	}
-	
+	return b1?0:2;
 }
 

@@ -1,9 +1,10 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Main.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="../webshell/Default.aspx">
     <Files>
-      <File FileName="Main.cs" Line="219" Column="29" />
-      <File FileName="../webshell/Default.aspx" Line="20" Column="20" />
+      <File FileName="Main.cs" Line="597" Column="22" />
+      <File FileName="../webshell/Default.aspx" Line="28" Column="1" />
+      <File FileName="../webshell/Default.aspx.cs" Line="9" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

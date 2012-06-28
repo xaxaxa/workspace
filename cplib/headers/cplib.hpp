@@ -1798,13 +1798,13 @@ namespace xaxaxa
 		out << "&{...}";
 		return out;
 	}
-	template<class T, class X> T& operator<<(T& out, X* obj)
+	/*template<class T, class X> T& operator<<(T& out, X* obj)
 	{
 		out << "&(";
 		out << *obj;
 		out << ')';
 		return out;
-	}
+	}*/
 	class BitArray64
 	{
 	public:

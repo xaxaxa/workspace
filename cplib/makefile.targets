@@ -1,7 +1,7 @@
 install:
 	pwd
-	cp -af "./libcplib.so" "/usr/local/lib/"
+	cp -rf "./libcplib.so" "/usr/local/lib/"
 	rm -rf "/usr/local/include/cplib"
-	cp -af "../headers" "/usr/local/include/cplib"
+	cp -rf "../headers" "/usr/local/include/cplib"
 	chown -R root:root "/usr/local/include/cplib" "/usr/local/lib/libcplib.so"
 
