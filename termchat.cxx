@@ -205,24 +205,36 @@ Socket sock(AF_UNIX,SOCK_STREAM,0);
 int main(int argc,char** argv)
 {
 	signal(SIGCHLD,SIG_IGN);
+	bool anon_sock=true;
 	const char* name=def_name;
 	if(argc<2)goto asdf;
+	if(strcmp(argv[1],"-f")==0)
+	{
+		if(argc>2)name=argv[2];
+		anon_sock=false;
+		goto asdf;
+	}
 	name=argv[1];
 asdf:
-	setlocale(LC_ALL,"");
-	int namelen=strlen(name);
-	char name1[strlen(name)+1];
-	memcpy(name1+1,name,namelen);
-	name1[0]='\0';
+//	setlocale(LC_ALL,"");
+	char* name1;
+	if(anon_sock)
+	{
+		int namelen=strlen(name);
+		name1=new char[strlen(name)+1];
+		memcpy(name1+1,name,namelen);
+		name1[0]='\0';
+	}
+	else name1=(char*)name;
 	{
 		int tmp=fork();
 		if(tmp==0)
 		{//child
 			//supress stdout
 			int out_fd=open("/dev/null",O_RDWR);
-			dup2(out_fd,0);
-			dup2(out_fd,1);
-			dup2(out_fd,2);
+//			dup2(out_fd,0);
+//			dup2(out_fd,1);
+//			dup2(out_fd,2);
 			setsid();
 			try{
 				Socket sock(AF_UNIX,SOCK_STREAM,0);

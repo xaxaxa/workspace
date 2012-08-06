@@ -47,8 +47,8 @@ using namespace xaxaxa;
 
 void cb(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
 void cb1(u_char *user, const pcap_pkthdr *header, const u_char *bytes);
-void cb2(void* user, const packet& p);
-void cb3(void* user, const packet& p);
+void cb2(void* user, const protocols::Event& e);
+void cb3(void* user, const protocols::Event& e);
 protostack pstack;
 int linktype;
 protocols::protoint* p_int;
@@ -151,12 +151,12 @@ void processPacket(Buffer b)
 {
 	if(p_int==NULL)
 	{
-		packet p={NULL,0x0800,NULL,b,NULL};
+		packet p={NULL,NULL,b,0x0800};
 		pstack.processPacket(p);
 	}
 	else
 	{
-		packet p={NULL,linktype,NULL,b,NULL};
+		packet p={NULL,NULL,b,linktype};
 		p_int->putdata(p);
 	}
 }
@@ -180,10 +180,14 @@ void* processorThread(void* v)
 	return NULL;
 }
 
-void cb2(void* user, const packet& p)
+void cb2(void* user, const protocols::Event& e)
 {
 	//from datalink processor
-	pstack.processPacket(p);
+	if(e.Type!=protocols::EventType::Data)
+		return;
+	const protocols::DataEvent& e1
+		= (const protocols::DataEvent&)e;
+	pstack.processPacket(e1.Data);
 }
 Int newfilen=0;
 char* getNewFile()
@@ -202,19 +206,25 @@ char* getNewFile()
 
 map<connection_ptr,int> files;
 typedef map<connection_ptr,int>::iterator files_iter;
-void cb3(void* user, const packet& p)
+void cb3(void* user, const protocols::Event& e)
 {
 	//from protocol stack
-	
+	WARN(5,"event received; type=" << protocols::EventType_[(int)e.Type]);
+	if(e.Type!=protocols::EventType::DataWithConnection)
+		return;
+	const protocols::DataEventWithConnection& e1
+		= (const protocols::DataEventWithConnection&)e;
+	const packet& p=e1.Data;
 	//get connection
-	connection_ptr conn;
-	const packet* pack=&p;
-	while(true)
+	connection_ptr conn{(connection*)&e1.Connection};
+	//const packet* pack=&p;
+	
+	/*while(true)
 	{
 		if(pack->protocol->getConnection(p,conn))break;
 		pack=pack->parent;
 		if(pack==NULL || pack->protocol==NULL)return;
-	}
+	}*/
 	//write(1,p.data.Data,p.data.Length);
 	files_iter it=files.find(conn);
 	int file;

@@ -334,25 +334,30 @@ namespace wave_lib3
 	//compatibility layer
 	public class format_wrapper
 	{
-		public uint channels=2;
-		public uint srate=44100;
-		public ushort bits=16;
+		public uint channels = 2;
+		public uint srate = 44100;
+		public ushort bits = 16;
+
 		public int nAvgBytesPerSec {
 			get {
 				return (int)(srate * bits / 8 * channels);
 			}
 		}
 	}
+
 	public unsafe class WaveOut
 	{
 		//public delegate uint wave_callback (byte* buf,uint length);
 		public wave_lib2.WaveOut.wave_callback Callback, event_onPlayBuffer;
+
 		public event wave_lib2.WaveOut.OnPlayBuffer_d OnPlayBuffer;
 		public event wave_lib.PlayBufferDelegate BeforePlayBuffer;
 		public event wave_lib.PlayBufferDelegate AfterPlayBuffer;
-		public System.IO.Stream src=null;
+
+		public System.IO.Stream src = null;
 		private short[] tmp_b;
-		public format_wrapper format=new format_wrapper();
+		public format_wrapper format = new format_wrapper ();
+
 		private unsafe uint _onPlayBuffer (byte* _buf, uint length)
 		{
 			short* buf = (short*)_buf;
@@ -370,7 +375,8 @@ namespace wave_lib3
 				}
 
 			}
-			if(OnPlayBuffer!=null)OnPlayBuffer (tmp_b);
+			if (OnPlayBuffer != null)
+				OnPlayBuffer (tmp_b);
 			return 0;
 		}
 
@@ -378,21 +384,24 @@ namespace wave_lib3
 		{
 			event_onPlayBuffer = _onPlayBuffer;
 		}
-
 		
 		public IntPtr pcm;
 		public bool _open = false;
-		public int bs,buffers;
+		public int bs, buffers;
+		System.Threading.Thread th = null;
+
 		public WaveOut (int buffers=0, int buffersize=4096)
 		{
 			bs = buffersize;
 			this.buffers = buffers;
 		}
+
 		public void ReallocBuffer (int buffers=0, int buffersize=4096)
 		{
 			bs = buffersize;
 			this.buffers = buffers;
 		}
+
 		public void Open ()
 		{
 			
@@ -402,22 +411,26 @@ namespace wave_lib3
 		{
 			
 		}
+
 		public void Pause ()
 		{
 			WaveNative.snd_pcm_pause (pcm, 1);
 		}
+
 		public void Resume ()
 		{
 			WaveNative.snd_pcm_pause (pcm, 0);
 		}
+
 		public void Play ()
 		{
 			Start ();
 		}
+
 		public void Start ()
 		{
 			if (_open)
-				Close ();
+				Stop ();
 			_open = true;
 			WaveNative.snd_pcm_open (out pcm, "default", WaveNative.snd_pcm_stream_t.SND_PCM_STREAM_PLAYBACK, 0);
 			IntPtr param;
@@ -447,7 +460,7 @@ namespace wave_lib3
 			WaveNative.snd_pcm_hw_params (pcm, param);
 			WaveNative.snd_pcm_hw_params_free (param);
 			WaveNative.snd_pcm_prepare (pcm);
-			System.Threading.Thread th = new System.Threading.Thread (thr1);
+			th = new System.Threading.Thread (thr1);
 			th.Priority = System.Threading.ThreadPriority.Highest;
 			th.Start ();
 		}
@@ -456,8 +469,16 @@ namespace wave_lib3
 		{
 			if (!_open)
 				return;
-			WaveNative.snd_pcm_close (pcm);
+			//WaveNative.snd_pcm_close (pcm);
 			_open = false;
+			if (th != null) {
+				try {
+					th.Join (2000);
+				} catch {
+					
+				}
+				th = null;
+			}
 		}
 
 		public void thr1 ()
@@ -465,6 +486,7 @@ namespace wave_lib3
 			byte[] buf = new byte[bs * (format.bits / 8) / format.channels];//new byte[(int)(srate * 0.1 * channels * bits / 8)];//100ms buffer
 			wave_lib.WaveBuffer wb = new wave_lib.WaveBuffer (buf, buf.Length);
 			fixed(byte* bufp=buf)
+			{
 				while (_open) {
 					if (src == null)
 						Callback (bufp, (uint)(buf.Length / (format.bits / 8) / format.channels));
@@ -486,12 +508,18 @@ namespace wave_lib3
 						event_onPlayBuffer (bufp, (uint)buf.Length);
 					if (AfterPlayBuffer != null)
 						AfterPlayBuffer (wb);
+				
 				}
+				WaveNative.snd_pcm_drop (pcm);
+				WaveNative.snd_pcm_close (pcm);
+			}
 		}
+
 		public void SetFormat (int sampleRate, int bits, int channels)
 		{
 			InitFormat ((uint)channels, (uint)sampleRate, (ushort)bits);
 		}
+
 		public void InitFormat (uint channels, uint sampleRate, ushort bitsPerSample)
 		{
 			format.channels = channels;

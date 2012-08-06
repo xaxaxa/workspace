@@ -362,9 +362,9 @@ void do_load(Stream& fs)
 		c->queue_draw();
 		update_fft();
 	}
-	catch(Exception& ex)
-	{
-	}
+	catch(Exception& ex) {}
+	catch(exception& ex) {}
+	catch(Glib::Exception& ex) {}
 }
 
 void loadfile();
@@ -380,6 +380,8 @@ void load()
 		do_load(fs);
 		fs.Close();
 	} catch(Exception& ex) {}
+	catch(exception& ex) {}
+	catch(Glib::FileError& ex) {}
 }
 
 void saveas()

@@ -2,6 +2,10 @@
 *.o
 *.gch
 *.so
+*.exe
+*.dll
+*.mdb
+*.pidb
 a.out
 *~
 sdfs/cplib

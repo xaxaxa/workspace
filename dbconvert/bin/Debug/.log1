@@ -1,0 +1,1389 @@
+execve("/usr/bin/mono", ["mono", "dbconvert.exe"], [/* 18 vars */]) = 0
+brk(0)                                  = 0x181e000
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3149000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY)      = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=37595, ...}) = 0
+mmap(NULL, 37595, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd313f000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\360>\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=538928, ...}) = 0
+mmap(NULL, 2633960, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd2ca7000
+mprotect(0x7fabd2d2a000, 2093056, PROT_NONE) = 0
+mmap(0x7fabd2f29000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x82000) = 0x7fabd2f29000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200!\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=31752, ...}) = 0
+mmap(NULL, 2129016, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd2a9f000
+mprotect(0x7fabd2aa6000, 2093056, PROT_NONE) = 0
+mmap(0x7fabd2ca5000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x7fabd2ca5000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340\r\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=14768, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd313e000
+mmap(NULL, 2109704, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd289b000
+mprotect(0x7fabd289d000, 2097152, PROT_NONE) = 0
+mmap(0x7fabd2a9d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2000) = 0x7fabd2a9d000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0Pl\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=135500, ...}) = 0
+mmap(NULL, 2212920, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd267e000
+mprotect(0x7fabd2696000, 2093056, PROT_NONE) = 0
+mmap(0x7fabd2895000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x17000) = 0x7fabd2895000
+mmap(0x7fabd2897000, 13368, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fabd2897000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 \24\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=1677624, ...}) = 0
+mmap(NULL, 3793768, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd22df000
+mprotect(0x7fabd2474000, 2093056, PROT_NONE) = 0
+mmap(0x7fabd2673000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x194000) = 0x7fabd2673000
+mmap(0x7fabd2678000, 21352, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fabd2678000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd313d000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd313b000
+arch_prctl(ARCH_SET_FS, 0x7fabd313b760) = 0
+mprotect(0x7fabd2673000, 16384, PROT_READ) = 0
+mprotect(0x7fabd2895000, 4096, PROT_READ) = 0
+mprotect(0x7fabd2a9d000, 4096, PROT_READ) = 0
+mprotect(0x7fabd2ca5000, 4096, PROT_READ) = 0
+mprotect(0x7fabd2f29000, 4096, PROT_READ) = 0
+mprotect(0x8df000, 4096, PROT_READ)     = 0
+mprotect(0x7fabd314b000, 4096, PROT_READ) = 0
+munmap(0x7fabd313f000, 37595)           = 0
+set_tid_address(0x7fabd313ba30)         = 20008
+set_robust_list(0x7fabd313ba40, 0x18)   = 0
+futex(0x7fff446efedc, FUTEX_WAKE_PRIVATE, 1) = 0
+futex(0x7fff446efedc, FUTEX_WAIT_BITSET_PRIVATE|FUTEX_CLOCK_REALTIME, 1, NULL, 7fabd313b760) = -1 EAGAIN (Resource temporarily unavailable)
+rt_sigaction(SIGRTMIN, {0x7fabd26846c0, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, NULL, 8) = 0
+rt_sigaction(SIGRT_1, {0x7fabd2684750, [], SA_RESTORER|SA_RESTART|SA_SIGINFO, 0x7fabd268e060}, NULL, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [RTMIN RT_1], NULL, 8) = 0
+getrlimit(RLIMIT_STACK, {rlim_cur=10240*1024, rlim_max=RLIM_INFINITY}) = 0
+brk(0)                                  = 0x181e000
+brk(0x183f000)                          = 0x183f000
+access("/proc/self/maps", F_OK)         = 0
+mmap(NULL, 4096, PROT_READ, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x40234000
+mmap(NULL, 4096, PROT_READ, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x41c10000
+mprotect(0x41c10000, 4096, PROT_NONE)   = 0
+mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x40e31000
+access("/proc/xen", F_OK)               = -1 ENOENT (No such file or directory)
+open("/proc/self/maps", O_RDONLY)       = 3
+getrlimit(RLIMIT_STACK, {rlim_cur=10240*1024, rlim_max=RLIM_INFINITY}) = 0
+fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3148000
+read(3, "00400000-006df000 r-xp 00000000 "..., 1024) = 1024
+read(3, "0 09:7f 522983                  "..., 1024) = 1024
+read(3, "-7fabd2ca5000 ---p 00007000 09:7"..., 1024) = 1024
+read(3, "/lib/x86_64-linux-gnu/ld-2.13.so"..., 1024) = 384
+close(3)                                = 0
+munmap(0x7fabd3148000, 4096)            = 0
+sched_getaffinity(20008, 32, {3, 0, 0, 0}) = 32
+mprotect(0x7fff43cf3000, 32768, PROT_NONE) = -1 ENOMEM (Cannot allocate memory)
+mmap(0x7fff43cf3000, 32768, PROT_NONE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fff43cf3000
+mmap(NULL, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3145000
+sigaltstack({ss_sp=0x7fabd3145000, ss_flags=SS_ONSTACK, ss_size=16384}, NULL) = 0
+rt_sigaction(SIGFPE, {0x41af80, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGQUIT, {0x4e55b0, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGILL, {0x41b060, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGBUS, {0x41b080, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGRT_3, NULL, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGRT_3, {0x4e4f30, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [RT_3], NULL, 8) = 0
+rt_sigaction(SIGPIPE, {SIG_IGN, [PIPE], SA_RESTORER|SA_RESTART, 0x7fabd2315420}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGABRT, {0x4e54c0, [], SA_RESTORER|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+rt_sigaction(SIGSEGV, {0x41b080, [RT_3], SA_RESTORER|SA_STACK|SA_SIGINFO, 0x7fabd268e060}, {SIG_DFL, [], 0}, 8) = 0
+open("/dev/shm/", O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC) = 3
+fcntl(3, F_GETFD)                       = 0x1 (flags FD_CLOEXEC)
+getdents(3, /* 5 entries */, 32768)     = 144
+kill(19999, SIG_0)                      = -1 ESRCH (No such process)
+statfs("/dev/shm/", {f_type=0x1021994, f_bsize=4096, f_blocks=375000, f_bfree=374997, f_bavail=374997, f_files=375000, f_ffree=374996, f_fsid={0, 0}, f_namelen=255, f_frsize=4096}) = 0
+futex(0x7fabd2ca6360, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+unlink("/dev/shm/mono.19999")           = 0
+kill(6923, SIG_0)                       = -1 EPERM (Operation not permitted)
+kill(6791, SIG_0)                       = -1 EPERM (Operation not permitted)
+getdents(3, /* 0 entries */, 32768)     = 0
+close(3)                                = 0
+open("/dev/shm/mono.20008", O_RDWR|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC, 0640) = 3
+fcntl(3, F_GETFD)                       = 0x1 (flags FD_CLOEXEC)
+ftruncate(3, 4096)                      = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_SHARED, 3, 0) = 0x7fabd3144000
+close(3)                                = 0
+open("/proc/self/maps", O_RDONLY)       = 3
+getrlimit(RLIMIT_STACK, {rlim_cur=10240*1024, rlim_max=RLIM_INFINITY}) = 0
+fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3143000
+read(3, "00400000-006df000 r-xp 00000000 "..., 1024) = 1024
+read(3, "0 09:7f 522983                  "..., 1024) = 1024
+read(3, "-7fabd2ca5000 ---p 00007000 09:7"..., 1024) = 1024
+read(3, "/dev/shm/mono.20008\n7fabd3145000"..., 1024) = 575
+close(3)                                = 0
+munmap(0x7fabd3143000, 4096)            = 0
+sched_getaffinity(20008, 32, {3, 0, 0, 0}) = 32
+rt_sigaction(SIGPWR, {0x5da570, ~[INT QUIT ABRT TERM RTMIN RT_1], SA_RESTORER|SA_RESTART, 0x7fabd268e060}, NULL, 8) = 0
+rt_sigaction(SIGXCPU, {0x5da500, ~[INT QUIT ABRT TERM RTMIN RT_1], SA_RESTORER|SA_RESTART, 0x7fabd268e060}, NULL, 8) = 0
+open("/proc/stat", O_RDONLY)            = 3
+read(3, "cpu  40432 0 10282 10913123 5972"..., 4096) = 215
+close(3)                                = 0
+mmap(NULL, 10489856, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0) = 0x7fabd18de000
+mprotect(0x7fabd18de000, 4096, PROT_NONE) = 0
+clone(Process 20009 attached
+child_stack=0x7fabd22ddf90, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tidptr=0x7fabd22de9d0, tls=0x7fabd22de700, child_tidptr=0x7fabd22de9d0) = 20009
+[pid 20008] mmap(NULL, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+[pid 20009] set_robust_list(0x7fabd22de9e0, 0x18 <unfinished ...>
+[pid 20008] <... mmap resumed> )        = 0x7fabd312b000
+[pid 20009] <... set_robust_list resumed> ) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 1, NULL <unfinished ...>
+[pid 20008] mmap(0x7fabd313b000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd311b000
+[pid 20008] mmap(0x7fabd312b000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd310b000
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 2) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 3, NULL <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 4) = 1
+[pid 20008] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 5, NULL <unfinished ...>
+[pid 20008] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 6) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] readlink("/proc/self/exe",  <unfinished ...>
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 7, NULL <unfinished ...>
+[pid 20008] <... readlink resumed> "/usr/bin/mono", 4095) = 13
+[pid 20008] clock_getres(CLOCK_MONOTONIC, {0, 1}) = 0
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 8) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] mmap(0x7fabd311b000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20008] <... mmap resumed> )        = 0x7fabd30fb000
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 9, NULL <unfinished ...>
+[pid 20008] open("dbconvert.exe.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] getcwd("/srv/bw3/dbconvert/bin/Debug", 32) = 29
+[pid 20008] open("dbconvert.exe", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0755, st_size=7168, ...}) = 0
+[pid 20008] mmap(NULL, 7168, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd30f9000
+[pid 20008] readlink("dbconvert.exe", 0x7fff446eeb50, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] getcwd("/srv/bw3/dbconvert/bin/Debug", 32) = 29
+[pid 20008] close(3)                    = 0
+[pid 20008] open("/usr/lib/mono/4.0/mscorlib.dll", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=2862592, ...}) = 0
+[pid 20008] mmap(NULL, 2862592, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd1623000
+[pid 20008] readlink("/usr", 0x7fff446eeac0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib", 0x7fff446eeac0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono", 0x7fff446eeac0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/4.0", 0x7fff446eeac0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/4.0/mscorlib.dll", 0x7fff446eeac0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] close(3)                    = 0
+[pid 20008] futex(0x7fabd2a9e0b0, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+[pid 20008] open("/usr/lib/mono/4.0/mscorlib.dll.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/4.0/mscorlib.dll.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/4.0/mscorlib.dll.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] getuid()                    = 1000
+[pid 20008] socket(PF_FILE, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0) = 3
+[pid 20008] connect(3, {sa_family=AF_FILE, path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
+[pid 20008] close(3)                    = 0
+[pid 20008] socket(PF_FILE, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0) = 3
+[pid 20008] connect(3, {sa_family=AF_FILE, path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
+[pid 20008] close(3)                    = 0
+[pid 20008] open("/etc/nsswitch.conf", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=475, ...}) = 0
+[pid 20008] mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3143000
+[pid 20008] read(3, "# /etc/nsswitch.conf\n#\n# Example"..., 4096) = 475
+[pid 20008] read(3, "", 4096)           = 0
+[pid 20008] close(3)                    = 0
+[pid 20008] munmap(0x7fabd3143000, 4096) = 0
+[pid 20008] open("/etc/ld.so.cache", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=37595, ...}) = 0
+[pid 20008] mmap(NULL, 37595, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd30ef000
+[pid 20008] close(3)                    = 0
+[pid 20008] access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/lib/x86_64-linux-gnu/libnss_compat.so.2", O_RDONLY) = 3
+[pid 20008] read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\23\0\0\0\0\0\0"..., 832) = 832
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=35712, ...}) = 0
+[pid 20008] mmap(NULL, 2131288, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd141a000
+[pid 20008] mprotect(0x7fabd1422000, 2093056, PROT_NONE) = 0
+[pid 20008] mmap(0x7fabd1621000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x7000) = 0x7fabd1621000
+[pid 20008] close(3)                    = 0
+[pid 20008] access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/lib/x86_64-linux-gnu/libnsl.so.1", O_RDONLY) = 3
+[pid 20008] read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0p@\0\0\0\0\0\0"..., 832) = 832
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=97256, ...}) = 0
+[pid 20008] mmap(NULL, 2202328, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd1200000
+[pid 20008] mprotect(0x7fabd1217000, 2093056, PROT_NONE) = 0
+[pid 20008] mmap(0x7fabd1416000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x16000) = 0x7fabd1416000
+[pid 20008] mmap(0x7fabd1418000, 6872, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fabd1418000
+[pid 20008] close(3)                    = 0
+[pid 20008] mprotect(0x7fabd1416000, 4096, PROT_READ) = 0
+[pid 20008] mprotect(0x7fabd1621000, 4096, PROT_READ) = 0
+[pid 20008] munmap(0x7fabd30ef000, 37595) = 0
+[pid 20008] open("/etc/ld.so.cache", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=37595, ...}) = 0
+[pid 20008] mmap(NULL, 37595, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd30ef000
+[pid 20008] close(3)                    = 0
+[pid 20008] access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/lib/x86_64-linux-gnu/libnss_nis.so.2", O_RDONLY) = 3
+[pid 20008] read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0` \0\0\0\0\0\0"..., 832) = 832
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=47696, ...}) = 0
+[pid 20008] mmap(NULL, 2143552, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd0ff4000
+[pid 20008] mprotect(0x7fabd0ffe000, 2097152, PROT_NONE) = 0
+[pid 20008] mmap(0x7fabd11fe000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xa000) = 0x7fabd11fe000
+[pid 20008] close(3)                    = 0
+[pid 20008] access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/lib/x86_64-linux-gnu/libnss_files.so.2", O_RDONLY) = 3
+[pid 20008] read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0`\"\0\0\0\0\0\0"..., 832) = 832
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=51736, ...}) = 0
+[pid 20008] mmap(NULL, 2148088, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fabd0de7000
+[pid 20008] mprotect(0x7fabd0df3000, 2093056, PROT_NONE) = 0
+[pid 20008] mmap(0x7fabd0ff2000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xb000) = 0x7fabd0ff2000
+[pid 20008] close(3)                    = 0
+[pid 20008] mprotect(0x7fabd0ff2000, 4096, PROT_READ) = 0
+[pid 20008] mprotect(0x7fabd11fe000, 4096, PROT_READ) = 0
+[pid 20008] munmap(0x7fabd30ef000, 37595) = 0
+[pid 20008] open("/etc/passwd", O_RDONLY|O_CLOEXEC) = 3
+[pid 20008] fcntl(3, F_GETFD)           = 0x1 (flags FD_CLOEXEC)
+[pid 20008] lseek(3, 0, SEEK_CUR)       = 0
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=1612, ...}) = 0
+[pid 20008] mmap(NULL, 1612, PROT_READ, MAP_SHARED, 3, 0) = 0x7fabd3143000
+[pid 20008] lseek(3, 1612, SEEK_SET)    = 1612
+[pid 20008] munmap(0x7fabd3143000, 1612) = 0
+[pid 20008] close(3)                    = 0
+[pid 20008] open("/etc/mono/assemblies/mscorlib/mscorlib.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] brk(0x1860000)              = 0x1860000
+[pid 20008] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x414bc000
+[pid 20008] open("/proc/stat", O_RDONLY|O_CLOEXEC) = 3
+[pid 20008] read(3, "cpu  40432 0 10283 10913124 5972"..., 8192) = 215
+[pid 20008] close(3)                    = 0
+[pid 20008] brk(0x1882000)              = 0x1882000
+[pid 20008] mmap(0x7fabd310b000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd30e9000
+[pid 20008] getrlimit(RLIMIT_NOFILE, {rlim_cur=1024, rlim_max=1024}) = 0
+[pid 20008] uname({sys="Linux", node="tmp1", ...}) = 0
+[pid 20008] uname({sys="Linux", node="tmp1", ...}) = 0
+[pid 20008] brk(0x18a5000)              = 0x18a5000
+[pid 20008] mmap(NULL, 262144, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd30a9000
+[pid 20008] mprotect(0x7fabd30a9000, 4096, PROT_READ|PROT_WRITE) = 0
+[pid 20008] mmap(0x7fabd30f9000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3099000
+[pid 20008] open("/proc/self/maps", O_RDONLY) = 3
+[pid 20008] getrlimit(RLIMIT_STACK, {rlim_cur=10240*1024, rlim_max=RLIM_INFINITY}) = 0
+[pid 20008] fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+[pid 20008] mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3143000
+[pid 20008] read(3, "00400000-006df000 r-xp 00000000 "..., 1024) = 1024
+[pid 20008] read(3, "fabd0ffe000 r-xp 00000000 09:7f "..., 1024) = 1024
+[pid 20008] read(3, "u/libnss_compat-2.13.so\n7fabd142"..., 1024) = 1024
+[pid 20008] read(3, "abd267e000 rw-p 00000000 00:00 0"..., 1024) = 1024
+[pid 20008] read(3, "974                     /lib/x86"..., 1024) = 1024
+[pid 20008] read(3, "fabd30e9000-7fabd30f9000 rw-p 00"..., 1024) = 910
+[pid 20008] close(3)                    = 0
+[pid 20008] munmap(0x7fabd3143000, 4096) = 0
+[pid 20008] sched_getaffinity(20008, 32, {3, 0, 0, 0}) = 32
+[pid 20008] brk(0x18c9000)              = 0x18c9000
+[pid 20008] brk(0x18c5000)              = 0x18c5000
+[pid 20008] brk(0x18c3000)              = 0x18c3000
+[pid 20008] mmap(NULL, 2101248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0) = 0x7fabd0be6000
+[pid 20008] mprotect(0x7fabd0be6000, 4096, PROT_NONE) = 0
+[pid 20008] clone(Process 20010 attached
+child_stack=0x7fabd0de5f90, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tidptr=0x7fabd0de69d0, tls=0x7fabd0de6700, child_tidptr=0x7fabd0de69d0) = 20010
+[pid 20010] set_robust_list(0x7fabd0de69e0, 0x18 <unfinished ...>
+[pid 20008] futex(0x7fabd30f8fd8, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20010] <... set_robust_list resumed> ) = 0
+[pid 20010] mmap(0x7fabd30a9000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3089000
+[pid 20010] futex(0x7fabd30f8fd8, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20008] <... futex resumed> )       = 0
+[pid 20010] futex(0x8ebce0, FUTEX_WAIT_PRIVATE, 2, NULL <unfinished ...>
+[pid 20008] futex(0x8ebce0, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20010] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20010] futex(0x8ebce0, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] open("/dev/null", O_RDWR <unfinished ...>
+[pid 20010] <... futex resumed> )       = 0
+[pid 20008] <... open resumed> )        = 3
+[pid 20008] close(3)                    = 0
+[pid 20010] sched_getaffinity(20010, 32, {3, 0, 0, 0}) = 32
+[pid 20008] open("/etc/mono/config", O_RDONLY <unfinished ...>
+[pid 20010] mprotect(0x7fabd0be7000, 32768, PROT_NONE <unfinished ...>
+[pid 20008] <... open resumed> )        = 3
+[pid 20008] fstat(3,  <unfinished ...>
+[pid 20010] <... mprotect resumed> )    = 0
+[pid 20010] mmap(NULL, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0 <unfinished ...>
+[pid 20008] <... fstat resumed> {st_mode=S_IFREG|0644, st_size=1777, ...}) = 0
+[pid 20010] <... mmap resumed> )        = 0x7fabd3085000
+[pid 20010] sigaltstack({ss_sp=0x7fabd3085000, ss_flags=SS_ONSTACK, ss_size=16384} <unfinished ...>
+[pid 20008] read(3, "<configuration>\n\t<dllmap dll=\"i:"..., 1777) = 1777
+[pid 20010] <... sigaltstack resumed> , NULL) = 0
+[pid 20008] close(3 <unfinished ...>
+[pid 20010] futex(0x8e9de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20008] <... close resumed> )       = 0
+[pid 20008] open("/home/user1/.mono/config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] getcwd("/srv/bw3/dbconvert/bin/Debug", 32) = 29
+[pid 20008] getcwd("/srv/bw3/dbconvert/bin/Debug", 32) = 29
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/etc/mono/assemblies/dbconvert/dbconvert.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] getcwd("/srv/bw3/dbconvert/bin/Debug", 32) = 29
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/policy.4.0.mscorlib/0.0.0.0__b77a5c561934e089/policy.4.0.mscorlib.dll", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/policy.4.0.System/0.0.0.0__b77a5c561934e089/policy.4.0.System.dll", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.dll", 0x7fff446ef0c0) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.exe", 0x7fff446ef0c0) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System/System.dll", 0x7fff446ef0c0) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System/System.exe", 0x7fff446ef0c0) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/System.dll", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=1746432, ...}) = 0
+[pid 20008] mmap(NULL, 1746432, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd0a3b000
+[pid 20008] readlink("/usr", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/System.dll", 0x7fff446ee0e0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] close(3)                    = 0
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/System.dll.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/System.dll.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/System.dll.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/etc/mono/assemblies/System/System.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] brk(0x18e5000)              = 0x18e5000
+[pid 20008] open("/usr/lib/mono/gac/policy.4.0.System.Configuration/0.0.0.0__b03f5f7f11d50a3a/policy.4.0.System.Configuration.dll", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Configuration.dll", 0x7fff446ee7f0) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Configuration.exe", 0x7fff446ee7f0) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Configuration/System.Configuration.dll", 0x7fff446ee7f0) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Configuration/System.Configuration.exe", 0x7fff446ee7f0) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System.Configuration/4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=124416, ...}) = 0
+[pid 20008] mmap(NULL, 124416, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd3066000
+[pid 20008] readlink("/usr", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System.Configuration", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System.Configuration/4.0.0.0__b03f5f7f11d50a3a", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System.Configuration/4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll", 0x7fff446ed810, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] close(3)                    = 0
+[pid 20008] open("/usr/lib/mono/gac/System.Configuration/4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System.Configuration/4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System.Configuration/4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/etc/mono/assemblies/System.Configuration/System.Configuration.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] brk(0x1906000)              = 0x1906000
+[pid 20008] open("/usr/lib/mono/gac/policy.4.0.System.Xml/0.0.0.0__b77a5c561934e089/policy.4.0.System.Xml.dll", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Xml.dll", 0x7fff446ee070) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Xml.exe", 0x7fff446ee070) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Xml/System.Xml.dll", 0x7fff446ee070) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/System.Xml/System.Xml.exe", 0x7fff446ee070) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System.Xml/4.0.0.0__b77a5c561934e089/System.Xml.dll", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=1272320, ...}) = 0
+[pid 20008] mmap(NULL, 1272320, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fabd0904000
+[pid 20008] readlink("/usr", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System.Xml", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System.Xml/4.0.0.0__b77a5c561934e089", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] readlink("/usr/lib/mono/gac/System.Xml/4.0.0.0__b77a5c561934e089/System.Xml.dll", 0x7fff446ed090, 4096) = -1 EINVAL (Invalid argument)
+[pid 20008] close(3)                    = 0
+[pid 20008] open("/usr/lib/mono/gac/System.Xml/4.0.0.0__b77a5c561934e089/System.Xml.dll.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System.Xml/4.0.0.0__b77a5c561934e089/System.Xml.dll.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System.Xml/4.0.0.0__b77a5c561934e089/System.Xml.dll.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/etc/mono/assemblies/System.Xml/System.Xml.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] brk(0x1928000)              = 0x1928000
+[pid 20008] brk(0x1925000)              = 0x1925000
+[pid 20008] brk(0x1921000)              = 0x1921000
+[pid 20008] brk(0x191e000)              = 0x191e000
+[pid 20008] brk(0x191c000)              = 0x191c000
+[pid 20008] brk(0x191a000)              = 0x191a000
+[pid 20008] brk(0x1918000)              = 0x1918000
+[pid 20008] brk(0x1916000)              = 0x1916000
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/libc.so.6", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/libc.so.6.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/libc.so.6.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] open("/usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/libc.so.6.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20008] uname({sys="Linux", node="tmp1", ...}) = 0
+[pid 20008] uname({sys="Linux", node="tmp1", ...}) = 0
+[pid 20008] brk(0x1937000)              = 0x1937000
+[pid 20008] brk(0x1935000)              = 0x1935000
+[pid 20008] brk(0x1934000)              = 0x1934000
+[pid 20008] brk(0x1932000)              = 0x1932000
+[pid 20008] mmap(0x7fabd3099000, 69632, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3055000
+[pid 20008] brk(0x1953000)              = 0x1953000
+[pid 20008] brk(0x1951000)              = 0x1951000
+[pid 20008] brk(0x194d000)              = 0x194d000
+[pid 20008] brk(0x194b000)              = 0x194b000
+[pid 20008] brk(0x1949000)              = 0x1949000
+[pid 20008] brk(0x1947000)              = 0x1947000
+[pid 20008] brk(0x1945000)              = 0x1945000
+[pid 20008] brk(0x1943000)              = 0x1943000
+[pid 20008] brk(0x1964000)              = 0x1964000
+[pid 20008] brk(0x1960000)              = 0x1960000
+[pid 20008] brk(0x195d000)              = 0x195d000
+[pid 20008] brk(0x195b000)              = 0x195b000
+[pid 20008] brk(0x1959000)              = 0x1959000
+[pid 20008] brk(0x1957000)              = 0x1957000
+[pid 20008] brk(0x1955000)              = 0x1955000
+[pid 20008] brk(0x1953000)              = 0x1953000
+[pid 20008] brk(0x1951000)              = 0x1951000
+[pid 20008] brk(0x194f000)              = 0x194f000
+[pid 20008] brk(0x194d000)              = 0x194d000
+[pid 20008] brk(0x194b000)              = 0x194b000
+[pid 20008] brk(0x1949000)              = 0x1949000
+[pid 20008] brk(0x1947000)              = 0x1947000
+[pid 20008] brk(0x1945000)              = 0x1945000
+[pid 20008] brk(0x1968000)              = 0x1968000
+[pid 20008] brk(0x1963000)              = 0x1963000
+[pid 20008] brk(0x1961000)              = 0x1961000
+[pid 20008] brk(0x195f000)              = 0x195f000
+[pid 20008] brk(0x195d000)              = 0x195d000
+[pid 20008] brk(0x195b000)              = 0x195b000
+[pid 20008] brk(0x1959000)              = 0x1959000
+[pid 20008] brk(0x1957000)              = 0x1957000
+[pid 20008] brk(0x1955000)              = 0x1955000
+[pid 20008] brk(0x1977000)              = 0x1977000
+[pid 20008] brk(0x1975000)              = 0x1975000
+[pid 20008] brk(0x1973000)              = 0x1973000
+[pid 20008] brk(0x1971000)              = 0x1971000
+[pid 20008] brk(0x196f000)              = 0x196f000
+[pid 20008] brk(0x196d000)              = 0x196d000
+[pid 20008] brk(0x196b000)              = 0x196b000
+[pid 20008] brk(0x1969000)              = 0x1969000
+[pid 20008] brk(0x1967000)              = 0x1967000
+[pid 20008] brk(0x1963000)              = 0x1963000
+[pid 20008] brk(0x1985000)              = 0x1985000
+[pid 20008] brk(0x1983000)              = 0x1983000
+[pid 20008] brk(0x1981000)              = 0x1981000
+[pid 20008] brk(0x197f000)              = 0x197f000
+[pid 20008] mmap(0x7fabd3066000, 94208, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd303e000
+[pid 20008] brk(0x19a3000)              = 0x19a3000
+[pid 20008] brk(0x199f000)              = 0x199f000
+[pid 20008] brk(0x199d000)              = 0x199d000
+[pid 20008] brk(0x199b000)              = 0x199b000
+[pid 20008] brk(0x1999000)              = 0x1999000
+[pid 20008] brk(0x1997000)              = 0x1997000
+[pid 20008] brk(0x1995000)              = 0x1995000
+[pid 20008] brk(0x19b6000)              = 0x19b6000
+[pid 20008] brk(0x19b4000)              = 0x19b4000
+[pid 20008] brk(0x19b2000)              = 0x19b2000
+[pid 20008] brk(0x1997000)              = 0x1997000
+[pid 20008] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x4165d000
+[pid 20008] stat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] lstat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] brk(0x19b8000)              = 0x19b8000
+[pid 20008] brk(0x19b7000)              = 0x19b7000
+[pid 20008] brk(0x19b5000)              = 0x19b5000
+[pid 20008] brk(0x19b3000)              = 0x19b3000
+[pid 20008] brk(0x19b1000)              = 0x19b1000
+[pid 20008] brk(0x19af000)              = 0x19af000
+[pid 20008] brk(0x19ad000)              = 0x19ad000
+[pid 20008] brk(0x19ab000)              = 0x19ab000
+[pid 20008] brk(0x19a9000)              = 0x19a9000
+[pid 20008] brk(0x19a7000)              = 0x19a7000
+[pid 20008] brk(0x19a5000)              = 0x19a5000
+[pid 20008] brk(0x19a3000)              = 0x19a3000
+[pid 20008] brk(0x19a1000)              = 0x19a1000
+[pid 20008] brk(0x199f000)              = 0x199f000
+[pid 20008] brk(0x199d000)              = 0x199d000
+[pid 20008] brk(0x199b000)              = 0x199b000
+[pid 20008] stat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] lstat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] stat("/etc/mono/4.0", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+[pid 20008] lstat("/etc/mono/4.0", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+[pid 20008] stat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] lstat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] stat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] lstat("/etc/mono/4.0/machine.config", {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] open("/etc/mono/4.0/machine.config", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=33313, ...}) = 0
+[pid 20008] brk(0x19bd000)              = 0x19bd000
+[pid 20008] brk(0x19bb000)              = 0x19bb000
+[pid 20008] brk(0x19b9000)              = 0x19b9000
+[pid 20008] brk(0x19b7000)              = 0x19b7000
+[pid 20008] brk(0x19b5000)              = 0x19b5000
+[pid 20008] brk(0x19b3000)              = 0x19b3000
+[pid 20008] brk(0x19b1000)              = 0x19b1000
+[pid 20008] brk(0x19af000)              = 0x19af000
+[pid 20008] brk(0x19ad000)              = 0x19ad000
+[pid 20008] brk(0x19cf000)              = 0x19cf000
+[pid 20008] brk(0x19cd000)              = 0x19cd000
+[pid 20008] brk(0x19cb000)              = 0x19cb000
+[pid 20008] brk(0x19c9000)              = 0x19c9000
+[pid 20008] brk(0x19c7000)              = 0x19c7000
+[pid 20008] brk(0x19c5000)              = 0x19c5000
+[pid 20008] brk(0x19c3000)              = 0x19c3000
+[pid 20008] brk(0x19c1000)              = 0x19c1000
+[pid 20008] brk(0x19bf000)              = 0x19bf000
+[pid 20008] brk(0x19bd000)              = 0x19bd000
+[pid 20008] brk(0x19bb000)              = 0x19bb000
+[pid 20008] brk(0x19b9000)              = 0x19b9000
+[pid 20008] brk(0x19b7000)              = 0x19b7000
+[pid 20008] brk(0x19b5000)              = 0x19b5000
+[pid 20008] brk(0x19b3000)              = 0x19b3000
+[pid 20008] brk(0x19b1000)              = 0x19b1000
+[pid 20008] brk(0x19af000)              = 0x19af000
+[pid 20008] brk(0x19ad000)              = 0x19ad000
+[pid 20008] read(3, "<?xml version=\"1.0\" encoding=\"ut"..., 8192) = 8192
+[pid 20008] brk(0x19ce000)              = 0x19ce000
+[pid 20008] brk(0x19cc000)              = 0x19cc000
+[pid 20008] brk(0x19c8000)              = 0x19c8000
+[pid 20008] brk(0x19c4000)              = 0x19c4000
+[pid 20008] brk(0x19c2000)              = 0x19c2000
+[pid 20008] brk(0x19c0000)              = 0x19c0000
+[pid 20008] brk(0x19be000)              = 0x19be000
+[pid 20008] brk(0x19bc000)              = 0x19bc000
+[pid 20008] brk(0x19de000)              = 0x19de000
+[pid 20008] brk(0x19d9000)              = 0x19d9000
+[pid 20008] brk(0x19d5000)              = 0x19d5000
+[pid 20008] brk(0x19d2000)              = 0x19d2000
+[pid 20008] brk(0x19d1000)              = 0x19d1000
+[pid 20008] brk(0x19cf000)              = 0x19cf000
+[pid 20008] brk(0x19cd000)              = 0x19cd000
+[pid 20008] brk(0x19cb000)              = 0x19cb000
+[pid 20008] tgkill(20008, 20010, SIGPWR) = 0
+[pid 20010] <... futex resumed> )       = ? ERESTARTSYS (To be restarted)
+[pid 20010] --- SIGPWR (Power failure) @ 0 (0) ---
+[pid 20008] futex(0x921fe0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20010] futex(0x921fe0, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20010] rt_sigsuspend(~[INT QUIT ABRT TERM XCPU RTMIN RT_1] <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 10 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20008] <... futex resumed> )       = 1
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 11, NULL <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 12 <unfinished ...>
+[pid 20009] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20008] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 14 <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 13, NULL <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 15, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20008] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 16) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] tgkill(20008, 20010, SIGXCPU <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 17, NULL <unfinished ...>
+[pid 20010] <... rt_sigsuspend resumed> ) = ? ERESTARTNOHAND (To be restarted)
+[pid 20008] <... tgkill resumed> )      = 0
+[pid 20010] --- SIGXCPU (CPU time limit exceeded) @ 0 (0) ---
+[pid 20008] futex(0x921fe0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20010] rt_sigreturn(0x7fabd0de6700) = -1 EINTR (Interrupted system call)
+[pid 20010] futex(0x921fe0, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20008] <... futex resumed> )       = 0
+[pid 20010] rt_sigreturn(0x921fe0)      = 202
+[pid 20010] futex(0x8e9de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20008] brk(0x19ec000)              = 0x19ec000
+[pid 20008] brk(0x19ea000)              = 0x19ea000
+[pid 20008] brk(0x19e8000)              = 0x19e8000
+[pid 20008] brk(0x19e6000)              = 0x19e6000
+[pid 20008] brk(0x19e4000)              = 0x19e4000
+[pid 20008] brk(0x19e2000)              = 0x19e2000
+[pid 20008] brk(0x19e1000)              = 0x19e1000
+[pid 20008] brk(0x1a03000)              = 0x1a03000
+[pid 20008] brk(0x1a24000)              = 0x1a24000
+[pid 20008] brk(0x1a1e000)              = 0x1a1e000
+[pid 20008] brk(0x1a17000)              = 0x1a17000
+[pid 20008] brk(0x1a15000)              = 0x1a15000
+[pid 20008] brk(0x1a13000)              = 0x1a13000
+[pid 20008] brk(0x1a11000)              = 0x1a11000
+[pid 20008] brk(0x1a0f000)              = 0x1a0f000
+[pid 20008] brk(0x1a0d000)              = 0x1a0d000
+[pid 20008] brk(0x1a0b000)              = 0x1a0b000
+[pid 20008] brk(0x1a09000)              = 0x1a09000
+[pid 20008] brk(0x1a07000)              = 0x1a07000
+[pid 20008] brk(0x1a05000)              = 0x1a05000
+[pid 20008] brk(0x1a03000)              = 0x1a03000
+[pid 20008] brk(0x1a01000)              = 0x1a01000
+[pid 20008] brk(0x19ff000)              = 0x19ff000
+[pid 20008] brk(0x19fd000)              = 0x19fd000
+[pid 20008] brk(0x19fb000)              = 0x19fb000
+[pid 20008] brk(0x19f9000)              = 0x19f9000
+[pid 20008] brk(0x19f7000)              = 0x19f7000
+[pid 20008] brk(0x19e1000)              = 0x19e1000
+[pid 20008] brk(0x1a02000)              = 0x1a02000
+[pid 20008] brk(0x19fe000)              = 0x19fe000
+[pid 20008] brk(0x19fc000)              = 0x19fc000
+[pid 20008] brk(0x19fa000)              = 0x19fa000
+[pid 20008] brk(0x19f8000)              = 0x19f8000
+[pid 20008] brk(0x19e1000)              = 0x19e1000
+[pid 20008] brk(0x1a02000)              = 0x1a02000
+[pid 20008] brk(0x19fe000)              = 0x19fe000
+[pid 20008] brk(0x19fd000)              = 0x19fd000
+[pid 20008] brk(0x19fb000)              = 0x19fb000
+[pid 20008] brk(0x19f9000)              = 0x19f9000
+[pid 20008] brk(0x19f7000)              = 0x19f7000
+[pid 20008] brk(0x19f5000)              = 0x19f5000
+[pid 20008] brk(0x19f3000)              = 0x19f3000
+[pid 20008] brk(0x19f1000)              = 0x19f1000
+[pid 20008] brk(0x19ef000)              = 0x19ef000
+[pid 20008] brk(0x19ed000)              = 0x19ed000
+[pid 20008] brk(0x19eb000)              = 0x19eb000
+[pid 20008] brk(0x19e9000)              = 0x19e9000
+[pid 20008] brk(0x19e7000)              = 0x19e7000
+[pid 20008] brk(0x19e5000)              = 0x19e5000
+[pid 20008] brk(0x19e3000)              = 0x19e3000
+[pid 20008] brk(0x19e1000)              = 0x19e1000
+[pid 20008] brk(0x1a02000)              = 0x1a02000
+[pid 20008] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x40036000
+[pid 20008] brk(0x1a01000)              = 0x1a01000
+[pid 20008] brk(0x19ff000)              = 0x19ff000
+[pid 20008] brk(0x19fd000)              = 0x19fd000
+[pid 20008] brk(0x19fb000)              = 0x19fb000
+[pid 20008] brk(0x19f9000)              = 0x19f9000
+[pid 20008] brk(0x19f7000)              = 0x19f7000
+[pid 20008] brk(0x19e9000)              = 0x19e9000
+[pid 20008] read(3, "KeyToken=b03f5f7f11d50a3a\" />\n\t\t"..., 8192) = 8192
+[pid 20008] mmap(0x7fabd3055000, 122880, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3020000
+[pid 20008] read(3, "\"system.transactions\" type=\"Syst"..., 8192) = 8192
+[pid 20008] brk(0x1a0a000)              = 0x1a0a000
+[pid 20008] brk(0x1a08000)              = 0x1a08000
+[pid 20008] brk(0x1a06000)              = 0x1a06000
+[pid 20008] brk(0x1a04000)              = 0x1a04000
+[pid 20008] brk(0x1a02000)              = 0x1a02000
+[pid 20008] brk(0x1a00000)              = 0x1a00000
+[pid 20008] tgkill(20008, 20010, SIGPWR) = 0
+[pid 20010] <... futex resumed> )       = ? ERESTARTSYS (To be restarted)
+[pid 20010] --- SIGPWR (Power failure) @ 0 (0) ---
+[pid 20008] futex(0x921fe0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20010] futex(0x921fe0, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20010] rt_sigsuspend(~[INT QUIT ABRT TERM XCPU RTMIN RT_1] <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 18) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 20 <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 19, NULL <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20008] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 22 <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 21, NULL <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 23, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20008] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 24) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] futex(0x8ec5e0, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 25, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = 0
+[pid 20008] tgkill(20008, 20010, SIGXCPU <unfinished ...>
+[pid 20010] <... rt_sigsuspend resumed> ) = ? ERESTARTNOHAND (To be restarted)
+[pid 20008] <... tgkill resumed> )      = 0
+[pid 20010] --- SIGXCPU (CPU time limit exceeded) @ 0 (0) ---
+[pid 20008] futex(0x921fe0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20010] rt_sigreturn(0x7fabd0de6700) = -1 EINTR (Interrupted system call)
+[pid 20010] futex(0x921fe0, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20008] <... futex resumed> )       = 0
+[pid 20010] rt_sigreturn(0x921fe0)      = 202
+[pid 20010] futex(0x8e9de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20008] read(3, "       \n\t\t description=\".Net Fra"..., 8192) = 8192
+[pid 20008] mmap(0x7fabd303e000, 167936, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd2ff7000
+[pid 20008] mmap(0x7fabd3020000, 65536, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd2fe7000
+[pid 20008] read(3, "0.0, Culture=neutral, PublicKeyT"..., 8192) = 545
+[pid 20008] close(3)                    = 0
+[pid 20008] brk(0x1a21000)              = 0x1a21000
+[pid 20008] brk(0x1a42000)              = 0x1a42000
+[pid 20008] brk(0x1a63000)              = 0x1a63000
+[pid 20008] brk(0x1a86000)              = 0x1a86000
+[pid 20008] brk(0x1a83000)              = 0x1a83000
+[pid 20008] brk(0x1a77000)              = 0x1a77000
+[pid 20008] brk(0x1a75000)              = 0x1a75000
+[pid 20008] brk(0x1a73000)              = 0x1a73000
+[pid 20008] brk(0x1a68000)              = 0x1a68000
+[pid 20008] brk(0x1a67000)              = 0x1a67000
+[pid 20008] brk(0x1a65000)              = 0x1a65000
+[pid 20008] brk(0x1a63000)              = 0x1a63000
+[pid 20008] brk(0x1a61000)              = 0x1a61000
+[pid 20008] brk(0x1a5f000)              = 0x1a5f000
+[pid 20008] brk(0x1a5d000)              = 0x1a5d000
+[pid 20008] brk(0x1a5b000)              = 0x1a5b000
+[pid 20008] brk(0x1a59000)              = 0x1a59000
+[pid 20008] brk(0x1a57000)              = 0x1a57000
+[pid 20008] brk(0x1a55000)              = 0x1a55000
+[pid 20008] brk(0x1a52000)              = 0x1a52000
+[pid 20008] brk(0x1a50000)              = 0x1a50000
+[pid 20008] brk(0x1a4e000)              = 0x1a4e000
+[pid 20008] brk(0x1a4c000)              = 0x1a4c000
+[pid 20008] brk(0x1a4a000)              = 0x1a4a000
+[pid 20008] brk(0x1a48000)              = 0x1a48000
+[pid 20008] brk(0x1a46000)              = 0x1a46000
+[pid 20008] brk(0x1a42000)              = 0x1a42000
+[pid 20008] brk(0x1a40000)              = 0x1a40000
+[pid 20008] brk(0x1a3e000)              = 0x1a3e000
+[pid 20008] brk(0x1a3c000)              = 0x1a3c000
+[pid 20008] brk(0x1a3a000)              = 0x1a3a000
+[pid 20008] brk(0x1a38000)              = 0x1a38000
+[pid 20008] brk(0x1a19000)              = 0x1a19000
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20008] stat("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", 0x7fff446eec50) = -1 ENOENT (No such file or directory)
+[pid 20008] lstat("/srv/bw3/dbconvert/bin/Debug/dbconvert.exe.config", 0x7fff446eec50) = -1 ENOENT (No such file or directory)
+[pid 20008] access("/srv/bw3/dbconvert/bin/Debug", F_OK) = 0
+[pid 20008] brk(0x1a3a000)              = 0x1a3a000
+[pid 20008] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x404db000
+[pid 20008] brk(0x1a38000)              = 0x1a38000
+[pid 20008] brk(0x1a36000)              = 0x1a36000
+[pid 20008] brk(0x1a2f000)              = 0x1a2f000
+[pid 20008] brk(0x1a50000)              = 0x1a50000
+[pid 20008] brk(0x1a4e000)              = 0x1a4e000
+[pid 20008] brk(0x1a4c000)              = 0x1a4c000
+[pid 20008] brk(0x1a4a000)              = 0x1a4a000
+[pid 20008] brk(0x1a48000)              = 0x1a48000
+[pid 20008] brk(0x1a46000)              = 0x1a46000
+[pid 20008] brk(0x1a44000)              = 0x1a44000
+[pid 20008] brk(0x1a42000)              = 0x1a42000
+[pid 20008] brk(0x1a40000)              = 0x1a40000
+[pid 20008] brk(0x1a2f000)              = 0x1a2f000
+[pid 20008] brk(0x1a50000)              = 0x1a50000
+[pid 20008] brk(0x1a4e000)              = 0x1a4e000
+[pid 20008] brk(0x1a4c000)              = 0x1a4c000
+[pid 20008] brk(0x1a4a000)              = 0x1a4a000
+[pid 20008] brk(0x1a48000)              = 0x1a48000
+[pid 20008] brk(0x1a46000)              = 0x1a46000
+[pid 20008] brk(0x1a44000)              = 0x1a44000
+[pid 20008] brk(0x1a42000)              = 0x1a42000
+[pid 20008] brk(0x1a40000)              = 0x1a40000
+[pid 20008] brk(0x1a33000)              = 0x1a33000
+[pid 20008] brk(0x1a54000)              = 0x1a54000
+[pid 20008] brk(0x1a75000)              = 0x1a75000
+[pid 20008] brk(0x1a97000)              = 0x1a97000
+[pid 20008] brk(0x1a94000)              = 0x1a94000
+[pid 20008] brk(0x1a92000)              = 0x1a92000
+[pid 20008] brk(0x1a90000)              = 0x1a90000
+[pid 20008] brk(0x1a8e000)              = 0x1a8e000
+[pid 20008] brk(0x1a8c000)              = 0x1a8c000
+[pid 20008] brk(0x1a8a000)              = 0x1a8a000
+[pid 20008] brk(0x1a88000)              = 0x1a88000
+[pid 20008] brk(0x1a86000)              = 0x1a86000
+[pid 20008] brk(0x1a84000)              = 0x1a84000
+[pid 20008] brk(0x1a82000)              = 0x1a82000
+[pid 20008] brk(0x1a80000)              = 0x1a80000
+[pid 20008] brk(0x1a75000)              = 0x1a75000
+[pid 20008] tgkill(20008, 20010, SIGPWR) = 0
+[pid 20010] <... futex resumed> )       = ? ERESTARTSYS (To be restarted)
+[pid 20010] --- SIGPWR (Power failure) @ 0 (0) ---
+[pid 20008] futex(0x921fe0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20010] futex(0x921fe0, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20010] <... futex resumed> )       = 0
+[pid 20010] rt_sigsuspend(~[INT QUIT ABRT TERM XCPU RTMIN RT_1] <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 26) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 28 <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 27, NULL <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 29, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20008] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 30) = 1
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] futex(0x8ec5e0, FUTEX_WAIT_PRIVATE, 2, NULL <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e0, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20008] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 31, NULL <unfinished ...>
+[pid 20008] futex(0x8ec5e0, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20009] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid 20008] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 32 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20008] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 33, NULL <unfinished ...>
+[pid 20008] tgkill(20008, 20010, SIGXCPU <unfinished ...>
+[pid 20010] <... rt_sigsuspend resumed> ) = ? ERESTARTNOHAND (To be restarted)
+[pid 20010] --- SIGXCPU (CPU time limit exceeded) @ 0 (0) ---
+[pid 20010] rt_sigreturn(0x7fabd0de6700) = -1 EINTR (Interrupted system call)
+[pid 20010] rt_sigreturn(0x921fe0)      = 202
+[pid 20010] futex(0x8e9de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20008] <... tgkill resumed> )      = 0
+[pid 20008] brk(0x1a96000)              = 0x1a96000
+[pid 20008] brk(0x1ab8000)              = 0x1ab8000
+[pid 20008] brk(0x1ab6000)              = 0x1ab6000
+[pid 20008] brk(0x1ab4000)              = 0x1ab4000
+[pid 20008] brk(0x1ab3000)              = 0x1ab3000
+[pid 20008] brk(0x1ab1000)              = 0x1ab1000
+[pid 20008] brk(0x1ab0000)              = 0x1ab0000
+[pid 20008] brk(0x1aae000)              = 0x1aae000
+[pid 20008] brk(0x1aac000)              = 0x1aac000
+[pid 20008] brk(0x1aaa000)              = 0x1aaa000
+[pid 20008] brk(0x1aa8000)              = 0x1aa8000
+[pid 20008] brk(0x1aa6000)              = 0x1aa6000
+[pid 20008] brk(0x1aa2000)              = 0x1aa2000
+[pid 20008] brk(0x1aa0000)              = 0x1aa0000
+[pid 20008] brk(0x1a9e000)              = 0x1a9e000
+[pid 20008] brk(0x1abf000)              = 0x1abf000
+[pid 20008] brk(0x1ae0000)              = 0x1ae0000
+[pid 20008] brk(0x1b07000)              = 0x1b07000
+[pid 20008] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x41bdc000
+[pid 20008] brk(0x1afe000)              = 0x1afe000
+[pid 20008] brk(0x1afc000)              = 0x1afc000
+[pid 20008] brk(0x1af2000)              = 0x1af2000
+[pid 20008] brk(0x1af1000)              = 0x1af1000
+[pid 20008] brk(0x1aef000)              = 0x1aef000
+[pid 20008] brk(0x1aed000)              = 0x1aed000
+[pid 20008] brk(0x1aeb000)              = 0x1aeb000
+[pid 20008] brk(0x1ae9000)              = 0x1ae9000
+[pid 20008] brk(0x1ae8000)              = 0x1ae8000
+[pid 20008] brk(0x1ae6000)              = 0x1ae6000
+[pid 20008] brk(0x1ae4000)              = 0x1ae4000
+[pid 20008] brk(0x1ae2000)              = 0x1ae2000
+[pid 20008] brk(0x1ae0000)              = 0x1ae0000
+[pid 20008] brk(0x1ade000)              = 0x1ade000
+[pid 20008] brk(0x1adb000)              = 0x1adb000
+[pid 20008] brk(0x1ad9000)              = 0x1ad9000
+[pid 20008] brk(0x1ad7000)              = 0x1ad7000
+[pid 20008] mmap(0x7fabd2ff7000, 221184, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd2fb1000
+[pid 20008] tgkill(20008, 20010, SIGPWR <unfinished ...>
+[pid 20010] <... futex resumed> )       = ? ERESTARTSYS (To be restarted)
+[pid 20010] --- SIGPWR (Power failure) @ 0 (0) ---
+[pid 20010] rt_sigsuspend(~[INT QUIT ABRT TERM XCPU RTMIN RT_1] <unfinished ...>
+[pid 20008] <... tgkill resumed> )      = 0
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 34 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 35, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = 1
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 36 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAIT_PRIVATE, 2, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = 1
+[pid 20008] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 37, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = 1
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 38 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 39, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = 1
+[pid 20008] futex(0x8ec5e4, FUTEX_CMP_REQUEUE_PRIVATE, 1, 2147483647, 0x8ec560, 40 <unfinished ...>
+[pid 20009] <... futex resumed> )       = 0
+[pid 20009] futex(0x8ec560, FUTEX_WAKE_PRIVATE, 1) = 0
+[pid 20009] futex(0x8ec5e4, FUTEX_WAIT_PRIVATE, 41, NULL <unfinished ...>
+[pid 20008] <... futex resumed> )       = 1
+[pid 20008] tgkill(20008, 20010, SIGXCPU <unfinished ...>
+[pid 20010] <... rt_sigsuspend resumed> ) = ? ERESTARTNOHAND (To be restarted)
+[pid 20010] --- SIGXCPU (CPU time limit exceeded) @ 0 (0) ---
+[pid 20010] rt_sigreturn(0x7fabd0de6700) = -1 EINTR (Interrupted system call)
+[pid 20010] rt_sigreturn(0x921fe0)      = 202
+[pid 20010] futex(0x8e9de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20008] <... tgkill resumed> )      = 0
+[pid 20008] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x41a67000
+[pid 20008] brk(0x1af9000)              = 0x1af9000
+[pid 20008] open("/etc/localtime", O_RDONLY) = 3
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] fstat(3, {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3143000
+[pid 20008] read(3, "TZif2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\r\0\0\0\r\0\0\0\0"..., 4096) = 1448
+[pid 20008] lseek(3, -890, SEEK_CUR)    = 558
+[pid 20008] read(3, "TZif2\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\16\0\0\0\16\0\0\0\0"..., 4096) = 890
+[pid 20008] close(3)                    = 0
+[pid 20008] munmap(0x7fabd3143000, 4096) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] stat("/etc/localtime", {st_mode=S_IFREG|0644, st_size=1448, ...}) = 0
+[pid 20008] mmap(NULL, 266240, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0) = 0x7fabd2f70000
+[pid 20008] mprotect(0x7fabd2f70000, 4096, PROT_NONE) = 0
+[pid 20008] clone(Process 20011 attached
+child_stack=0x7fabd2faff90, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tidptr=0x7fabd2fb09d0, tls=0x7fabd2fb0700, child_tidptr=0x7fabd2fb09d0) = 20011
+[pid 20011] set_robust_list(0x7fabd2fb09e0, 0x18 <unfinished ...>
+[pid 20008] futex(0x7fabd3037de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20011] <... set_robust_list resumed> ) = 0
+[pid 20011] futex(0x7fabd3037de0, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20008] <... futex resumed> )       = 0
+[pid 20011] futex(0x1884c18, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20008] futex(0x1884c18, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20011] <... futex resumed> )       = 0
+[pid 20011] sched_getaffinity(20011, 32, {3, 0, 0, 0}) = 32
+[pid 20011] mprotect(0x7fabd2f71000, 32768, PROT_NONE) = 0
+[pid 20011] mmap(NULL, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd2f6c000
+[pid 20011] sigaltstack({ss_sp=0x7fabd2f6c000, ss_flags=SS_ONSTACK, ss_size=16384}, NULL) = 0
+[pid 20011] open("/proc/uptime", O_RDONLY) = 3
+[pid 20011] fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+[pid 20011] mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd2f6b000
+[pid 20011] read(3, "54866.93 107802.97\n", 1024) = 19
+[pid 20011] close(3)                    = 0
+[pid 20011] munmap(0x7fabd2f6b000, 4096) = 0
+[pid 20011] nanosleep({0, 500000000},  <unfinished ...>
+[pid 20008] futex(0x1884c84, FUTEX_WAIT_BITSET_PRIVATE|FUTEX_CLOCK_REALTIME, 1, {1329074158, 282000000}, ffffffff <unfinished ...>
+[pid 20011] <... nanosleep resumed> 0x7fabd2fafd00) = 0
+[pid 20011] mmap(NULL, 2101248, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0) = 0x7fabd0703000
+[pid 20011] mprotect(0x7fabd0703000, 4096, PROT_NONE) = 0
+[pid 20011] clone(Process 20012 attached
+child_stack=0x7fabd0902f90, flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, parent_tidptr=0x7fabd09039d0, tls=0x7fabd0903700, child_tidptr=0x7fabd09039d0) = 20012
+[pid 20011] futex(0x7fabd3037de0, FUTEX_WAIT_PRIVATE, 0, NULL <unfinished ...>
+[pid 20012] set_robust_list(0x7fabd09039e0, 0x18) = 0
+[pid 20012] futex(0x7fabd3037de0, FUTEX_WAKE_PRIVATE, 1) = 1
+[pid 20011] <... futex resumed> )       = 0
+[pid 20011] nanosleep({0, 500000000},  <unfinished ...>
+[pid 20012] sched_getaffinity(20012, 32, {3, 0, 0, 0}) = 32
+[pid 20012] mprotect(0x7fabd0704000, 32768, PROT_NONE) = 0
+[pid 20012] mmap(NULL, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd3140000
+[pid 20012] sigaltstack({ss_sp=0x7fabd3140000, ss_flags=SS_ONSTACK, ss_size=16384}, NULL) = 0
+[pid 20012] socket(PF_INET, SOCK_STREAM, IPPROTO_TCP) = 3
+[pid 20012] setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0
+[pid 20012] setsockopt(3, SOL_IP, IP_MTU_DISCOVER, [0], 4) = 0
+[pid 20012] shutdown(3, 0 /* receive */) = -1 ENOTCONN (Transport endpoint is not connected)
+[pid 20012] close(3)                    = 0
+[pid 20012] socket(PF_INET, SOCK_STREAM, IPPROTO_TCP) = 3
+[pid 20012] setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0
+[pid 20012] setsockopt(3, SOL_IP, IP_MTU_DISCOVER, [0], 4) = 0
+[pid 20012] open("/etc/ld.so.cache", O_RDONLY) = 4
+[pid 20012] fstat(4, {st_mode=S_IFREG|0644, st_size=37595, ...}) = 0
+[pid 20012] mmap(NULL, 37595, PROT_READ, MAP_PRIVATE, 4, 0) = 0x7fabd2f62000
+[pid 20012] close(4)                    = 0
+[pid 20012] access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/x86_64-linux-gnu/tls/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/x86_64-linux-gnu/tls/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/x86_64-linux-gnu/tls/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/x86_64-linux-gnu/tls", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/x86_64-linux-gnu/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/x86_64-linux-gnu/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/x86_64-linux-gnu/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/x86_64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+[pid 20012] open("/usr/lib/x86_64-linux-gnu/tls/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/x86_64-linux-gnu/tls/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/usr/lib/x86_64-linux-gnu/tls/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/x86_64-linux-gnu/tls", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/usr/lib/x86_64-linux-gnu/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/x86_64-linux-gnu/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/usr/lib/x86_64-linux-gnu/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/x86_64-linux-gnu", {st_mode=S_IFDIR|0755, st_size=12288, ...}) = 0
+[pid 20012] open("/lib/tls/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/tls/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/tls/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/tls", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/lib/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+[pid 20012] open("/usr/lib/tls/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/tls/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/usr/lib/tls/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/tls", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/usr/lib/x86_64/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib/x86_64", 0x7fabd0901c90) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/usr/lib/libnss_db.so.2", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=20480, ...}) = 0
+[pid 20012] munmap(0x7fabd2f62000, 37595) = 0
+[pid 20012] open("/etc/protocols", O_RDONLY|O_CLOEXEC) = 4
+[pid 20012] fcntl(4, F_GETFD)           = 0x1 (flags FD_CLOEXEC)
+[pid 20012] fstat(4, {st_mode=S_IFREG|0644, st_size=2859, ...}) = 0
+[pid 20012] mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd313f000
+[pid 20012] read(4, "# Internet (IP) protocols\n#\n# Up"..., 4096) = 2859
+[pid 20012] close(4)                    = 0
+[pid 20012] munmap(0x7fabd313f000, 4096) = 0
+[pid 20012] setsockopt(3, SOL_TCP, TCP_NODELAY, [1], 4) = 0
+[pid 20012] connect(3, {sa_family=AF_INET, sin_port=htons(80), sin_addr=inet_addr("127.0.0.1")}, 16) = 0
+[pid 20012] open("/usr/lib/mono/gac/policy.4.0.Mono.Security/0.0.0.0__0738eb9f132ed756/policy.4.0.Mono.Security.dll", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] stat("/srv/bw3/dbconvert/bin/Debug/Mono.Security.dll", {st_mode=S_IFREG|0644, st_size=282624, ...}) = 0
+[pid 20012] open("/srv/bw3/dbconvert/bin/Debug/Mono.Security.dll", O_RDONLY) = 4
+[pid 20012] fstat(4, {st_mode=S_IFREG|0644, st_size=282624, ...}) = 0
+[pid 20012] mmap(NULL, 282624, PROT_READ, MAP_PRIVATE, 4, 0) = 0x7fabd06be000
+[pid 20012] readlink("/srv", 0x7fabd0900bc0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20012] readlink("/srv/bw3", 0x7fabd0900bc0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20012] readlink("/srv/bw3/dbconvert", 0x7fabd0900bc0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20012] readlink("/srv/bw3/dbconvert/bin", 0x7fabd0900bc0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20012] readlink("/srv/bw3/dbconvert/bin/Debug", 0x7fabd0900bc0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20012] readlink("/srv/bw3/dbconvert/bin/Debug/Mono.Security.dll", 0x7fabd0900bc0, 4096) = -1 EINVAL (Invalid argument)
+[pid 20012] close(4)                    = 0
+[pid 20012] open("/srv/bw3/dbconvert/bin/Debug/Mono.Security.dll.so", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/srv/bw3/dbconvert/bin/Debug/Mono.Security.dll.so.la", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/srv/bw3/dbconvert/bin/Debug/Mono.Security.dll.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] open("/etc/mono/assemblies/Mono.Security/Mono.Security.config", O_RDONLY) = -1 ENOENT (No such file or directory)
+[pid 20012] fstat(1, {st_mode=S_IFREG|0664, st_size=101306, ...}) = 0
+[pid 20012] mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fabd313f000
+[pid 20012] mmap(NULL, 65551, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANONYMOUS|MAP_32BIT, -1, 0) = 0x40941000
+[pid 20012] futex(0x8eaae8, FUTEX_WAIT_BITSET_PRIVATE|FUTEX_CLOCK_REALTIME, 0, {1329074060, 799213000}, ffffffff <unfinished ...>
+[pid 20011] <... nanosleep resumed> 0x7fabd2fafd00) = 0
+[pid 20011] nanosleep({0, 500000000},  <unfinished ...>
+Process 20009 detached
+Process 20010 detached
+Process 20011 detached
+Process 20012 detached

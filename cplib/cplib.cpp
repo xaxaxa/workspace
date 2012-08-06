@@ -40,7 +40,24 @@ namespace xaxaxa
 #endif
 
 ///////////////////////////////////////////////////////////
+	Long Splice(Stream& from, Stream& to, Long c)
+	{ //overload if a more efficient mechanism is available for your stream type, for example
+	  //sendfile(2) for file to socket
 
+		//default generic inefficient implementation
+		Int c2 = c;
+		Int bs = c;
+		if (bs > 8192) bs = 8192;
+		Buffer b(bs);
+		Int br;
+		while ((br = from.Read(b)) > 0) {
+			to.Write(b.SubBuffer(0, br));
+			c2 -= br;
+			if (c2 <= 0) break;
+			if (c2 > b.Length) b.Clip(0, c2);
+		}
+		return c - c2;
+	}
 	StreamReaderWriter::StreamReaderWriter(Stream& s, int rbuffersize, int wbuffersize) :
 			wbuf(wbuffersize), wbuffersize(wbuffersize), max_wbuffer_copy(1024)
 	{
@@ -52,6 +69,7 @@ namespace xaxaxa
 	}
 	StreamReaderWriter::~StreamReaderWriter()
 	{
+		Close();
 		free(buf);
 	}
 	int StreamReaderWriter::Read(const BufferRef& buf)
@@ -59,58 +77,46 @@ namespace xaxaxa
 		int br = 0;
 
 		int tmp = buf_length;
-		if (buf.Length < tmp)
-			tmp = buf.Length;
-		if (tmp > 0)
-		{
+		if (buf.Length < tmp) tmp = buf.Length;
+		if (tmp > 0) {
 			memcpy(buf.Data, ((Byte*) this->buf) + buf_index, tmp);
 			//buf.Clip(tmp);
 			buf_index += tmp;
 			buf_length -= tmp;
 			br += tmp;
 		}
-		if (br >= buf.Length)
-			return br;
-		if (buf.Length - br > this->buf_size)
-		{
-			while ((br >= buf.Length) && (tmp = s->Read(buf.SubBuffer(br))) > 0)
-			{
+		if (br >= buf.Length) return br;
+		if (buf.Length - br > this->buf_size) {
+			while ((br >= buf.Length) && (tmp = s->Read(buf.SubBuffer(br))) > 0) {
 				br += tmp;
 				//buf.Clip(tmp);
 			}
 			return br;
 		}
-		while (1)
-		{
-			if (buf_length <= 0)
-			{
+		while (1) {
+			if (buf_length <= 0) {
 				Buffer tmpb((char*) this->buf, buf_size);
 				tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return br;
+				if (tmp <= 0) return br;
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			tmp = buf_length;
-			if (buf.Length - br < tmp)
-				tmp = buf.Length - br;
+			if (buf.Length - br < tmp) tmp = buf.Length - br;
 			memcpy(buf.Data + br, ((Byte*) this->buf) + buf_index, tmp);
 			//buf.Clip(tmp);
 			buf_index += tmp;
 			buf_length -= tmp;
 			br += tmp;
-			if (br >= buf.Length)
-				return br;
+			if (br >= buf.Length) return br;
 		}
 	}
 	int StreamReaderWriter::Read(StringBuilder& buf, int length)
 	{
 		int br = 0;
-		if (buf_length > 0)
-		{
+		if (buf_length > 0) {
 			int tmp = buf_length;
-			if (length < tmp)
-				tmp = length;
+			if (length < tmp) tmp = length;
 			Buffer tmpb((char*) this->buf + buf_index, tmp);
 			buf.Append(tmpb);
 			length -= tmp;
@@ -118,8 +124,7 @@ namespace xaxaxa
 			buf_length -= tmp;
 			br += tmp;
 		}
-		if (length > 0)
-		{
+		if (length > 0) {
 			buf.EnsureCapacity(buf.length + length);
 			Buffer tmpb((char*) (buf.buf.Data) + buf.length, length);
 			int tmp = s->Read(tmpb);
@@ -131,33 +136,26 @@ namespace xaxaxa
 	int StreamReaderWriter::Read(StringBuilder& buf, const char* delimitors, int delimitor_count)
 	{
 		int br = 0;
-		while (1)
-		{
-			if (buf_length <= 0)
-			{
+		while (1) {
+			if (buf_length <= 0) {
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			int tmp2 = buf_length + buf_index;
-			for (int i = buf_index; i < tmp2; i++)
-			{
+			for (int i = buf_index; i < tmp2; i++) {
 				for (int j = 0; j < delimitor_count; j++)
-					if (((char*) (this->buf))[i] == delimitors[j])
-					{
+					if (((char*) (this->buf))[i] == delimitors[j]) {
 						int tmp = i - buf_index;
 						Buffer tmpb((char*) this->buf + buf_index, tmp);
 						buf.Append(tmpb);
 						br += tmp;
 						tmp++;
-						while (tmp < buf_length)
-						{
+						while (tmp < buf_length) {
 							for (j = 0; j < delimitor_count; j++)
-								if (((char*) (this->buf))[buf_index + tmp] == delimitors[j])
-									goto asdfg;
+								if (((char*) (this->buf))[buf_index + tmp] == delimitors[j]) goto asdfg;
 							break;
 							asdfg: tmp++;
 						}
@@ -175,33 +173,26 @@ namespace xaxaxa
 	int StreamReaderWriter::Read(Stream& out, const char* delimitors, int delimitor_count)
 	{
 		int br = 0;
-		while (1)
-		{
-			if (buf_length <= 0)
-			{
+		while (1) {
+			if (buf_length <= 0) {
 				BufferRef tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			int tmp2 = buf_length + buf_index;
-			for (int i = buf_index; i < tmp2; i++)
-			{
+			for (int i = buf_index; i < tmp2; i++) {
 				for (int j = 0; j < delimitor_count; j++)
-					if (((char*) (this->buf))[i] == delimitors[j])
-					{
+					if (((char*) (this->buf))[i] == delimitors[j]) {
 						int tmp = i - buf_index;
 						BufferRef tmpb((char*) this->buf + buf_index, tmp);
 						out.Write(tmpb);
 						br += tmp;
 						tmp++;
-						while (tmp < buf_length)
-						{
+						while (tmp < buf_length) {
 							for (j = 0; j < delimitor_count; j++)
-								if (((char*) (this->buf))[buf_index + tmp] == delimitors[j])
-									goto asdfg;
+								if (((char*) (this->buf))[buf_index + tmp] == delimitors[j]) goto asdfg;
 							break;
 							asdfg: tmp++;
 						}
@@ -226,28 +217,20 @@ namespace xaxaxa
 		/*for (i = 0; i < delimitor_count; i++)
 		 if (delimitors[i].length > delimitor_maxlen)
 		 delimitor_maxlen = delimitors[i].length;*/
-		while (1)
-		{
-			if (buf_length <= 0)
-			{
+		while (1) {
+			if (buf_length <= 0) {
 				BufferRef tmpb(this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			int tmp2 = buf_length + buf_index;
-			for (i = buf_index; i < tmp2; i++)
-			{
-				for (int j = 0; j < delimitor_count; j++)
-				{
-					if (cbuf[i] == delimitors[j].c[0])
-					{
-						for (int ii = 0; ii < delimitors[j].length; ii++)
-						{
-							if (i + ii >= tmp2)
-							{
+			for (i = buf_index; i < tmp2; i++) {
+				for (int j = 0; j < delimitor_count; j++) {
+					if (cbuf[i] == delimitors[j].c[0]) {
+						for (int ii = 0; ii < delimitors[j].length; ii++) {
+							if (i + ii >= tmp2) {
 								//goto cont;
 								BufferRef tmpb(cbuf + buf_index, buf_length - ii);
 								out.Write(tmpb);
@@ -256,14 +239,12 @@ namespace xaxaxa
 								memcpy(cbuf, cbuf + i, ii);
 								Buffer tmpb1(cbuf + ii, buf_size - ii);
 								int tmp = s->Read(tmpb1);
-								if (tmp <= 0)
-									return (br == 0 ? -1 : br);
+								if (tmp <= 0) return (br == 0 ? -1 : br);
 								buf_index = 0;
 								buf_length = tmp + ii;
 								i = 0;
 							}
-							if (cbuf[i + ii] != delimitors[j].c[ii])
-								goto cont;
+							if (cbuf[i + ii] != delimitors[j].c[ii]) goto cont;
 						}
 						int tmp = i - buf_index;
 						BufferRef tmpb(cbuf + buf_index, tmp);
@@ -280,8 +261,7 @@ namespace xaxaxa
 						 }*/
 						buf_index += tmp;
 						buf_length -= tmp;
-						if (delim_index != NULL)
-							*delim_index = j;
+						if (delim_index != NULL) *delim_index = j;
 						return br;
 					}
 					cont: ;
@@ -298,24 +278,19 @@ namespace xaxaxa
 		int br = 0;
 		Byte* cbuf = (Byte*) this->buf;
 		BufferRef tmpb(cbuf, buf_size);
-		while (1)
-		{
-			if (buf_length <= 0)
-			{
+		while (1) {
+			if (buf_length <= 0) {
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return (br == 0 ? -1 : br);
+				if (tmp <= 0) return (br == 0 ? -1 : br);
 				buf_index = 0;
 				buf_length = tmp;
 			}
 			int tmp2 = buf_length + buf_index;
 			register int i = buf_index;
-			while (true)
-			{
+			while (true) {
 				while (i < tmp2 && cbuf[i] != '\n')
 					i++;
-				if (!(i < tmp2))
-					break;
+				if (!(i < tmp2)) break;
 				int tmp = i - buf_index;
 				//Buffer tmpb((char*) this->buf + buf_index, tmp);
 				//cb({(Byte*) this->buf + buf_index, tmp});
@@ -335,8 +310,7 @@ namespace xaxaxa
 
 	void StreamReaderWriter::Write(const BufferRef& buf)
 	{
-		if (buf.Length > max_wbuffer_copy)
-		{
+		if (buf.Length > max_wbuffer_copy) {
 			s->Write(buf);
 			return;
 		}
@@ -357,86 +331,90 @@ namespace xaxaxa
 	}
 
 	/*void StreamReader_async::begin()
-	{
+	 {
 
-	}
-	void StreamReader_async::check_buffer()
-	{
-		if (sr->buf_length <= 0)
-		{
-			BufferRef tmpb(sr->buf, sr->buf_size);
-			int tmp = sr->s->Read(tmpb);
-			if (tmp <= 0)
-			{
-				completed(br == 0 ? -1 : br);
-				return;
-			}
-			sr->buf_index = 0;
-			sr->buf_length = tmp;
-		}
-		do_process();
-	}
-	void StreamReader_async::do_process()
-	{
-		Int tmp2 = sr->buf_length + sr->buf_index;
-		Int i;
-		char* cbuf = (char*) sr->buf;
-		for (i = sr->buf_index; i < tmp2; i++)
-		{
-			for (int j = 0; j < delimitor_count; j++)
-			{
-				if (cbuf[i] == delimitors[j].c[0])
-				{
-					for (int ii = 0; ii < delimitors[j].length; ii++)
-					{
-						if (i + ii >= tmp2)
-						{
-							//goto cont;
-							BufferRef tmpb(cbuf + sr->buf_index, sr->buf_length - ii);
-							out->Write(tmpb);
-							br += tmpb.Length;
+	 }
+	 void StreamReader_async::check_buffer()
+	 {
+	 if (sr->buf_length <= 0)
+	 {
+	 BufferRef tmpb(sr->buf, sr->buf_size);
+	 int tmp = sr->s->Read(tmpb);
+	 if (tmp <= 0)
+	 {
+	 completed(br == 0 ? -1 : br);
+	 return;
+	 }
+	 sr->buf_index = 0;
+	 sr->buf_length = tmp;
+	 }
+	 do_process();
+	 }
+	 void StreamReader_async::do_process()
+	 {
+	 Int tmp2 = sr->buf_length + sr->buf_index;
+	 Int i;
+	 char* cbuf = (char*) sr->buf;
+	 for (i = sr->buf_index; i < tmp2; i++)
+	 {
+	 for (int j = 0; j < delimitor_count; j++)
+	 {
+	 if (cbuf[i] == delimitors[j].c[0])
+	 {
+	 for (int ii = 0; ii < delimitors[j].length; ii++)
+	 {
+	 if (i + ii >= tmp2)
+	 {
+	 //goto cont;
+	 BufferRef tmpb(cbuf + sr->buf_index, sr->buf_length - ii);
+	 out->Write(tmpb);
+	 br += tmpb.Length;
 
-							memcpy(cbuf, cbuf + i, ii);
-							Buffer tmpb1(cbuf + ii, sr->buf_size - ii);
-							int tmp = sr->s->Read(tmpb1);
-							if (tmp <= 0)
-								return (br == 0 ? -1 : br);
-							sr->buf_index = 0;
-							sr->buf_length = tmp + ii;
-							i = 0;
-						}
-						if (cbuf[i + ii] != delimitors[j].c[ii])
-							goto cont;
-					}
-					int tmp = i - sr->buf_index;
-					BufferRef tmpb(cbuf + sr->buf_index, tmp);
-					out->Write(tmpb);
-					br += tmp;
-					tmp += delimitors[j].length;
-					
-					sr->buf_index += tmp;
-					sr->buf_length -= tmp;
-					if (delim_index != NULL)
-						*delim_index = j;
-					return br;
-				}
-				cont: ;
-			}
-		}
-		BufferRef tmpb((char*) this->buf + buf_index, buf_length);
-		out->Write(tmpb);
-		br += sr->buf_length;
-		sr->buf_length = 0;
-		check_buffer();
-	}
-	void StreamReader_async::completed(Int ret)
-	{
+	 memcpy(cbuf, cbuf + i, ii);
+	 Buffer tmpb1(cbuf + ii, sr->buf_size - ii);
+	 int tmp = sr->s->Read(tmpb1);
+	 if (tmp <= 0)
+	 return (br == 0 ? -1 : br);
+	 sr->buf_index = 0;
+	 sr->buf_length = tmp + ii;
+	 i = 0;
+	 }
+	 if (cbuf[i + ii] != delimitors[j].c[ii])
+	 goto cont;
+	 }
+	 int tmp = i - sr->buf_index;
+	 BufferRef tmpb(cbuf + sr->buf_index, tmp);
+	 out->Write(tmpb);
+	 br += tmp;
+	 tmp += delimitors[j].length;
 
-	}*/
+	 sr->buf_index += tmp;
+	 sr->buf_length -= tmp;
+	 if (delim_index != NULL)
+	 *delim_index = j;
+	 return br;
+	 }
+	 cont: ;
+	 }
+	 }
+	 BufferRef tmpb((char*) this->buf + buf_index, buf_length);
+	 out->Write(tmpb);
+	 br += sr->buf_length;
+	 sr->buf_length = 0;
+	 check_buffer();
+	 }
+	 void StreamReader_async::completed(Int ret)
+	 {
+
+	 }*/
 	/////////////////////////////////////////////////////////
-
 	StringBuilder::StringBuilder(int initsize) :
 			buf(initsize), Capacity(initsize), length(0), position(0)
+	{
+		//this->buf = malloc(initsize);
+	}
+	StringBuilder::StringBuilder(const Buffer& b) :
+			buf(b), Capacity(b.Length), length(0), position(0)
 	{
 		//this->buf = malloc(initsize);
 	}
@@ -450,8 +428,7 @@ namespace xaxaxa
 		this->EnsureCapacity(this->position + buf.Length);
 		memcpy((char*) this->buf.Data + this->position, buf.Data, buf.Length);
 		this->position += buf.Length;
-		if (this->position > this->length)
-			this->length = this->position;
+		if (this->position > this->length) this->length = this->position;
 	}
 	void StringBuilder::Append(STRING buf)
 	{
@@ -459,8 +436,7 @@ namespace xaxaxa
 		this->EnsureCapacity(this->position + buf.length);
 		memcpy((char*) this->buf.Data + this->position, buf.c, buf.length);
 		this->position += buf.length;
-		if (this->position > this->length)
-			this->length = this->position;
+		if (this->position > this->length) this->length = this->position;
 	}
 	void StringBuilder::Append(const StringBuilder* s)
 	{
@@ -473,15 +449,13 @@ namespace xaxaxa
 	}
 	int StringBuilder::CompareTo(const BufferRef& buf)
 	{
-		if (buf.Length <= 0 || this->length <= 0)
-			return -1;
+		if (buf.Length <= 0 || this->length <= 0) return -1;
 		return memcmp(this->buf.Data, buf.Data,
 				buf.Length < this->length ? buf.Length : this->length);
 	}
 	int StringBuilder::CompareTo(const StringBuilder& sb)
 	{
-		if (sb.length <= 0 || this->length <= 0)
-			return -1;
+		if (sb.length <= 0 || this->length <= 0) return -1;
 		return memcmp(buf.Data, sb.buf.Data, sb.length < this->length ? sb.length : this->length);
 	}
 	STRING StringBuilder::ToString()
@@ -497,10 +471,8 @@ namespace xaxaxa
 	int StringBuilder::Read(const BufferRef& buf)
 	{
 		int i = length - position;
-		if (i <= 0)
-			return 0;
-		if (buf.Length < i)
-			i = buf.Length;
+		if (i <= 0) return 0;
+		if (buf.Length < i) i = buf.Length;
 		memcpy(buf.Data, ((char*) this->buf.Data) + position, i);
 		position += i;
 		return i;
@@ -528,11 +500,11 @@ namespace xaxaxa
 		//Exception *ex;
 		switch (sig)
 		{
-		case SIGSEGV:
-			throw PointerException();
-			break;
-		default:
-			throw Exception();
+			case SIGSEGV:
+				throw PointerException();
+				break;
+			default:
+				throw Exception();
 		}
 
 	}

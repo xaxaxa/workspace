@@ -10,4 +10,5 @@ freqplay:
 	g++ -g3 freqplay.C -o freqplay --std=c++0x -lcplib -ljack -lfftw3 $(PKG_CONFIG)
 clean:
 	rm -f jackfft jackfftc
-
+install:
+	cp jackfft jackfftc main2.ui trollface200.png /usr/local/bin/

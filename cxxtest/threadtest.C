@@ -39,6 +39,7 @@ int main()
 	{
 		pthread_create(&t[x],NULL,th,(void*)x);
 	}
-	while(1)sleep(10);
+	return 0;
+	//while(1)sleep(10);
 }
 

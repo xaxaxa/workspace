@@ -94,10 +94,10 @@
 		inline NAME(RETVAL(*f)(void*,__VA_ARGS__))\
 		{__id=rand();this->f=reinterpret_cast<RETVAL(*)(void*,__VA_ARGS__)>((void*)f);\
 		this->obj=NULL;}\
-		inline NAME(const function<RETVAL(void*,__VA_ARGS__)>& func)\
+		inline NAME(const std::function<RETVAL(void*,__VA_ARGS__)>& func)\
 		{__id=rand();f=func;\
 		this->obj=NULL;}\
-		inline NAME(const function<RETVAL(void*,__VA_ARGS__)>& func, void* obj)\
+		inline NAME(const std::function<RETVAL(void*,__VA_ARGS__)>& func, void* obj)\
 		{__id=rand();f=func;\
 		this->obj=obj;}\
 		inline NAME(){}\
@@ -145,24 +145,24 @@ namespace xaxaxa
 //typedef void* Function;
 	typedef volatile int atomic_t;
 #define atomic_read(v)                  v
-#define	atomic_set(v,i)                 v = i
-#define	atomic_add(i,v)                 v += i
-#define	atomic_sub(i,v)                 v -= i
-#define	atomic_sub_and_test(i,v)        (v -= i) == 0
-#define	atomic_inc(v)                   v++
-#define	atomic_dec(v)                   v--
-#define	atomic_dec_and_test(v)          --v == 0
-#define	atomic_inc_and_test(v)          ++v == 0
-#define	atomic_add_negative(i,v)        (v += i) < 0
+#define atomic_set(v,i)                 v = i
+#define atomic_add(i,v)                 v += i
+#define atomic_sub(i,v)                 v -= i
+#define atomic_sub_and_test(i,v)        (v -= i) == 0
+#define atomic_inc(v)                   v++
+#define atomic_dec(v)                   v--
+#define atomic_dec_and_test(v)          --v == 0
+#define atomic_inc_and_test(v)          ++v == 0
+#define atomic_add_negative(i,v)        (v += i) < 0
 	template<class SIGNATURE> struct Delegate;
 	template<class RET, class ... ARGS> struct Delegate<RET(ARGS...)>
 	{
 		virtual RET operator()(ARGS...)=0;
 	};
 
-	//for the following 3 function wrapper classes, if they are initialized
-	//with the default constructor(without any parameters), calling the object
-	//results in undefined behavior
+//for the following 3 function wrapper classes, if they are initialized
+//with the default constructor(without any parameters), calling the object
+//results in undefined behavior
 	template<class SIGNATURE> struct StaticFunction;
 	template<class RET, class ... ARGS> struct StaticFunction<RET(ARGS...)> : public Delegate<
 			RET(ARGS...)>
@@ -200,8 +200,8 @@ namespace xaxaxa
 				{}
 			};
 
-		//uncomment to allow hybrid functions to distinguish between a member
-		//function pointer with a NULL thisptr and a static function.
+		//uncomment to allow hybrid functions to distinguish between (a member
+		//function pointer with a NULL thisptr) and (a static function).
 		//this adds overhead.
 		//#define XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 
@@ -305,8 +305,7 @@ namespace xaxaxa
 			cout<<"release<"<<typeid(this).name()<<"> = "<<RefCount << "; "<<objs<<" objects total"<<endl;
 #endif
 			dbgprint("refcount=" << RefCount);
-			if (RefCount <= 0)
-			{
+			if (RefCount <= 0) {
 				delete this;
 				//cout << o;
 			}
@@ -339,33 +338,27 @@ namespace xaxaxa
 		inline Property(T* obj) :
 				obj(obj)
 		{
-			if (obj != NULL)
-				obj->RefCount_inc();
+			if (obj != NULL) obj->RefCount_inc();
 		}
 		inline Property(T& obj) :
 				obj(&obj)
 		{
-			if (&obj != NULL)
-				obj.RefCount_inc();
+			if (&obj != NULL) obj.RefCount_inc();
 		}
 		inline ~Property()
 		{
-			if (this->obj != NULL)
-				this->obj->RefCount_dec();
+			if (this->obj != NULL) this->obj->RefCount_dec();
 		}
 		Property(const Property<T>& other) :
 				obj(other.obj)
 		{
-			if (obj != NULL)
-				obj->RefCount_inc();
+			if (obj != NULL) obj->RefCount_inc();
 		}
 		T* operator=(T* obj)
 		{
-			if (this->obj != NULL)
-				this->obj->RefCount_dec();
+			if (this->obj != NULL) this->obj->RefCount_dec();
 			this->obj = obj;
-			if (obj != NULL)
-				obj->RefCount_inc();
+			if (obj != NULL) obj->RefCount_inc();
 			return obj;
 		}
 		T* operator=(T& obj)
@@ -374,26 +367,24 @@ namespace xaxaxa
 		}
 		Property& operator=(const Property& other)
 		{
-			if (this->obj != NULL)
-				this->obj->RefCount_dec();
+			if (this->obj != NULL) this->obj->RefCount_dec();
 			this->obj = other.obj;
-			if (obj != NULL)
-				obj->RefCount_inc();
+			if (obj != NULL) obj->RefCount_inc();
 			return *this;
 		}
-		inline T* operator()()
+		inline T* operator()() const
 		{
 			return obj;
 		}
-		inline T& operator*()
+		inline T& operator*() const
 		{
 			return *obj;
 		}
-		inline T* operator->()
+		inline T* operator->() const
 		{
 			return obj;
 		}
-		inline T* get()
+		inline T* get() const
 		{
 			return obj;
 		}
@@ -414,19 +405,19 @@ namespace xaxaxa
 		{
 			obj->RefCount_dec();
 		}
-		inline T* operator()()
+		inline T* operator()() const
 		{
 			return obj;
 		}
-		inline T* operator->()
+		inline T* operator->() const
 		{
 			return obj;
 		}
-		inline T& operator*()
+		inline T& operator*() const
 		{
 			return *obj;
 		}
-		inline T* get()
+		inline T* get() const
 		{
 			return obj;
 		}
@@ -434,18 +425,17 @@ namespace xaxaxa
 	template<class T> Property<T>::Property(const objref<T>& other) :
 			obj(other.obj)
 	{
-		if (obj != NULL)
-			obj->RefCount_inc();
+		if (obj != NULL) obj->RefCount_inc();
 	}
 
-	//creates a new instance, but disowns it
-	template<class T, class ... ARGS> T* newobj(ARGS ... args)
+//creates a new instance, but disowns it
+	template<class T, class ... ARGS> T* newobj(ARGS&&... args)
 	{
-		T* tmp = new T(args...);
+		T* tmp = new T(std::forward<ARGS>(args)...);
 		tmp->RefCount = 0;
 		return tmp;
 	}
-	//*/
+//*/
 	/*template<class T> T* operator=(T*& a, const Property<T>& b)
 	 {
 	 a = b.obj;
@@ -685,9 +675,15 @@ namespace xaxaxa
 	typedef float Float;
 	typedef double Double;
 	typedef long double Decimal;
-	//typedef boost::shared_ptr shared_ptr;
-	//does NOT do reference counting; this is a simple struct to pass around buffers
-	//to functions that do not store them; this avoids the overhead of Buffer
+	template<class T> inline T modulus(T number, T modulus)
+	{
+		T result = number % modulus;
+		if (result < 0) result += modulus;
+		return result;
+	}
+//typedef boost::shared_ptr shared_ptr;
+//does NOT do reference counting; this is a simple struct to pass around buffers
+//to functions that do not store them; this avoids the overhead of Buffer
 	class Buffer
 	;
 	struct BufferRef
@@ -723,8 +719,8 @@ namespace xaxaxa
 		 }*/
 		inline BufferRef SubBuffer(int index, int length) const
 		{
-			if (index < 0 || index + length > this->Length)
-				throw Exception("SubBuffer() out of range");
+			if (index < 0 || index + length > this->Length) throw Exception(
+					"SubBuffer() out of range");
 			return BufferRef
 			{ Data + index, length };
 		}
@@ -734,16 +730,16 @@ namespace xaxaxa
 		}
 		inline void Clip(int index, int length)
 		{
-			if (index < 0 || index + length > this->Length)
-				throw Exception("BufferRef::Clip() out of range");
+			if (index < 0 || index + length > this->Length) throw Exception(
+					"BufferRef::Clip() out of range");
 			Data += index;
 			Length = length;
 		}
 		inline void Clip(int index)
 		{
 			//Clip(index, Length - index);
-			if (index < 0 || index > this->Length)
-				throw Exception("BufferRef::Clip() out of range");
+			if (index < 0 || index > this->Length) throw Exception(
+					"BufferRef::Clip() out of range");
 			Data += index;
 			Length -= index;
 		}
@@ -764,8 +760,7 @@ namespace xaxaxa
 		}
 		inline void __dec_autofree()
 		{
-			if (--*pbuf <= 0)
-				delete[] (Byte*) pbuf;
+			if (--*pbuf <= 0) delete[] (Byte*) pbuf;
 		}
 		inline Buffer() :
 				pbuf(NULL)
@@ -810,9 +805,8 @@ namespace xaxaxa
 		}
 		inline void Release()
 		{
-			if (pbuf == NULL)
-				throw Exception(
-						"Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
+			if (pbuf == NULL) throw Exception(
+					"Attempting to release a buffer initialized with a raw pointer. This can be dangerous.");
 			__dec_autofree();
 			Data = NULL;
 			Length = 0;
@@ -821,8 +815,7 @@ namespace xaxaxa
 		Buffer(int length)
 		{
 			this->Length = length;
-			if (length <= 0)
-			{
+			if (length <= 0) {
 				this->Data = NULL;
 				this->pbuf = NULL;
 				return;
@@ -836,31 +829,25 @@ namespace xaxaxa
 		Buffer(const Buffer& b) :
 				BufferRef(b), pbuf(b.pbuf)
 		{
-			if (b.pbuf != NULL)
-				__inc();
+			if (b.pbuf != NULL) __inc();
 		}
 		Buffer& operator=(const Buffer& b)
 		{
 			BufferRef::operator=(b);
-			if (pbuf != NULL)
-				__dec_autofree();
-			if ((pbuf = b.pbuf) != NULL)
-				__inc();
+			if (pbuf != NULL) __dec_autofree();
+			if ((pbuf = b.pbuf) != NULL) __inc();
 			return *this;
 		}
 		inline ~Buffer()
 		{
-			if (pbuf != NULL)
-				__dec_autofree();
+			if (pbuf != NULL) __dec_autofree();
 		}
 		inline Buffer SubBuffer(int index, int length) const
 		{
-			if (index < 0 || index + length > this->Length)
-				throw Exception("SubBuffer() out of range");
-			if (pbuf == NULL)
-				return Buffer(Data + index, length);
-			else
-				return Buffer(Data + index, length, pbuf);
+			if (index < 0 || index + length > this->Length) throw Exception(
+					"SubBuffer() out of range");
+			if (pbuf == NULL) return Buffer(Data + index, length);
+			else return Buffer(Data + index, length, pbuf);
 		}
 		inline Buffer SubBuffer(int index) const
 		{
@@ -868,16 +855,15 @@ namespace xaxaxa
 		}
 		inline void Clip(int index, int length)
 		{
-			if (index < 0 || index + length > this->Length)
-				throw Exception("Buffer::Clip() out of range");
+			if (index < 0 || index + length > this->Length) throw Exception(
+					"Buffer::Clip() out of range");
 			Data += index;
 			Length = length;
 		}
 		inline void Clip(int index)
 		{
 			//Clip(index, Length - index);
-			if (index < 0 || index > this->Length)
-				throw Exception("Buffer::Clip() out of range");
+			if (index < 0 || index > this->Length) throw Exception("Buffer::Clip() out of range");
 			Data += index;
 			Length -= index;
 		}
@@ -983,6 +969,23 @@ namespace xaxaxa
 		{	return 0;} //set or get length
 		virtual Cap Capabilities()
 		{	return Cap::None;}
+		virtual Int Skip(Long n)
+		{
+			if((Byte)Capabilities() & (Byte)Cap::Seek)
+			{
+				Seek(n,SeekFrom::Current);
+				return n;
+			}
+			Buffer b(n>8192?8192:n);
+			Int br;
+			Int n2(n);
+			while(n2>0 && (br=Read(b))>0)
+			{
+				n2-=br;
+				if(b.Length>n2)b.Clip(0,n2);
+			}
+			return n-n2;
+		}
 		//bool AutoClose;
 		//typedef boost::function<void (void*,Stream*)> Callback;
 		FUNCTION_DECLARE(Callback,void,Stream*);
@@ -1069,6 +1072,9 @@ namespace xaxaxa
 	{
 		return (Stream::Cap) (~(Byte) c);
 	}
+
+	Long Splice(Stream& from, Stream& to, Long c);
+
 	class StreamSource: public Object
 	{
 	public:
@@ -1107,10 +1113,15 @@ namespace xaxaxa
 		virtual int GetFileDesc()=0;
 		virtual void Trigger(event_t events)=0;
 	};
+	class TextWriter: public Stream
+	{
+
+	};
 	class StringBuilder: public Stream
 	{
 	public:
 		StringBuilder(int initsize = 4096);
+		StringBuilder(const Buffer& b);
 		virtual ~StringBuilder();
 		virtual Cap Capabilities()
 		{
@@ -1128,11 +1139,9 @@ namespace xaxaxa
 		}
 		inline void EnsureCapacity(int c)
 		{
-			if (Capacity >= c)
-				return;
+			if (Capacity >= c) return;
 			int tmp = this->Capacity;
-			while (tmp < c)
-			{
+			while (tmp < c) {
 				tmp *= 2;
 			}
 			/*Byte* new_arr = new Byte[tmp];
@@ -1152,8 +1161,7 @@ namespace xaxaxa
 			this->EnsureCapacity(this->position + length);
 			memcpy((char*) this->buf.Data + this->position, buf, length);
 			this->position += length;
-			if (this->position > this->length)
-				this->length = this->position;
+			if (this->position > this->length) this->length = this->position;
 		}
 		void Append(const char* buf);
 		void Append(const StringBuilder* s);
@@ -1195,13 +1203,11 @@ namespace xaxaxa
 		}
 		int Append(Stream& s, Int n)
 		{
-			if (n <= 0)
-				return 0;
+			if (n <= 0) return 0;
 			EnsureCapacity(position + n);
 			Int tmp = s.Read(buf.SubBuffer(position, n));
 			position += tmp;
-			if (position > length)
-				length = position;
+			if (position > length) length = position;
 			return tmp;
 		}
 		/*inline void Append(Float n)
@@ -1233,19 +1239,18 @@ namespace xaxaxa
 		{
 			switch (from)
 			{
-			case SeekFrom::Begin:
-				break;
-			case SeekFrom::Current:
-				n += position;
-				break;
-			case SeekFrom::End:
-				n = length - n;
-				break;
-			default:
-				return;
+				case SeekFrom::Begin:
+					break;
+				case SeekFrom::Current:
+					n += position;
+					break;
+				case SeekFrom::End:
+					n = length - n;
+					break;
+				default:
+					return;
 			}
-			if (n < 0)
-				n = 0;
+			if (n < 0) n = 0;
 			position = n;
 		}
 		virtual Long Position()
@@ -1254,10 +1259,8 @@ namespace xaxaxa
 		}
 		virtual Long Length(Long newlen = -1)
 		{
-			if (newlen < 0)
-				return length;
-			else
-				return (length = newlen);
+			if (newlen < 0) return length;
+			else return (length = newlen);
 		}
 	};
 	typedef int FILEDES;
@@ -1275,8 +1278,7 @@ namespace xaxaxa
 		inline File(const char *path, int flags)
 		{
 			_f = CreateFile(path, flags);
-			if (_f < 0)
-				throw Exception(errno);
+			if (_f < 0) throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -1285,8 +1287,7 @@ namespace xaxaxa
 		inline File(const char *path, int flags, mode_t mode)
 		{
 			_f = CreateFile(path, flags, mode);
-			if (_f < 0)
-				throw Exception(errno);
+			if (_f < 0) throw Exception(errno);
 			//int set = 1;
 			//setsockopt(_s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 			dbgprint("file " << _f << " created");
@@ -1303,29 +1304,25 @@ namespace xaxaxa
 		{
 			//throw Exception();
 			dbgprint("file " << _f << " closed");
-			if (_f != -1)
-				close(_f);
+			if (_f != -1) close(_f);
 			_f = -1;
 		}
 		inline Int Write(const BufferRef& buf)
 		{
 			Int tmp = write(_f, buf.Data, buf.Length);
-			if (tmp < 0)
-				throw Exception(errno);
+			if (tmp < 0) throw Exception(errno);
 			return tmp;
 		}
 		inline Int Read(const BufferRef& buf)
 		{
 			Int tmp = read(_f, buf.Data, buf.Length);
-			if (tmp < 0)
-				throw Exception(errno);
+			if (tmp < 0) throw Exception(errno);
 			return tmp;
 		}
 		inline off_t Seek(off_t offset, int whence)
 		{
 			off_t tmp = lseek(_f, offset, whence);
-			if (tmp == (off_t) -1)
-				throw Exception(errno);
+			if (tmp == (off_t) -1) throw Exception(errno);
 			return tmp;
 		}
 		void Flush()
@@ -1337,8 +1334,7 @@ namespace xaxaxa
 		}
 		inline void SetFlags(Int f)
 		{
-			if (fcntl(_f, F_SETFL, f) < 0)
-				throw Exception(errno, "could not set file flags");
+			if (fcntl(_f, F_SETFL, f) < 0) throw Exception(errno, "could not set file flags");
 		}
 	};
 	class FileStream: public Stream
@@ -1557,6 +1553,7 @@ namespace xaxaxa
 		{	return c;}
 	};
 #endif
+
 	class StreamReaderWriter: public Stream
 	{
 	public:
@@ -1591,12 +1588,10 @@ namespace xaxaxa
 		}
 		inline Short ReadByte()
 		{
-			if (buf_length <= 0)
-			{
+			if (buf_length <= 0) {
 				Buffer tmpb((char*) this->buf, buf_size);
 				int tmp = s->Read(tmpb);
-				if (tmp <= 0)
-					return -1;
+				if (tmp <= 0) return -1;
 				buf_index = 0;
 				buf_length = tmp;
 			}
@@ -1639,26 +1634,48 @@ namespace xaxaxa
 			return Read(buf, delim, 2);
 			//return Read(buf, "\r\n", 2);
 		}
-
+		int ReadLine(string& s)
+		{
+			struct asdf: public Stream
+			{
+				string& s;
+				asdf(string& s) :
+						s(s)
+				{
+				}
+				virtual int Read(const BufferRef& buf)
+				{
+					return 0;
+				}
+				virtual void Write(const BufferRef& buf)
+				{
+					s.append((char*) buf.Data, buf.Length);
+				}
+				virtual void Flush()
+				{
+				}
+				virtual void Close()
+				{
+				}
+			} tmp(s);
+			return ReadLine(tmp);
+		}
 		virtual void Write(const BufferRef& buf);
 		virtual void Flush();
 		virtual void Close();
 		void do_flush()
 		{
-			if (wbuf.length <= 0)
-				return;
+			if (wbuf.length <= 0) return;
 			s->Write(wbuf.ToBuffer());
 			wbuf.Clear();
 		}
 		inline void flush_if_full(int space = 0)
 		{
-			if (wbuf.length > (wbuffersize - space))
-				do_flush();
+			if (wbuf.length > (wbuffersize - space)) do_flush();
 		}
 		void Write(void* buf, int len)
 		{
-			if (len > max_wbuffer_copy)
-			{
+			if (len > max_wbuffer_copy) {
 				s->Write(Buffer(buf, len));
 				return;
 			}
@@ -1748,16 +1765,46 @@ namespace xaxaxa
 		s.Write(x);
 		return s;
 	}
-	template<class S, class X> inline S& operator<<(S& os, const vector<X>& dt)
+	template<class S, class X> inline S& operator<<(S&& os, const vector<X>& dt)
 	{
-		os << "[";
+		os << "vector[";
 		bool notfirst = false;
-		for (typename vector<X>::const_iterator it = dt.begin(); it != dt.end(); it++)
-			(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		for (auto it = dt.begin(); it != dt.end(); it++)
+		(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		os << "]";
+		return os;
+	}
+	template<class S, class X> inline S& operator<<(S&& os, const list<X>& dt)
+	{
+		os << "list[";
+		bool notfirst = false;
+		for (auto it = dt.begin(); it != dt.end(); it++)
+		(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
+		os << "]";
+		return os;
+	}
+	template<class S, class X> inline S& operator<<(S&& os, const set<X>& dt)
+	{
+		os << "set[";
+		bool notfirst = false;
+		for (auto it = dt.begin(); it != dt.end(); it++)
+		(notfirst || !(notfirst = true)) ? os << ", " << (*it) : os << (*it);
 		os << "]";
 		return os;
 	}
 
+	template<class T> inline T& operator<<(T& out, void* obj)
+	{
+		out << "&{...}";
+		return out;
+	}
+	/*template<class T, class X> T& operator<<(T& out, X* obj)
+	{
+		out << "&(";
+		out << *obj;
+		out << ')';
+		return out;
+	}*/
 	class BitArray64
 	{
 	public:
@@ -1841,11 +1888,9 @@ namespace xaxaxa
 	}
 	template<class T> void ArrayList<T>::EnsureCapacity(int c)
 	{
-		if (Capacity >= c)
-			return;
+		if (Capacity >= c) return;
 		int tmp = this->Capacity;
-		while (tmp < c)
-		{
+		while (tmp < c) {
 			tmp *= 2;
 		}
 		this->array = (T*) realloc(this->array, tmp * sizeof(T));
@@ -1870,8 +1915,7 @@ namespace xaxaxa
 
 		inline static BufferManager* GetDefault()
 		{
-			if (__def_BufferManager == NULL)
-				__def_BufferManager = new BufferManager();
+			if (__def_BufferManager == NULL) __def_BufferManager = new BufferManager();
 			return __def_BufferManager;
 		}
 		vector<Buffer> l;
@@ -1890,10 +1934,8 @@ namespace xaxaxa
 		}
 		Buffer Get()
 		{
-			if (l.size() <= 0)
-				return Buffer(bufferSize);
-			else
-			{
+			if (l.size() <= 0) return Buffer(bufferSize);
+			else {
 				auto tmp = l[l.size() - 1];
 				l.pop_back();
 				return tmp;
@@ -1901,8 +1943,7 @@ namespace xaxaxa
 		}
 		void Return(Buffer& b)
 		{
-			if ((int) l.size() < maxSpare)
-				l.push_back(b);
+			if ((int) l.size() < maxSpare) l.push_back(b);
 			//else b->Release();
 		}
 	};
@@ -1916,6 +1957,10 @@ namespace xaxaxa
 		EventQueue()
 		{
 			efd = eventfd(0, EFD_SEMAPHORE);
+		}
+		~EventQueue()
+		{
+			close(efd);
 		}
 		void Append(const T& value)
 		{
@@ -1935,6 +1980,59 @@ namespace xaxaxa
 				q.pop();
 				return tmp;
 			}
+		}
+	};
+	class EventHandle: public Object
+	{
+	public:
+		int efd;
+		EventHandle()
+		{
+			efd = eventfd(0, 0);
+		}
+		~EventHandle()
+		{
+			close(efd);
+		}
+		void Set()
+		{
+			eventfd_write(efd, 1);
+		}
+		eventfd_t Wait()
+		{
+			eventfd_t val;
+			eventfd_read(efd, &val);
+			return val;
+		}
+	};
+	class ConditionHandle: public Object
+	{
+	public:
+		int efd;
+		bool value;
+		ConditionHandle(bool value = false) :
+				value(value)
+		{
+			efd = eventfd(0, 0);
+		}
+		~ConditionHandle()
+		{
+			close(efd);
+		}
+		void Set()
+		{
+			value = true;
+			eventfd_write(efd, 1);
+		}
+		void Reset()
+		{
+			value = false;
+		}
+		void Wait() //wait for value to become true
+		{
+			eventfd_t val;
+			while (!value)
+				eventfd_read(efd, &val);
 		}
 	};
 #define __intwrap1(var,max) var%=(max);
@@ -2049,8 +2147,8 @@ namespace xaxaxa
 		inline T& GetPointer(Int i)
 		{
 			__intwrap1(i, size);
-			if (i >= size || i < 0)
-				throw OutOfRangeException("CircularQueue::GetPointer() out of range");
+			if (i >= size || i < 0) throw OutOfRangeException(
+					"CircularQueue::GetPointer() out of range");
 			return array[i * objsize]; //__intwrap(i,size);
 		}
 		inline bool CanAppend()
@@ -2059,8 +2157,7 @@ namespace xaxaxa
 		}
 		int BeginAppend()
 		{
-			if (__getlength(s1, e2, __wrap) >= size)
-				return -1;
+			if (__getlength(s1, e2, __wrap) >= size) return -1;
 			int tmp = e2++;
 			__intwrap1(e2, __wrap);
 			b.Set(__intwrap(tmp,size), true);
@@ -2068,16 +2165,12 @@ namespace xaxaxa
 		}
 		void EndAppend(Int i)
 		{
-			if (i == e1)
-			{
-				do
-				{
+			if (i == e1) {
+				do {
 					e1++;
 					__intwrap1(e1, __wrap);
 				} while (__getlength(e1, e2, __wrap) > 0 && !(b.Get(__intwrap(e1,size))));
-			}
-			else
-				b.Set(__intwrap(i,size), false);
+			} else b.Set(__intwrap(i,size), false);
 		}
 		inline Int Length()
 		{
@@ -2089,8 +2182,7 @@ namespace xaxaxa
 		}
 		Int BeginDequeue()
 		{
-			if (__getlength(s2, e1, __wrap) <= 0)
-				return -1;
+			if (__getlength(s2, e1, __wrap) <= 0) return -1;
 			Int tmp = s2++;
 			__intwrap1(s2, __wrap);
 			b.Set(__intwrap(tmp,size), true);
@@ -2098,28 +2190,295 @@ namespace xaxaxa
 		}
 		void EndDequeue(Int i)
 		{
-			if (i == s1)
-			{
-				do
-				{
+			if (i == s1) {
+				do {
 					s1++;
 					__intwrap1(s1, __wrap);
 				} while (__getlength(s1, s2, __wrap) > 0 && !(b.Get(__intwrap(s1,size))));
-			}
-			else
-				b.Set(__intwrap(i,size), false);
+			} else b.Set(__intwrap(i,size), false);
 		}
 	};
-	class CircularBuffer: public Stream
+	class CircularBuffer: public Object
+	{
+	public:
+		Byte* array;
+		Int size;
+		Int __wrap;
+		Int s1, s2, e1, e2;
+		CircularBuffer(Int size) :
+				size(size), __wrap(size * 2), s1(0), s2(0), e1(0), e2(0)
+		{
+			array = new Byte[size];
+		}
+		~CircularBuffer()
+		{
+			delete[] array;
+		}
+		inline int __getlength(Int i1, Int i2, Int wrap)
+		{
+			return (i2 < i1 ? i2 + wrap : i2) - i1;
+		}
+		inline Byte* GetPointer(Int i)
+		{
+			__intwrap1(i, size);
+			if (i >= size || i < 0) throw OutOfRangeException(
+					"CircularBuffer::GetPointer() out of range");
+			return array + i; //__intwrap(i,size);
+		}
+		inline bool BufferOperations(const function<bool(BufferRef b)>& func, Int i, Int c)
+		{ //perform an arbitrary operation on a buffer segment;
+		  //for example writing a section of the buffer to disk
+		  //this function mainly handles buffer fragmentation
+			Int tmp(size - __intwrap(i, size));
+			if (tmp > c) tmp = c;
+			if (!func(BufferRef(GetPointer(i), tmp))) return false;
+			if (tmp < c) return func(BufferRef(GetPointer(0), c - tmp));
+			return true;
+		}
+		inline bool CanAppend(Int c)
+		{
+			return __getlength(s1, e2, __wrap) + c <= size;
+		}
+		Int BeginAppend(Int c)
+		{
+			if (__getlength(s1, e2, __wrap) + c > size) return -1;
+			Int tmp(e2);
+			//e2 += c;
+			e2 = __intwrap(e2 + c, __wrap);
+			//b.Set(__intwrap(tmp,size), true);
+			return tmp;
+		}
+		void EndAppend(Int i, Int c)
+		{
+			e2 = e1 = __intwrap(e1 + c, __wrap);
+		}
+		inline Int Length()
+		{
+			return __getlength(s2, e1, __wrap);
+		}
+		inline bool CanDequeue()
+		{
+			return __getlength(s2, e1, __wrap) > 0;
+		}
+		Int BeginDequeue(Int& c, bool allow_short_read = true)
+		{
+			if (allow_short_read) {
+				Int data_avail(__getlength(s2, e1, __wrap));
+				if (data_avail <= 0) return -1;
+				if (data_avail < c) c = data_avail;
+			} else {
+				if (__getlength(s2, e1, __wrap) < c) return -1;
+			}
+			Int tmp(s2);
+			s2 = __intwrap(s2 + c, __wrap);
+			return tmp;
+		}
+		void EndDequeue(Int i, Int c)
+		{
+			s2 = s1 = __intwrap(s1 + c, __wrap);
+		}
+	};
+	class CircularStream: public Stream
 	{
 	public:
 		Buffer b;
-		Int rpos, wpos, len;
-		CircularBuffer(Int size=4096):b(size),rpos(0),wpos(0),len(0)
+		Int rpos, len; //0 <= len <= b.Length; 0 <= rpos < b.Length
+		CircularStream(Int size = 4096) :
+				b(size), rpos(0), len(0)
 		{
 
 		}
+		virtual Int Read(const BufferRef& buf)
+		{
+			Int l(buf.Length);
+			Int l2;
+			if (l > len) l = len;
+			if (l <= 0) return 0;
+			l2 = b.Length - rpos;
+			if (l2 > l) l2 = l;
+			memcpy(buf.Data, b.Data + rpos, l2);
+			rpos += l2;
+			if (rpos >= b.Length) {
+				memcpy(buf.Data + l2, b.Data, l - l2);
+				rpos = l - l2;
+			}
+			len -= l;
+			return l;
+		}
+		void Clear()
+		{
+			len = 0;
+		}
+		virtual Int Read(Stream& s, Int length)
+		{
+			Int l(length);
+			Int l2;
+			if (l > len) l = len;
+			if (l <= 0) return 0;
+			l2 = b.Length - rpos;
+			if (l2 > l) l2 = l;
+			//memcpy(buf.Data, b.Data + rpos, l2);
+			s.Write(b.SubBuffer(rpos, l2));
+			rpos += l2;
+			if (rpos >= b.Length) {
+				//memcpy(buf.Data + l2, b.Data, l - l2);
+				s.Write(b.SubBuffer(0, l - l2));
+				rpos = l - l2;
+			}
+			len -= l;
+			return l;
+		}
+		virtual void Write(const BufferRef& buf)
+		{
+			BufferRef buf2(buf);
+			if (buf2.Length > b.Length) buf2.Clip(buf2.Length - b.Length, b.Length);
+			Int wpos((rpos + len) % b.Length);
+			Int l2(b.Length - wpos);
+			if (l2 > buf2.Length) l2 = buf2.Length;
+			memcpy(b.Data + wpos, buf2.Data, l2);
+			if ((wpos = (wpos + l2)) >= b.Length) {
+				memcpy(b.Data, buf2.Data + l2, buf2.Length - l2);
+				wpos = buf2.Length - l2;
+			}
+			len += buf2.Length;
+			if (len > b.Length) len = b.Length;
+			rpos = modulus(wpos - len, b.Length);
+		}
+		virtual Int Write(Stream& s, Int length)
+		{
+			//BufferRef buf2(buf);
+			if (length > b.Length) s.Skip(length - b.Length);
+			Int wpos((rpos + len) % b.Length);
+			Int l2(b.Length - wpos);
+			if (l2 > length) l2 = length;
+			//memcpy(b.Data + wpos, buf2.Data, l2);
+			Int br = s.Fill(b.SubBuffer(wpos, l2));
+			if (br < l2) {
+				length -= (l2 - br);
+				l2 = br;
+			}
+			if ((wpos = (wpos + l2)) >= b.Length) {
+				//memcpy(b.Data, buf2.Data + l2, buf2.Length - l2);
+				wpos = s.Fill(b.SubBuffer(0, length - l2));
+				if (wpos < (length - l2)) len -= (length - l2) - wpos; //compensate for buffer short-read
+				//wpos = length - l2;
+			}
+			len += length;
+			if (len > b.Length) len = b.Length;
+			rpos = modulus(wpos - len, b.Length);
+			return length;
+		}
+		virtual void Flush()
+		{
+		}
+		virtual void Close()
+		{
+		}
+		virtual void Seek(Long n, SeekFrom from = SeekFrom::Begin)
+		{
+		}
+		virtual Long Position()
+		{
+			return 0;
+		}
+		virtual Long Length(Long newlen = -1)
+		{
+			if (newlen >= 0 && newlen < len) {
+				rpos = (rpos + len - newlen) % b.Length;
+				len = newlen;
+			}
+			return len;
+		} //set or get length
+		virtual Cap Capabilities()
+		{
+			return Cap::ReadWrite | Cap::Length;
+		}
+		struct iterator
+		{
+			CircularStream& s;
+			Int pos;
+			iterator(CircularStream& s, Int pos) :
+					s(s), pos(pos)
+			{
+			}
+			inline Byte operator*()
+			{
+				return s.b.Data[pos % s.b.Length];
+			}
+			inline void operator++(int i)
+			{
+				pos = (pos + 1) % (s.b.Length * 2);
+			}
+			inline void operator--(int i)
+			{
+				if (--pos < 0) pos += (s.b.Length * 2);
+			}
+			inline bool operator==(const iterator& other)
+			{
+				return pos == other.pos;
+			}
+			inline bool operator!=(const iterator& other)
+			{
+				return pos != other.pos;
+			}
+			inline iterator operator+(int i)
+			{
+				return {s,(pos+i)%(s.b.Length*2)};
+			}
+			inline iterator operator-(int i)
+			{
+				return {s,modulus(pos-i,s.b.Length*2)};
+			}
+			inline void operator+=(int i)
+			{
+				pos = (pos + i) % (s.b.Length * 2);
+			}
+			inline void operator-=(int i)
+			{
+				pos = modulus(pos - i, s.b.Length * 2);
+			}
+		};
+		inline iterator begin()
+		{
+			return {*this,rpos};
+		}
+		inline iterator end()
+		{
+			return {*this,(rpos+len)%(b.Length*2)};
+		}
+		void Clip(const iterator& begin, const iterator& end)
+		{
+			if (begin.pos % b.Length > rpos) rpos = begin.pos % b.Length;
+			//Int tmp_l = modulus(end.pos - begin.pos, b.Length * 2);
+			Int endpos = (rpos + len) % (b.Length * 2);
+			if (end.pos < endpos) len = modulus(end.pos - rpos, b.Length * 2);
+		}
+		void GetData(const iterator& begin, const iterator& end, Stream& s)
+		{
+			Int l = modulus(end.pos - begin.pos, b.Length * 2);
+			Int p = begin.pos % b.Length;
+			//Int l(length);
+			Int l2;
+			if (l <= 0) return;
+			l2 = b.Length - p;
+			if (l2 > l) l2 = l;
+			//memcpy(buf.Data, b.Data + rpos, l2);
+			s.Write(b.SubBuffer(p, l2));
+			p += l2;
+			if (p >= b.Length) {
+				//memcpy(buf.Data + l2, b.Data, l - l2);
+				s.Write(b.SubBuffer(0, l - l2));
+			}
+		}
 	};
+	inline Long Splice(Stream& from, CircularStream& to, Long c)
+	{
+		return to.Write(from, c);
+	}
+	inline Long Splice(CircularStream& from, Stream& to, Long c)
+	{
+		return from.Read(to, c);
+	}
 	template<class T, class Allocator = allocator<T> > class vectorlist
 	{
 	public:
@@ -2143,8 +2502,7 @@ namespace xaxaxa
 				//if (it == vl.l.end())
 				//	return;
 				vect_index++;
-				if (vect_index >= (*it).v.size())
-				{
+				if (vect_index >= (*it).v.size()) {
 					it++;
 					vect_index = 0;
 				}
@@ -2152,10 +2510,8 @@ namespace xaxaxa
 			void operator--(int i)
 			{
 				vect_index--;
-				if (vect_index < 0)
-				{
-					if (it == vl.l.begin())
-					{
+				if (vect_index < 0) {
+					if (it == vl.l.begin()) {
 						vect_index = 0;
 						return;
 					}
@@ -2189,8 +2545,7 @@ namespace xaxaxa
 		void push_back(const T& item)
 		{
 			auto it = l.end();
-			if (it == l.begin())
-			{
+			if (it == l.begin()) {
 				//create new vector
 				vector<T> tmp
 				{ item };
@@ -2199,8 +2554,7 @@ namespace xaxaxa
 				return;
 			}
 			it--;
-			if ((*it).v.size() >= vect_size)
-			{
+			if ((*it).v.size() >= vect_size) {
 				//create new vector
 				vector<T> tmp
 				{ item };
@@ -2215,22 +2569,18 @@ namespace xaxaxa
 		void pop_front()
 		{
 			auto it = l.begin();
-			if (it == l.end())
-				return;
+			if (it == l.end()) return;
 			auto& v = (*it).v;
-			if (v.size() <= 0)
-				return;
+			if (v.size() <= 0) return;
 			v.erase(0);
-			if (v.size() <= 0)
-				l.erase(it);
+			if (v.size() <= 0) l.erase(it);
 		}
 		void erase(const iterator& it)
 		{
 			auto& it1 = it.it;
 			auto& v = (*it1).v;
 			v.erase(v.begin() + it.vect_index);
-			if (v.size() <= 0)
-				l.erase(it1);
+			if (v.size() <= 0) l.erase(it1);
 		}
 		iterator begin()
 		{
@@ -2257,7 +2607,7 @@ namespace xaxaxa
 
 		}
 	};
-	typedef struct ucontext sig_ucontext_t;
+	
 
 	class Util_c
 	{
@@ -2268,34 +2618,28 @@ namespace xaxaxa
 		string GetDirFromPath(const string path)
 		{
 			Int i = path.rfind("/");
-			if (i < 0)
-				return string();
+			if (i < 0) return string();
 			return path.substr(0, i + 1);
 		}
 		string GetProgramPath()
 		{
 			char buf[256];
 			Int i = readlink("/proc/self/exe", buf, sizeof(buf));
-			if (i < 0)
-				throw Exception(errno);
+			if (i < 0) throw Exception(errno);
 			return string(buf, i);
 		}
 		void ChDir(string dir)
 		{
-			if (chdir(dir.c_str()) < 0)
-				throw Exception(errno);
+			if (chdir(dir.c_str()) < 0) throw Exception(errno);
 		}
 		void RestartOnCrash(int argc, char** argv)
 		{
 			_argc = argc;
 			_argv = argv;
 			pid_t pid = fork();
-			if (pid == 0)
-			{
+			if (pid == 0) {
 				return;
-			}
-			else if (pid < 0)
-			{
+			} else if (pid < 0) {
 				throw Exception(errno);
 			}
 		}
@@ -2308,43 +2652,32 @@ namespace xaxaxa
 				if(i+1>=argc)return NULL;
 				return argv[(++i)];
 			};
-			for (; i < argc; i++)
-			{
-				if (argv[i][0] == '\x00')
-					continue;
-				if (argv[i][0] == '-')
-				{
+			for (; i < argc; i++) {
+				if (argv[i][0] == '\x00') continue;
+				if (argv[i][0] == '-') {
 					cb(argv[i] + 1, func);
-				}
-				else
-				{
+				} else {
 					cb(NULL, [argv,i]()
 					{	return argv[i];});
 				}
 			}
 		}
 #if __x86_64__
+		typedef struct ucontext sig_ucontext_t;
 		static void crit_err_hdlr(int sig_num, siginfo_t * info, void * ucontext)
 		{
 			sig_ucontext_t * uc = (sig_ucontext_t *) ucontext;
-
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
-
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
-					<< info->si_addr << " from " << caller_address << std::endl << std::endl;
-
+			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
 			void * array[50];
 			int size = backtrace(array, 50);
-
 			array[1] = caller_address;
-
 			char ** messages = backtrace_symbols(array, size);
-
 			// skip first stack frame (points here)
 			for (int i = 1; i < size && messages != NULL; ++i)
 			{
 				char *mangled_name = 0, *offset_begin = 0, *offset_end = 0;
-
 				// find parantheses and +address offset surrounding mangled name
 				for (char *p = messages[i]; *p; ++p)
 				{
@@ -2362,14 +2695,12 @@ namespace xaxaxa
 						break;
 					}
 				}
-
 				// if the line could be processed, attempt to demangle the symbol
 				if (mangled_name && offset_begin && offset_end && mangled_name < offset_begin)
 				{
 					*mangled_name++ = '\0';
 					*offset_begin++ = '\0';
 					*offset_end++ = '\0';
-
 					int status;
 					char * real_name = abi::__cxa_demangle(mangled_name, 0, 0, &status);
 
@@ -2377,14 +2708,13 @@ namespace xaxaxa
 					if (status == 0)
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
-								<< "+" << offset_begin << offset_end << std::endl;
-
+						<< "+" << offset_begin << offset_end << std::endl;
 					}
 					// otherwise, output the mangled function name
 					else
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << mangled_name
-								<< "+" << offset_begin << offset_end << std::endl;
+						<< "+" << offset_begin << offset_end << std::endl;
 					}
 					free(real_name);
 				}
@@ -2395,31 +2725,58 @@ namespace xaxaxa
 				}
 			}
 			std::cerr << std::endl;
-
 			free(messages);
-
 			exit(EXIT_FAILURE);
 		}
+#else
+		// This structure mirrors the one found in /usr/include/asm/ucontext.h
+		typedef struct _sig_ucontext {
+		   unsigned long     uc_flags;
+		   struct ucontext   *uc_link;
+		   stack_t           uc_stack;
+		   struct sigcontext uc_mcontext;
+		   sigset_t          uc_sigmask;
+		} sig_ucontext_t;
+		static void crit_err_hdlr(int sig_num, siginfo_t * info, void * ucontext) {
+			sig_ucontext_t * uc = (sig_ucontext_t *)ucontext;
+
+			// Get the address at the time the signal was raised from the EIP (x86)
+			void * caller_address = (void *) uc->uc_mcontext.eip;
+
+			std::cerr << "signal " << sig_num 
+					  << " (" << strsignal(sig_num) << "), address is " 
+					  << info->si_addr << " from " 
+					  << caller_address << std::endl;
+			void * array[50];
+			int size = backtrace(array, 50);
+			std::cerr << __FUNCTION__ << " backtrace returned " 
+					  << size << " frames\n\n";
+			// overwrite sigaction with caller's address
+			array[1] = caller_address;
+			char ** messages = backtrace_symbols(array, size);
+
+			// skip first stack frame (points here)
+			for (int i = 1; i < size && messages != NULL; ++i) {
+				std::cerr << "[bt]: (" << i << ") " << messages[i] << std::endl;
+			}
+			std::cerr << std::endl;
+			free(messages);
+			exit(EXIT_FAILURE);
+		}
+
 #endif
 		void SetHandlers()
 		{
-#if __x86_64__
+//#if __x86_64__
 			struct sigaction sigact;
 			sigact.sa_sigaction = &Util_c::crit_err_hdlr;
 			sigact.sa_flags = SA_RESTART | SA_SIGINFO;
 			sigaction(SIGSEGV, &sigact, (struct sigaction *) NULL);
 			sigaction(SIGABRT, &sigact, (struct sigaction *) NULL);
 			sigaction(SIGFPE, &sigact, (struct sigaction *) NULL);
-#endif
+//#endif
 		}
 	};
 	extern Util_c Util;
-	template<class T> inline T modulus(T number, T modulus)
-	{
-		T result = number % modulus;
-		if (result < 0)
-			result += modulus;
-		return result;
-	}
 }
 #endif
