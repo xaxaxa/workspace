@@ -1,0 +1,83 @@
+<Project name="test_1" fileversion="2.0" DefaultNamespace="test_1" language="VBNet" Configuration="Debug" Platform="AnyCPU" StartupObject="test_1.Form4" AssemblyName="test_1" MyType="WindowsFormsWithCustomSubMain" OptionExplicit="Off" targetFramework="3.5" ctype="DotNetProject">
+  <Configurations active="Debug">
+    <Configuration name="Debug" DefineDebug="true" DefineTrace="true" DocumentationFile="test_1.xml" NoWarn="41999,42016,42017,42018,42019,42020,42021,42022,42032,42036" UseVSHostingProcess="false" AdditionalParameters="" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Debug4/" assembly="test_1" />
+      <Build debugmode="True" target="WinExe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration defineDebug="True" defineTrace="True" debugType="full" documentationFile="test_1.xml" nowarn="41999,42016,42017,42018,42019,42020,42021,42022,42032,42036" warningsAsErrors="" warningLevel="1" optimize="False" definesymbols="" generateoverflowchecks="False" additionalParameters="" ctype="VBCompilerParameters" />
+    </Configuration>
+    <Configuration name="Release" DefineDebug="false" DefineTrace="true" DocumentationFile="test_1.xml" NoWarn="41999,42016,42017,42018,42019,42020,42021,42022,42032,42036" UseVSHostingProcess="false" unsafe="true" AdditionalParameters="" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/Release/" assembly="test_1" />
+      <Build debugmode="False" target="WinExe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration defineDebug="False" defineTrace="True" debugType="pdbonly" documentationFile="test_1.xml" nowarn="41999,42016,42017,42018,42019,42020,42021,42022,42032,42036" warningsAsErrors="" warningLevel="1" optimize="False" definesymbols="" generateoverflowchecks="False" additionalParameters="" ctype="VBCompilerParameters" />
+    </Configuration>
+    <Configuration name="release2" DefineTrace="true" DocumentationFile="test_1.xml" NoWarn="41999,42016,42017,42018,42019,42020,42021,42022,42032,42036" PlatformTarget="AnyCPU" UseVSHostingProcess="false" DefineDebug="false" AdditionalParameters="" ctype="DotNetProjectConfiguration">
+      <Output directory="bin/release2/" assembly="test_1" />
+      <Build debugmode="False" target="WinExe" />
+      <Execution consolepause="True" runwithwarnings="True" runtime="MsNet" />
+      <CodeGeneration defineDebug="False" defineTrace="True" debugType="pdbonly" documentationFile="test_1.xml" nowarn="41999,42016,42017,42018,42019,42020,42021,42022,42032,42036" warningsAsErrors="" warningLevel="1" optimize="False" definesymbols="" generateoverflowchecks="False" additionalParameters="" ctype="VBCompilerParameters" />
+    </Configuration>
+  </Configurations>
+  <Contents>
+    <File subtype="Code" buildaction="Compile" name="eq.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/eq.vb" />
+    <File subtype="Code" buildaction="Compile" name="eq.vb" contentType="Form" />
+    <File subtype="Code" buildaction="Compile" name="Form1.vb" contentType="Form" />
+    <File subtype="Code" buildaction="Compile" name="Form1.Designer.vb" contentType="Form" dependson="/home/xaxatrollo/workspace/test_1/Form1.vb" />
+    <File subtype="Code" buildaction="Compile" name="Form2.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/Form2.vb" />
+    <File subtype="Code" buildaction="Compile" name="Form2.vb" contentType="Form" />
+    <File subtype="Code" buildaction="Compile" name="Form3.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/Form3.vb" />
+    <File subtype="Code" buildaction="Compile" name="Form3.vb" contentType="Form" />
+    <File subtype="Code" buildaction="Compile" name="Form4.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/Form4.vb" />
+    <File subtype="Code" buildaction="Compile" name="Form4.vb" contentType="Form" />
+    <File subtype="Code" buildaction="Compile" name="Form5.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/Form5.vb" />
+    <File subtype="Code" buildaction="Compile" name="Form5.vb" contentType="Form" />
+    <File subtype="Code" buildaction="Compile" name="My Project/AssemblyInfo.vb" />
+    <File subtype="Code" buildaction="Compile" name="My Project/Application.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/My Project/Application.myapp" />
+    <File subtype="Code" buildaction="Compile" name="My Project/Resources.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/My Project/Resources.resx" />
+    <File subtype="Code" buildaction="Compile" name="My Project/Settings.Designer.vb" dependson="/home/xaxatrollo/workspace/test_1/My Project/Settings.settings" />
+    <File subtype="Code" buildaction="Compile" name="__panel.vb" contentType="Component" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="eq.resx" contentType="Designer" dependson="/home/xaxatrollo/workspace/test_1/eq.vb" resource_id="test_1.eq.resources" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="Form1.resx" contentType="Designer" dependson="/home/xaxatrollo/workspace/test_1/Form1.vb" resource_id="test_1.Form1.resources" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="Form2.resx" contentType="Designer" dependson="/home/xaxatrollo/workspace/test_1/Form2.vb" resource_id="test_1.Form2.resources" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="Form3.resx" contentType="Designer" dependson="/home/xaxatrollo/workspace/test_1/Form3.vb" resource_id="test_1.Form3.resources" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="Form4.resx" contentType="Designer" dependson="/home/xaxatrollo/workspace/test_1/Form4.vb" resource_id="test_1.Form4.resources" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="Form5.resx" contentType="Designer" dependson="/home/xaxatrollo/workspace/test_1/Form5.vb" resource_id="test_1.Form5.resources" />
+    <File subtype="Code" buildaction="EmbedAsResource" name="My Project/Resources.resx" contentType="Designer" generator="VbMyResourcesResXFileCodeGenerator" resource_id="test_1.My_Project.Resources.resources" />
+    <File subtype="Code" buildaction="Nothing" name="bin/Debug4/wave_lib.exp" />
+    <File subtype="Code" buildaction="Nothing" name="bin/Debug4/wave_lib.ilk" />
+    <File subtype="Code" buildaction="Nothing" name="bin/Debug4/wave_lib.lib" />
+    <File subtype="Code" buildaction="Nothing" name="bin/Release/wave_lib.exp" />
+    <File subtype="Code" buildaction="Nothing" name="bin/Release/wave_lib.ilk" />
+    <File subtype="Code" buildaction="Nothing" name="bin/Release/wave_lib.lib" />
+    <File subtype="Code" buildaction="Nothing" name="My Project/Application.myapp" generator="MyApplicationCodeGenerator" />
+    <File subtype="Code" buildaction="Nothing" name="My Project/Settings.settings" generator="SettingsSingleFileGenerator" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Debug3/test_1.exe" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Debug3/test_1.pdb" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Debug4/wave_lib.dll" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Debug4/wave_lib.pdb" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Release/test_1.exe" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Release/test_1.pdb" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Release/wave_lib.dll" />
+    <File subtype="Code" buildaction="Exclude" name="bin/Release/wave_lib.pdb" />
+  </Contents>
+  <References>
+    <ProjectReference specificVersion="False" type="Gac" localcopy="True" refto="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference specificVersion="False" type="Gac" localcopy="True" refto="System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference specificVersion="False" type="Gac" localcopy="True" refto="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <ProjectReference specificVersion="False" type="Gac" localcopy="True" refto="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference specificVersion="False" type="Gac" localcopy="True" refto="System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    <ProjectReference type="Project" localcopy="True" refto="wave_lib2" />
+  </References>
+  <LanguageParameters OptionExplicit="Off" MyType="WindowsFormsWithCustomSubMain" StartupObject="test_1.Form4" ctype="VBProjectParameters" />
+  <Items>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+  </Items>
+</Project>

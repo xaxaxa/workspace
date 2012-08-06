@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "test_1", "test_1.vbproj", "{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wave_lib2", "..\wave_lib2\wave_lib2.csproj", "{7379F310-D67C-4EFE-A27D-B70EA20A2183}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "alsa_test", "alsa_test\alsa_test.csproj", "{E31087FF-84E4-4413-BC8D-E768BE16E52C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		release2|Any CPU = release2|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}.release2|Any CPU.ActiveCfg = release2|Any CPU
+		{0B908F87-F1B8-4CB9-B5FD-A81A80C384CB}.release2|Any CPU.Build.0 = release2|Any CPU
+		{7379F310-D67C-4EFE-A27D-B70EA20A2183}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7379F310-D67C-4EFE-A27D-B70EA20A2183}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7379F310-D67C-4EFE-A27D-B70EA20A2183}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7379F310-D67C-4EFE-A27D-B70EA20A2183}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7379F310-D67C-4EFE-A27D-B70EA20A2183}.release2|Any CPU.ActiveCfg = Debug|Any CPU
+		{7379F310-D67C-4EFE-A27D-B70EA20A2183}.release2|Any CPU.Build.0 = Debug|Any CPU
+		{E31087FF-84E4-4413-BC8D-E768BE16E52C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E31087FF-84E4-4413-BC8D-E768BE16E52C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E31087FF-84E4-4413-BC8D-E768BE16E52C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E31087FF-84E4-4413-BC8D-E768BE16E52C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E31087FF-84E4-4413-BC8D-E768BE16E52C}.release2|Any CPU.ActiveCfg = Debug|Any CPU
+		{E31087FF-84E4-4413-BC8D-E768BE16E52C}.release2|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = test_1.vbproj
+	EndGlobalSection
+EndGlobal

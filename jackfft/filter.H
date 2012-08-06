@@ -29,8 +29,12 @@ namespace xaxaxa
 	template<class NUMTYPE> class Filter
 	{
 	public:
-		virtual void PutData(const NUMTYPE* data, UInt length)=0;
-		virtual UInt GetData(NUMTYPE* out, UInt length)=0;
+		virtual void Process(NUMTYPE* data, UInt length)=0;
+		virtual void Process(const NUMTYPE* in, NUMTYPE* out, UInt length)
+		{
+			memcpy(out, in, length*sizeof(NUMTYPE));
+			Process(out, length);
+		}
 		Filter()
 		{
 		}
@@ -39,6 +43,30 @@ namespace xaxaxa
 		}
 	};
 	template<class NUMTYPE> class BufferedFilter: public Filter<NUMTYPE>
+	{
+	public:
+		virtual void PutData(const NUMTYPE* data, UInt length)=0;
+		virtual UInt GetData(NUMTYPE* out, UInt length)=0;
+		virtual void Process(NUMTYPE* data, UInt length)
+		{
+			PutData(data,length);
+			UInt tmp=GetData(data,length);
+			if(tmp<length) WARN(2,"buffer underflow: wanted " << length << " samples, but got " << tmp);
+		}
+		virtual void Process(const NUMTYPE* in, NUMTYPE* out, UInt length)
+		{
+			PutData(in,length);
+			UInt tmp=GetData(out,length);
+			if(tmp<length) WARN(2,"buffer underflow: wanted " << length << " samples, but got " << tmp);
+		}
+		BufferedFilter()
+		{
+		}
+		virtual ~BufferedFilter()
+		{
+		}
+	};
+	template<class NUMTYPE> class BufferedFilterHelper: public BufferedFilter<NUMTYPE>
 	{
 	public:
 		NUMTYPE* InBuffer;
@@ -124,13 +152,13 @@ namespace xaxaxa
 			}
 			return br;
 		}
-		BufferedFilter(UInt buffersize, UInt outbuffers) :
+		BufferedFilterHelper(UInt buffersize, UInt outbuffers) :
 				InBuffer(NULL), BufferSize(buffersize), OutBuffers(outbuffers),
 						OutBuffer(outbuffers, buffersize), outbuffer_index(-1), outbuffer_pos(0)
 		{
 			InBuffer = (NUMTYPE*) malloc(sizeof(NUMTYPE) * BufferSize);
 		}
-		virtual ~BufferedFilter()
+		virtual ~BufferedFilterHelper()
 		{
 			if (InBuffer != NULL
 			)
@@ -138,7 +166,7 @@ namespace xaxaxa
 		}
 	};
 
-	template<class NUMTYPE, class FLOATTYPE = double> class OverlappedFilter: public Filter<NUMTYPE>
+	template<class NUMTYPE, class FLOATTYPE = double> class OverlappedFilter: public BufferedFilter<NUMTYPE>
 	{
 	public:
 		CircularQueue<FLOATTYPE> InBuffer, OutBuffer;
@@ -322,7 +350,7 @@ namespace xaxaxa
 			free_buffer();
 		}
 	};
-	template<class NUMTYPE, class FLOATTYPE = double> class OverlappedFilter2: public Filter<NUMTYPE>
+	template<class NUMTYPE, class FLOATTYPE = double> class OverlappedFilter2: public BufferedFilter<NUMTYPE>
 	{
 	public:
 		CircularQueue<FLOATTYPE> InBuffer, OutBuffer;
