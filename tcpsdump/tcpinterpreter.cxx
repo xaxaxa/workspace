@@ -43,20 +43,25 @@ namespace net
 	typedef Int protoid;
 	constexpr protoid noproto=0;
 	struct packet;
-	struct connection
+	struct connection: public Object
 	{
 		virtual SByte largerThan(const connection& x) const=0;
-		/*virtual bool operator==(const connection& x) const=0;
-		virtual bool operator!=(const connection& x) const=0;
-		virtual bool operator>(const connection& x) const=0;
-		virtual bool operator<(const connection& x) const=0;
-		virtual bool operator<=(const connection& x) const=0;
-		virtual bool operator>=(const connection& x) const=0;*/
-		
+		inline bool operator==(const connection& x) const
+		{return largerThan(x)==0;}
+		inline bool operator!=(const connection& x) const
+		{return !(*this==x);}
+		inline bool operator>(const connection& x) const
+		{return largerThan(x)>0;}
+		inline bool operator<(const connection& x) const
+		{return largerThan(x)<0;}
+		inline bool operator<=(const connection& x) const
+		{return !(*this>x);}
+		inline bool operator>=(const connection& x) const
+		{return !(*this<x);}
 	};
 	struct connection_ptr
 	{
-		boost::shared_ptr<connection> ptr;
+		Property<connection> ptr;
 		inline bool operator==(const connection_ptr& x) const
 		{WARN(10,"oper = called");return this->ptr->largerThan(*(x.ptr))==0;}
 		inline bool operator!=(const connection_ptr& x) const
@@ -72,12 +77,63 @@ namespace net
 	};
 	namespace protocols
 	{
+		class protoint;
+	}
+	struct packet	//contains a *parsed* packet; raw packets should be represented by xaxaxa::Buffer
+	{				//can be an actual packet OR a piece of data in a stream
+		protocols::protoint* protocol;	//protocol of this packet, not the data within
+		void* header;					//packet classes contain valid packets only. no need for a separate headerlen field
+		Buffer data;
+		protoid dataprotocol;			//protocol of the data
+	};
+	namespace protocols
+	{
+		enum class EventType:Byte
+		{
+			Data=1,
+			DataWithConnection,
+			NewConnection,
+			CloseConnection
+		};
+		static const char* EventType_[]={NULL,"Data","DataWithConnection","NewConnection","CloseConnection"};
+			struct Event
+			{
+				const Event* Parent;
+				EventType Type;
+				//Event(EventType t):Parent(NULL),Type(t){}
+				Event(EventType t, const Event* parent=NULL):Parent(parent),Type(t){}
+				virtual ~Event(){}
+			};
+			struct DataEvent: public Event
+			{
+				const packet& Data;
+				DataEvent(const packet& p, EventType t, const Event* parent=NULL):Event(t,parent),Data(p){}
+				
+				DataEvent(const packet& p, const Event* parent=NULL):Event(EventType::Data, parent),Data(p){}
+			};
+			struct DataEventWithConnection: public DataEvent
+			{	//Connection has to inherit net::connection
+				const connection& Connection;
+				
+				DataEventWithConnection(const packet& p, const connection& con, const Event* parent=NULL):DataEvent(p, EventType::DataWithConnection, parent), Connection(con){}
+			};
+			struct ConnectionEvent: public Event
+			{	//Connection has to inherit net::connection
+				const connection& Connection;
+				ConnectionEvent(EventType t, const connection& c, const Event* parent=NULL):Event(t, parent),Connection(c){}
+			};
 		class protoint
 		{
 		public:
-			DELEGATE(void,datadelegate,const packet& p);
+			
+			
+			DELEGATE(void,datadelegate,const Event& e);
 			EVENT(datadelegate) dataout;
-			virtual void putdata(const packet& p)=0;
+			virtual void HandleEvent(const Event& e)=0;
+			virtual void putdata(const packet& p)
+			{	//DEPRECATED; use HandleEvent instead;
+				HandleEvent(DataEvent((const packet&)p));
+			}
 			virtual string identify() const=0;
 			
 			//for protocols with src and dst addresses only
@@ -96,14 +152,7 @@ namespace net
 			{return false;}
 		};
 	}
-	struct packet	//contains a *parsed* packet; raw packets should be represented by xaxaxa::Buffer
-	{				//can be an actual packet OR a piece of data in a stream
-		protocols::protoint* protocol;	//protocol of this packet, not the data within
-		protoid dataprotocol;			//protocol of the data
-		void* header;					//packet classes contain valid packets only. no need for a separate headerlen field
-		Buffer data;
-		packet* parent;
-	};
+	
 	namespace protocols
 	{
 		class tcpint;
@@ -113,17 +162,21 @@ namespace net
 		
 		class ether:public protoint
 		{
-			virtual void putdata(const packet& p)
+			virtual void HandleEvent(const Event& e)
 			{
-				const Buffer& b=p.data;
-				const ether_header* h=(ether_header*)b.Data;
-				if((UInt)b.Length<sizeof(ether_header))
+				if(e.Type==EventType::Data)
 				{
-					WARN(5,"Invalid ethernet packet; length="<<b.Length);
-					return;
+					const packet& p=((const DataEvent&)e).Data;
+					const Buffer& b=p.data;
+					const ether_header* h=(ether_header*)b.Data;
+					if((UInt)b.Length<sizeof(ether_header))
+					{
+						WARN(5,"Invalid ethernet packet; length="<<b.Length);
+						return;
+					}
+					WARN(10,"received ethernet packet; length="<<b.Length<<"; ether_type="<<ntohs(h->ether_type));
+					RAISEEVENT(dataout,DataEvent{packet{this,b.Data,b.SubBuffer(sizeof(ether_header)),(protoid)ntohs(h->ether_type)},&e});
 				}
-				WARN(10,"received ethernet packet; length="<<b.Length<<"; ether_type="<<ntohs(h->ether_type));
-				RAISEEVENT(dataout,{this,(protoid)ntohs(h->ether_type),b.Data,b.SubBuffer(sizeof(ether_header)),(packet*)&p});
 			}
 			virtual string identify() const{return "Ethernet";}
 			virtual Byte getAddrSize(const packet& p) const
@@ -137,33 +190,41 @@ namespace net
 		};
 		class sll:public protoint
 		{
-			virtual void putdata(const packet& p)
+			virtual void HandleEvent(const Event& e)
 			{
-				const Buffer& b=p.data;
-				const sll_header* h=(sll_header*)b.Data;
-				if((UInt)b.Length<sizeof(sll_header))
+				if(e.Type==EventType::Data)
 				{
-					WARN(5,"Invalid linux cooked packet; length="<<b.Length);
-					return;
+					const packet& p=((const DataEvent&)e).Data;
+					const Buffer& b=p.data;
+					const sll_header* h=(sll_header*)b.Data;
+					if((UInt)b.Length<sizeof(sll_header))
+					{
+						WARN(5,"Invalid linux cooked packet; length="<<b.Length);
+						return;
+					}
+					WARN(10,"received linux cooked packet; length="<<b.Length<<"; sll_protocol="<<ntohs(h->sll_protocol));
+					RAISEEVENT(dataout,DataEvent{packet{this,b.Data,b.SubBuffer(sizeof(sll_header)),(protoid)ntohs(h->sll_protocol)},&e});
 				}
-				WARN(10,"received linux cooked packet; length="<<b.Length<<"; sll_protocol="<<ntohs(h->sll_protocol));
-				RAISEEVENT(dataout,{this,(protoid)ntohs(h->sll_protocol),b.Data,b.SubBuffer(sizeof(sll_header)),(packet*)&p});
 			}
 			virtual string identify() const{return "Linux Cooked";}
 		};
 		class ip:public protoint
 		{
-			virtual void putdata(const packet& p)
+			virtual void HandleEvent(const Event& e)
 			{
-				const Buffer& b=p.data;
-				iphdr* h=(iphdr*)b.Data;
-				Int hdrlen;
-				if(b.Length<1 || b.Length<(hdrlen=h->ihl*4))
+				if(e.Type==EventType::Data)
 				{
-					WARN(5,"Invalid IP packet");
-					return;
+					const packet& p=((const DataEvent&)e).Data;
+					const Buffer& b=p.data;
+					iphdr* h=(iphdr*)b.Data;
+					Int hdrlen;
+					if(b.Length<1 || b.Length<(hdrlen=h->ihl*4))
+					{
+						WARN(5,"Invalid IP packet");
+						return;
+					}
+					RAISEEVENT(dataout,DataEvent{packet{this,h,b.SubBuffer(hdrlen),(protoid)(h->protocol)},&e});
 				}
-				RAISEEVENT(dataout,{this,(protoid)(h->protocol),h,b.SubBuffer(hdrlen),(packet*)&p});
 			}
 			virtual string identify() const{return "Internet Protocol";}
 			virtual Byte getAddrSize(const packet& p) const
@@ -184,17 +245,21 @@ namespace net
 		
 		class ipv6:public protoint
 		{
-			virtual void putdata(const packet& p)
+			virtual void HandleEvent(const Event& e)
 			{
-				const Buffer& b=p.data;
-				ip6_hdr* h=(ip6_hdr*)b.Data;
-				//Int hdrlen;
-				if(b.Length<(Int)sizeof(ip6_hdr))
+				if(e.Type==EventType::Data)
 				{
-					WARN(5,"Invalid IPv6 packet");
-					return;
+					const packet& p=((const DataEvent&)e).Data;
+					const Buffer& b=p.data;
+					ip6_hdr* h=(ip6_hdr*)b.Data;
+					//Int hdrlen;
+					if(b.Length<(Int)sizeof(ip6_hdr))
+					{
+						WARN(5,"Invalid IPv6 packet");
+						return;
+					}
+					RAISEEVENT(dataout,DataEvent{packet{this,h,b.SubBuffer(sizeof(ip6_hdr)),(protoid)(h->ip6_ctlun.ip6_un1.ip6_un1_nxt)},&e});
 				}
-				RAISEEVENT(dataout,{this,(protoid)(h->ip6_ctlun.ip6_un1.ip6_un1_nxt),h,b.SubBuffer(sizeof(ip6_hdr)),(packet*)&p});
 			}
 			virtual string identify() const{return "Internet Protocol Version 6";}
 			virtual Byte getAddrSize(const packet& p) const
@@ -238,7 +303,7 @@ namespace net
 			struct tcpconn:connection
 			{
 				Byte addrlen;
-				boost::shared_array<Byte> address;
+				//boost::shared_array<Byte> address;
 				Byte* srcaddr;
 				Byte* dstaddr;
 				UShort srcport;
@@ -247,8 +312,8 @@ namespace net
 				protoint* parentproto;
 				#define __GET_SRCADDR(x,addrlen) (*((Byte(&)[addrlen])x))
 				#define __GET_DSTADDR(x,addrlen) (*((Byte(&)[addrlen])(((Byte*)(x))+addrlen)))
-				tcpconn():isRaw(false){}
-				tcpconn(Byte addrlen, Byte* src, Byte* dst, protoint* p, bool raw=false):isRaw(raw), parentproto(p)
+				inline tcpconn():isRaw(false){}
+				inline tcpconn(Byte addrlen, Byte* src, Byte* dst, protoint* p, bool raw=false):isRaw(raw), parentproto(p)
 				{
 					this->addrlen=addrlen;
 					if(raw)
@@ -258,11 +323,16 @@ namespace net
 					}
 					else
 					{
-						address=boost::shared_array<Byte>(new Byte[addrlen*2]);
-						Byte* addr=address.get();
+						Byte* addr=new Byte[addrlen*2];
 						memcpy(addr,src,addrlen);
 						memcpy(addr+addrlen,dst,addrlen);
+						srcaddr=addr;
 					}
+				}
+				~tcpconn()
+				{
+					if(!isRaw)
+						delete[] srcaddr;
 				}
 				virtual SByte largerThan(const connection& x) const
 				{
@@ -274,9 +344,9 @@ namespace net
 					if(srcport<x2.srcport)return -2;
 					if(dstport>x2.dstport)return 1;
 					if(dstport<x2.dstport)return -1;
-					return 0;
-					const Byte* saddr=isRaw?srcaddr:((Byte*)this->address.get());
-					const Byte* saddr2=x2.isRaw?x2.srcaddr:((Byte*)x2.address.get());
+					//return 0;
+					const Byte* saddr=srcaddr;//isRaw?srcaddr:((Byte*)this->address.get());
+					const Byte* saddr2=x2.srcaddr;//x2.isRaw?x2.srcaddr:((Byte*)x2.address.get());
 					const Byte* daddr=isRaw?dstaddr:(saddr+addrlen);
 					const Byte* daddr2=x2.isRaw?x2.dstaddr:(saddr2+x2.addrlen);
 					//Byte (&srcaddr)[addrlen]=*((Byte(*)[addrlen])dataaddr);
@@ -387,67 +457,79 @@ namespace net
 			typedef map<connection_ptr,tcpbuffer>::iterator iter;
 			void tcpbuf_cb(tcpbuffer& src, const Buffer& b)
 			{
-				RAISEEVENT(dataout,{this,noproto,&src,b,NULL});
+				//packet p{this,&src,b,NULL,noproto};
+				//RAISEEVENT(this->dataout,DataEvent((const packet&)p));
+				RAISEEVENT(this->dataout,DataEventWithConnection(packet{this,&src,b,noproto},(const connection&)*src.conn.ptr));
 			}
-			virtual void putdata(const packet& p)
+			virtual void HandleEvent(const Event& e)
 			{
-				const Buffer& b=p.data;
-				tcphdr* h=(tcphdr*)b.Data;
-				if(b.Length<20)
+				if(e.Type==EventType::Data)
 				{
-					WARN(5,"Invalid TCP packet");
-					return;
+					const packet& p=((const DataEvent&)e).Data;
+					const Buffer& b=p.data;
+					tcphdr* h=(tcphdr*)b.Data;
+					if(b.Length<20)
+					{
+						WARN(5,"Invalid TCP packet");
+						return;
+					}
+					Int doff=h->doff*4;
+					if((doff<(Int)sizeof(tcphdr)) || doff>b.Length)
+					{
+						WARN(5,"Invalid TCP packet");
+						return;
+					}
+					const Event* p_e=&e;
+					const packet* pack;
+					int addrlen;
+					while(true)
+					{
+						const DataEvent* p_d_e=dynamic_cast<const DataEvent*>(p_e);
+						pack=&p_d_e->Data;
+						if((addrlen=pack->protocol->getAddrSize(*pack))>0)break;
+						p_e=p_e->Parent;
+						if(p_e==NULL)
+						{WARN(6,"could not find src address and dst address for tcp packet");return;}
+					}
+					
+					WARN(8,"received tcp packet; len="<<b.Length);
+					//Byte tmpbuf[sizeof(tcpconn)+(addrlen*2)];
+					Byte* srcaddr; Byte* dstaddr;
+					pack->protocol->getAddr(*pack,srcaddr,dstaddr);
+					tcpconn con(addrlen,srcaddr,dstaddr,pack->protocol,true);//malloc(sizeof(tcpconn)+(addrlen*2));
+					//memcpy(con+1,srcaddr,addrlen);
+					//memcpy(((Byte*)con+1)+addrlen,dstaddr,addrlen);
+					con.srcport=ntohs(h->source);
+					con.dstport=ntohs(h->dest);
+					connection_ptr tmpptr{&con};
+					iter it=connections.find(tmpptr);
+					tcpbuffer* tcpbufp;
+					if(it==connections.end())
+					{
+						objref<tcpconn> con1(addrlen,srcaddr,dstaddr,pack->protocol);//(tcpconn*)malloc(sizeof(tcpconn)+(addrlen*2));
+						//memcpy(con1,con,sizeof(tmpbuf));
+						con1->srcport=con.srcport;
+						con1->dstport=con.dstport;
+						WARN(9,"added new connection; sport="<<con.srcport<<"; dport="<<con.dstport<<"; seq="<<ntohl(h->seq));
+						WARN(9,"src="<<pack->protocol->getAddressString(*pack,srcaddr)<<"; dst="<<pack->protocol->getAddressString(*pack,dstaddr));
+						//cptr.ptr=boost::shared_ptr<connection>(con1);
+						tmpptr.ptr=con1();
+						tcpbufp=&connections[tmpptr];
+						tcpbufp->conn=tmpptr;
+						RAISEEVENT(this->dataout,ConnectionEvent(EventType::NewConnection,*con1,&e));
+					} else 
+					{
+						WARN(9,"found existing connection; sport="<<con.srcport<<"; dport="<<con.dstport<<"; seq="<<ntohl(h->seq));
+						tcpbufp=&((*it).second);
+						//if(tcpbufp->conn!=cptr) WARN(3,"INTERNAL ERROR POSSIBLE DATA CORRUPTION: connections[cptr].conn != cptr");
+					}
+					tcpbuffer& tcpbuf=*tcpbufp;
+					if(FUNCTION_ISNULL(tcpbuf.dataout))tcpbuf.dataout=tcpbuffer::datadelegate(&tcp::tcpbuf_cb,this);
+					//tcpbuf.processData(h->syn?ntohl(h->seq)+1:ntohl(h->seq),b.SubBuffer(doff));
+					tcpbuf.processData(ntohl(h->seq),b.SubBuffer(doff),h->psh?1:0,(h->syn||h->fin)?1:0);
+					//RAISEEVENT(dataout,{this,noproto,h,b.SubBuffer(h->doff*4),(packet*)&p});
+					//CALL(dataout,NULL,b);
 				}
-				Int doff=h->doff*4;
-				if((doff<(Int)sizeof(tcphdr)) || doff>b.Length)
-				{
-					WARN(5,"Invalid TCP packet");
-					return;
-				}
-				const packet* pack=&p;
-				int addrlen;
-				while(true)
-				{
-					if(pack==NULL || pack->protocol==NULL)
-					{WARN(6,"could not find src address and dst address for tcp packet");return;}
-					if((addrlen=pack->protocol->getAddrSize(*pack))>0)break;
-					pack=pack->parent;
-				}
-				WARN(8,"received tcp packet; len="<<b.Length);
-				//Byte tmpbuf[sizeof(tcpconn)+(addrlen*2)];
-				Byte* srcaddr; Byte* dstaddr;
-				pack->protocol->getAddr(*pack,srcaddr,dstaddr);
-				tcpconn* con=new tcpconn(addrlen,srcaddr,dstaddr,pack->protocol,true);//malloc(sizeof(tcpconn)+(addrlen*2));
-				//memcpy(con+1,srcaddr,addrlen);
-				//memcpy(((Byte*)con+1)+addrlen,dstaddr,addrlen);
-				con->srcport=ntohs(h->source);
-				con->dstport=ntohs(h->dest);
-				connection_ptr cptr={boost::shared_ptr<connection>(con)};
-				iter it=connections.find(cptr);
-				tcpbuffer* tcpbufp;
-				if(it==connections.end())
-				{
-					tcpconn* con1=new tcpconn(addrlen,srcaddr,dstaddr,pack->protocol);//(tcpconn*)malloc(sizeof(tcpconn)+(addrlen*2));
-					//memcpy(con1,con,sizeof(tmpbuf));
-					con1->srcport=con->srcport;
-					con1->dstport=con->dstport;
-					WARN(9,"added new connection; sport="<<con->srcport<<"; dport="<<con->dstport<<"; seq="<<ntohl(h->seq));
-					WARN(9,"src="<<pack->protocol->getAddressString(*pack,srcaddr)<<"; dst="<<pack->protocol->getAddressString(*pack,dstaddr));
-					cptr.ptr=boost::shared_ptr<connection>(con1);
-					tcpbufp=&connections[cptr];
-					tcpbufp->conn=cptr;
-				} else 
-				{
-					WARN(9,"found existing connection; sport="<<con->srcport<<"; dport="<<con->dstport<<"; seq="<<ntohl(h->seq));
-					tcpbufp=&(connections[cptr]);
-					//if(tcpbufp->conn!=cptr) WARN(3,"INTERNAL ERROR POSSIBLE DATA CORRUPTION: connections[cptr].conn != cptr");
-				}
-				tcpbuffer& tcpbuf=*tcpbufp;
-				if(FUNCTION_ISNULL(tcpbuf.dataout))tcpbuf.dataout=tcpbuffer::datadelegate(&tcp::tcpbuf_cb,this);
-				//tcpbuf.processData(h->syn?ntohl(h->seq)+1:ntohl(h->seq),b.SubBuffer(doff));
-				tcpbuf.processData(ntohl(h->seq),b.SubBuffer(doff),h->psh?1:0,(h->syn||h->fin)?1:0);
-				//RAISEEVENT(dataout,{this,noproto,h,b.SubBuffer(h->doff*4),(packet*)&p});
-				//CALL(dataout,NULL,b);
 			}
 			virtual bool getConnection(const packet& p, connection_ptr& ptr_out) const
 			{
@@ -458,32 +540,36 @@ namespace net
 			virtual Byte getAddrSize(const packet& p) const
 			{
 				tcpbuffer* b=(tcpbuffer*)p.header;
-				boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
-				return c->addrlen;
+				//boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
+				return ((tcpconn*)(b->conn.ptr()))->addrlen;
 			}
 			virtual void getAddr(const packet& p, Byte*& src, Byte*& dst) const
 			{
 				tcpbuffer* b=(tcpbuffer*)p.header;
-				boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
-				src=c->isRaw?(c->srcaddr):(c->address.get());
+				//boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
+				tcpconn* c=(tcpconn*)(b->conn.ptr());
+				src=c->srcaddr;//c->isRaw?(c->srcaddr):(c->address.get());
 				dst=c->isRaw?(c->dstaddr):(src+c->addrlen);
 			}
 			virtual string getAddressString(const packet& p, Byte* addr) const
 			{
 				tcpbuffer* b=(tcpbuffer*)p.header;
-				boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
+				//boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
+				tcpconn* c=(tcpconn*)(b->conn.ptr());
 				return c->parentproto->getAddressString(p, addr);
 			}
 			virtual UShort getSrcPort(const packet& p) const
 			{
 				tcpbuffer* b=(tcpbuffer*)p.header;
-				boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
+				tcpconn* c=(tcpconn*)(b->conn.ptr());
+				//boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
 				return c->srcport;
 			}
 			virtual UShort getDstPort(const packet& p) const
 			{
 				tcpbuffer* b=(tcpbuffer*)p.header;
-				boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
+				tcpconn* c=(tcpconn*)(b->conn.ptr());
+				//boost::shared_ptr<tcpconn> c=boost::static_pointer_cast<tcpconn>(b->conn.ptr);
 				return c->dstport;
 			}
 			virtual string identify() const{return "Transmission Control Protocol";}
@@ -502,14 +588,19 @@ namespace net
 			if(it==p.end()){WARN(10,"protocol " << pack.dataprotocol << " not found");return;}
 			(*it).second->putdata(pack);
 		}
-		void cb(const packet& p)
+		void cb(const protocols::Event& e)
 		{
-			if(p.dataprotocol==noproto)
-			{//reached application layer
-				WARN(10,"application layer reached. last protocol was \""<<p.protocol->identify()<<"\".");
-				RAISEEVENT(dataout,p);
+			if(e.Type==protocols::EventType::Data)
+			{
+				const packet& p=((protocols::DataEvent&)e).Data;
+				if(p.dataprotocol==noproto)
+				{//reached application layer
+					WARN(10,"application layer reached. last protocol was \""<<p.protocol->identify()<<"\".");
+					RAISEEVENT(dataout,e);
+				}
+				else processPacket(p);
 			}
-			else processPacket(p);
+			else RAISEEVENT(dataout,e);
 		}
 		protostack()
 		{

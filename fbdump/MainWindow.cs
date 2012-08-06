@@ -18,7 +18,7 @@ public partial class MainWindow: Gtk.Window
 {
 	public const string graph_base = "https://graph.facebook.com/";
 	public delegate void object_callback (JToken obj,string graph_path,fbdump_params p);
-
+	int expand_depth=1;
 	public MainWindow (): base (Gtk.WindowType.Toplevel)
 	{
 		Build ();

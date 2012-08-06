@@ -200,8 +200,8 @@ namespace xaxaxa
 				{}
 			};
 
-		//uncomment to allow hybrid functions to distinguish between a member
-		//function pointer with a NULL thisptr and a static function.
+		//uncomment to allow hybrid functions to distinguish between (a member
+		//function pointer with a NULL thisptr) and (a static function).
 		//this adds overhead.
 		//#define XAXAXA_FUNCTION_ALLOW_NULL_THISPTR
 
@@ -372,19 +372,19 @@ namespace xaxaxa
 			if (obj != NULL) obj->RefCount_inc();
 			return *this;
 		}
-		inline T* operator()()
+		inline T* operator()() const
 		{
 			return obj;
 		}
-		inline T& operator*()
+		inline T& operator*() const
 		{
 			return *obj;
 		}
-		inline T* operator->()
+		inline T* operator->() const
 		{
 			return obj;
 		}
-		inline T* get()
+		inline T* get() const
 		{
 			return obj;
 		}
@@ -405,19 +405,19 @@ namespace xaxaxa
 		{
 			obj->RefCount_dec();
 		}
-		inline T* operator()()
+		inline T* operator()() const
 		{
 			return obj;
 		}
-		inline T* operator->()
+		inline T* operator->() const
 		{
 			return obj;
 		}
-		inline T& operator*()
+		inline T& operator*() const
 		{
 			return *obj;
 		}
-		inline T* get()
+		inline T* get() const
 		{
 			return obj;
 		}
@@ -2607,7 +2607,7 @@ namespace xaxaxa
 
 		}
 	};
-	typedef struct ucontext sig_ucontext_t;
+	
 
 	class Util_c
 	{
@@ -2663,27 +2663,21 @@ namespace xaxaxa
 			}
 		}
 #if __x86_64__
+		typedef struct ucontext sig_ucontext_t;
 		static void crit_err_hdlr(int sig_num, siginfo_t * info, void * ucontext)
 		{
 			sig_ucontext_t * uc = (sig_ucontext_t *) ucontext;
-
 			void * caller_address = (void *) uc->uc_mcontext.gregs[REG_RIP]; // x86 specific
-
 			std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is "
 			<< info->si_addr << " from " << caller_address << std::endl << std::endl;
-
 			void * array[50];
 			int size = backtrace(array, 50);
-
 			array[1] = caller_address;
-
 			char ** messages = backtrace_symbols(array, size);
-
 			// skip first stack frame (points here)
 			for (int i = 1; i < size && messages != NULL; ++i)
 			{
 				char *mangled_name = 0, *offset_begin = 0, *offset_end = 0;
-
 				// find parantheses and +address offset surrounding mangled name
 				for (char *p = messages[i]; *p; ++p)
 				{
@@ -2701,14 +2695,12 @@ namespace xaxaxa
 						break;
 					}
 				}
-
 				// if the line could be processed, attempt to demangle the symbol
 				if (mangled_name && offset_begin && offset_end && mangled_name < offset_begin)
 				{
 					*mangled_name++ = '\0';
 					*offset_begin++ = '\0';
 					*offset_end++ = '\0';
-
 					int status;
 					char * real_name = abi::__cxa_demangle(mangled_name, 0, 0, &status);
 
@@ -2717,7 +2709,6 @@ namespace xaxaxa
 					{
 						std::cerr << "[bt]: (" << i << ") " << messages[i] << " : " << real_name
 						<< "+" << offset_begin << offset_end << std::endl;
-
 					}
 					// otherwise, output the mangled function name
 					else
@@ -2734,22 +2725,56 @@ namespace xaxaxa
 				}
 			}
 			std::cerr << std::endl;
-
 			free(messages);
-
 			exit(EXIT_FAILURE);
 		}
+#else
+		// This structure mirrors the one found in /usr/include/asm/ucontext.h
+		typedef struct _sig_ucontext {
+		   unsigned long     uc_flags;
+		   struct ucontext   *uc_link;
+		   stack_t           uc_stack;
+		   struct sigcontext uc_mcontext;
+		   sigset_t          uc_sigmask;
+		} sig_ucontext_t;
+		static void crit_err_hdlr(int sig_num, siginfo_t * info, void * ucontext) {
+			sig_ucontext_t * uc = (sig_ucontext_t *)ucontext;
+
+			// Get the address at the time the signal was raised from the EIP (x86)
+			void * caller_address = (void *) uc->uc_mcontext.eip;
+
+			std::cerr << "signal " << sig_num 
+					  << " (" << strsignal(sig_num) << "), address is " 
+					  << info->si_addr << " from " 
+					  << caller_address << std::endl;
+			void * array[50];
+			int size = backtrace(array, 50);
+			std::cerr << __FUNCTION__ << " backtrace returned " 
+					  << size << " frames\n\n";
+			// overwrite sigaction with caller's address
+			array[1] = caller_address;
+			char ** messages = backtrace_symbols(array, size);
+
+			// skip first stack frame (points here)
+			for (int i = 1; i < size && messages != NULL; ++i) {
+				std::cerr << "[bt]: (" << i << ") " << messages[i] << std::endl;
+			}
+			std::cerr << std::endl;
+			free(messages);
+			exit(EXIT_FAILURE);
+		}
+
 #endif
 		void SetHandlers()
 		{
-#if __x86_64__
+//#if __x86_64__
 			struct sigaction sigact;
 			sigact.sa_sigaction = &Util_c::crit_err_hdlr;
 			sigact.sa_flags = SA_RESTART | SA_SIGINFO;
 			sigaction(SIGSEGV, &sigact, (struct sigaction *) NULL);
 			sigaction(SIGABRT, &sigact, (struct sigaction *) NULL);
 			sigaction(SIGFPE, &sigact, (struct sigaction *) NULL);
-#endif
+//#endif
 		}
 	};
 	extern Util_c Util;

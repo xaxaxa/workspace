@@ -1,0 +1,63 @@
+#ifndef __CURL_HTTPREQ_H
+#define __CURL_HTTPREQ_H
+#include <curl/curl.h>
+#include <event.h>
+#include <functional>
+#include <queue>
+#include <string>
+
+using std::function;
+using std::queue;
+using std::string;
+
+namespace curl
+{
+	struct instance
+	{
+		event_base* eb;
+		CURLM *m;
+		event timer_event;
+	};
+	void newInstance(instance* inst);
+	void eventLoop(instance* inst);
+	void dispose(instance* inst);
+	
+	void cb_event(int fd, short events, void *userdata);
+	void addCurlTask(instance* inst, CURL* c, const function<void(CURL*,CURLcode)>& cb);
+	void addTransfer(instance* inst, const char* url,
+		const function<bool(const void* data, int len, int state)>& cb);
+											/*-1:failed 1:connected 2:sent 3:recving 4:closed*/
+	class transferManager
+	{
+	public:
+		instance inst;
+		int itemsProcessing, concurrency;
+		struct item
+		{
+			string url;
+			function<bool(const void* data, int len, int state)> cb;
+		};
+		queue<item> q;
+		transferManager(int concurrency=3):itemsProcessing(0), concurrency(concurrency)
+		{
+			curl::newInstance(&inst);
+		}
+		~transferManager()
+		{
+			curl::dispose(&inst);
+		}
+		void checkQueue();
+		void doTransfer(const char* url,
+			const function<bool(const void* data, int len, int state)>& cb);
+		void addTransfer(const char* url,
+			const function<bool(const void* data, int len, int state)>& cb);
+		inline void eventLoop()
+		{
+			curl::eventLoop(&inst);
+		}
+	};
+	
+}
+
+#endif
+
