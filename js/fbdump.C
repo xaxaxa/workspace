@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 //#include <urdl.cpp>
 
 using namespace v8;
@@ -34,8 +35,6 @@ namespace l
 {
 	using namespace lib;
 	//boost::asio::io_service io_service;
-	
-	
 #if false
 	class httpreq
 	{
@@ -194,7 +193,52 @@ namespace l
 			String::Utf8Value ct(a[1]);
 			xaxaxa::FileStream fs(*fn,O_RDWR|O_CREAT|O_TRUNC,0644);
 			const char* str=*ct;
-			fs.Write({(void*)str,strlen(str)});
+			fs.Write({(void*)str,(int)strlen(str)});
+			return Undefined();
+		}
+		catch(exception& ex)
+		{
+			return ThrowException(String::New(ex.what()));
+		}
+	}
+	static Handle<Value> load(const Arguments& a)
+	{
+		if(!(a.Length()<1))goto cont;
+		return ThrowException(String::New("argument error: usage: String load(String filename)"));
+	cont:
+		try
+		{
+			String::Utf8Value fn(a[0]);
+			xaxaxa::FileStream fs(*fn,O_RDONLY);
+			xaxaxa::StringBuilder sb;
+			while(sb.Append(fs,4096)>0);
+			return String::New(sb.ToString().c,sb.Length());
+		}
+		catch(exception& ex)
+		{
+			return ThrowException(String::New(ex.what()));
+		}
+	}
+	static Handle<Value> ls(const Arguments& a)
+	{
+		if(!(a.Length()<2))goto cont;
+		return ThrowException(String::New("argument error: usage: ls(String dir, Function callback)"));
+	cont:
+		try
+		{
+			String::Utf8Value dir(a[0]);
+			Handle<Function> func(Handle<Function>::Cast(a[1]));
+			Handle<Object> obj(a.Holder());
+			DIR* d=opendir(*dir);
+			if(d==NULL)return ThrowException(String::New(strerror(errno)));
+			dirent* entry;
+			Handle<Value> argv[1];
+			while((entry=readdir(d))!=NULL)
+			{
+				argv[0]=String::New(entry->d_name);
+				func->Call(obj,1,argv);
+			}
+			closedir(d);
 			return Undefined();
 		}
 		catch(exception& ex)
@@ -253,6 +297,27 @@ namespace l
 			return ThrowException(String::New(ex.what()));
 		}
 	}
+	static Handle<Value> prompt(const Arguments& a)
+	{
+		try
+		{
+			char* line=NULL;
+			size_t len=0;
+			if(getline(&line,&len,stdin)<0) return ThrowException(String::New("EOF"));
+			size_t len2=strlen(line);
+			for(;len2>=0;len2--) {
+				char c=line[len2-1];
+				if(c!='\x0A' && c!='\x0D')break;
+			}
+			Handle<String> s=String::New(line,len2);
+			free(line);
+			return s;
+		}
+		catch(exception& ex)
+		{
+			return ThrowException(String::New(ex.what()));
+		}
+	}
 	static Handle<Value> exit(const Arguments& a)
 	{
 		int code=0;
@@ -268,7 +333,9 @@ namespace l
 		return lib::gettemplate({{"print",getfunc(print)}, {"get",getfunc(get)},
 			{"download",getfunc(download)}, {"exists",getfunc(exists)},
 			{"save",getfunc(save)}, {"symlink",getfunc(symlink)},
-			{"mkdir",getfunc(mkdir)}, {"exit",getfunc(exit)} });
+			{"mkdir",getfunc(mkdir)}, {"exit",getfunc(exit)},
+			{"load",getfunc(load)}, {"ls",getfunc(ls)},
+			{"prompt",getfunc(prompt)} });
 	}
 }
 namespace fbd

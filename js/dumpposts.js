@@ -14,7 +14,7 @@ function getLargestPicture(obj)
 		return ["source",obj.source];
 	}
 }
-var help="all variables:\n - profile - id or username of the target facebook profile"
+var help="usage: dumpposts.js -o profile=id_or_username"
 if(!("profile" in this))
 {
 	lib.print("'profile' undefined. "+help);
