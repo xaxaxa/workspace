@@ -39,7 +39,7 @@ function on_error(obj)
 	if(obj.error.type=="OAuthException") {
 		if((!(typeof noprompt === "undefined")) && noprompt) throw Error(obj.error.message);
 		else {
-			lib.print("the access token has expired or is invalid; please enter a new one:");
+			print("the access token has expired or is invalid; please enter a new one:",0);
 			s=lib.prompt();
 			if(s==null || s.length==0) throw Error("user cancelled");
 			a=s;
@@ -69,12 +69,12 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 {
 	var g=access_token_generation;
 	url=patch_arg(url,"access_token",a);
-	lib.print(url);
-	if("onrequest" in traps)traps.onrequest(url);
+	lib.print("getting: "+url);
+	if(traps && "onrequest" in traps)traps.onrequest(url);
 	lib.get(url, function(s)
 	{
 		//lib.print(s);
-		if("onresponse" in traps)traps.onresponse(url);
+		if(traps && "onresponse" in traps)traps.onresponse(url);
 		d=JSON.parse(s);
 		if("error" in d) {
 			while(true) {
@@ -94,7 +94,7 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 		} else {
 			if(cb) cb(new fbobj(d,null,s));
 		}
-		if("oncomplete" in traps)traps.oncomplete(url);
+		if(traps && "oncomplete" in traps)traps.oncomplete(url);
 	});
 }
 function dump(p,cb,follow,traps)
