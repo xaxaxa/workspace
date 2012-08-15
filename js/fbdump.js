@@ -76,6 +76,7 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 		//lib.print(s);
 		if(traps && "onresponse" in traps)traps.onresponse(url);
 		d=JSON.parse(s);
+		if(d===false)return;
 		if("error" in d) {
 			while(true) {
 				if(access_token_generation>g) {
@@ -99,7 +100,7 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 }
 function dump(p,cb,follow,traps)
 {
-	p=p.replace(/^\/+|\/+$/g, "");
+	try{ p=p.replace(/^\/+|\/+$/g, ""); } catch(e){}
 	if(follow==null)follow=true;
 	do_dump("https://graph.facebook.com/"+p,cb,follow,p,Object(),traps);
 }

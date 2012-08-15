@@ -8,3 +8,5 @@ clean:
 install:
 	cp -f main /usr/local/bin/tcpsdump
 	cp -f rmhttphdr /usr/local/bin/
+	setcap cap_net_raw=eip /usr/local/bin/tcpsdump
+
