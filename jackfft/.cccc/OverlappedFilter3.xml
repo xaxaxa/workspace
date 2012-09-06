@@ -2,14 +2,14 @@
 <!--Detailed report on module OverlappedFilter3-->
 <CCCC_Project>
 <module_summary>
-<lines_of_code value="118" level="0" />
+<lines_of_code value="119" level="0" />
 <lines_of_code_per_member_function value="******" level="0" />
 <McCabes_cyclomatic_complexity value="17" level="0" />
 <McCabes_cyclomatic_complexity_per_member_function value="******" level="2" />
-<lines_of_code value="7" level="0" />
+<lines_of_code value="6" level="0" />
 <lines_of_code_per_member_function value="********" level="2" />
-<lines_of_code_per_line_of_comment value="16.857" level="1" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="2.429" level="0" />
+<lines_of_code_per_line_of_comment value="19.833" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="2.833" level="0" />
 <weighted_methods_per_class_unity value="12" level="0" />
 <weighted_methods_per_class_visibility value="12" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
@@ -24,7 +24,7 @@
 </module_summary>
 <module_detail>
 <description>definition</description>
-<source_reference file="filter.H" line="537" />
+<source_reference file="filter.H" line="567" />
 <lines_of_code value="13" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
 <lines_of_comment value="0" level="0" />
@@ -36,7 +36,7 @@
 <name>DoProcess()</name>
 <extent>
 <description>declaration</description>
-<source_reference file="filter.H" line="565" />
+<source_reference file="filter.H" line="595" />
 </extent>
 <lines_of_code value="1" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -48,7 +48,7 @@
 <name>DoProcess1()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="566" />
+<source_reference file="filter.H" line="596" />
 </extent>
 <lines_of_code value="11" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
@@ -60,7 +60,7 @@
 <name>GetData(NUMTYPE *)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="640" />
+<source_reference file="filter.H" line="670" />
 </extent>
 <lines_of_code value="9" level="0" />
 <McCabes_cyclomatic_complexity value="3" level="0" />
@@ -72,7 +72,7 @@
 <name>OutputSize()</name>
 <extent>
 <description>declaration</description>
-<source_reference file="filter.H" line="639" />
+<source_reference file="filter.H" line="669" />
 </extent>
 <lines_of_code value="1" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -84,7 +84,7 @@
 <name>OverlappedFilter3(UInt,UInt,UInt,UInt,UInt,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="649" />
+<source_reference file="filter.H" line="679" />
 </extent>
 <lines_of_code value="11" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -96,7 +96,7 @@
 <name>PeriodSize()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="550" />
+<source_reference file="filter.H" line="580" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
@@ -108,19 +108,19 @@
 <name>PutData(const NUMTYPE *,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="608" />
+<source_reference file="filter.H" line="638" />
 </extent>
-<lines_of_code value="29" level="0" />
+<lines_of_code value="30" level="0" />
 <McCabes_cyclomatic_complexity value="6" level="0" />
-<lines_of_comment value="2" level="0" />
-<lines_of_code_per_line_of_comment value="14.500" level="1" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="3.000" level="0" />
+<lines_of_comment value="1" level="0" />
+<lines_of_code_per_line_of_comment value="30.000" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="6.000" level="1" />
 </member_function>
 <member_function>
 <name>__warn(UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="603" />
+<source_reference file="filter.H" line="633" />
 </extent>
 <lines_of_code value="5" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
@@ -132,7 +132,7 @@
 <name>alloc_buffer()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="555" />
+<source_reference file="filter.H" line="585" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -144,7 +144,7 @@
 <name>free_buffer()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="559" />
+<source_reference file="filter.H" line="589" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -156,7 +156,7 @@
 <name>proc()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="579" />
+<source_reference file="filter.H" line="609" />
 </extent>
 <lines_of_code value="21" level="0" />
 <McCabes_cyclomatic_complexity value="5" level="0" />
@@ -168,7 +168,7 @@
 <name>~OverlappedFilter3()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="661" />
+<source_reference file="filter.H" line="691" />
 </extent>
 <lines_of_code value="5" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -195,91 +195,91 @@
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="540" />
+<source_reference file="filter.H" line="570" />
 </extent>
 <name>FLOATTYPE</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="554" />
+<source_reference file="filter.H" line="584" />
 </extent>
 <name>Int</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="542" />
+<source_reference file="filter.H" line="572" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="544" />
+<source_reference file="filter.H" line="574" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="547" />
+<source_reference file="filter.H" line="577" />
 </extent>
 <name>NUMTYPE</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="608" />
+<source_reference file="filter.H" line="638" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="640" />
+<source_reference file="filter.H" line="670" />
 </extent>
 <name>UInt</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="541" />
+<source_reference file="filter.H" line="571" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="543" />
+<source_reference file="filter.H" line="573" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="545" />
+<source_reference file="filter.H" line="575" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="546" />
+<source_reference file="filter.H" line="576" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="603" />
+<source_reference file="filter.H" line="633" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="608" />
+<source_reference file="filter.H" line="638" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="649" />
+<source_reference file="filter.H" line="679" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="649" />
+<source_reference file="filter.H" line="679" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="649" />
+<source_reference file="filter.H" line="679" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="649" />
+<source_reference file="filter.H" line="679" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="650" />
+<source_reference file="filter.H" line="680" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="650" />
+<source_reference file="filter.H" line="680" />
 </extent>
 </supplier_module>
 </module>

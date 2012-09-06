@@ -14,7 +14,7 @@
 <weighted_methods_per_class_visibility value="0" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
 <number_of_children value="0" level="0" />
-<coupling_between_objects value="8" level="0" />
+<coupling_between_objects value="9" level="0" />
 <IF4 value="0" level="0" />
 <IF4_per_member_function value="********" level="0" />
 <IF4_visible value="0" level="0" />
@@ -35,34 +35,57 @@
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="690" />
+<source_reference file="filter.H" line="720" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="692" />
+<source_reference file="filter.H" line="722" />
 </extent>
 <name>BufferedFilter</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="48" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="49" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="50" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="56" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="56" />
+</extent>
+<name>BufferedFilterHelper</name>
+<visible>true</visible>
+<concrete>false</concrete>
+<extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="44" />
+<source_reference file="filter.H" line="72" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="50" />
+<source_reference file="filter.H" line="78" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="50" />
+<source_reference file="filter.H" line="78" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="57" />
+<source_reference file="filter.H" line="85" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="99" />
+<source_reference file="filter.H" line="127" />
 </extent>
 <name>Filter</name>
 <visible>true</visible>
@@ -75,64 +98,68 @@
 <description>pass by reference</description>
 <source_reference file="filter.H" line="33" />
 </extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="33" />
+</extent>
 <name>FilterBuffer</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="670" />
+<source_reference file="filter.H" line="700" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="673" />
+<source_reference file="filter.H" line="703" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="677" />
+<source_reference file="filter.H" line="707" />
 </extent>
 <name>FilterBuffer2</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="729" />
+<source_reference file="filter.H" line="759" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="758" />
+<source_reference file="filter.H" line="788" />
 </extent>
 <name>OverlappedFilter</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="249" />
+<source_reference file="filter.H" line="277" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="280" />
+<source_reference file="filter.H" line="308" />
 </extent>
 <name>OverlappedFilter2</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="455" />
+<source_reference file="filter.H" line="483" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="486" />
+<source_reference file="filter.H" line="516" />
 </extent>
 <name>OverlappedFilter3</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="608" />
+<source_reference file="filter.H" line="638" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="640" />
+<source_reference file="filter.H" line="670" />
 </extent>
 </client_module>
 <supplier_module>

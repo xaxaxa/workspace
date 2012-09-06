@@ -1,24 +1,24 @@
 /*
  * fftfilter.C
- * 
+ *
  * Copyright 2012  <xaxaxa@xaxaxa-mac>
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
+ *
+ *
  */
 
 #include <cplib/cplib.hpp>
@@ -79,7 +79,7 @@ namespace xaxaxa
 
 		inline void __warn(UInt length)
 		{
-			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; OutBuffers = " << OutBuffers << "; length = " << length);
+			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; OutBuffers = " << OutBuffers << "; inputlength = " << length);
 			return;
 		}
 		virtual void PutData(const NUMTYPE* data, UInt length)
@@ -271,7 +271,7 @@ namespace xaxaxa
 		}
 		inline void __warn(UInt length)
 		{
-			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffers << "; length = " << length);
+			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffer.Length() << "/" << InBuffers << "; inputlength = " << length);
 			return;
 		}
 		virtual void PutData(const NUMTYPE* data, UInt length)
@@ -419,7 +419,7 @@ trolled:
 			{
 				FLOATTYPE* out1=&OutBuffer.GetPointer(OutBufferPtrs[i1]);
 				//memcpy(out1, tmpbuffer + offset, BufferSize * sizeof(FLOATTYPE));
-				for (Int i = 0; i < BufferSize; i++)
+				for (UInt i = 0; i < BufferSize; i++)
 				{
 					FLOATTYPE fade;
 					if(overlapcount<=1) fade=0;
@@ -432,7 +432,7 @@ trolled:
 			}
 		}
 
-		
+
 		void proc()
 		{
 			//while((curBuffer_in = InBuffer.BeginDequeue()) >= 0)
@@ -462,7 +462,7 @@ trolled:
 			}
 			//WARN(3,"asdf2");
 			FLOATTYPE coeff = 1.0 / overlapcount;
-			
+
 			//UInt offset = BufferSize / overlapcount * i;
 			DoProcess(1.0, coeff);
 			//memcpy(out1, in1, sizeof(FLOATTYPE)*BufferSize);
@@ -477,7 +477,7 @@ trolled:
 		}
 		inline void __warn(UInt length)
 		{
-			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffers << "; length = " << length);
+			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffer.Length() << "/" << InBuffers << "; length = " << length);
 			return;
 		}
 		virtual void PutData(const NUMTYPE* data, UInt length)
@@ -492,6 +492,7 @@ trolled:
 						__warn(length);
 						return;
 					}
+					//WARN(0,"__BEGINAPPEND");
 				}
 				auto l = __MIN(length, BufferSize - inbuffer_pos);
 				//memcpy(&InBuffer.GetPointer(inbuffer_index) + inbuffer_pos, data, l * sizeof(NUMTYPE));
@@ -502,6 +503,7 @@ trolled:
 				if (inbuffer_pos >= BufferSize)
 				{
 					InBuffer.EndAppend(inbuffer_index);
+					//WARN(0,"__ENDAPPEND");
 					//WARN(3, "inbuffer_pos >= BufferSize");
 					inbuffer_index = -1;
 					inbuffer_pos = 0;
@@ -603,7 +605,7 @@ trolled:
 			DoProcess();
 		}
 
-		
+
 		void proc()
 		{
 			Int skip=BuffersPerPeriod/this->overlapcount;
@@ -619,7 +621,7 @@ trolled:
 				nextBuffer_in=modulus(nextBuffer_in+1,BuffersPerPeriod+1);
 				//WARN(3,"got buffers: " << modulus(nextBuffer_in-curBuffer_in,BuffersPerPeriod+1) << " total; nextBuffer_in=" << nextBuffer_in << "; curBuffer_in=" << curBuffer_in);
 			}
-			
+
 			DoProcess1();
 			for(Int i=0;i<skip;i++)
 			{
@@ -630,7 +632,7 @@ trolled:
 		}
 		inline void __warn(UInt length)
 		{
-			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffers << "; length = " << length);
+			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffer.Length() << "/" << InBuffers << "; length = " << length);
 			return;
 		}
 		virtual void PutData(const NUMTYPE* data, UInt length)
@@ -655,7 +657,7 @@ trolled:
 				if (inbuffer_pos >= BufferSize)
 				{
 					InBuffer.EndAppend(inbuffer_index);
-					//WARN(3, "inbuffer_pos >= BufferSize");
+					WARN(3, "inbuffer_pos >= BufferSize");
 					inbuffer_index = -1;
 					inbuffer_pos = 0;
 					proc();
@@ -700,7 +702,7 @@ trolled:
 		UInt size;
 		FilterBuffer(NUMTYPE* buf, UInt size):data(buf),length(0),size(size)
 		{
-			
+
 		}
 		UInt Append(NUMTYPE* data, UInt length)
 		{

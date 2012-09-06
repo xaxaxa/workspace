@@ -2,15 +2,15 @@
 <!--Detailed report on module anonymous-->
 <CCCC_Project>
 <module_summary>
-<lines_of_code value="578" level="1" />
+<lines_of_code value="628" level="1" />
 <lines_of_code_per_member_function value="******" level="0" />
-<McCabes_cyclomatic_complexity value="98" level="0" />
+<McCabes_cyclomatic_complexity value="104" level="0" />
 <McCabes_cyclomatic_complexity_per_member_function value="******" level="2" />
-<lines_of_code value="169" level="0" />
+<lines_of_code value="183" level="0" />
 <lines_of_code_per_member_function value="********" level="2" />
-<lines_of_code_per_line_of_comment value="3.420" level="0" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="0.580" level="0" />
-<weighted_methods_per_class_unity value="26" level="0" />
+<lines_of_code_per_line_of_comment value="3.432" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="0.568" level="0" />
+<weighted_methods_per_class_unity value="28" level="0" />
 <weighted_methods_per_class_visibility value="0" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
 <number_of_children value="0" level="0" />
@@ -29,7 +29,7 @@
 <name>apply_label_workaround(Label *)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="425" />
+<source_reference file="jackfft.C" line="465" />
 </extent>
 <lines_of_code value="7" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -41,7 +41,7 @@
 <name>apply_pitchshift()</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="421" />
+<source_reference file="jackfft.C" line="461" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -53,19 +53,19 @@
 <name>apply_pitchshift1(FFTFilter **)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="396" />
+<source_reference file="jackfft.C" line="435" />
 </extent>
-<lines_of_code value="25" level="0" />
+<lines_of_code value="24" level="0" />
 <McCabes_cyclomatic_complexity value="6" level="0" />
-<lines_of_comment value="0" level="0" />
-<lines_of_code_per_line_of_comment value="******" level="2" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="******" level="2" />
+<lines_of_comment value="2" level="0" />
+<lines_of_code_per_line_of_comment value="12.000" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="3.000" level="0" />
 </member_function>
 <member_function>
 <name>complex_to_real(const t &amp;)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="125" />
+<source_reference file="jackfft.C" line="131" />
 </extent>
 <lines_of_code value="6" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
@@ -77,31 +77,43 @@
 <name>do_load(Stream &amp;)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="300" />
+<source_reference file="jackfft.C" line="336" />
 </extent>
-<lines_of_code value="29" level="0" />
+<lines_of_code value="30" level="0" />
 <McCabes_cyclomatic_complexity value="5" level="0" />
 <lines_of_comment value="3" level="0" />
-<lines_of_code_per_line_of_comment value="9.667" level="1" />
+<lines_of_code_per_line_of_comment value="10.000" level="1" />
 <McCabes_cyclomatic_complexity_per_line_of_comment value="1.667" level="0" />
 </member_function>
 <member_function>
 <name>do_save(Stream &amp;)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="266" />
+<source_reference file="jackfft.C" line="301" />
 </extent>
-<lines_of_code value="20" level="0" />
+<lines_of_code value="21" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
 <lines_of_comment value="1" level="0" />
-<lines_of_code_per_line_of_comment value="20.000" level="0" />
+<lines_of_code_per_line_of_comment value="21.000" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
+<name>efd(...)</name>
+<extent>
+<description>declaration</description>
+<source_reference file="jackfft.C" line="55" />
+</extent>
+<lines_of_code value="1" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
 <McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
 </member_function>
 <member_function>
 <name>error(const char *)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="199" />
+<source_reference file="jackfft.C" line="234" />
 </extent>
 <extent>
 <description>definition</description>
@@ -117,7 +129,7 @@
 <name>get_nsec(const timespec &amp;)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="121" />
+<source_reference file="jackfft.C" line="127" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
@@ -129,7 +141,7 @@
 <name>jack_shutdown(void *)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="203" />
+<source_reference file="jackfft.C" line="238" />
 </extent>
 <extent>
 <description>definition</description>
@@ -145,9 +157,9 @@
 <name>load()</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="334" />
+<source_reference file="jackfft.C" line="371" />
 </extent>
-<lines_of_code value="13" level="0" />
+<lines_of_code value="15" level="0" />
 <McCabes_cyclomatic_complexity value="2" level="0" />
 <lines_of_comment value="0" level="0" />
 <lines_of_code_per_line_of_comment value="------" level="0" />
@@ -169,11 +181,11 @@
 <name>loadfile()</name>
 <extent>
 <description>declaration</description>
-<source_reference file="jackfft.C" line="333" />
+<source_reference file="jackfft.C" line="370" />
 </extent>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="372" />
+<source_reference file="jackfft.C" line="411" />
 </extent>
 <lines_of_code value="25" level="0" />
 <McCabes_cyclomatic_complexity value="2" level="0" />
@@ -185,7 +197,7 @@
 <name>logn(double,double)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="87" />
+<source_reference file="jackfft.C" line="91" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="1" level="0" />
@@ -197,17 +209,17 @@
 <name>main(...)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="433" />
+<source_reference file="jackfft.C" line="473" />
 </extent>
 <extent>
 <description>definition</description>
 <source_reference file="jackfftc.C" line="142" />
 </extent>
-<lines_of_code value="173" level="2" />
-<McCabes_cyclomatic_complexity value="22" level="1" />
-<lines_of_comment value="79" level="0" />
-<lines_of_code_per_line_of_comment value="2.190" level="0" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="0.278" level="0" />
+<lines_of_code value="199" level="2" />
+<McCabes_cyclomatic_complexity value="24" level="1" />
+<lines_of_comment value="81" level="0" />
+<lines_of_code_per_line_of_comment value="2.457" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="0.296" level="0" />
 </member_function>
 <member_function>
 <name>main(int,char **)</name>
@@ -237,7 +249,7 @@
 <name>on_change(void *,UInt,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="233" />
+<source_reference file="jackfft.C" line="268" />
 </extent>
 <lines_of_code value="19" level="0" />
 <McCabes_cyclomatic_complexity value="3" level="0" />
@@ -249,7 +261,7 @@
 <name>on_mousemove(void *,double)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="257" />
+<source_reference file="jackfft.C" line="292" />
 </extent>
 <lines_of_code value="8" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -261,23 +273,23 @@
 <name>process(jack_nframes_t,void *)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="132" />
+<source_reference file="jackfft.C" line="138" />
 </extent>
 <extent>
 <description>definition</description>
 <source_reference file="jackfftc.C" line="26" />
 </extent>
-<lines_of_code value="72" level="1" />
-<McCabes_cyclomatic_complexity value="17" level="1" />
-<lines_of_comment value="17" level="0" />
-<lines_of_code_per_line_of_comment value="4.235" level="0" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="1.000" level="0" />
+<lines_of_code value="61" level="1" />
+<McCabes_cyclomatic_complexity value="14" level="1" />
+<lines_of_comment value="25" level="0" />
+<lines_of_code_per_line_of_comment value="2.440" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="0.560" level="0" />
 </member_function>
 <member_function>
 <name>save()</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="288" />
+<source_reference file="jackfft.C" line="324" />
 </extent>
 <lines_of_code value="11" level="0" />
 <McCabes_cyclomatic_complexity value="2" level="0" />
@@ -289,11 +301,11 @@
 <name>saveas()</name>
 <extent>
 <description>declaration</description>
-<source_reference file="jackfft.C" line="287" />
+<source_reference file="jackfft.C" line="323" />
 </extent>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="348" />
+<source_reference file="jackfft.C" line="387" />
 </extent>
 <lines_of_code value="25" level="0" />
 <McCabes_cyclomatic_complexity value="2" level="0" />
@@ -305,7 +317,7 @@
 <name>scale_freq(double)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="62" />
+<source_reference file="jackfft.C" line="66" />
 </extent>
 <extent>
 <description>definition</description>
@@ -321,7 +333,7 @@
 <name>scale_freq_r(double)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="77" />
+<source_reference file="jackfft.C" line="81" />
 </extent>
 <extent>
 <description>definition</description>
@@ -337,7 +349,7 @@
 <name>scale_value(double)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="92" />
+<source_reference file="jackfft.C" line="98" />
 </extent>
 <extent>
 <description>definition</description>
@@ -345,7 +357,7 @@
 </extent>
 <lines_of_code value="13" level="0" />
 <McCabes_cyclomatic_complexity value="4" level="0" />
-<lines_of_comment value="6" level="0" />
+<lines_of_comment value="7" level="0" />
 <lines_of_code_per_line_of_comment value="------" level="0" />
 <McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
 </member_function>
@@ -353,7 +365,7 @@
 <name>scale_value_r(double)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="109" />
+<source_reference file="jackfft.C" line="115" />
 </extent>
 <extent>
 <description>definition</description>
@@ -366,10 +378,22 @@
 <McCabes_cyclomatic_complexity_per_line_of_comment value="0.208" level="0" />
 </member_function>
 <member_function>
+<name>thread1(void *)</name>
+<extent>
+<description>definition</description>
+<source_reference file="jackfft.C" line="202" />
+</extent>
+<lines_of_code value="31" level="1" />
+<McCabes_cyclomatic_complexity value="7" level="0" />
+<lines_of_comment value="1" level="0" />
+<lines_of_code_per_line_of_comment value="31.000" level="2" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="7.000" level="1" />
+</member_function>
+<member_function>
 <name>update_fft(...)</name>
 <extent>
 <description>definition</description>
-<source_reference file="jackfft.C" line="211" />
+<source_reference file="jackfft.C" line="246" />
 </extent>
 <lines_of_code value="22" level="0" />
 <McCabes_cyclomatic_complexity value="7" level="0" />

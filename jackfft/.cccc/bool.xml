@@ -35,7 +35,7 @@
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="338" />
+<source_reference file="filter.H" line="366" />
 </extent>
 </client_module>
 <supplier_module>

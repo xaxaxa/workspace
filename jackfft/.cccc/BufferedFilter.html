@@ -8,15 +8,15 @@ Detailed report on module BufferedFilter
 <TR>
 <TH BGCOLOR="AQUA" WIDTH=70%>Metric</TH><TH BGCOLOR="AQUA" WIDTH=10%>Tag</TH><TH BGCOLOR="AQUA" WIDTH=10%>Overall</TH><TH BGCOLOR="AQUA" WIDTH=10%>Per Function</TH></TR>
 <TR>
-<TD>Lines of Code</TD><TD>LOC</TD><TD ALIGN=RIGHT>    93</TD><TD ALIGN=RIGHT>******</TD></TR>
+<TD>Lines of Code</TD><TD>LOC</TD><TD ALIGN=RIGHT>    24</TD><TD ALIGN=RIGHT>******</TD></TR>
 <TR>
-<TD>McCabe's Cyclomatic Number</TD><TD>MVG</TD><TD ALIGN=RIGHT>    17</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>******</STRONG></TD></TR>
+<TD>McCabe's Cyclomatic Number</TD><TD>MVG</TD><TD ALIGN=RIGHT>     2</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>******</STRONG></TD></TR>
 <TR>
-<TD>Lines of Comment</TD><TD>COM</TD><TD ALIGN=RIGHT>     5</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
+<TD>Lines of Comment</TD><TD>COM</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>********</TD></TR>
 <TR>
-<TD>LOC/COM</TD><TD>L_C</TD><TD ALIGN=RIGHT BGCOLOR="YELLOW"><EM>18.600</EM></TD><TD>&nbsp;</TD></TR>
+<TD>LOC/COM</TD><TD>L_C</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>******</STRONG></TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>MVG/COM</TD><TD>M_C</TD><TD ALIGN=RIGHT> 3.400</TD><TD>&nbsp;</TD></TR>
+<TD>MVG/COM</TD><TD>M_C</TD><TD ALIGN=RIGHT>------</TD><TD>&nbsp;</TD></TR>
 <TR>
 <TD>Weighted Methods per Class ( &nbsp;weighting = unity&nbsp;)</TD><TD>WMC1</TD><TD ALIGN=RIGHT>     6</TD><TD>&nbsp;</TD></TR>
 <TR>
@@ -24,63 +24,63 @@ Detailed report on module BufferedFilter
 <TR>
 <TD>Depth of Inheritance Tree</TD><TD>DIT</TD><TD ALIGN=RIGHT>     1</TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>Number of Children</TD><TD>NOC</TD><TD ALIGN=RIGHT>     0</TD><TD>&nbsp;</TD></TR>
+<TD>Number of Children</TD><TD>NOC</TD><TD ALIGN=RIGHT>     3</TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>Coupling between objects</TD><TD>CBO</TD><TD ALIGN=RIGHT>     5</TD><TD>&nbsp;</TD></TR>
+<TD>Coupling between objects</TD><TD>CBO</TD><TD ALIGN=RIGHT>     6</TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>Information Flow measure ( &nbsp;inclusive&nbsp;)</TD><TD>IF4</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>********</TD></TR>
+<TD>Information Flow measure ( &nbsp;inclusive&nbsp;)</TD><TD>IF4</TD><TD ALIGN=RIGHT>    81</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
 <TR>
-<TD>Information Flow measure ( &nbsp;visible&nbsp;)</TD><TD>IF4v</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>********</TD></TR>
+<TD>Information Flow measure ( &nbsp;visible&nbsp;)</TD><TD>IF4v</TD><TD ALIGN=RIGHT BGCOLOR="YELLOW"><EM>    81</EM></TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
 <TR>
-<TD>Information Flow measure ( &nbsp;concrete&nbsp;)</TD><TD>IF4c</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>********</TD></TR>
+<TD>Information Flow measure ( &nbsp;concrete&nbsp;)</TD><TD>IF4c</TD><TD ALIGN=RIGHT BGCOLOR="YELLOW"><EM>    36</EM></TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
 </TABLE>
 <H2><A NAME="modext">Definitions and Declarations</A></H2>
 <TABLE BORDER WIDTH=100%><TR>
 <TD WIDTH=50%>Description</TD><TH BGCOLOR="AQUA" WIDTH=10%>LOC</TH><TH BGCOLOR="AQUA" WIDTH=10%>MVG</TH><TH BGCOLOR="AQUA" WIDTH=10%>COM</TH><TH BGCOLOR="AQUA" WIDTH=10%>L_C</TH><TH BGCOLOR="AQUA" WIDTH=10%>M_C</TH><TR>
 <TD>definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        41">filter.H:41</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        45">filter.H:45</A></CODE><BR>
 </TD>
-<TD ALIGN=RIGHT>    10</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+<TD ALIGN=RIGHT>     4</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR><TD HEIGHT=12 COLSPAN=6></TD></TR>
 </TR></TABLE>
 <H2><A NAME="proc">Functions</A></H2>
 <TABLE BORDER WIDTH=100%><TR>
 <TD WIDTH=50%>Function prototype</TD><TH BGCOLOR="AQUA" WIDTH=10%>LOC</TH><TH BGCOLOR="AQUA" WIDTH=10%>MVG</TH><TH BGCOLOR="AQUA" WIDTH=10%>COM</TH><TH BGCOLOR="AQUA" WIDTH=10%>L_C</TH><TH BGCOLOR="AQUA" WIDTH=10%>M_C</TH><TR>
-<TD>BufferedFilter( &nbsp;UInt, &nbsp;UInt&nbsp;)<BR>
+<TD>BufferedFilter( &nbsp;&nbsp;)<BR>
 definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:       127">filter.H:127</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        62">filter.H:62</A></CODE><BR>
 <BR>
-</TD><TD ALIGN=RIGHT>     6</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
-<TR>
-<TD>DoProcess( &nbsp;const NUMTYPE *, &nbsp;NUMTYPE *&nbsp;)<BR>
-declaration &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        50">filter.H:50</A></CODE><BR>
-<BR>
-</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+</TD><TD ALIGN=RIGHT>     3</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR>
 <TD>GetData( &nbsp;NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
-definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        99">filter.H:99</A></CODE><BR>
+declaration &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        49">filter.H:49</A></CODE><BR>
 <BR>
-</TD><TD ALIGN=RIGHT>    27</TD><TD ALIGN=RIGHT>     6</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>******</STRONG></TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>******</STRONG></TD></TR>
+</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+<TR>
+<TD>Process( &nbsp;NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
+definition &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        50">filter.H:50</A></CODE><BR>
+<BR>
+</TD><TD ALIGN=RIGHT>     6</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+<TR>
+<TD>Process( &nbsp;const NUMTYPE *, &nbsp;NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
+definition &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        56">filter.H:56</A></CODE><BR>
+<BR>
+</TD><TD ALIGN=RIGHT>     6</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR>
 <TD>PutData( &nbsp;const NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
-definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        57">filter.H:57</A></CODE><BR>
+declaration &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        48">filter.H:48</A></CODE><BR>
 <BR>
-</TD><TD ALIGN=RIGHT BGCOLOR="YELLOW"><EM>    38</EM></TD><TD ALIGN=RIGHT>     9</TD><TD ALIGN=RIGHT>     4</TD><TD ALIGN=RIGHT BGCOLOR="YELLOW"><EM> 9.500</EM></TD><TD ALIGN=RIGHT> 2.250</TD></TR>
-<TR>
-<TD>__warn( &nbsp;UInt&nbsp;)<BR>
-definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        52">filter.H:52</A></CODE><BR>
-<BR>
-</TD><TD ALIGN=RIGHT>     5</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR>
 <TD>~BufferedFilter( &nbsp;&nbsp;)<BR>
 definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:       133">filter.H:133</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        65">filter.H:65</A></CODE><BR>
 <BR>
-</TD><TD ALIGN=RIGHT>     6</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+</TD><TD ALIGN=RIGHT>     3</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR><TD HEIGHT=12 COLSPAN=6></TD></TR>
 </TR></TABLE>
 <H2><A NAME="structdet">Relationships</A></H2>
@@ -88,54 +88,51 @@ definition &nbsp;
 <TR><TH WIDTH=50%>Clients</TH><TH WIDTH=50%>Suppliers</TH></TR>
 <TR>
 <TD WIDTH=50%>
+BufferedFilterHelper [CV] <BR>
+inheritance &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        69">filter.H:69</A></CODE><BR>
+<BR>
+<BR>
+OverlappedFilter [CV] <BR>
+inheritance &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:       169">filter.H:169</A></CODE><BR>
+<BR>
+<BR>
+OverlappedFilter2 [CV] <BR>
+inheritance &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:       353">filter.H:353</A></CODE><BR>
+<BR>
+<BR>
 &nbsp;
 </TD>
 <TD WIDTH=50%>
-CircularQueue [CV] <BR>
-has by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        47">filter.H:47</A></CODE><BR>
-<BR>
-<BR>
 Filter [CV] <BR>
 inheritance &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        41">filter.H:41</A></CODE><BR>
-<BR>
-<BR>
-Int [CV] <BR>
-has by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        97">filter.H:97</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        45">filter.H:45</A></CODE><BR>
 <BR>
 <BR>
 NUMTYPE [V] <BR>
-has by reference &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        44">filter.H:44</A></CODE><BR>
+pass by reference &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        48">filter.H:48</A></CODE><BR>
+pass by reference &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        49">filter.H:49</A></CODE><BR>
 pass by reference &nbsp;
 <CODE><A HREF="cccc_src.html#filter.H:        50">filter.H:50</A></CODE><BR>
 pass by reference &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        50">filter.H:50</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        56">filter.H:56</A></CODE><BR>
 pass by reference &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        57">filter.H:57</A></CODE><BR>
-pass by reference &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        99">filter.H:99</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        56">filter.H:56</A></CODE><BR>
 <BR>
 <BR>
 UInt [CV] <BR>
-has by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        45">filter.H:45</A></CODE><BR>
-has by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        46">filter.H:46</A></CODE><BR>
 pass by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        52">filter.H:52</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        48">filter.H:48</A></CODE><BR>
 pass by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        57">filter.H:57</A></CODE><BR>
-has by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        98">filter.H:98</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        49">filter.H:49</A></CODE><BR>
 pass by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        99">filter.H:99</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        50">filter.H:50</A></CODE><BR>
 pass by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:       127">filter.H:127</A></CODE><BR>
-pass by value &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:       127">filter.H:127</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        56">filter.H:56</A></CODE><BR>
 <BR>
 <BR>
 &nbsp;

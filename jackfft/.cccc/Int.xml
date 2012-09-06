@@ -30,12 +30,12 @@
 <module>
 <name>Int</name>
 <client_module>
-<name>BufferedFilter</name>
+<name>BufferedFilterHelper</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="97" />
+<source_reference file="filter.H" line="125" />
 </extent>
 <name>FFTFilter</name>
 <visible>true</visible>
@@ -49,68 +49,68 @@
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="719" />
+<source_reference file="filter.H" line="749" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="729" />
+<source_reference file="filter.H" line="759" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="758" />
+<source_reference file="filter.H" line="788" />
 </extent>
 <name>OverlappedFilter</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="145" />
+<source_reference file="filter.H" line="173" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="201" />
+<source_reference file="filter.H" line="229" />
 </extent>
 <name>OverlappedFilter2</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="330" />
+<source_reference file="filter.H" line="358" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="332" />
+<source_reference file="filter.H" line="360" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="335" />
+<source_reference file="filter.H" line="363" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="336" />
+<source_reference file="filter.H" line="364" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="517" />
+<source_reference file="filter.H" line="547" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="517" />
+<source_reference file="filter.H" line="547" />
 </extent>
 <name>OverlappedFilter3</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="542" />
+<source_reference file="filter.H" line="572" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="544" />
+<source_reference file="filter.H" line="574" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="547" />
+<source_reference file="filter.H" line="577" />
 </extent>
 </client_module>
 <supplier_module>

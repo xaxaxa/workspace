@@ -1,0 +1,1 @@
+cmd_/home/xaxaxa/nfs/workspace/trollfs/trollfs.o := ld -m elf_x86_64   -r -o /home/xaxaxa/nfs/workspace/trollfs/trollfs.o /home/xaxaxa/nfs/workspace/trollfs/main.o ; scripts/mod/modpost /home/xaxaxa/nfs/workspace/trollfs/trollfs.o

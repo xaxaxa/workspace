@@ -1,24 +1,24 @@
 /*
  * fftfilter.C
- * 
+ *
  * Copyright 2012  <xaxaxa@xaxaxa-mac>
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301, USA.
- * 
- * 
+ *
+ *
  */
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -96,10 +96,10 @@ namespace xaxaxa
 			for(Int i=0;i<l;i++)
 				coefficients[i] = 1.0;
 			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
-			
+
 			tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
 			/*tmpcomplex2 = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
-			
+
 			//cout << this->PeriodSize() << endl;
 			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
 			p2 = fftw_plan_dft_c2r_1d(this->PeriodSize(), tmpcomplex2, this->tmpbuffer, 0);
@@ -114,13 +114,13 @@ namespace xaxaxa
 			//fftw_free(tmpcomplex2);
 			delete[] coefficients;
 		}
-		
+
 		/*long long get_nsec(const timespec& t)
 		{
 			return t.tv_sec*1000000000+t.tv_nsec;
 		}*/
 		int asdf;
-		
+
 		virtual void DoProcess()
 		{
 			UInt complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
@@ -138,11 +138,11 @@ namespace xaxaxa
 				}*/
 				//asdf=0;
 			//}
-			
+
 			//tmpcomplex[0][0]=0;
 			//tmpcomplex[0][1]=0;
-			
-			
+
+
 			/*for(UInt i=(complexsize-1)/2+1;i<complexsize;i++)
 			{
 				tmpcomplex[i][0]=0;
@@ -162,9 +162,9 @@ namespace xaxaxa
 			if(skip<1)skip=1;
 			UInt overlapcount=this->BuffersPerPeriod/skip;
 			Int skip_samples=this->PeriodSize()/overlapcount;*/
-			
+
 			//for(Int i=complexsize-1;i>=0;i--)
-			for(Int i=0;i<complexsize;i++)
+			for(UInt i=0;i<complexsize;i++)
 			{
 				int i2;
 				//if(i>50)
@@ -172,7 +172,7 @@ namespace xaxaxa
 				i2=(int)asdf;
 				if(i2==0 || i==0)	//prevent division by zero
 					continue;
-				if(i2+1>=complexsize)
+				if(i2+1>=(int)complexsize)
 				{
 					fft.Data_c[i][0]=fft.Data_c[i][1]=0.;
 					continue;
@@ -184,7 +184,7 @@ namespace xaxaxa
 				double period2=(double)fft.size/(double)i;
 				double sine=(tmpcomplex[i2][1]*(1.0-trololo) + tmpcomplex[i2+1][1]*trololo);
 				double cosine=(tmpcomplex[i2][0]*(1.0-trololo) + tmpcomplex[i2+1][0]*trololo);
-				
+
 				double amplitude=sqrt(sine*sine+cosine*cosine);
 				double phase=atan2(cosine,sine);	//radians; [-pi,pi]
 				//double phase_delta1=(skip_samples%period1)/period1*(2*M_PI);
@@ -212,7 +212,7 @@ namespace xaxaxa
 			double* d=fft.Reverse(this->PeriodSize());
 			memcpy(this->tmpbuffer,d,sizeof(double)*this->PeriodSize());
 			Int ps=this->PeriodSize();
-			for(UInt i=0;i<ps;i++)
+			for(Int i=0;i<ps;i++)
 				this->tmpbuffer[i] /= fft.size;
 		}
 	};
@@ -263,7 +263,7 @@ namespace xaxaxa
 					a=1.0-(abs(i - half) / (double)w);
 				this->tmpbuffer[i]*=a;
 			}
-			
+
 			fftw_execute(p1);
 			int tmp=this->OutBuffer.BeginAppend();
 			if(tmp<0)return;
@@ -315,7 +315,7 @@ namespace xaxaxa
 			return buffer_out;
 		}
 	};
-	
+
 	class FFTStream_r
 	{
 	public:
@@ -359,7 +359,7 @@ namespace xaxaxa
 				buffer_c[i][0]=cos(phase)*amplitude;
 				//cosine
 				buffer_c[i][1]=sin(phase)*amplitude;
-				
+
 				/*double period=(double)((size_c-1) * 2) / i;
 				double periods=size/period;
 				phase+=periods;

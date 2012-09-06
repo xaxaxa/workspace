@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--Report on software metrics-->
 <CCCC_Project>
-<timestamp>Sat Mar 31 16:29:15 2012
+<timestamp>Tue Sep  4 20:46:24 2012
 </timestamp>
 <project_summary>
-<number_of_modules value="22" level="0" />
-<lines_of_code value="1537" level="0" />
-<lines_of_code_per_module value="69.864" level="0" />
-<McCabes_cyclomatic_complexity value="247" level="0" />
-<McCabes_cyclomatic_complexity_per_module value="11.227" level="0" />
-<lines_of_comment value="415" level="0" />
-<lines_of_comment_per_module value="18.864" level="0" />
-<lines_of_code_per_line_of_comment value="3.704" level="0" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="0.595" level="0" />
-<IF4 value="118" level="0" />
-<IF4_per_module value="5.364" level="0" />
-<IF4_visible value="118" level="0" />
-<IF4_visible_per_module value="5.364" level="0" />
-<IF4_concrete value="55" level="0" />
-<IF4_concrete value="2.500" level="0" />
+<number_of_modules value="23" level="0" />
+<lines_of_code value="1616" level="0" />
+<lines_of_code_per_module value="70.261" level="0" />
+<McCabes_cyclomatic_complexity value="255" level="0" />
+<McCabes_cyclomatic_complexity_per_module value="11.087" level="0" />
+<lines_of_comment value="430" level="0" />
+<lines_of_comment_per_module value="18.696" level="0" />
+<lines_of_code_per_line_of_comment value="3.758" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="0.593" level="0" />
+<IF4 value="167" level="0" />
+<IF4_per_module value="7.261" level="0" />
+<IF4_visible value="167" level="0" />
+<IF4_visible_per_module value="7.261" level="0" />
+<IF4_concrete value="83" level="0" />
+<IF4_concrete value="3.609" level="0" />
 <rejected_lines_of_code value="34" level="0" />
 </project_summary>
 <procedural_summary>
@@ -32,6 +32,14 @@
 </module>
 <module>
 <name>BufferedFilter</name>
+<lines_of_code value="24" level="0" />
+<McCabes_cyclomatic_complexity value="2" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="******" level="2" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</module>
+<module>
+<name>BufferedFilterHelper</name>
 <lines_of_code value="93" level="0" />
 <McCabes_cyclomatic_complexity value="17" level="0" />
 <lines_of_comment value="5" level="0" />
@@ -88,7 +96,7 @@
 </module>
 <module>
 <name>Filter</name>
-<lines_of_code value="12" level="0" />
+<lines_of_code value="16" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
 <lines_of_comment value="0" level="0" />
 <lines_of_code_per_line_of_comment value="------" level="0" />
@@ -138,17 +146,17 @@
 <name>OverlappedFilter2</name>
 <lines_of_code value="181" level="0" />
 <McCabes_cyclomatic_complexity value="30" level="0" />
-<lines_of_comment value="25" level="0" />
-<lines_of_code_per_line_of_comment value="7.240" level="1" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="1.200" level="0" />
+<lines_of_comment value="27" level="0" />
+<lines_of_code_per_line_of_comment value="6.704" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="1.111" level="0" />
 </module>
 <module>
 <name>OverlappedFilter3</name>
-<lines_of_code value="118" level="0" />
+<lines_of_code value="119" level="0" />
 <McCabes_cyclomatic_complexity value="17" level="0" />
-<lines_of_comment value="7" level="0" />
-<lines_of_code_per_line_of_comment value="16.857" level="1" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="2.429" level="0" />
+<lines_of_comment value="6" level="0" />
+<lines_of_code_per_line_of_comment value="19.833" level="1" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="2.833" level="0" />
 </module>
 <module>
 <name>UInt</name>
@@ -168,11 +176,11 @@
 </module>
 <module>
 <name>anonymous</name>
-<lines_of_code value="578" level="1" />
-<McCabes_cyclomatic_complexity value="98" level="0" />
-<lines_of_comment value="169" level="0" />
-<lines_of_code_per_line_of_comment value="3.420" level="0" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="0.580" level="0" />
+<lines_of_code value="628" level="1" />
+<McCabes_cyclomatic_complexity value="104" level="0" />
+<lines_of_comment value="183" level="0" />
+<lines_of_code_per_line_of_comment value="3.432" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="0.568" level="0" />
 </module>
 <module>
 <name>bool</name>
@@ -213,6 +221,14 @@
 <weighted_methods_per_class_unity value="6" level="0" />
 <weighted_methods_per_class_visibility value="6" level="0" />
 <depth_of_inheritance_tree value="1" level="0" />
+<number_of_children value="3" level="0" />
+<coupling_between_objects value="6" level="0" />
+</module>
+<module>
+<name>BufferedFilterHelper</name>
+<weighted_methods_per_class_unity value="6" level="0" />
+<weighted_methods_per_class_visibility value="6" level="0" />
+<depth_of_inheritance_tree value="2" level="0" />
 <number_of_children value="0" level="0" />
 <coupling_between_objects value="5" level="0" />
 </module>
@@ -228,7 +244,7 @@
 <name>FFTFilter</name>
 <weighted_methods_per_class_unity value="6" level="0" />
 <weighted_methods_per_class_visibility value="6" level="0" />
-<depth_of_inheritance_tree value="2" level="0" />
+<depth_of_inheritance_tree value="3" level="0" />
 <number_of_children value="0" level="0" />
 <coupling_between_objects value="5" level="0" />
 </module>
@@ -269,8 +285,8 @@
 <weighted_methods_per_class_unity value="4" level="0" />
 <weighted_methods_per_class_visibility value="4" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
-<number_of_children value="3" level="0" />
-<coupling_between_objects value="5" level="0" />
+<number_of_children value="1" level="0" />
+<coupling_between_objects value="3" level="0" />
 </module>
 <module>
 <name>FilterBuffer</name>
@@ -302,13 +318,13 @@
 <weighted_methods_per_class_visibility value="0" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
 <number_of_children value="0" level="0" />
-<coupling_between_objects value="8" level="0" />
+<coupling_between_objects value="9" level="0" />
 </module>
 <module>
 <name>OverlappedFilter</name>
 <weighted_methods_per_class_unity value="11" level="0" />
 <weighted_methods_per_class_visibility value="11" level="1" />
-<depth_of_inheritance_tree value="1" level="0" />
+<depth_of_inheritance_tree value="2" level="0" />
 <number_of_children value="0" level="0" />
 <coupling_between_objects value="6" level="0" />
 </module>
@@ -316,7 +332,7 @@
 <name>OverlappedFilter2</name>
 <weighted_methods_per_class_unity value="11" level="0" />
 <weighted_methods_per_class_visibility value="11" level="1" />
-<depth_of_inheritance_tree value="1" level="0" />
+<depth_of_inheritance_tree value="2" level="0" />
 <number_of_children value="1" level="0" />
 <coupling_between_objects value="8" level="0" />
 </module>
@@ -334,7 +350,7 @@
 <weighted_methods_per_class_visibility value="0" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
 <number_of_children value="0" level="0" />
-<coupling_between_objects value="10" level="0" />
+<coupling_between_objects value="11" level="0" />
 </module>
 <module>
 <name>WindowedFFT</name>
@@ -346,7 +362,7 @@
 </module>
 <module>
 <name>anonymous</name>
-<weighted_methods_per_class_unity value="26" level="0" />
+<weighted_methods_per_class_unity value="28" level="0" />
 <weighted_methods_per_class_visibility value="0" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
 <number_of_children value="0" level="0" />
@@ -392,6 +408,18 @@
 </module>
 <module>
 <name>BufferedFilter</name>
+<fan_out_visible value="3" level="0" />
+<fan_out_concrete value="3" level="0" />
+<fan_out value="3" level="0" />
+<fan_in_visible value="3" level="0" />
+<fan_in_concrete value="2" level="0" />
+<fan_in value="3" level="0" />
+<IF4_visible value="81" level="1" />
+<IF4_concrete value="36" level="1" />
+<IF4 value="81" level="0" />
+</module>
+<module>
+<name>BufferedFilterHelper</name>
 <fan_out_visible value="0" level="0" />
 <fan_out_concrete value="0" level="0" />
 <fan_out value="0" level="0" />
@@ -476,15 +504,15 @@
 </module>
 <module>
 <name>Filter</name>
-<fan_out_visible value="3" level="0" />
-<fan_out_concrete value="3" level="0" />
-<fan_out value="3" level="0" />
+<fan_out_visible value="1" level="0" />
+<fan_out_concrete value="1" level="0" />
+<fan_out value="1" level="0" />
 <fan_in_visible value="2" level="0" />
 <fan_in_concrete value="1" level="0" />
 <fan_in value="2" level="0" />
-<IF4_visible value="36" level="1" />
-<IF4_concrete value="9" level="0" />
-<IF4 value="36" level="0" />
+<IF4_visible value="4" level="0" />
+<IF4_concrete value="1" level="0" />
+<IF4 value="4" level="0" />
 </module>
 <module>
 <name>FilterBuffer</name>
@@ -524,9 +552,9 @@
 </module>
 <module>
 <name>NUMTYPE</name>
-<fan_out_visible value="8" level="1" />
+<fan_out_visible value="9" level="1" />
 <fan_out_concrete value="0" level="0" />
-<fan_out value="8" level="0" />
+<fan_out value="9" level="0" />
 <fan_in_visible value="0" level="0" />
 <fan_in_concrete value="0" level="0" />
 <fan_in value="0" level="0" />
@@ -572,9 +600,9 @@
 </module>
 <module>
 <name>UInt</name>
-<fan_out_visible value="10" level="1" />
-<fan_out_concrete value="10" level="1" />
-<fan_out value="10" level="0" />
+<fan_out_visible value="11" level="1" />
+<fan_out_concrete value="11" level="1" />
+<fan_out value="11" level="0" />
 <fan_in_visible value="0" level="0" />
 <fan_in_concrete value="0" level="0" />
 <fan_in value="0" level="0" />

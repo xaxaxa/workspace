@@ -1,7 +1,9 @@
 CCCC_Module@AppendData@class@
-CCCC_ModExt@AppendData@class@filter.H@686@definition@F??T2@LOC:7 COM:0 MVG:0@2@d@
+CCCC_ModExt@AppendData@class@filter.H@716@definition@F??T2@LOC:7 COM:0 MVG:0@2@d@
 CCCC_Module@BufferedFilter@class@
-CCCC_ModExt@BufferedFilter@class@filter.H@41@definition@F??T0@LOC:10 COM:0 MVG:0@0@d@
+CCCC_ModExt@BufferedFilter@class@filter.H@45@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_Module@BufferedFilterHelper@class@
+CCCC_ModExt@BufferedFilterHelper@class@filter.H@69@definition@F??T0@LOC:10 COM:0 MVG:0@0@d@
 CCCC_Module@CircularQueue@@
 CCCC_Module@FFTFilter@class@
 CCCC_ModExt@FFTFilter@class@fftfilter.C@73@definition@F??T0@LOC:9 COM:8 MVG:0@0@d@
@@ -15,17 +17,17 @@ CCCC_Module@FLOATTYPE@@
 CCCC_Module@Filter@class@
 CCCC_ModExt@Filter@class@filter.H@29@definition@F??T2@LOC:4 COM:0 MVG:0@2@d@
 CCCC_Module@FilterBuffer@class@
-CCCC_ModExt@FilterBuffer@class@filter.H@667@definition@F??T2@LOC:7 COM:0 MVG:0@2@d@
+CCCC_ModExt@FilterBuffer@class@filter.H@697@definition@F??T2@LOC:7 COM:0 MVG:0@2@d@
 CCCC_Module@FilterBuffer2@class@
-CCCC_ModExt@FilterBuffer2@class@filter.H@715@definition@F??T2@LOC:6 COM:0 MVG:0@2@d@
+CCCC_ModExt@FilterBuffer2@class@filter.H@745@definition@F??T2@LOC:6 COM:0 MVG:0@2@d@
 CCCC_Module@Int@@
 CCCC_Module@NUMTYPE@@
 CCCC_Module@OverlappedFilter@class@
-CCCC_ModExt@OverlappedFilter@class@filter.H@141@definition@F??T0@LOC:11 COM:0 MVG:0@0@d@
+CCCC_ModExt@OverlappedFilter@class@filter.H@169@definition@F??T0@LOC:11 COM:0 MVG:0@0@d@
 CCCC_Module@OverlappedFilter2@class@
-CCCC_ModExt@OverlappedFilter2@class@filter.H@325@definition@F??T0@LOC:15 COM:1 MVG:0@0@d@
+CCCC_ModExt@OverlappedFilter2@class@filter.H@353@definition@F??T0@LOC:15 COM:1 MVG:0@0@d@
 CCCC_Module@OverlappedFilter3@class@
-CCCC_ModExt@OverlappedFilter3@class@filter.H@537@definition@F??T2@LOC:13 COM:0 MVG:0@2@d@
+CCCC_ModExt@OverlappedFilter3@class@filter.H@567@definition@F??T2@LOC:13 COM:0 MVG:0@2@d@
 CCCC_Module@UInt@@
 CCCC_Module@WindowedFFT@class@
 CCCC_ModExt@WindowedFFT@class@fftfilter.C@35@definition@F???2@LOC:9 COM:0 MVG:0@2@d@
@@ -46,23 +48,35 @@ CCCC_ModExt@long@builtin@<nofile>@0@builtin definition@d?????@@0@d@
 CCCC_Module@void@builtin@
 CCCC_ModExt@void@builtin@<nofile>@0@builtin definition@d?????@@0@d@
 CCCC_Member@AppendData@AppendData@@(FilterBuffer &,NUMTYPE *,UInt)@
-CCCC_MemExt@AppendData@AppendData@@(FilterBuffer &,NUMTYPE *,UInt)@filter.H@692@definition@F??T0@LOC:7 COM:0 MVG:0@0@d@
+CCCC_MemExt@AppendData@AppendData@@(FilterBuffer &,NUMTYPE *,UInt)@filter.H@722@definition@F??T0@LOC:7 COM:0 MVG:0@0@d@
 CCCC_Member@AppendData@operator ()@@()@
-CCCC_MemExt@AppendData@operator ()@@()@filter.H@704@definition@F??T0@LOC:9 COM:0 MVG:3@0@d@
+CCCC_MemExt@AppendData@operator ()@@()@filter.H@734@definition@F??T0@LOC:9 COM:0 MVG:3@0@d@
 CCCC_Member@AppendData@~AppendData@@()@
-CCCC_MemExt@AppendData@~AppendData@@()@filter.H@699@definition@F??T0@LOC:5 COM:0 MVG:2@0@d@
-CCCC_Member@BufferedFilter@BufferedFilter@@(UInt,UInt)@
-CCCC_MemExt@BufferedFilter@BufferedFilter@@(UInt,UInt)@filter.H@127@definition@F??T0@LOC:6 COM:0 MVG:0@0@d@
-CCCC_Member@BufferedFilter@DoProcess@@(const NUMTYPE *,NUMTYPE *)@
-CCCC_MemExt@BufferedFilter@DoProcess@@(const NUMTYPE *,NUMTYPE *)@filter.H@50@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
+CCCC_MemExt@AppendData@~AppendData@@()@filter.H@729@definition@F??T0@LOC:5 COM:0 MVG:2@0@d@
+CCCC_Member@BufferedFilter@BufferedFilter@@()@
+CCCC_MemExt@BufferedFilter@BufferedFilter@@()@filter.H@62@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
 CCCC_Member@BufferedFilter@GetData@@(NUMTYPE *,UInt)@
-CCCC_MemExt@BufferedFilter@GetData@@(NUMTYPE *,UInt)@filter.H@99@definition@F??T0@LOC:27 COM:0 MVG:6@0@d@
+CCCC_MemExt@BufferedFilter@GetData@@(NUMTYPE *,UInt)@filter.H@49@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
+CCCC_Member@BufferedFilter@Process@@(NUMTYPE *,UInt)@
+CCCC_MemExt@BufferedFilter@Process@@(NUMTYPE *,UInt)@filter.H@50@definition@F??T0@LOC:6 COM:0 MVG:1@0@d@
+CCCC_Member@BufferedFilter@Process@@(const NUMTYPE *,NUMTYPE *,UInt)@
+CCCC_MemExt@BufferedFilter@Process@@(const NUMTYPE *,NUMTYPE *,UInt)@filter.H@56@definition@F??T0@LOC:6 COM:0 MVG:1@0@d@
 CCCC_Member@BufferedFilter@PutData@@(const NUMTYPE *,UInt)@
-CCCC_MemExt@BufferedFilter@PutData@@(const NUMTYPE *,UInt)@filter.H@57@definition@F??T0@LOC:38 COM:4 MVG:9@0@d@
-CCCC_Member@BufferedFilter@__warn@@(UInt)@
-CCCC_MemExt@BufferedFilter@__warn@@(UInt)@filter.H@52@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
+CCCC_MemExt@BufferedFilter@PutData@@(const NUMTYPE *,UInt)@filter.H@48@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
 CCCC_Member@BufferedFilter@~BufferedFilter@@()@
-CCCC_MemExt@BufferedFilter@~BufferedFilter@@()@filter.H@133@definition@F??T0@LOC:6 COM:0 MVG:1@0@d@
+CCCC_MemExt@BufferedFilter@~BufferedFilter@@()@filter.H@65@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
+CCCC_Member@BufferedFilterHelper@BufferedFilterHelper@@(UInt,UInt)@
+CCCC_MemExt@BufferedFilterHelper@BufferedFilterHelper@@(UInt,UInt)@filter.H@155@definition@F??T0@LOC:6 COM:0 MVG:0@0@d@
+CCCC_Member@BufferedFilterHelper@DoProcess@@(const NUMTYPE *,NUMTYPE *)@
+CCCC_MemExt@BufferedFilterHelper@DoProcess@@(const NUMTYPE *,NUMTYPE *)@filter.H@78@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
+CCCC_Member@BufferedFilterHelper@GetData@@(NUMTYPE *,UInt)@
+CCCC_MemExt@BufferedFilterHelper@GetData@@(NUMTYPE *,UInt)@filter.H@127@definition@F??T0@LOC:27 COM:0 MVG:6@0@d@
+CCCC_Member@BufferedFilterHelper@PutData@@(const NUMTYPE *,UInt)@
+CCCC_MemExt@BufferedFilterHelper@PutData@@(const NUMTYPE *,UInt)@filter.H@85@definition@F??T0@LOC:38 COM:4 MVG:9@0@d@
+CCCC_Member@BufferedFilterHelper@__warn@@(UInt)@
+CCCC_MemExt@BufferedFilterHelper@__warn@@(UInt)@filter.H@80@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
+CCCC_Member@BufferedFilterHelper@~BufferedFilterHelper@@()@
+CCCC_MemExt@BufferedFilterHelper@~BufferedFilterHelper@@()@filter.H@161@definition@F??T0@LOC:6 COM:0 MVG:1@0@d@
 CCCC_Member@FFTFilter@ComplexSize@@()@
 CCCC_MemExt@FFTFilter@ComplexSize@@()@fftfilter.C@86@definition@F??T0@LOC:4 COM:0 MVG:1@0@d@
 CCCC_Member@FFTFilter@DoProcess@@()@
@@ -100,93 +114,93 @@ CCCC_MemExt@FFTTransform@free_buffer@@()@fftfilter.C@227@definition@F??T0@LOC:1 
 CCCC_Member@FFTTransform@~FFTTransform@@()@
 CCCC_MemExt@FFTTransform@~FFTTransform@@()@fftfilter.C@238@definition@F??T0@LOC:5 COM:3 MVG:0@0@d@
 CCCC_Member@Filter@Filter@@()@
-CCCC_MemExt@Filter@Filter@@()@filter.H@34@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
-CCCC_Member@Filter@GetData@@(NUMTYPE *,UInt)@
-CCCC_MemExt@Filter@GetData@@(NUMTYPE *,UInt)@filter.H@33@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
-CCCC_Member@Filter@PutData@@(const NUMTYPE *,UInt)@
-CCCC_MemExt@Filter@PutData@@(const NUMTYPE *,UInt)@filter.H@32@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
+CCCC_MemExt@Filter@Filter@@()@filter.H@38@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
+CCCC_Member@Filter@Process@@(NUMTYPE *,UInt)@
+CCCC_MemExt@Filter@Process@@(NUMTYPE *,UInt)@filter.H@32@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
+CCCC_Member@Filter@Process@@(const NUMTYPE *,NUMTYPE *,UInt)@
+CCCC_MemExt@Filter@Process@@(const NUMTYPE *,NUMTYPE *,UInt)@filter.H@33@definition@F??T0@LOC:5 COM:0 MVG:0@0@d@
 CCCC_Member@Filter@~Filter@@()@
-CCCC_MemExt@Filter@~Filter@@()@filter.H@37@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
+CCCC_MemExt@Filter@~Filter@@()@filter.H@41@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
 CCCC_Member@FilterBuffer2@FilterBuffer2@@(UInt,UInt)@
-CCCC_MemExt@FilterBuffer2@FilterBuffer2@@(UInt,UInt)@filter.H@720@definition@F??T0@LOC:4 COM:1 MVG:0@0@d@
+CCCC_MemExt@FilterBuffer2@FilterBuffer2@@(UInt,UInt)@filter.H@750@definition@F??T0@LOC:4 COM:1 MVG:0@0@d@
 CCCC_Member@FilterBuffer2@GetData@@(NUMTYPE *,Int)@
-CCCC_MemExt@FilterBuffer2@GetData@@(NUMTYPE *,Int)@filter.H@758@definition@F??T0@LOC:32 COM:3 MVG:9@0@d@
+CCCC_MemExt@FilterBuffer2@GetData@@(NUMTYPE *,Int)@filter.H@788@definition@F??T0@LOC:32 COM:3 MVG:9@0@d@
 CCCC_Member@FilterBuffer2@PutData@@(const NUMTYPE *,Int)@
-CCCC_MemExt@FilterBuffer2@PutData@@(const NUMTYPE *,Int)@filter.H@729@definition@F??T0@LOC:25 COM:2 MVG:5@0@d@
+CCCC_MemExt@FilterBuffer2@PutData@@(const NUMTYPE *,Int)@filter.H@759@definition@F??T0@LOC:25 COM:2 MVG:5@0@d@
 CCCC_Member@FilterBuffer2@~FilterBuffer2@@()@
-CCCC_MemExt@FilterBuffer2@~FilterBuffer2@@()@filter.H@725@definition@F??T0@LOC:3 COM:1 MVG:0@0@d@
+CCCC_MemExt@FilterBuffer2@~FilterBuffer2@@()@filter.H@755@definition@F??T0@LOC:3 COM:1 MVG:0@0@d@
 CCCC_Member@FilterBuffer@Append@@(NUMTYPE *,UInt)@
-CCCC_MemExt@FilterBuffer@Append@@(NUMTYPE *,UInt)@filter.H@677@definition@F??T0@LOC:9 COM:0 MVG:4@0@d@
+CCCC_MemExt@FilterBuffer@Append@@(NUMTYPE *,UInt)@filter.H@707@definition@F??T0@LOC:9 COM:0 MVG:4@0@d@
 CCCC_Member@FilterBuffer@FilterBuffer@@(NUMTYPE *,UInt)@
-CCCC_MemExt@FilterBuffer@FilterBuffer@@(NUMTYPE *,UInt)@filter.H@673@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
+CCCC_MemExt@FilterBuffer@FilterBuffer@@(NUMTYPE *,UInt)@filter.H@703@definition@F??T0@LOC:3 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter2@DoProcess@@()@
-CCCC_MemExt@OverlappedFilter2@DoProcess@@()@filter.H@354@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
+CCCC_MemExt@OverlappedFilter2@DoProcess@@()@filter.H@382@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
 CCCC_Member@OverlappedFilter2@DoProcess@@(FLOATTYPE,FLOATTYPE)@
-CCCC_MemExt@OverlappedFilter2@DoProcess@@(FLOATTYPE,FLOATTYPE)@filter.H@355@definition@F??T0@LOC:40 COM:10 MVG:7@0@d@
+CCCC_MemExt@OverlappedFilter2@DoProcess@@(FLOATTYPE,FLOATTYPE)@filter.H@383@definition@F??T0@LOC:40 COM:10 MVG:7@0@d@
 CCCC_Member@OverlappedFilter2@GetData@@(NUMTYPE *,UInt)@
-CCCC_MemExt@OverlappedFilter2@GetData@@(NUMTYPE *,UInt)@filter.H@486@definition@F??T0@LOC:28 COM:1 MVG:7@0@d@
+CCCC_MemExt@OverlappedFilter2@GetData@@(NUMTYPE *,UInt)@filter.H@516@definition@F??T0@LOC:28 COM:1 MVG:7@0@d@
 CCCC_Member@OverlappedFilter2@OverlappedFilter2@@(UInt,UInt,UInt,UInt,Int,Int)@
-CCCC_MemExt@OverlappedFilter2@OverlappedFilter2@@(UInt,UInt,UInt,UInt,Int,Int)@filter.H@516@definition@F??T0@LOC:14 COM:1 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter2@OverlappedFilter2@@(UInt,UInt,UInt,UInt,Int,Int)@filter.H@546@definition@F??T0@LOC:14 COM:1 MVG:0@0@d@
 CCCC_Member@OverlappedFilter2@PeriodSize@@()@
-CCCC_MemExt@OverlappedFilter2@PeriodSize@@()@filter.H@339@definition@F??T0@LOC:4 COM:0 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter2@PeriodSize@@()@filter.H@367@definition@F??T0@LOC:4 COM:0 MVG:1@0@d@
 CCCC_Member@OverlappedFilter2@PutData@@(const NUMTYPE *,UInt)@
-CCCC_MemExt@OverlappedFilter2@PutData@@(const NUMTYPE *,UInt)@filter.H@455@definition@F??T0@LOC:29 COM:2 MVG:6@0@d@
+CCCC_MemExt@OverlappedFilter2@PutData@@(const NUMTYPE *,UInt)@filter.H@483@definition@F??T0@LOC:29 COM:4 MVG:6@0@d@
 CCCC_Member@OverlappedFilter2@__warn@@(UInt)@
-CCCC_MemExt@OverlappedFilter2@__warn@@(UInt)@filter.H@450@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter2@__warn@@(UInt)@filter.H@478@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
 CCCC_Member@OverlappedFilter2@alloc_buffer@@()@
-CCCC_MemExt@OverlappedFilter2@alloc_buffer@@()@filter.H@344@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter2@alloc_buffer@@()@filter.H@372@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter2@free_buffer@@()@
-CCCC_MemExt@OverlappedFilter2@free_buffer@@()@filter.H@348@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter2@free_buffer@@()@filter.H@376@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter2@proc@@()@
-CCCC_MemExt@OverlappedFilter2@proc@@()@filter.H@408@definition@F??T0@LOC:32 COM:9 MVG:8@0@d@
+CCCC_MemExt@OverlappedFilter2@proc@@()@filter.H@436@definition@F??T0@LOC:32 COM:9 MVG:8@0@d@
 CCCC_Member@OverlappedFilter2@~OverlappedFilter2@@()@
-CCCC_MemExt@OverlappedFilter2@~OverlappedFilter2@@()@filter.H@531@definition@F??T0@LOC:5 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter2@~OverlappedFilter2@@()@filter.H@561@definition@F??T0@LOC:5 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter3@DoProcess@@()@
-CCCC_MemExt@OverlappedFilter3@DoProcess@@()@filter.H@565@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
+CCCC_MemExt@OverlappedFilter3@DoProcess@@()@filter.H@595@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
 CCCC_Member@OverlappedFilter3@DoProcess1@@()@
-CCCC_MemExt@OverlappedFilter3@DoProcess1@@()@filter.H@566@definition@F??T0@LOC:11 COM:0 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter3@DoProcess1@@()@filter.H@596@definition@F??T0@LOC:11 COM:0 MVG:1@0@d@
 CCCC_Member@OverlappedFilter3@GetData@@(NUMTYPE *)@
-CCCC_MemExt@OverlappedFilter3@GetData@@(NUMTYPE *)@filter.H@640@definition@F??T0@LOC:9 COM:0 MVG:3@0@d@
+CCCC_MemExt@OverlappedFilter3@GetData@@(NUMTYPE *)@filter.H@670@definition@F??T0@LOC:9 COM:0 MVG:3@0@d@
 CCCC_Member@OverlappedFilter3@OutputSize@@()@
-CCCC_MemExt@OverlappedFilter3@OutputSize@@()@filter.H@639@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
+CCCC_MemExt@OverlappedFilter3@OutputSize@@()@filter.H@669@declaration@F??T0@LOC:1 COM:0 MVG:0@0@D@
 CCCC_Member@OverlappedFilter3@OverlappedFilter3@@(UInt,UInt,UInt,UInt,UInt,UInt)@
-CCCC_MemExt@OverlappedFilter3@OverlappedFilter3@@(UInt,UInt,UInt,UInt,UInt,UInt)@filter.H@649@definition@F??T0@LOC:11 COM:1 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter3@OverlappedFilter3@@(UInt,UInt,UInt,UInt,UInt,UInt)@filter.H@679@definition@F??T0@LOC:11 COM:1 MVG:0@0@d@
 CCCC_Member@OverlappedFilter3@PeriodSize@@()@
-CCCC_MemExt@OverlappedFilter3@PeriodSize@@()@filter.H@550@definition@F??T0@LOC:4 COM:1 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter3@PeriodSize@@()@filter.H@580@definition@F??T0@LOC:4 COM:1 MVG:1@0@d@
 CCCC_Member@OverlappedFilter3@PutData@@(const NUMTYPE *,UInt)@
-CCCC_MemExt@OverlappedFilter3@PutData@@(const NUMTYPE *,UInt)@filter.H@608@definition@F??T0@LOC:29 COM:2 MVG:6@0@d@
+CCCC_MemExt@OverlappedFilter3@PutData@@(const NUMTYPE *,UInt)@filter.H@638@definition@F??T0@LOC:30 COM:1 MVG:6@0@d@
 CCCC_Member@OverlappedFilter3@__warn@@(UInt)@
-CCCC_MemExt@OverlappedFilter3@__warn@@(UInt)@filter.H@603@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter3@__warn@@(UInt)@filter.H@633@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
 CCCC_Member@OverlappedFilter3@alloc_buffer@@()@
-CCCC_MemExt@OverlappedFilter3@alloc_buffer@@()@filter.H@555@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter3@alloc_buffer@@()@filter.H@585@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter3@free_buffer@@()@
-CCCC_MemExt@OverlappedFilter3@free_buffer@@()@filter.H@559@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter3@free_buffer@@()@filter.H@589@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter3@proc@@()@
-CCCC_MemExt@OverlappedFilter3@proc@@()@filter.H@579@definition@F??T0@LOC:21 COM:2 MVG:5@0@d@
+CCCC_MemExt@OverlappedFilter3@proc@@()@filter.H@609@definition@F??T0@LOC:21 COM:2 MVG:5@0@d@
 CCCC_Member@OverlappedFilter3@~OverlappedFilter3@@()@
-CCCC_MemExt@OverlappedFilter3@~OverlappedFilter3@@()@filter.H@661@definition@F??T0@LOC:5 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter3@~OverlappedFilter3@@()@filter.H@691@definition@F??T0@LOC:5 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter@DoProcess@@()@
-CCCC_MemExt@OverlappedFilter@DoProcess@@()@filter.H@164@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
+CCCC_MemExt@OverlappedFilter@DoProcess@@()@filter.H@192@declaration@F??T0@LOC:1 COM:1 MVG:0@0@D@
 CCCC_Member@OverlappedFilter@DoProcess@@(FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,UInt,FLOATTYPE,FLOATTYPE)@
-CCCC_MemExt@OverlappedFilter@DoProcess@@(FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,UInt,FLOATTYPE,FLOATTYPE)@filter.H@165@definition@F??T0@LOC:29 COM:6 MVG:6@0@d@
+CCCC_MemExt@OverlappedFilter@DoProcess@@(FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,FLOATTYPE *,UInt,FLOATTYPE,FLOATTYPE)@filter.H@193@definition@F??T0@LOC:29 COM:6 MVG:6@0@d@
 CCCC_Member@OverlappedFilter@GetData@@(NUMTYPE *,UInt)@
-CCCC_MemExt@OverlappedFilter@GetData@@(NUMTYPE *,UInt)@filter.H@280@definition@F??T0@LOC:28 COM:1 MVG:7@0@d@
+CCCC_MemExt@OverlappedFilter@GetData@@(NUMTYPE *,UInt)@filter.H@308@definition@F??T0@LOC:28 COM:1 MVG:7@0@d@
 CCCC_Member@OverlappedFilter@OverlappedFilter@@(UInt,UInt,UInt,UInt)@
-CCCC_MemExt@OverlappedFilter@OverlappedFilter@@(UInt,UInt,UInt,UInt)@filter.H@310@definition@F??T0@LOC:9 COM:1 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter@OverlappedFilter@@(UInt,UInt,UInt,UInt)@filter.H@338@definition@F??T0@LOC:9 COM:1 MVG:0@0@d@
 CCCC_Member@OverlappedFilter@PeriodSize@@()@
-CCCC_MemExt@OverlappedFilter@PeriodSize@@()@filter.H@149@definition@F??T0@LOC:4 COM:1 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter@PeriodSize@@()@filter.H@177@definition@F??T0@LOC:4 COM:1 MVG:1@0@d@
 CCCC_Member@OverlappedFilter@PutData@@(const NUMTYPE *,UInt)@
-CCCC_MemExt@OverlappedFilter@PutData@@(const NUMTYPE *,UInt)@filter.H@249@definition@F??T0@LOC:29 COM:2 MVG:6@0@d@
+CCCC_MemExt@OverlappedFilter@PutData@@(const NUMTYPE *,UInt)@filter.H@277@definition@F??T0@LOC:29 COM:2 MVG:6@0@d@
 CCCC_Member@OverlappedFilter@__warn@@(UInt)@
-CCCC_MemExt@OverlappedFilter@__warn@@(UInt)@filter.H@244@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
+CCCC_MemExt@OverlappedFilter@__warn@@(UInt)@filter.H@272@definition@F??T0@LOC:5 COM:0 MVG:1@0@d@
 CCCC_Member@OverlappedFilter@alloc_buffer@@()@
-CCCC_MemExt@OverlappedFilter@alloc_buffer@@()@filter.H@154@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter@alloc_buffer@@()@filter.H@182@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter@free_buffer@@()@
-CCCC_MemExt@OverlappedFilter@free_buffer@@()@filter.H@158@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter@free_buffer@@()@filter.H@186@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@OverlappedFilter@proc@@()@
-CCCC_MemExt@OverlappedFilter@proc@@()@filter.H@204@definition@F??T0@LOC:30 COM:10 MVG:13@0@d@
+CCCC_MemExt@OverlappedFilter@proc@@()@filter.H@232@definition@F??T0@LOC:30 COM:10 MVG:13@0@d@
 CCCC_Member@OverlappedFilter@~OverlappedFilter@@()@
-CCCC_MemExt@OverlappedFilter@~OverlappedFilter@@()@filter.H@320@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
+CCCC_MemExt@OverlappedFilter@~OverlappedFilter@@()@filter.H@348@definition@F??T0@LOC:4 COM:0 MVG:0@0@d@
 CCCC_Member@WindowedFFT@Forward@@(double *,int)@
 CCCC_MemExt@WindowedFFT@Forward@@(double *,int)@fftfilter.C@50@definition@F???0@LOC:8 COM:0 MVG:1@0@d@
 CCCC_Member@WindowedFFT@Reverse@@(int)@
@@ -196,97 +210,114 @@ CCCC_MemExt@WindowedFFT@WindowedFFT@@(int)@fftfilter.C@43@definition@F???0@LOC:7
 CCCC_Member@WindowedFFT@~WindowedFFT@@()@
 CCCC_MemExt@WindowedFFT@~WindowedFFT@@()@fftfilter.C@65@definition@F???0@LOC:7 COM:0 MVG:0@0@d@
 CCCC_Member@anonymous@apply_label_workaround@@(Label *)@
-CCCC_MemExt@anonymous@apply_label_workaround@@(Label *)@jackfft.C@425@definition@F????@LOC:7 COM:1 MVG:0@?@d@
+CCCC_MemExt@anonymous@apply_label_workaround@@(Label *)@jackfft.C@465@definition@F????@LOC:7 COM:1 MVG:0@?@d@
 CCCC_Member@anonymous@apply_pitchshift@@()@
-CCCC_MemExt@anonymous@apply_pitchshift@@()@jackfft.C@421@definition@F????@LOC:4 COM:0 MVG:0@?@d@
+CCCC_MemExt@anonymous@apply_pitchshift@@()@jackfft.C@461@definition@F????@LOC:4 COM:0 MVG:0@?@d@
 CCCC_Member@anonymous@apply_pitchshift1@@(FFTFilter **)@
-CCCC_MemExt@anonymous@apply_pitchshift1@@(FFTFilter **)@jackfft.C@396@definition@F????@LOC:25 COM:0 MVG:6@?@d@
+CCCC_MemExt@anonymous@apply_pitchshift1@@(FFTFilter **)@jackfft.C@435@definition@F????@LOC:24 COM:2 MVG:6@?@d@
 CCCC_Member@anonymous@complex_to_real@@(const t &)@
-CCCC_MemExt@anonymous@complex_to_real@@(const t &)@jackfft.C@125@definition@F????@LOC:6 COM:1 MVG:1@?@d@
+CCCC_MemExt@anonymous@complex_to_real@@(const t &)@jackfft.C@131@definition@F????@LOC:6 COM:1 MVG:1@?@d@
 CCCC_Member@anonymous@do_load@@(Stream &)@
-CCCC_MemExt@anonymous@do_load@@(Stream &)@jackfft.C@300@definition@F????@LOC:29 COM:3 MVG:5@?@d@
+CCCC_MemExt@anonymous@do_load@@(Stream &)@jackfft.C@336@definition@F????@LOC:30 COM:3 MVG:5@?@d@
 CCCC_Member@anonymous@do_save@@(Stream &)@
-CCCC_MemExt@anonymous@do_save@@(Stream &)@jackfft.C@266@definition@F????@LOC:20 COM:1 MVG:1@?@d@
+CCCC_MemExt@anonymous@do_save@@(Stream &)@jackfft.C@301@definition@F????@LOC:21 COM:1 MVG:1@?@d@
+CCCC_Member@anonymous@efd@@(...)@
+CCCC_MemExt@anonymous@efd@@(...)@jackfft.C@55@declaration@F????@LOC:1 COM:0 MVG:0@?@D@
 CCCC_Member@anonymous@error@@(const char *)@
-CCCC_MemExt@anonymous@error@@(const char *)@jackfft.C@199@definition@F????@LOC:4 COM:0 MVG:0@?@d@
+CCCC_MemExt@anonymous@error@@(const char *)@jackfft.C@234@definition@F????@LOC:4 COM:0 MVG:0@?@d@
 CCCC_MemExt@anonymous@error@@(const char *)@jackfftc.C@50@definition@F????@LOC:4 COM:0 MVG:0@?@d@
 CCCC_Member@anonymous@get_nsec@@(const timespec &)@
-CCCC_MemExt@anonymous@get_nsec@@(const timespec &)@jackfft.C@121@definition@F????@LOC:4 COM:0 MVG:1@?@d@
+CCCC_MemExt@anonymous@get_nsec@@(const timespec &)@jackfft.C@127@definition@F????@LOC:4 COM:0 MVG:1@?@d@
 CCCC_Member@anonymous@jack_shutdown@@(void *)@
-CCCC_MemExt@anonymous@jack_shutdown@@(void *)@jackfft.C@203@definition@F????@LOC:4 COM:0 MVG:0@?@d@
+CCCC_MemExt@anonymous@jack_shutdown@@(void *)@jackfft.C@238@definition@F????@LOC:4 COM:0 MVG:0@?@d@
 CCCC_MemExt@anonymous@jack_shutdown@@(void *)@jackfftc.C@54@definition@F????@LOC:4 COM:0 MVG:0@?@d@
 CCCC_Member@anonymous@load@@()@
-CCCC_MemExt@anonymous@load@@()@jackfft.C@334@definition@F????@LOC:13 COM:0 MVG:2@?@d@
+CCCC_MemExt@anonymous@load@@()@jackfft.C@371@definition@F????@LOC:15 COM:0 MVG:2@?@d@
 CCCC_Member@anonymous@load@@(Stream &,double *,UInt)@
 CCCC_MemExt@anonymous@load@@(Stream &,double *,UInt)@jackfftc.C@111@definition@F????@LOC:27 COM:3 MVG:5@?@d@
 CCCC_Member@anonymous@loadfile@@()@
-CCCC_MemExt@anonymous@loadfile@@()@jackfft.C@333@declaration@F????@LOC:1 COM:0 MVG:0@?@D@
-CCCC_MemExt@anonymous@loadfile@@()@jackfft.C@372@definition@F????@LOC:24 COM:0 MVG:2@?@d@
+CCCC_MemExt@anonymous@loadfile@@()@jackfft.C@370@declaration@F????@LOC:1 COM:0 MVG:0@?@D@
+CCCC_MemExt@anonymous@loadfile@@()@jackfft.C@411@definition@F????@LOC:24 COM:0 MVG:2@?@d@
 CCCC_Member@anonymous@logn@@(double,double)@
-CCCC_MemExt@anonymous@logn@@(double,double)@jackfft.C@87@definition@F????@LOC:4 COM:0 MVG:1@?@d@
+CCCC_MemExt@anonymous@logn@@(double,double)@jackfft.C@91@definition@F????@LOC:4 COM:0 MVG:1@?@d@
 CCCC_Member@anonymous@main@@(...)@
-CCCC_MemExt@anonymous@main@@(...)@jackfft.C@433@definition@F????@LOC:124 COM:74 MVG:11@?@d@
+CCCC_MemExt@anonymous@main@@(...)@jackfft.C@473@definition@F????@LOC:150 COM:76 MVG:13@?@d@
 CCCC_MemExt@anonymous@main@@(...)@jackfftc.C@142@definition@F????@LOC:49 COM:5 MVG:11@?@d@
 CCCC_Member@anonymous@main@@(int,char **)@
 CCCC_MemExt@anonymous@main@@(int,char **)@ctrltest.C@29@definition@F????@LOC:13 COM:2 MVG:1@?@d@
 CCCC_Member@anonymous@modulus@@(double,double)@
 CCCC_MemExt@anonymous@modulus@@(double,double)@fftfilter.C@30@definition@F????@LOC:5 COM:0 MVG:1@?@d@
 CCCC_Member@anonymous@on_change@@(void *,UInt,UInt)@
-CCCC_MemExt@anonymous@on_change@@(void *,UInt,UInt)@jackfft.C@233@definition@F????@LOC:19 COM:5 MVG:3@?@d@
+CCCC_MemExt@anonymous@on_change@@(void *,UInt,UInt)@jackfft.C@268@definition@F????@LOC:19 COM:5 MVG:3@?@d@
 CCCC_Member@anonymous@on_mousemove@@(void *,double)@
-CCCC_MemExt@anonymous@on_mousemove@@(void *,double)@jackfft.C@257@definition@F????@LOC:8 COM:0 MVG:0@?@d@
+CCCC_MemExt@anonymous@on_mousemove@@(void *,double)@jackfft.C@292@definition@F????@LOC:8 COM:0 MVG:0@?@d@
 CCCC_Member@anonymous@process@@(jack_nframes_t,void *)@
-CCCC_MemExt@anonymous@process@@(jack_nframes_t,void *)@jackfft.C@132@definition@F????@LOC:57 COM:9 MVG:15@?@d@
-CCCC_MemExt@anonymous@process@@(jack_nframes_t,void *)@jackfftc.C@26@definition@F????@LOC:15 COM:8 MVG:2@?@d@
+CCCC_MemExt@anonymous@process@@(jack_nframes_t,void *)@jackfft.C@138@definition@F????@LOC:47 COM:16 MVG:12@?@d@
+CCCC_MemExt@anonymous@process@@(jack_nframes_t,void *)@jackfftc.C@26@definition@F????@LOC:14 COM:9 MVG:2@?@d@
 CCCC_Member@anonymous@save@@()@
-CCCC_MemExt@anonymous@save@@()@jackfft.C@288@definition@F????@LOC:11 COM:0 MVG:2@?@d@
+CCCC_MemExt@anonymous@save@@()@jackfft.C@324@definition@F????@LOC:11 COM:0 MVG:2@?@d@
 CCCC_Member@anonymous@saveas@@()@
-CCCC_MemExt@anonymous@saveas@@()@jackfft.C@287@declaration@F????@LOC:1 COM:0 MVG:0@?@D@
-CCCC_MemExt@anonymous@saveas@@()@jackfft.C@348@definition@F????@LOC:24 COM:0 MVG:2@?@d@
+CCCC_MemExt@anonymous@saveas@@()@jackfft.C@323@declaration@F????@LOC:1 COM:0 MVG:0@?@D@
+CCCC_MemExt@anonymous@saveas@@()@jackfft.C@387@definition@F????@LOC:24 COM:0 MVG:2@?@d@
 CCCC_Member@anonymous@scale_freq@@(double)@
-CCCC_MemExt@anonymous@scale_freq@@(double)@jackfft.C@62@definition@F????@LOC:7 COM:0 MVG:3@?@d@
+CCCC_MemExt@anonymous@scale_freq@@(double)@jackfft.C@66@definition@F????@LOC:7 COM:0 MVG:3@?@d@
 CCCC_MemExt@anonymous@scale_freq@@(double)@jackfftc.C@58@definition@F????@LOC:7 COM:0 MVG:3@?@d@
 CCCC_Member@anonymous@scale_freq_r@@(double)@
-CCCC_MemExt@anonymous@scale_freq_r@@(double)@jackfft.C@77@definition@F????@LOC:6 COM:12 MVG:2@?@d@
+CCCC_MemExt@anonymous@scale_freq_r@@(double)@jackfft.C@81@definition@F????@LOC:6 COM:12 MVG:2@?@d@
 CCCC_MemExt@anonymous@scale_freq_r@@(double)@jackfftc.C@73@definition@F????@LOC:6 COM:12 MVG:2@?@d@
 CCCC_Member@anonymous@scale_value@@(double)@
-CCCC_MemExt@anonymous@scale_value@@(double)@jackfft.C@92@definition@F????@LOC:6 COM:5 MVG:1@?@d@
+CCCC_MemExt@anonymous@scale_value@@(double)@jackfft.C@98@definition@F????@LOC:6 COM:6 MVG:1@?@d@
 CCCC_MemExt@anonymous@scale_value@@(double)@jackfftc.C@83@definition@F????@LOC:7 COM:1 MVG:3@?@d@
 CCCC_Member@anonymous@scale_value_r@@(double)@
-CCCC_MemExt@anonymous@scale_value_r@@(double)@jackfft.C@109@definition@F????@LOC:4 COM:13 MVG:1@?@d@
+CCCC_MemExt@anonymous@scale_value_r@@(double)@jackfft.C@115@definition@F????@LOC:4 COM:13 MVG:1@?@d@
 CCCC_MemExt@anonymous@scale_value_r@@(double)@jackfftc.C@98@definition@F????@LOC:7 COM:11 MVG:4@?@d@
+CCCC_Member@anonymous@thread1@@(void *)@
+CCCC_MemExt@anonymous@thread1@@(void *)@jackfft.C@202@definition@F????@LOC:31 COM:1 MVG:7@?@d@
 CCCC_Member@anonymous@update_fft@@(...)@
-CCCC_MemExt@anonymous@update_fft@@(...)@jackfft.C@211@definition@F????@LOC:22 COM:3 MVG:7@?@d@
+CCCC_MemExt@anonymous@update_fft@@(...)@jackfft.C@246@definition@F????@LOC:22 COM:3 MVG:7@?@d@
 CCCC_UseRel@FilterBuffer@AppendData@
-CCCC_UseExt@FilterBuffer@AppendData@filter.H@689@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@FilterBuffer@AppendData@filter.H@692@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@FilterBuffer@AppendData@filter.H@719@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@FilterBuffer@AppendData@filter.H@722@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@NUMTYPE@AppendData@
-CCCC_UseExt@NUMTYPE@AppendData@filter.H@690@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@NUMTYPE@AppendData@filter.H@692@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@AppendData@filter.H@720@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@NUMTYPE@AppendData@filter.H@722@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@AppendData@
-CCCC_UseExt@UInt@AppendData@filter.H@691@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@AppendData@filter.H@692@pass by value@F??T0@*@0@P@
-CCCC_UseRel@CircularQueue@BufferedFilter@
-CCCC_UseExt@CircularQueue@BufferedFilter@filter.H@47@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@AppendData@filter.H@721@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@AppendData@filter.H@722@pass by value@F??T0@*@0@P@
 CCCC_UseRel@Filter@BufferedFilter@
-CCCC_UseExt@Filter@BufferedFilter@filter.H@41@inheritance@F??T0@*@0@I@
-CCCC_UseRel@Int@BufferedFilter@
-CCCC_UseExt@Int@BufferedFilter@filter.H@97@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Filter@BufferedFilter@filter.H@45@inheritance@F??T0@*@0@I@
 CCCC_UseRel@NUMTYPE@BufferedFilter@
-CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@44@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@48@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@49@pass by reference@F??T0@*@0@p@
 CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@50@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@50@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@57@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@99@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@56@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@BufferedFilter@filter.H@56@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@BufferedFilter@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@45@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@46@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@52@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@57@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@98@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@99@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@127@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@BufferedFilter@filter.H@127@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilter@filter.H@48@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilter@filter.H@49@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilter@filter.H@50@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilter@filter.H@56@pass by value@F??T0@*@0@P@
+CCCC_UseRel@BufferedFilter@BufferedFilterHelper@
+CCCC_UseExt@BufferedFilter@BufferedFilterHelper@filter.H@69@inheritance@F??T0@*@0@I@
+CCCC_UseRel@CircularQueue@BufferedFilterHelper@
+CCCC_UseExt@CircularQueue@BufferedFilterHelper@filter.H@75@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseRel@Int@BufferedFilterHelper@
+CCCC_UseExt@Int@BufferedFilterHelper@filter.H@125@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseRel@NUMTYPE@BufferedFilterHelper@
+CCCC_UseExt@NUMTYPE@BufferedFilterHelper@filter.H@72@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@NUMTYPE@BufferedFilterHelper@filter.H@78@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@BufferedFilterHelper@filter.H@78@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@BufferedFilterHelper@filter.H@85@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@BufferedFilterHelper@filter.H@127@pass by reference@F??T0@*@0@p@
+CCCC_UseRel@UInt@BufferedFilterHelper@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@73@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@74@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@80@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@85@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@126@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@127@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@155@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@BufferedFilterHelper@filter.H@155@pass by value@F??T0@*@0@P@
 CCCC_UseRel@Int@FFTFilter@
 CCCC_UseExt@Int@FFTFilter@fftfilter.C@90@pass by value@F??T0@*@0@P@
 CCCC_UseRel@OverlappedFilter2@FFTFilter@
@@ -325,116 +356,117 @@ CCCC_UseExt@fftw_plan@FFTTransform@fftfilter.C@222@has by value@F??T0@LOC:0 COM:
 CCCC_UseRel@NUMTYPE@Filter@
 CCCC_UseExt@NUMTYPE@Filter@filter.H@32@pass by reference@F??T0@*@0@p@
 CCCC_UseExt@NUMTYPE@Filter@filter.H@33@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@Filter@filter.H@33@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@Filter@
 CCCC_UseExt@UInt@Filter@filter.H@32@pass by value@F??T0@*@0@P@
 CCCC_UseExt@UInt@Filter@filter.H@33@pass by value@F??T0@*@0@P@
 CCCC_UseRel@NUMTYPE@FilterBuffer@
-CCCC_UseExt@NUMTYPE@FilterBuffer@filter.H@670@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@NUMTYPE@FilterBuffer@filter.H@673@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@FilterBuffer@filter.H@677@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@FilterBuffer@filter.H@700@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@NUMTYPE@FilterBuffer@filter.H@703@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@FilterBuffer@filter.H@707@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@FilterBuffer@
-CCCC_UseExt@UInt@FilterBuffer@filter.H@671@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@FilterBuffer@filter.H@672@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@FilterBuffer@filter.H@673@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@FilterBuffer@filter.H@677@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@FilterBuffer@filter.H@701@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@FilterBuffer@filter.H@702@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@FilterBuffer@filter.H@703@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@FilterBuffer@filter.H@707@pass by value@F??T0@*@0@P@
 CCCC_UseRel@CircularQueue@FilterBuffer2@
-CCCC_UseExt@CircularQueue@FilterBuffer2@filter.H@718@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@CircularQueue@FilterBuffer2@filter.H@748@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@Int@FilterBuffer2@
-CCCC_UseExt@Int@FilterBuffer2@filter.H@719@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@FilterBuffer2@filter.H@729@pass by value@F??T0@*@0@P@
-CCCC_UseExt@Int@FilterBuffer2@filter.H@758@pass by value@F??T0@*@0@P@
+CCCC_UseExt@Int@FilterBuffer2@filter.H@749@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@FilterBuffer2@filter.H@759@pass by value@F??T0@*@0@P@
+CCCC_UseExt@Int@FilterBuffer2@filter.H@788@pass by value@F??T0@*@0@P@
 CCCC_UseRel@NUMTYPE@FilterBuffer2@
-CCCC_UseExt@NUMTYPE@FilterBuffer2@filter.H@729@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@FilterBuffer2@filter.H@758@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@FilterBuffer2@filter.H@759@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@FilterBuffer2@filter.H@788@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@FilterBuffer2@
-CCCC_UseExt@UInt@FilterBuffer2@filter.H@720@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@FilterBuffer2@filter.H@720@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@FilterBuffer2@filter.H@750@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@FilterBuffer2@filter.H@750@pass by value@F??T0@*@0@P@
+CCCC_UseRel@BufferedFilter@OverlappedFilter@
+CCCC_UseExt@BufferedFilter@OverlappedFilter@filter.H@169@inheritance@F??T0@*@0@I@
 CCCC_UseRel@CircularQueue@OverlappedFilter@
-CCCC_UseExt@CircularQueue@OverlappedFilter@filter.H@144@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@CircularQueue@OverlappedFilter@filter.H@172@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@FLOATTYPE@OverlappedFilter@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@153@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@165@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@165@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@165@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@165@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@166@pass by value@F??T0@*@0@P@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@166@pass by value@F??T0@*@0@P@
-CCCC_UseRel@Filter@OverlappedFilter@
-CCCC_UseExt@Filter@OverlappedFilter@filter.H@141@inheritance@F??T0@*@0@I@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@181@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@193@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@193@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@193@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@193@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@194@pass by value@F??T0@*@0@P@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter@filter.H@194@pass by value@F??T0@*@0@P@
 CCCC_UseRel@Int@OverlappedFilter@
-CCCC_UseExt@Int@OverlappedFilter@filter.H@145@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter@filter.H@201@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter@filter.H@173@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter@filter.H@229@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@NUMTYPE@OverlappedFilter@
-CCCC_UseExt@NUMTYPE@OverlappedFilter@filter.H@249@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@OverlappedFilter@filter.H@280@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@OverlappedFilter@filter.H@277@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@OverlappedFilter@filter.H@308@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@OverlappedFilter@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@146@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@166@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@202@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@203@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@244@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@249@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@280@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@310@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@310@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@310@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter@filter.H@310@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@174@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@194@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@230@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@231@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@272@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@277@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@308@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@338@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@338@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@338@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter@filter.H@338@pass by value@F??T0@*@0@P@
+CCCC_UseRel@BufferedFilter@OverlappedFilter2@
+CCCC_UseExt@BufferedFilter@OverlappedFilter2@filter.H@353@inheritance@F??T0@*@0@I@
 CCCC_UseRel@CircularQueue@OverlappedFilter2@
-CCCC_UseExt@CircularQueue@OverlappedFilter2@filter.H@328@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@CircularQueue@OverlappedFilter2@filter.H@356@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@FLOATTYPE@OverlappedFilter2@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter2@filter.H@343@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter2@filter.H@355@pass by value@F??T0@*@0@P@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter2@filter.H@355@pass by value@F??T0@*@0@P@
-CCCC_UseRel@Filter@OverlappedFilter2@
-CCCC_UseExt@Filter@OverlappedFilter2@filter.H@325@inheritance@F??T0@*@0@I@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter2@filter.H@371@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter2@filter.H@383@pass by value@F??T0@*@0@P@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter2@filter.H@383@pass by value@F??T0@*@0@P@
 CCCC_UseRel@Int@OverlappedFilter2@
-CCCC_UseExt@Int@OverlappedFilter2@filter.H@330@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter2@filter.H@332@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter2@filter.H@335@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter2@filter.H@336@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter2@filter.H@517@pass by value@F??T0@*@0@P@
-CCCC_UseExt@Int@OverlappedFilter2@filter.H@517@pass by value@F??T0@*@0@P@
+CCCC_UseExt@Int@OverlappedFilter2@filter.H@358@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter2@filter.H@360@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter2@filter.H@363@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter2@filter.H@364@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter2@filter.H@547@pass by value@F??T0@*@0@P@
+CCCC_UseExt@Int@OverlappedFilter2@filter.H@547@pass by value@F??T0@*@0@P@
 CCCC_UseRel@NUMTYPE@OverlappedFilter2@
-CCCC_UseExt@NUMTYPE@OverlappedFilter2@filter.H@455@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@OverlappedFilter2@filter.H@486@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@OverlappedFilter2@filter.H@483@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@OverlappedFilter2@filter.H@516@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@OverlappedFilter2@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@329@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@331@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@333@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@334@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@450@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@455@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@486@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@357@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@359@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@361@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@362@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@478@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@483@pass by value@F??T0@*@0@P@
 CCCC_UseExt@UInt@OverlappedFilter2@filter.H@516@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@516@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@516@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter2@filter.H@517@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@546@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@546@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@546@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter2@filter.H@547@pass by value@F??T0@*@0@P@
 CCCC_UseRel@bool@OverlappedFilter2@
-CCCC_UseExt@bool@OverlappedFilter2@filter.H@338@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@bool@OverlappedFilter2@filter.H@366@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@CircularQueue@OverlappedFilter3@
-CCCC_UseExt@CircularQueue@OverlappedFilter3@filter.H@540@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@CircularQueue@OverlappedFilter3@filter.H@570@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@FLOATTYPE@OverlappedFilter3@
-CCCC_UseExt@FLOATTYPE@OverlappedFilter3@filter.H@554@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@FLOATTYPE@OverlappedFilter3@filter.H@584@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
 CCCC_UseRel@Int@OverlappedFilter3@
-CCCC_UseExt@Int@OverlappedFilter3@filter.H@542@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter3@filter.H@544@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@Int@OverlappedFilter3@filter.H@547@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter3@filter.H@572@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter3@filter.H@574@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@Int@OverlappedFilter3@filter.H@577@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
 CCCC_UseRel@NUMTYPE@OverlappedFilter3@
-CCCC_UseExt@NUMTYPE@OverlappedFilter3@filter.H@608@pass by reference@F??T0@*@0@p@
-CCCC_UseExt@NUMTYPE@OverlappedFilter3@filter.H@640@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@OverlappedFilter3@filter.H@638@pass by reference@F??T0@*@0@p@
+CCCC_UseExt@NUMTYPE@OverlappedFilter3@filter.H@670@pass by reference@F??T0@*@0@p@
 CCCC_UseRel@UInt@OverlappedFilter3@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@541@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@543@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@545@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@546@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@603@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@608@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@649@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@649@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@649@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@649@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@650@pass by value@F??T0@*@0@P@
-CCCC_UseExt@UInt@OverlappedFilter3@filter.H@650@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@571@has by reference@F??T0@LOC:0 COM:0 MVG:0@0@h@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@573@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@575@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@576@has by value@F??T0@LOC:0 COM:0 MVG:0@0@H@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@633@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@638@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@679@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@679@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@679@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@679@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@680@pass by value@F??T0@*@0@P@
+CCCC_UseExt@UInt@OverlappedFilter3@filter.H@680@pass by value@F??T0@*@0@P@
 CCCC_UseRel@fftw_complex@WindowedFFT@
 CCCC_UseExt@fftw_complex@WindowedFFT@fftfilter.C@41@has by reference@F???0@LOC:0 COM:0 MVG:0@0@h@
 CCCC_UseRel@fftw_plan@WindowedFFT@

@@ -499,7 +499,6 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               </object>
               <packing>
                 <property name="x_options">GTK_FILL</property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -515,7 +514,6 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
                 <property name="x_options">GTK_FILL</property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -531,7 +529,6 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="left_attach">2</property>
                 <property name="right_attach">3</property>
                 <property name="x_options">GTK_FILL</property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -547,7 +544,6 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="left_attach">3</property>
                 <property name="right_attach">4</property>
                 <property name="x_options">GTK_FILL</property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -562,7 +558,6 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="left_attach">4</property>
                 <property name="right_attach">5</property>
                 <property name="x_options">GTK_FILL</property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -579,7 +574,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
           <object class="GtkTable" id="table3">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="n_columns">8</property>
+            <property name="n_columns">6</property>
             <child>
               <object class="GtkCheckButton" id="c_pitchshift">
                 <property name="label" translatable="yes">Pitch shift</property>
@@ -591,17 +586,16 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               </object>
               <packing>
                 <property name="x_options"></property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="t_pitch1">
-                <property name="width_request">30</property>
+              <object class="GtkEntry" id="t_pitch">
+                <property name="width_request">33</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="has_frame">False</property>
                 <property name="invisible_char">•</property>
-                <property name="text" translatable="yes">1</property>
+                <property name="text" translatable="yes">0</property>
                 <property name="xalign">1</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
@@ -612,37 +606,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
                 <property name="x_options"></property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label2">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">/</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="right_attach">3</property>
-                <property name="x_options"></property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEntry" id="t_pitch2">
-                <property name="width_request">30</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="has_frame">False</property>
-                <property name="invisible_char">•</property>
-                <property name="text" translatable="yes">1</property>
-                <property name="primary_icon_activatable">False</property>
-                <property name="secondary_icon_activatable">False</property>
-                <property name="primary_icon_sensitive">True</property>
-                <property name="secondary_icon_sensitive">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">3</property>
-                <property name="right_attach">4</property>
-                <property name="x_options"></property>
+                <property name="x_padding">4</property>
               </packing>
             </child>
             <child>
@@ -654,10 +618,9 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="use_action_appearance">False</property>
               </object>
               <packing>
-                <property name="left_attach">4</property>
-                <property name="right_attach">5</property>
+                <property name="left_attach">2</property>
+                <property name="right_attach">3</property>
                 <property name="x_options"></property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -669,10 +632,9 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="use_action_appearance">False</property>
               </object>
               <packing>
-                <property name="left_attach">5</property>
-                <property name="right_attach">6</property>
+                <property name="left_attach">3</property>
+                <property name="right_attach">4</property>
                 <property name="x_options"></property>
-                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -685,9 +647,10 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
-                <property name="left_attach">6</property>
-                <property name="right_attach">7</property>
+                <property name="left_attach">4</property>
+                <property name="right_attach">5</property>
                 <property name="x_options"></property>
+                <property name="x_padding">2</property>
               </packing>
             </child>
             <child>
@@ -697,8 +660,8 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
                 <property name="xalign">0</property>
               </object>
               <packing>
-                <property name="left_attach">7</property>
-                <property name="right_attach">8</property>
+                <property name="left_attach">5</property>
+                <property name="right_attach">6</property>
                 <property name="x_options">GTK_FILL</property>
                 <property name="x_padding">2</property>
               </packing>

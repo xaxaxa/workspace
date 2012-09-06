@@ -156,8 +156,10 @@ int process(jack_nframes_t length, void *arg)
 			filt2[i]->PutData(in, length);
 			if(filt2[i]->GetData(out, length) > 0)
 			{
-				delete filt[i];
-				filt[i] = NULL;
+				if(filt[i]!=NULL)
+					delete filt[i];
+				filt[i]=filt2[i];
+				filt2[i]=NULL;
 				continue;
 			}
 		}
@@ -179,16 +181,14 @@ int process(jack_nframes_t length, void *arg)
 		for(register unsigned int ii=0;ii<CHANNELS;ii++)
 			out_samples[ii][i]=avg+(out_samples[ii][i]-avg)*3;
 	}*/
-	for(size_t i = 0; i < inputs.size(); i++)
-	{
-		if(filt[i] != NULL)goto asdfghjkl;
+	if(filt2) {
+		for(size_t i = 0; i < inputs.size(); i++)
+		{
+			if(filt2[i] != NULL)goto asdfghjkl;
+		}
+		delete[] filt2;
+		filt2 = NULL;
 	}
-	for(size_t i = 0; i < inputs.size(); i++)
-	{
-		filt[i] = filt2[i];
-	}
-	delete[] filt2;
-	filt2 = NULL;
 asdfghjkl:
 	FFTFilter<jack_default_audio_sample_t>* trololo = ((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
 	if(display_spectrum && trololo->didprocess)
@@ -440,10 +440,11 @@ void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
 	b->get_widget("c_pitchshift", cb);
 	if(cb->get_active())
 	{
-		b->get_widget("t_pitch1", e);
+		b->get_widget("t_pitch", e);
 		asdf = strtod(e->get_text().c_str(), NULL);
-		b->get_widget("t_pitch2", e);
-		asdf /= strtod(e->get_text().c_str(), NULL);
+		asdf=pow(2,asdf/8.d);
+		//b->get_widget("t_pitch2", e);
+		//asdf /= strtod(e->get_text().c_str(), NULL);
 	}
 	if(filt2 != NULL)
 	{
@@ -484,7 +485,7 @@ int main(int argc, char *argv[])
 	{
 		FFTFilter<jack_default_audio_sample_t>* trololo = new FFTFilter<jack_default_audio_sample_t>
 		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
-		(1024, 16,			16,			2,		12,					2,			8192 * 2);
+		(1024, 20,			20,			2,		12,					2,			8192 * 2);
 
 		//trololo->freq_scale=9./10.;
 		filt[i] = trololo;
@@ -538,9 +539,9 @@ int main(int argc, char *argv[])
 	for(i = 0; i < CHANNELS; i++)
 	{
 		inputs.push_back(jack_port_register(client, CONCAT("input_" << i).c_str(),
-											JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
+						JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
 		outputs.push_back(jack_port_register(client, CONCAT("output_" << i).c_str(),
-											 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
+						JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
 	}
 
 //aaaaa:
@@ -604,7 +605,7 @@ int main(int argc, char *argv[])
 		b->get_widget("t_fftsize", ent);
 		fftsize = atoi(ent->get_text().c_str());
 		Int buffers;
-		buffers = bpp + padding * 2;
+		buffers = (bpp + padding * 2) + 4;
 		for(int i = 0; i < CHANNELS; i++)
 		{
 			tmp[i] = new FFTFilter<jack_default_audio_sample_t>

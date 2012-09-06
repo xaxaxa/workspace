@@ -2,7 +2,7 @@
 <!--Detailed report on module Filter-->
 <CCCC_Project>
 <module_summary>
-<lines_of_code value="12" level="0" />
+<lines_of_code value="16" level="0" />
 <lines_of_code_per_member_function value="******" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
 <McCabes_cyclomatic_complexity_per_member_function value="******" level="0" />
@@ -13,13 +13,13 @@
 <weighted_methods_per_class_unity value="4" level="0" />
 <weighted_methods_per_class_visibility value="4" level="0" />
 <depth_of_inheritance_tree value="0" level="0" />
-<number_of_children value="3" level="0" />
-<coupling_between_objects value="5" level="0" />
-<IF4 value="36" level="0" />
+<number_of_children value="1" level="0" />
+<coupling_between_objects value="3" level="0" />
+<IF4 value="4" level="0" />
 <IF4_per_member_function value="********" level="2" />
-<IF4_visible value="36" level="1" />
+<IF4_visible value="4" level="0" />
 <IF4_visible_per_member_function value="********" level="2" />
-<IF4_concrete value="9" level="0" />
+<IF4_concrete value="1" level="0" />
 <IF4_concrete_per_member_function value="********" level="2" />
 </module_summary>
 <module_detail>
@@ -36,7 +36,7 @@
 <name>Filter()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="34" />
+<source_reference file="filter.H" line="38" />
 </extent>
 <lines_of_code value="3" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -45,19 +45,7 @@
 <McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
 </member_function>
 <member_function>
-<name>GetData(NUMTYPE *,UInt)</name>
-<extent>
-<description>declaration</description>
-<source_reference file="filter.H" line="33" />
-</extent>
-<lines_of_code value="1" level="0" />
-<McCabes_cyclomatic_complexity value="0" level="0" />
-<lines_of_comment value="0" level="0" />
-<lines_of_code_per_line_of_comment value="------" level="0" />
-<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
-</member_function>
-<member_function>
-<name>PutData(const NUMTYPE *,UInt)</name>
+<name>Process(NUMTYPE *,UInt)</name>
 <extent>
 <description>declaration</description>
 <source_reference file="filter.H" line="32" />
@@ -69,10 +57,22 @@
 <McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
 </member_function>
 <member_function>
+<name>Process(const NUMTYPE *,NUMTYPE *,UInt)</name>
+<extent>
+<description>definition</description>
+<source_reference file="filter.H" line="33" />
+</extent>
+<lines_of_code value="5" level="0" />
+<McCabes_cyclomatic_complexity value="0" level="0" />
+<lines_of_comment value="0" level="0" />
+<lines_of_code_per_line_of_comment value="------" level="0" />
+<McCabes_cyclomatic_complexity_per_line_of_comment value="------" level="0" />
+</member_function>
+<member_function>
 <name>~Filter()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="37" />
+<source_reference file="filter.H" line="41" />
 </extent>
 <lines_of_code value="3" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -90,21 +90,7 @@
 <concrete>true</concrete>
 <extent>
 <description>inheritance</description>
-<source_reference file="filter.H" line="41" />
-</extent>
-<name>OverlappedFilter</name>
-<visible>true</visible>
-<concrete>true</concrete>
-<extent>
-<description>inheritance</description>
-<source_reference file="filter.H" line="141" />
-</extent>
-<name>OverlappedFilter2</name>
-<visible>true</visible>
-<concrete>true</concrete>
-<extent>
-<description>inheritance</description>
-<source_reference file="filter.H" line="325" />
+<source_reference file="filter.H" line="45" />
 </extent>
 </client_module>
 <supplier_module>
@@ -114,6 +100,10 @@
 <extent>
 <description>pass by reference</description>
 <source_reference file="filter.H" line="32" />
+</extent>
+<extent>
+<description>pass by reference</description>
+<source_reference file="filter.H" line="33" />
 </extent>
 <extent>
 <description>pass by reference</description>

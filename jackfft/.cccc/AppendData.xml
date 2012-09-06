@@ -24,7 +24,7 @@
 </module_summary>
 <module_detail>
 <description>definition</description>
-<source_reference file="filter.H" line="686" />
+<source_reference file="filter.H" line="716" />
 <lines_of_code value="7" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
 <lines_of_comment value="0" level="0" />
@@ -36,7 +36,7 @@
 <name>AppendData(FilterBuffer &amp;,NUMTYPE *,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="692" />
+<source_reference file="filter.H" line="722" />
 </extent>
 <lines_of_code value="7" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -48,7 +48,7 @@
 <name>operator ()()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="704" />
+<source_reference file="filter.H" line="734" />
 </extent>
 <lines_of_code value="9" level="0" />
 <McCabes_cyclomatic_complexity value="3" level="0" />
@@ -60,7 +60,7 @@
 <name>~AppendData()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="699" />
+<source_reference file="filter.H" line="729" />
 </extent>
 <lines_of_code value="5" level="0" />
 <McCabes_cyclomatic_complexity value="2" level="0" />
@@ -80,33 +80,33 @@
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="689" />
+<source_reference file="filter.H" line="719" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="692" />
+<source_reference file="filter.H" line="722" />
 </extent>
 <name>NUMTYPE</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="690" />
+<source_reference file="filter.H" line="720" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="692" />
+<source_reference file="filter.H" line="722" />
 </extent>
 <name>UInt</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="691" />
+<source_reference file="filter.H" line="721" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="692" />
+<source_reference file="filter.H" line="722" />
 </extent>
 </supplier_module>
 </module>

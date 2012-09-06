@@ -1,0 +1,62 @@
+CCCC_FileExt@.ADA@ada.95@
+CCCC_FileExt@.ADB@ada.95@
+CCCC_FileExt@.ADS@ada.95@
+CCCC_FileExt@.C@c++.ansi@
+CCCC_FileExt@.CC@c++.ansi@
+CCCC_FileExt@.CPP@c++.ansi@
+CCCC_FileExt@.CXX@c++.ansi@
+CCCC_FileExt@.H@c++.ansi@
+CCCC_FileExt@.H++@c++.ansi@
+CCCC_FileExt@.HH@c++.ansi@
+CCCC_FileExt@.HPP@c++.ansi@
+CCCC_FileExt@.HXX@c++.ansi@
+CCCC_FileExt@.J@java@
+CCCC_FileExt@.JAV@java@
+CCCC_FileExt@.JAVA@java@
+CCCC_FileExt@.ada@ada.95@
+CCCC_FileExt@.adb@ada.95@
+CCCC_FileExt@.ads@ada.95@
+CCCC_FileExt@.c@c.ansi@
+CCCC_FileExt@.c++@c++.ansi@
+CCCC_FileExt@.cc@c++.ansi@
+CCCC_FileExt@.cpp@c++.ansi@
+CCCC_FileExt@.cxx@c++.ansi@
+CCCC_FileExt@.h@c++.ansi@
+CCCC_FileExt@.h++@c++.ansi@
+CCCC_FileExt@.hh@c++.ansi@
+CCCC_FileExt@.hpp@c++.ansi@
+CCCC_FileExt@.hxx@c++.ansi@
+CCCC_FileExt@.j@java@
+CCCC_FileExt@.jav@java@
+CCCC_FileExt@.java@java@
+CCCC_MetTmnt@8.3@999999.000000@999999.000000@0@8@3@General format for fixed precision 3 d.p.@
+CCCC_MetTmnt@CBO@12.000000@30.000000@0@6@0@Coupling between objects@
+CCCC_MetTmnt@COM@999999.000000@999999.000000@0@6@0@Comment lines@
+CCCC_MetTmnt@COMper@999999.000000@999999.000000@0@6@3@Comment lines (averaged)@
+CCCC_MetTmnt@DIT@3.000000@6.000000@0@6@0@Depth of Inheritance Tree@
+CCCC_MetTmnt@FI@12.000000@20.000000@0@6@0@Fan in (overall)@
+CCCC_MetTmnt@FIc@6.000000@12.000000@0@6@0@Fan in (concrete uses only)@
+CCCC_MetTmnt@FIv@6.000000@12.000000@0@6@0@Fan in (visible uses only)@
+CCCC_MetTmnt@FO@12.000000@20.000000@0@6@0@Fan out (overall)@
+CCCC_MetTmnt@FOc@6.000000@12.000000@0@6@0@Fan out (concrete uses only)@
+CCCC_MetTmnt@FOv@6.000000@12.000000@0@6@0@Fan out (visible uses only)@
+CCCC_MetTmnt@IF4@100.000000@1000.000000@0@6@0@Henry-Kafura/Shepperd measure (overall)@
+CCCC_MetTmnt@IF4c@30.000000@100.000000@0@6@0@Henry-Kafura/Shepperd measure (concrete)@
+CCCC_MetTmnt@IF4v@30.000000@100.000000@0@6@0@Henry-Kafura/Shepperd measure (visible)@
+CCCC_MetTmnt@LOCf@30.000000@100.000000@0@6@0@Lines of code/function@
+CCCC_MetTmnt@LOCm@500.000000@2000.000000@0@6@0@Lines of code/single module@
+CCCC_MetTmnt@LOCp@999999.000000@999999.000000@0@6@0@Lines of code/project@
+CCCC_MetTmnt@LOCper@500.000000@2000.000000@0@6@3@Lines of code/average module@
+CCCC_MetTmnt@L_C@7.000000@30.000000@20@6@3@LOC/COM Lines of code/comment line@
+CCCC_MetTmnt@MVGf@10.000000@30.000000@0@6@0@Cyclomatic complexity/function@
+CCCC_MetTmnt@MVGm@200.000000@1000.000000@0@6@0@Cyclomatic complexity/single module@
+CCCC_MetTmnt@MVGp@999999.000000@999999.000000@0@6@0@Cyclomatic complexity/project@
+CCCC_MetTmnt@MVGper@200.000000@1000.000000@0@6@3@Cyclomatic complexity/average module@
+CCCC_MetTmnt@M_C@5.000000@10.000000@5@6@3@MVG/COM McCabe/comment line@
+CCCC_MetTmnt@NOC@4.000000@15.000000@0@6@0@Number of children@
+CCCC_MetTmnt@WMC1@30.000000@100.000000@0@6@0@Weighting function=1 unit per method@
+CCCC_MetTmnt@WMCv@10.000000@30.000000@0@6@0@Weighting function=1 unit per visible method@
+CCCC_Dialect@c++.mfc@BEGIN_MESSAGE_MAP@start_skipping@
+CCCC_Dialect@c++.mfc@END_MESSAGE_MAP@stop_skipping@
+CCCC_Dialect@c++.stl@__STL_BEGIN_NAMESPACE@ignore@
+CCCC_Dialect@c++.stl@__STL_END_NAMESPACE@ignore@

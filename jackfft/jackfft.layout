@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="jackfft" />
-	<File name="ctrltest.C" open="1" top="0" tabpos="5">
-		<Cursor position="814" topLine="6" />
-	</File>
 	<File name="fftfilter.C" open="1" top="0" tabpos="2">
-		<Cursor position="1208" topLine="37" />
+		<Cursor position="6669" topLine="197" />
+	</File>
+	<File name="filter.H" open="1" top="1" tabpos="4">
+		<Cursor position="12365" topLine="398" />
 	</File>
 	<File name="jackfft.C" open="1" top="0" tabpos="1">
-		<Cursor position="5018" topLine="190" />
+		<Cursor position="3450" topLine="127" />
 	</File>
-	<File name="jackfftc.C" open="1" top="0" tabpos="4">
-		<Cursor position="2958" topLine="139" />
+	<File name="jackfftc.C" open="1" top="0" tabpos="3">
+		<Cursor position="4145" topLine="145" />
 	</File>
 </CodeBlocks_layout_file>

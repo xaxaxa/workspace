@@ -24,7 +24,7 @@
 </module_summary>
 <module_detail>
 <description>definition</description>
-<source_reference file="filter.H" line="667" />
+<source_reference file="filter.H" line="697" />
 <lines_of_code value="7" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
 <lines_of_comment value="0" level="0" />
@@ -36,7 +36,7 @@
 <name>Append(NUMTYPE *,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="677" />
+<source_reference file="filter.H" line="707" />
 </extent>
 <lines_of_code value="9" level="0" />
 <McCabes_cyclomatic_complexity value="4" level="0" />
@@ -48,7 +48,7 @@
 <name>FilterBuffer(NUMTYPE *,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="673" />
+<source_reference file="filter.H" line="703" />
 </extent>
 <lines_of_code value="3" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -66,11 +66,11 @@
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="689" />
+<source_reference file="filter.H" line="719" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="692" />
+<source_reference file="filter.H" line="722" />
 </extent>
 </client_module>
 <supplier_module>
@@ -79,34 +79,34 @@
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="670" />
+<source_reference file="filter.H" line="700" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="673" />
+<source_reference file="filter.H" line="703" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="677" />
+<source_reference file="filter.H" line="707" />
 </extent>
 <name>UInt</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="671" />
+<source_reference file="filter.H" line="701" />
 </extent>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="672" />
+<source_reference file="filter.H" line="702" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="673" />
+<source_reference file="filter.H" line="703" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="677" />
+<source_reference file="filter.H" line="707" />
 </extent>
 </supplier_module>
 </module>

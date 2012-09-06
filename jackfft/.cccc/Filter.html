@@ -8,7 +8,7 @@ Detailed report on module Filter
 <TR>
 <TH BGCOLOR="AQUA" WIDTH=70%>Metric</TH><TH BGCOLOR="AQUA" WIDTH=10%>Tag</TH><TH BGCOLOR="AQUA" WIDTH=10%>Overall</TH><TH BGCOLOR="AQUA" WIDTH=10%>Per Function</TH></TR>
 <TR>
-<TD>Lines of Code</TD><TD>LOC</TD><TD ALIGN=RIGHT>    12</TD><TD ALIGN=RIGHT>******</TD></TR>
+<TD>Lines of Code</TD><TD>LOC</TD><TD ALIGN=RIGHT>    16</TD><TD ALIGN=RIGHT>******</TD></TR>
 <TR>
 <TD>McCabe's Cyclomatic Number</TD><TD>MVG</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>******</TD></TR>
 <TR>
@@ -24,15 +24,15 @@ Detailed report on module Filter
 <TR>
 <TD>Depth of Inheritance Tree</TD><TD>DIT</TD><TD ALIGN=RIGHT>     0</TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>Number of Children</TD><TD>NOC</TD><TD ALIGN=RIGHT>     3</TD><TD>&nbsp;</TD></TR>
+<TD>Number of Children</TD><TD>NOC</TD><TD ALIGN=RIGHT>     1</TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>Coupling between objects</TD><TD>CBO</TD><TD ALIGN=RIGHT>     5</TD><TD>&nbsp;</TD></TR>
+<TD>Coupling between objects</TD><TD>CBO</TD><TD ALIGN=RIGHT>     3</TD><TD>&nbsp;</TD></TR>
 <TR>
-<TD>Information Flow measure ( &nbsp;inclusive&nbsp;)</TD><TD>IF4</TD><TD ALIGN=RIGHT>    36</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
+<TD>Information Flow measure ( &nbsp;inclusive&nbsp;)</TD><TD>IF4</TD><TD ALIGN=RIGHT>     4</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
 <TR>
-<TD>Information Flow measure ( &nbsp;visible&nbsp;)</TD><TD>IF4v</TD><TD ALIGN=RIGHT BGCOLOR="YELLOW"><EM>    36</EM></TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
+<TD>Information Flow measure ( &nbsp;visible&nbsp;)</TD><TD>IF4v</TD><TD ALIGN=RIGHT>     4</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
 <TR>
-<TD>Information Flow measure ( &nbsp;concrete&nbsp;)</TD><TD>IF4c</TD><TD ALIGN=RIGHT>     9</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
+<TD>Information Flow measure ( &nbsp;concrete&nbsp;)</TD><TD>IF4c</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT BGCOLOR="RED"><STRONG>********</STRONG></TD></TR>
 </TABLE>
 <H2><A NAME="modext">Definitions and Declarations</A></H2>
 <TABLE BORDER WIDTH=100%><TR>
@@ -48,25 +48,25 @@ Detailed report on module Filter
 <TD WIDTH=50%>Function prototype</TD><TH BGCOLOR="AQUA" WIDTH=10%>LOC</TH><TH BGCOLOR="AQUA" WIDTH=10%>MVG</TH><TH BGCOLOR="AQUA" WIDTH=10%>COM</TH><TH BGCOLOR="AQUA" WIDTH=10%>L_C</TH><TH BGCOLOR="AQUA" WIDTH=10%>M_C</TH><TR>
 <TD>Filter( &nbsp;&nbsp;)<BR>
 definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        34">filter.H:34</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        38">filter.H:38</A></CODE><BR>
 <BR>
 </TD><TD ALIGN=RIGHT>     3</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR>
-<TD>GetData( &nbsp;NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
-declaration &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        33">filter.H:33</A></CODE><BR>
-<BR>
-</TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
-<TR>
-<TD>PutData( &nbsp;const NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
+<TD>Process( &nbsp;NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
 declaration &nbsp;
 <CODE><A HREF="cccc_src.html#filter.H:        32">filter.H:32</A></CODE><BR>
 <BR>
 </TD><TD ALIGN=RIGHT>     1</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR>
+<TD>Process( &nbsp;const NUMTYPE *, &nbsp;NUMTYPE *, &nbsp;UInt&nbsp;)<BR>
+definition &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        33">filter.H:33</A></CODE><BR>
+<BR>
+</TD><TD ALIGN=RIGHT>     5</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
+<TR>
 <TD>~Filter( &nbsp;&nbsp;)<BR>
 definition &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        37">filter.H:37</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        41">filter.H:41</A></CODE><BR>
 <BR>
 </TD><TD ALIGN=RIGHT>     3</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>     0</TD><TD ALIGN=RIGHT>------</TD><TD ALIGN=RIGHT>------</TD></TR>
 <TR><TD HEIGHT=12 COLSPAN=6></TD></TR>
@@ -78,17 +78,7 @@ definition &nbsp;
 <TD WIDTH=50%>
 BufferedFilter [CV] <BR>
 inheritance &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:        41">filter.H:41</A></CODE><BR>
-<BR>
-<BR>
-OverlappedFilter [CV] <BR>
-inheritance &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:       141">filter.H:141</A></CODE><BR>
-<BR>
-<BR>
-OverlappedFilter2 [CV] <BR>
-inheritance &nbsp;
-<CODE><A HREF="cccc_src.html#filter.H:       325">filter.H:325</A></CODE><BR>
+<CODE><A HREF="cccc_src.html#filter.H:        45">filter.H:45</A></CODE><BR>
 <BR>
 <BR>
 &nbsp;
@@ -97,6 +87,8 @@ inheritance &nbsp;
 NUMTYPE [V] <BR>
 pass by reference &nbsp;
 <CODE><A HREF="cccc_src.html#filter.H:        32">filter.H:32</A></CODE><BR>
+pass by reference &nbsp;
+<CODE><A HREF="cccc_src.html#filter.H:        33">filter.H:33</A></CODE><BR>
 pass by reference &nbsp;
 <CODE><A HREF="cccc_src.html#filter.H:        33">filter.H:33</A></CODE><BR>
 <BR>

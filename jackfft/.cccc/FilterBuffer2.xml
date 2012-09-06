@@ -24,7 +24,7 @@
 </module_summary>
 <module_detail>
 <description>definition</description>
-<source_reference file="filter.H" line="715" />
+<source_reference file="filter.H" line="745" />
 <lines_of_code value="6" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
 <lines_of_comment value="0" level="0" />
@@ -36,7 +36,7 @@
 <name>FilterBuffer2(UInt,UInt)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="720" />
+<source_reference file="filter.H" line="750" />
 </extent>
 <lines_of_code value="4" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -48,7 +48,7 @@
 <name>GetData(NUMTYPE *,Int)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="758" />
+<source_reference file="filter.H" line="788" />
 </extent>
 <lines_of_code value="32" level="1" />
 <McCabes_cyclomatic_complexity value="9" level="0" />
@@ -60,7 +60,7 @@
 <name>PutData(const NUMTYPE *,Int)</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="729" />
+<source_reference file="filter.H" line="759" />
 </extent>
 <lines_of_code value="25" level="0" />
 <McCabes_cyclomatic_complexity value="5" level="0" />
@@ -72,7 +72,7 @@
 <name>~FilterBuffer2()</name>
 <extent>
 <description>definition</description>
-<source_reference file="filter.H" line="725" />
+<source_reference file="filter.H" line="755" />
 </extent>
 <lines_of_code value="3" level="0" />
 <McCabes_cyclomatic_complexity value="0" level="0" />
@@ -92,44 +92,44 @@
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="718" />
+<source_reference file="filter.H" line="748" />
 </extent>
 <name>Int</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="719" />
+<source_reference file="filter.H" line="749" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="729" />
+<source_reference file="filter.H" line="759" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="758" />
+<source_reference file="filter.H" line="788" />
 </extent>
 <name>NUMTYPE</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="729" />
+<source_reference file="filter.H" line="759" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="758" />
+<source_reference file="filter.H" line="788" />
 </extent>
 <name>UInt</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="720" />
+<source_reference file="filter.H" line="750" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="720" />
+<source_reference file="filter.H" line="750" />
 </extent>
 </supplier_module>
 </module>

@@ -35,53 +35,53 @@
 <concrete>true</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="153" />
+<source_reference file="filter.H" line="181" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="165" />
+<source_reference file="filter.H" line="193" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="165" />
+<source_reference file="filter.H" line="193" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="165" />
+<source_reference file="filter.H" line="193" />
 </extent>
 <extent>
 <description>pass by reference</description>
-<source_reference file="filter.H" line="165" />
+<source_reference file="filter.H" line="193" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="166" />
+<source_reference file="filter.H" line="194" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="166" />
+<source_reference file="filter.H" line="194" />
 </extent>
 <name>OverlappedFilter2</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="343" />
+<source_reference file="filter.H" line="371" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="355" />
+<source_reference file="filter.H" line="383" />
 </extent>
 <extent>
 <description>pass by value</description>
-<source_reference file="filter.H" line="355" />
+<source_reference file="filter.H" line="383" />
 </extent>
 <name>OverlappedFilter3</name>
 <visible>true</visible>
 <concrete>false</concrete>
 <extent>
 <description>has by reference</description>
-<source_reference file="filter.H" line="554" />
+<source_reference file="filter.H" line="584" />
 </extent>
 </client_module>
 <supplier_module>

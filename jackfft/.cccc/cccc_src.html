@@ -56,25 +56,25 @@ source file
 <TT>
 <A NAME="fftfilter.C:         1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;</A>/*<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * fftfilter.C<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Copyright 2012  &lt;xaxaxa@xaxaxa-mac&gt;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * This program is free software; you can redistribute it and/or modify<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * it under the terms of the GNU General Public License as published by<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * the Free Software Foundation; either version 2 of the License, &nbsp; or<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * ( &nbsp;at your option&nbsp;) any later version.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * This program is distributed in the hope that it will be useful, &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * but WITHOUT ANY WARRANTY; without even the implied warranty of<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * GNU General Public License for more details.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * You should have received a copy of the GNU General Public License<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * along with this program; if not, &nbsp; write to the Free Software<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Foundation, &nbsp; Inc., &nbsp; 51 Franklin Street, &nbsp; Fifth Floor, &nbsp; Boston, &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * MA 02110-1301, &nbsp; USA.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#define _USE_MATH_DEFINES<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#include &lt;math.h&gt;<BR>
@@ -152,10 +152,10 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;Int i=0;i&lt;l;i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				coefficients[i] = 1.0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//tmpdouble = ( &nbsp;double*&nbsp;)fftw_malloc( &nbsp;sizeof( &nbsp;double&nbsp;)*buffersize&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmpcomplex = ( &nbsp;fftw_complex*&nbsp;)fftw_malloc( &nbsp;sizeof( &nbsp;fftw_complex&nbsp;) * l&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			/*tmpcomplex2 = ( &nbsp;fftw_complex*&nbsp;)fftw_malloc( &nbsp;sizeof( &nbsp;fftw_complex&nbsp;) * l&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//cout &lt;&lt; this-&gt;PeriodSize( &nbsp;&nbsp;) &lt;&lt; endl;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			p1 = fftw_plan_dft_r2c_1d( &nbsp;this-&gt;PeriodSize( &nbsp;&nbsp;), &nbsp; this-&gt;tmpbuffer, &nbsp; tmpcomplex, &nbsp; 0&nbsp;); //FFTW_UNALIGNED<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			p2 = fftw_plan_dft_c2r_1d( &nbsp;this-&gt;PeriodSize( &nbsp;&nbsp;), &nbsp; tmpcomplex2, &nbsp; this-&gt;tmpbuffer, &nbsp; 0&nbsp;);<BR>
@@ -170,13 +170,13 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//fftw_free( &nbsp;tmpcomplex2&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			delete[] coefficients;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		/*long long get_nsec( &nbsp;const timespec&amp; t&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return t.tv_sec*1000000000+t.tv_nsec;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}*/<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		int asdf;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 <A NAME="fftfilter.C:       124">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;124&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt complexsize = ComplexSize( &nbsp;&nbsp;);//( &nbsp;UInt&nbsp;)( &nbsp;this-&gt;PeriodSize( &nbsp;&nbsp;) / 2&nbsp;) + 1;<BR>
@@ -194,11 +194,11 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				}*/<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//asdf=0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//tmpcomplex[0][0]=0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//tmpcomplex[0][1]=0;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			/*for( &nbsp;UInt i=( &nbsp;complexsize-1&nbsp;)/2+1;i&lt;complexsize;i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				tmpcomplex[i][0]=0;<BR>
@@ -218,9 +218,9 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;skip&lt;1&nbsp;)skip=1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt overlapcount=this-&gt;BuffersPerPeriod/skip;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Int skip_samples=this-&gt;PeriodSize( &nbsp;&nbsp;)/overlapcount;*/<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//for( &nbsp;Int i=complexsize-1;i&gt;=0;i--&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;Int i=0;i&lt;complexsize;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;UInt i=0;i&lt;complexsize;i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				int i2;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//if( &nbsp;i&gt;50&nbsp;)<BR>
@@ -228,7 +228,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				i2=( &nbsp;int&nbsp;)asdf;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;i2==0 || i==0&nbsp;)	//prevent division by zero<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					continue;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;i2+1&gt;=complexsize&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;i2+1&gt;=( &nbsp;int&nbsp;)complexsize&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					fft.Data_c[i][0]=fft.Data_c[i][1]=0.;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					continue;<BR>
@@ -240,7 +240,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				double period2=( &nbsp;double&nbsp;)fft.size/( &nbsp;double&nbsp;)i;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				double sine=( &nbsp;tmpcomplex[i2][1]*( &nbsp;1.0-trololo&nbsp;) + tmpcomplex[i2+1][1]*trololo&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				double cosine=( &nbsp;tmpcomplex[i2][0]*( &nbsp;1.0-trololo&nbsp;) + tmpcomplex[i2+1][0]*trololo&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				double amplitude=sqrt( &nbsp;sine*sine+cosine*cosine&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				double phase=atan2( &nbsp;cosine, &nbsp;sine&nbsp;);	//radians; [-pi, &nbsp;pi]<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//double phase_delta1=( &nbsp;skip_samples%period1&nbsp;)/period1*( &nbsp;2*M_PI&nbsp;);<BR>
@@ -268,7 +268,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double* d=fft.Reverse( &nbsp;this-&gt;PeriodSize( &nbsp;&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			memcpy( &nbsp;this-&gt;tmpbuffer, &nbsp;d, &nbsp;sizeof( &nbsp;double&nbsp;)*this-&gt;PeriodSize( &nbsp;&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Int ps=this-&gt;PeriodSize( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;UInt i=0;i&lt;ps;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;Int i=0;i&lt;ps;i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				this-&gt;tmpbuffer[i] /= fft.size;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
@@ -319,7 +319,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					a=1.0-( &nbsp;abs( &nbsp;i - half&nbsp;) / ( &nbsp;double&nbsp;)w&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				this-&gt;tmpbuffer[i]*=a;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			fftw_execute( &nbsp;p1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			int tmp=this-&gt;OutBuffer.BeginAppend( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;tmp&lt;0&nbsp;)return;<BR>
@@ -371,7 +371,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return buffer_out;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 <A NAME="fftfilter.C:       319">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;319&nbsp;&nbsp;</A>	class FFTStream_r<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
@@ -415,7 +415,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				buffer_c[i][0]=cos( &nbsp;phase&nbsp;)*amplitude;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//cosine<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				buffer_c[i][1]=sin( &nbsp;phase&nbsp;)*amplitude;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				/*double period=( &nbsp;double&nbsp;)( &nbsp;( &nbsp;size_c-1&nbsp;) * 2&nbsp;) / i;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				double periods=size/period;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				phase+=periods;<BR>
@@ -437,25 +437,25 @@ source file
 <TT>
 <A NAME="filter.H:         1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;</A>/*<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * fftfilter.C<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Copyright 2012  &lt;xaxaxa@xaxaxa-mac&gt;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * This program is free software; you can redistribute it and/or modify<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * it under the terms of the GNU General Public License as published by<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * the Free Software Foundation; either version 2 of the License, &nbsp; or<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * ( &nbsp;at your option&nbsp;) any later version.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * This program is distributed in the hope that it will be useful, &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * but WITHOUT ANY WARRANTY; without even the implied warranty of<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * GNU General Public License for more details.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * You should have received a copy of the GNU General Public License<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * along with this program; if not, &nbsp; write to the Free Software<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Foundation, &nbsp; Inc., &nbsp; 51 Franklin Street, &nbsp; Fifth Floor, &nbsp; Boston, &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * MA 02110-1301, &nbsp; USA.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#include &lt;cplib/cplib.hpp&gt;<BR>
@@ -466,32 +466,60 @@ source file
 <A NAME="filter.H:        29">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;29&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt; class Filter<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:        32">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;32&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)=0;<BR>
-<A NAME="filter.H:        33">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;33&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)=0;<BR>
-<A NAME="filter.H:        34">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;34&nbsp;&nbsp;</A>		Filter( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:        32">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;32&nbsp;&nbsp;</A>		virtual void Process( &nbsp;NUMTYPE* data, &nbsp; UInt length&nbsp;)=0;<BR>
+<A NAME="filter.H:        33">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;33&nbsp;&nbsp;</A>		virtual void Process( &nbsp;const NUMTYPE* in, &nbsp; NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			memcpy( &nbsp;out, &nbsp; in, &nbsp; length*sizeof( &nbsp;NUMTYPE&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Process( &nbsp;out, &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+<A NAME="filter.H:        38">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;38&nbsp;&nbsp;</A>		Filter( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:        37">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;37&nbsp;&nbsp;</A>		virtual ~Filter( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:        41">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;41&nbsp;&nbsp;</A>		virtual ~Filter( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
-<A NAME="filter.H:        41">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;41&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt; class BufferedFilter: public Filter&lt;NUMTYPE&gt;<BR>
+<A NAME="filter.H:        45">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;45&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt; class BufferedFilter: public Filter&lt;NUMTYPE&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:        44">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;44&nbsp;&nbsp;</A>		NUMTYPE* InBuffer;<BR>
-<A NAME="filter.H:        45">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;45&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers;<BR>
-<A NAME="filter.H:        46">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;46&nbsp;&nbsp;</A>		UInt InBufferLength;<BR>
-<A NAME="filter.H:        47">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;47&nbsp;&nbsp;</A>		CircularQueue&lt;NUMTYPE&gt; OutBuffer;<BR>
+<A NAME="filter.H:        48">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;48&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)=0;<BR>
+<A NAME="filter.H:        49">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;49&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)=0;<BR>
+<A NAME="filter.H:        50">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;50&nbsp;&nbsp;</A>		virtual void Process( &nbsp;NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			PutData( &nbsp;data, &nbsp;length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt tmp=GetData( &nbsp;data, &nbsp;length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;tmp&lt;length&nbsp;) WARN( &nbsp;2, &nbsp;"buffer underflow: wanted " &lt;&lt; length &lt;&lt; " samples, &nbsp; but got " &lt;&lt; tmp&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+<A NAME="filter.H:        56">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;56&nbsp;&nbsp;</A>		virtual void Process( &nbsp;const NUMTYPE* in, &nbsp; NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			PutData( &nbsp;in, &nbsp;length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt tmp=GetData( &nbsp;out, &nbsp;length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;tmp&lt;length&nbsp;) WARN( &nbsp;2, &nbsp;"buffer underflow: wanted " &lt;&lt; length &lt;&lt; " samples, &nbsp; but got " &lt;&lt; tmp&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+<A NAME="filter.H:        62">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;62&nbsp;&nbsp;</A>		BufferedFilter( &nbsp;&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+<A NAME="filter.H:        65">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;65&nbsp;&nbsp;</A>		virtual ~BufferedFilter( &nbsp;&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
+<A NAME="filter.H:        69">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;69&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt; class BufferedFilterHelper: public BufferedFilter&lt;NUMTYPE&gt;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
+<A NAME="filter.H:        72">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;72&nbsp;&nbsp;</A>		NUMTYPE* InBuffer;<BR>
+<A NAME="filter.H:        73">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;73&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers;<BR>
+<A NAME="filter.H:        74">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;74&nbsp;&nbsp;</A>		UInt InBufferLength;<BR>
+<A NAME="filter.H:        75">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;75&nbsp;&nbsp;</A>		CircularQueue&lt;NUMTYPE&gt; OutBuffer;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//process exactly 1 buffer<BR>
-<A NAME="filter.H:        50">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;50&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;const NUMTYPE* in, &nbsp; NUMTYPE* out&nbsp;)=0;<BR>
+<A NAME="filter.H:        78">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;78&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;const NUMTYPE* in, &nbsp; NUMTYPE* out&nbsp;)=0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="filter.H:        52">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;52&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
+<A NAME="filter.H:        80">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;80&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; OutBuffers = " &lt;&lt; OutBuffers &lt;&lt; "; length = " &lt;&lt; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; OutBuffers = " &lt;&lt; OutBuffers &lt;&lt; "; inputlength = " &lt;&lt; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:        57">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;57&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:        85">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;85&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			asdf: if ( &nbsp;InBufferLength &lt;= 0 &amp;&amp; length &gt;= BufferSize&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{ //input buffer is empty and the input data length is larger than BufferSize;<BR>
@@ -531,9 +559,9 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			InBufferLength += l;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			goto zxcv;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:        97">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;97&nbsp;&nbsp;</A>		Int outbuffer_index;<BR>
-<A NAME="filter.H:        98">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;98&nbsp;&nbsp;</A>		UInt outbuffer_pos;<BR>
-<A NAME="filter.H:        99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;99&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       125">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;125&nbsp;&nbsp;</A>		Int outbuffer_index;<BR>
+<A NAME="filter.H:       126">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;126&nbsp;&nbsp;</A>		UInt outbuffer_pos;<BR>
+<A NAME="filter.H:       127">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;127&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt br = 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
@@ -561,13 +589,13 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return br;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       127">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;127&nbsp;&nbsp;</A>		BufferedFilter( &nbsp;UInt buffersize, &nbsp; UInt outbuffers&nbsp;) :<BR>
+<A NAME="filter.H:       155">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;155&nbsp;&nbsp;</A>		BufferedFilterHelper( &nbsp;UInt buffersize, &nbsp; UInt outbuffers&nbsp;) :<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				InBuffer( &nbsp;NULL&nbsp;), &nbsp; BufferSize( &nbsp;buffersize&nbsp;), &nbsp; OutBuffers( &nbsp;outbuffers&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						OutBuffer( &nbsp;outbuffers, &nbsp; buffersize&nbsp;), &nbsp; outbuffer_index( &nbsp;-1&nbsp;), &nbsp; outbuffer_pos( &nbsp;0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			InBuffer = ( &nbsp;NUMTYPE*&nbsp;) malloc( &nbsp;sizeof( &nbsp;NUMTYPE&nbsp;) * BufferSize&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       133">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;133&nbsp;&nbsp;</A>		virtual ~BufferedFilter( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       161">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;161&nbsp;&nbsp;</A>		virtual ~BufferedFilterHelper( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if ( &nbsp;InBuffer != NULL<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			&nbsp;)<BR>
@@ -575,32 +603,32 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="filter.H:       141">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;141&nbsp;&nbsp;</A>	template&lt;class NUMTYPE, &nbsp; class FLOATTYPE = double&gt; class OverlappedFilter: public Filter&lt;NUMTYPE&gt;<BR>
+<A NAME="filter.H:       169">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;169&nbsp;&nbsp;</A>	template&lt;class NUMTYPE, &nbsp; class FLOATTYPE = double&gt; class OverlappedFilter: public BufferedFilter&lt;NUMTYPE&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:       144">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;144&nbsp;&nbsp;</A>		CircularQueue&lt;FLOATTYPE&gt; InBuffer, &nbsp; OutBuffer;<BR>
-<A NAME="filter.H:       145">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;145&nbsp;&nbsp;</A>		Int curBuffer_in, &nbsp; nextBuffer_in, &nbsp; curBuffer_out, &nbsp; nextBuffer_out;<BR>
-<A NAME="filter.H:       146">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;146&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers, &nbsp; InBuffers;<BR>
+<A NAME="filter.H:       172">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;172&nbsp;&nbsp;</A>		CircularQueue&lt;FLOATTYPE&gt; InBuffer, &nbsp; OutBuffer;<BR>
+<A NAME="filter.H:       173">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;173&nbsp;&nbsp;</A>		Int curBuffer_in, &nbsp; nextBuffer_in, &nbsp; curBuffer_out, &nbsp; nextBuffer_out;<BR>
+<A NAME="filter.H:       174">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;174&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers, &nbsp; InBuffers;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//out[n] = coeff_o*out[n] + coeff_n*f( &nbsp;out[n]&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="filter.H:       149">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;149&nbsp;&nbsp;</A>		inline UInt PeriodSize( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       177">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;177&nbsp;&nbsp;</A>		inline UInt PeriodSize( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return BufferSize;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       153">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;153&nbsp;&nbsp;</A>		FLOATTYPE* tmpbuffer;<BR>
-<A NAME="filter.H:       154">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;154&nbsp;&nbsp;</A>		virtual void alloc_buffer( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       181">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;181&nbsp;&nbsp;</A>		FLOATTYPE* tmpbuffer;<BR>
+<A NAME="filter.H:       182">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;182&nbsp;&nbsp;</A>		virtual void alloc_buffer( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmpbuffer = new FLOATTYPE[PeriodSize( &nbsp;&nbsp;)];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       158">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;158&nbsp;&nbsp;</A>		virtual void free_buffer( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       186">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;186&nbsp;&nbsp;</A>		virtual void free_buffer( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			delete[] tmpbuffer;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//virtual void DoProcess( &nbsp;FLOATTYPE* in1, &nbsp; FLOATTYPE* in2, &nbsp; FLOATTYPE* out1, &nbsp; FLOATTYPE* out2, &nbsp; UInt offset, &nbsp; FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;) = 0;<BR>
-<A NAME="filter.H:       164">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;164&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;) = 0;<BR>
-<A NAME="filter.H:       165">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;165&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;FLOATTYPE* in1, &nbsp; FLOATTYPE* in2, &nbsp; FLOATTYPE* out1, &nbsp; FLOATTYPE* out2, &nbsp;<BR>
-<A NAME="filter.H:       166">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;166&nbsp;&nbsp;</A>				UInt offset, &nbsp; FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;)<BR>
+<A NAME="filter.H:       192">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;192&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;) = 0;<BR>
+<A NAME="filter.H:       193">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;193&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;FLOATTYPE* in1, &nbsp; FLOATTYPE* in2, &nbsp; FLOATTYPE* out1, &nbsp; FLOATTYPE* out2, &nbsp;<BR>
+<A NAME="filter.H:       194">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;194&nbsp;&nbsp;</A>				UInt offset, &nbsp; FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			auto l = BufferSize - offset;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if ( &nbsp;l &gt; 0&nbsp;)<BR>
@@ -635,10 +663,10 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="filter.H:       201">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;201&nbsp;&nbsp;</A>		Int outbuffer_index, &nbsp; inbuffer_index;<BR>
-<A NAME="filter.H:       202">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;202&nbsp;&nbsp;</A>		UInt outbuffer_pos, &nbsp; inbuffer_pos;<BR>
-<A NAME="filter.H:       203">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;203&nbsp;&nbsp;</A>		UInt overlapcount;<BR>
-<A NAME="filter.H:       204">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;204&nbsp;&nbsp;</A>		void proc( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       229">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;229&nbsp;&nbsp;</A>		Int outbuffer_index, &nbsp; inbuffer_index;<BR>
+<A NAME="filter.H:       230">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;230&nbsp;&nbsp;</A>		UInt outbuffer_pos, &nbsp; inbuffer_pos;<BR>
+<A NAME="filter.H:       231">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;231&nbsp;&nbsp;</A>		UInt overlapcount;<BR>
+<A NAME="filter.H:       232">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;232&nbsp;&nbsp;</A>		void proc( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//while( &nbsp;( &nbsp;curBuffer_in = InBuffer.BeginDequeue( &nbsp;&nbsp;)&nbsp;) &gt;= 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//	InBuffer.EndDequeue( &nbsp;curBuffer_in&nbsp;);<BR>
@@ -678,12 +706,12 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			nextBuffer_out = -1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			goto asdf;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       244">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;244&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
+<A NAME="filter.H:       272">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;272&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; InBuffers = " &lt;&lt; InBuffers &lt;&lt; "; length = " &lt;&lt; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; InBuffers = " &lt;&lt; InBuffer.Length( &nbsp;&nbsp;) &lt;&lt; "/" &lt;&lt; InBuffers &lt;&lt; "; inputlength = " &lt;&lt; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       249">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;249&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       277">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;277&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
@@ -714,7 +742,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				length -= l;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       280">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;280&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       308">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;308&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt br = 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
@@ -744,7 +772,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return br;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       310">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;310&nbsp;&nbsp;</A>		OverlappedFilter( &nbsp;UInt buffersize, &nbsp; UInt inbuffers, &nbsp; UInt outbuffers, &nbsp; UInt overlapcount&nbsp;) :<BR>
+<A NAME="filter.H:       338">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;338&nbsp;&nbsp;</A>		OverlappedFilter( &nbsp;UInt buffersize, &nbsp; UInt inbuffers, &nbsp; UInt outbuffers, &nbsp; UInt overlapcount&nbsp;) :<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				InBuffer( &nbsp;inbuffers, &nbsp; buffersize&nbsp;), &nbsp; OutBuffer( &nbsp;outbuffers, &nbsp; buffersize&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						curBuffer_in( &nbsp;-1&nbsp;), &nbsp; nextBuffer_in( &nbsp;-1&nbsp;), &nbsp; curBuffer_out( &nbsp;-1&nbsp;), &nbsp; nextBuffer_out( &nbsp;-1&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						BufferSize( &nbsp;buffersize&nbsp;), &nbsp; OutBuffers( &nbsp;outbuffers&nbsp;), &nbsp; InBuffers( &nbsp;inbuffers&nbsp;), &nbsp;<BR>
@@ -754,42 +782,42 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//InBuffer = ( &nbsp;NUMTYPE*&nbsp;)malloc( &nbsp;sizeof( &nbsp;NUMTYPE&nbsp;)*BufferSize&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			alloc_buffer( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       320">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;320&nbsp;&nbsp;</A>		~OverlappedFilter( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       348">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;348&nbsp;&nbsp;</A>		~OverlappedFilter( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			free_buffer( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
-<A NAME="filter.H:       325">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;325&nbsp;&nbsp;</A>	template&lt;class NUMTYPE, &nbsp; class FLOATTYPE = double&gt; class OverlappedFilter2: public Filter&lt;NUMTYPE&gt;<BR>
+<A NAME="filter.H:       353">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;353&nbsp;&nbsp;</A>	template&lt;class NUMTYPE, &nbsp; class FLOATTYPE = double&gt; class OverlappedFilter2: public BufferedFilter&lt;NUMTYPE&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:       328">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;328&nbsp;&nbsp;</A>		CircularQueue&lt;FLOATTYPE&gt; InBuffer, &nbsp; OutBuffer;<BR>
-<A NAME="filter.H:       329">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;329&nbsp;&nbsp;</A>		UInt *InBufferPtrs, &nbsp; *OutBufferPtrs;<BR>
-<A NAME="filter.H:       330">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;330&nbsp;&nbsp;</A>		Int curBuffer_in, &nbsp; nextBuffer_in, &nbsp; curBuffer_out, &nbsp; nextBuffer_out;<BR>
-<A NAME="filter.H:       331">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;331&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers, &nbsp; InBuffers;<BR>
-<A NAME="filter.H:       332">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;332&nbsp;&nbsp;</A>		Int outbuffer_index, &nbsp; inbuffer_index;<BR>
-<A NAME="filter.H:       333">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;333&nbsp;&nbsp;</A>		UInt outbuffer_pos, &nbsp; inbuffer_pos;<BR>
-<A NAME="filter.H:       334">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;334&nbsp;&nbsp;</A>		UInt overlapcount;<BR>
-<A NAME="filter.H:       335">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;335&nbsp;&nbsp;</A>		Int BuffersPerPeriod;<BR>
-<A NAME="filter.H:       336">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;336&nbsp;&nbsp;</A>		Int padding;<BR>
+<A NAME="filter.H:       356">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;356&nbsp;&nbsp;</A>		CircularQueue&lt;FLOATTYPE&gt; InBuffer, &nbsp; OutBuffer;<BR>
+<A NAME="filter.H:       357">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;357&nbsp;&nbsp;</A>		UInt *InBufferPtrs, &nbsp; *OutBufferPtrs;<BR>
+<A NAME="filter.H:       358">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;358&nbsp;&nbsp;</A>		Int curBuffer_in, &nbsp; nextBuffer_in, &nbsp; curBuffer_out, &nbsp; nextBuffer_out;<BR>
+<A NAME="filter.H:       359">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;359&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers, &nbsp; InBuffers;<BR>
+<A NAME="filter.H:       360">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;360&nbsp;&nbsp;</A>		Int outbuffer_index, &nbsp; inbuffer_index;<BR>
+<A NAME="filter.H:       361">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;361&nbsp;&nbsp;</A>		UInt outbuffer_pos, &nbsp; inbuffer_pos;<BR>
+<A NAME="filter.H:       362">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;362&nbsp;&nbsp;</A>		UInt overlapcount;<BR>
+<A NAME="filter.H:       363">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;363&nbsp;&nbsp;</A>		Int BuffersPerPeriod;<BR>
+<A NAME="filter.H:       364">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;364&nbsp;&nbsp;</A>		Int padding;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//out[n] = coeff_o*out[n] + coeff_n*f( &nbsp;out[n]&nbsp;)<BR>
-<A NAME="filter.H:       338">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;338&nbsp;&nbsp;</A>		bool didprocess;<BR>
-<A NAME="filter.H:       339">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;339&nbsp;&nbsp;</A>		inline UInt PeriodSize( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       366">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;366&nbsp;&nbsp;</A>		bool didprocess;<BR>
+<A NAME="filter.H:       367">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;367&nbsp;&nbsp;</A>		inline UInt PeriodSize( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return BufferSize*( &nbsp;BuffersPerPeriod+( &nbsp;padding*2&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       343">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;343&nbsp;&nbsp;</A>		FLOATTYPE* tmpbuffer;<BR>
-<A NAME="filter.H:       344">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;344&nbsp;&nbsp;</A>		virtual void alloc_buffer( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       371">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;371&nbsp;&nbsp;</A>		FLOATTYPE* tmpbuffer;<BR>
+<A NAME="filter.H:       372">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;372&nbsp;&nbsp;</A>		virtual void alloc_buffer( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmpbuffer = new FLOATTYPE[PeriodSize( &nbsp;&nbsp;)];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       348">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;348&nbsp;&nbsp;</A>		virtual void free_buffer( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       376">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;376&nbsp;&nbsp;</A>		virtual void free_buffer( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			delete[] tmpbuffer;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//virtual void DoProcess( &nbsp;FLOATTYPE* in1, &nbsp; FLOATTYPE* in2, &nbsp; FLOATTYPE* out1, &nbsp; FLOATTYPE* out2, &nbsp; UInt offset, &nbsp; FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;) = 0;<BR>
-<A NAME="filter.H:       354">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;354&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;) = 0;<BR>
-<A NAME="filter.H:       355">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;355&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;)<BR>
+<A NAME="filter.H:       382">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;382&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;) = 0;<BR>
+<A NAME="filter.H:       383">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;383&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Int BuffersPerPeriod=this-&gt;BuffersPerPeriod+( &nbsp;padding*2&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Int offset=0;<BR>
@@ -828,7 +856,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				FLOATTYPE* out1=&amp;OutBuffer.GetPointer( &nbsp;OutBufferPtrs[i1]&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//memcpy( &nbsp;out1, &nbsp; tmpbuffer + offset, &nbsp; BufferSize * sizeof( &nbsp;FLOATTYPE&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				for ( &nbsp;Int i = 0; i &lt; BufferSize; i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				for ( &nbsp;UInt i = 0; i &lt; BufferSize; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					FLOATTYPE fade;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					if( &nbsp;overlapcount&lt;=1&nbsp;) fade=0;<BR>
@@ -841,8 +869,8 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		<BR>
-<A NAME="filter.H:       408">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;408&nbsp;&nbsp;</A>		void proc( &nbsp;&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+<A NAME="filter.H:       436">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;436&nbsp;&nbsp;</A>		void proc( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//while( &nbsp;( &nbsp;curBuffer_in = InBuffer.BeginDequeue( &nbsp;&nbsp;)&nbsp;) &gt;= 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//	InBuffer.EndDequeue( &nbsp;curBuffer_in&nbsp;);<BR>
@@ -871,7 +899,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//WARN( &nbsp;3, &nbsp;"asdf2"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			FLOATTYPE coeff = 1.0 / overlapcount;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//UInt offset = BufferSize / overlapcount * i;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			DoProcess( &nbsp;1.0, &nbsp; coeff&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//memcpy( &nbsp;out1, &nbsp; in1, &nbsp; sizeof( &nbsp;FLOATTYPE&nbsp;)*BufferSize&nbsp;);<BR>
@@ -884,12 +912,12 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			goto asdf;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       450">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;450&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
+<A NAME="filter.H:       478">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;478&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; InBuffers = " &lt;&lt; InBuffers &lt;&lt; "; length = " &lt;&lt; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; InBuffers = " &lt;&lt; InBuffer.Length( &nbsp;&nbsp;) &lt;&lt; "/" &lt;&lt; InBuffers &lt;&lt; "; length = " &lt;&lt; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       455">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;455&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       483">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;483&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
@@ -901,6 +929,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						__warn( &nbsp;length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					//WARN( &nbsp;0, &nbsp;"__BEGINAPPEND"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				auto l = __MIN( &nbsp;length, &nbsp; BufferSize - inbuffer_pos&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//memcpy( &nbsp;&amp;InBuffer.GetPointer( &nbsp;inbuffer_index&nbsp;) + inbuffer_pos, &nbsp; data, &nbsp; l * sizeof( &nbsp;NUMTYPE&nbsp;)&nbsp;);<BR>
@@ -911,6 +940,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if ( &nbsp;inbuffer_pos &gt;= BufferSize&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					InBuffer.EndAppend( &nbsp;inbuffer_index&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					//WARN( &nbsp;0, &nbsp;"__ENDAPPEND"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					//WARN( &nbsp;3, &nbsp; "inbuffer_pos &gt;= BufferSize"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					inbuffer_index = -1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					inbuffer_pos = 0;<BR>
@@ -920,7 +950,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				length -= l;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       486">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;486&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       516">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;516&nbsp;&nbsp;</A>		virtual UInt GetData( &nbsp;NUMTYPE* out, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt br = 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
@@ -950,8 +980,8 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return br;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       516">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;516&nbsp;&nbsp;</A>		OverlappedFilter2( &nbsp;UInt buffersize, &nbsp; UInt inbuffers, &nbsp; UInt outbuffers, &nbsp;<BR>
-<A NAME="filter.H:       517">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;517&nbsp;&nbsp;</A>				UInt overlapcount, &nbsp; Int BuffersPerPeriod, &nbsp; Int padding=1&nbsp;) :<BR>
+<A NAME="filter.H:       546">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;546&nbsp;&nbsp;</A>		OverlappedFilter2( &nbsp;UInt buffersize, &nbsp; UInt inbuffers, &nbsp; UInt outbuffers, &nbsp;<BR>
+<A NAME="filter.H:       547">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;547&nbsp;&nbsp;</A>				UInt overlapcount, &nbsp; Int BuffersPerPeriod, &nbsp; Int padding=1&nbsp;) :<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		InBuffer( &nbsp;inbuffers, &nbsp; buffersize&nbsp;), &nbsp; OutBuffer( &nbsp;outbuffers, &nbsp; buffersize&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		curBuffer_in( &nbsp;0&nbsp;), &nbsp; nextBuffer_in( &nbsp;0&nbsp;), &nbsp; curBuffer_out( &nbsp;0&nbsp;), &nbsp; nextBuffer_out( &nbsp;0&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		BufferSize( &nbsp;buffersize&nbsp;), &nbsp; OutBuffers( &nbsp;outbuffers&nbsp;), &nbsp; InBuffers( &nbsp;inbuffers&nbsp;), &nbsp;<BR>
@@ -965,42 +995,42 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			InBufferPtrs = new UInt[( &nbsp;BuffersPerPeriod+1&nbsp;)+( &nbsp;this-&gt;BuffersPerPeriod+1&nbsp;)];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			OutBufferPtrs = InBufferPtrs+( &nbsp;BuffersPerPeriod+1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       531">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;531&nbsp;&nbsp;</A>		~OverlappedFilter2( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       561">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;561&nbsp;&nbsp;</A>		~OverlappedFilter2( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			free_buffer( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			delete[] InBufferPtrs;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
-<A NAME="filter.H:       537">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;537&nbsp;&nbsp;</A>	template&lt;class NUMTYPE, &nbsp; class FLOATTYPE = double&gt; class OverlappedFilter3<BR>
+<A NAME="filter.H:       567">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;567&nbsp;&nbsp;</A>	template&lt;class NUMTYPE, &nbsp; class FLOATTYPE = double&gt; class OverlappedFilter3<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:       540">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;540&nbsp;&nbsp;</A>		CircularQueue&lt;FLOATTYPE&gt; InBuffer, &nbsp; OutBuffer;<BR>
-<A NAME="filter.H:       541">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;541&nbsp;&nbsp;</A>		UInt *InBufferPtrs;<BR>
-<A NAME="filter.H:       542">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;542&nbsp;&nbsp;</A>		Int curBuffer_in, &nbsp; nextBuffer_in;<BR>
-<A NAME="filter.H:       543">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;543&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers, &nbsp; InBuffers;<BR>
-<A NAME="filter.H:       544">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;544&nbsp;&nbsp;</A>		Int outbuffer_index, &nbsp; inbuffer_index;<BR>
-<A NAME="filter.H:       545">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;545&nbsp;&nbsp;</A>		UInt outbuffer_pos, &nbsp; inbuffer_pos;<BR>
-<A NAME="filter.H:       546">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;546&nbsp;&nbsp;</A>		UInt overlapcount;<BR>
-<A NAME="filter.H:       547">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;547&nbsp;&nbsp;</A>		Int BuffersPerPeriod;<BR>
+<A NAME="filter.H:       570">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;570&nbsp;&nbsp;</A>		CircularQueue&lt;FLOATTYPE&gt; InBuffer, &nbsp; OutBuffer;<BR>
+<A NAME="filter.H:       571">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;571&nbsp;&nbsp;</A>		UInt *InBufferPtrs;<BR>
+<A NAME="filter.H:       572">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;572&nbsp;&nbsp;</A>		Int curBuffer_in, &nbsp; nextBuffer_in;<BR>
+<A NAME="filter.H:       573">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;573&nbsp;&nbsp;</A>		UInt BufferSize, &nbsp; OutBuffers, &nbsp; InBuffers;<BR>
+<A NAME="filter.H:       574">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;574&nbsp;&nbsp;</A>		Int outbuffer_index, &nbsp; inbuffer_index;<BR>
+<A NAME="filter.H:       575">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;575&nbsp;&nbsp;</A>		UInt outbuffer_pos, &nbsp; inbuffer_pos;<BR>
+<A NAME="filter.H:       576">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;576&nbsp;&nbsp;</A>		UInt overlapcount;<BR>
+<A NAME="filter.H:       577">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;577&nbsp;&nbsp;</A>		Int BuffersPerPeriod;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//out[n] = coeff_o*out[n] + coeff_n*f( &nbsp;out[n]&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="filter.H:       550">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;550&nbsp;&nbsp;</A>		inline UInt PeriodSize( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       580">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;580&nbsp;&nbsp;</A>		inline UInt PeriodSize( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return BufferSize*BuffersPerPeriod;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       554">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;554&nbsp;&nbsp;</A>		FLOATTYPE* tmpbuffer;<BR>
-<A NAME="filter.H:       555">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;555&nbsp;&nbsp;</A>		virtual void alloc_buffer( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       584">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;584&nbsp;&nbsp;</A>		FLOATTYPE* tmpbuffer;<BR>
+<A NAME="filter.H:       585">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;585&nbsp;&nbsp;</A>		virtual void alloc_buffer( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmpbuffer = new FLOATTYPE[PeriodSize( &nbsp;&nbsp;)];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       559">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;559&nbsp;&nbsp;</A>		virtual void free_buffer( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       589">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;589&nbsp;&nbsp;</A>		virtual void free_buffer( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			delete[] tmpbuffer;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//virtual void DoProcess( &nbsp;FLOATTYPE* in1, &nbsp; FLOATTYPE* in2, &nbsp; FLOATTYPE* out1, &nbsp; FLOATTYPE* out2, &nbsp; UInt offset, &nbsp; FLOATTYPE coeff_o, &nbsp; FLOATTYPE coeff_n&nbsp;) = 0;<BR>
-<A NAME="filter.H:       565">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;565&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;) = 0;<BR>
-<A NAME="filter.H:       566">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;566&nbsp;&nbsp;</A>		void DoProcess1( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       595">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;595&nbsp;&nbsp;</A>		virtual void DoProcess( &nbsp;&nbsp;) = 0;<BR>
+<A NAME="filter.H:       596">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;596&nbsp;&nbsp;</A>		void DoProcess1( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Int offset=0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;Int i1=curBuffer_in;i1!=nextBuffer_in;i1=modulus( &nbsp;i1+1, &nbsp;BuffersPerPeriod+1&nbsp;)&nbsp;)<BR>
@@ -1012,8 +1042,8 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			DoProcess( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		<BR>
-<A NAME="filter.H:       579">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;579&nbsp;&nbsp;</A>		void proc( &nbsp;&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+<A NAME="filter.H:       609">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;609&nbsp;&nbsp;</A>		void proc( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			Int skip=BuffersPerPeriod/this-&gt;overlapcount;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;skip&lt;1&nbsp;)skip=1;<BR>
@@ -1028,7 +1058,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				nextBuffer_in=modulus( &nbsp;nextBuffer_in+1, &nbsp;BuffersPerPeriod+1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				//WARN( &nbsp;3, &nbsp;"got buffers: " &lt;&lt; modulus( &nbsp;nextBuffer_in-curBuffer_in, &nbsp;BuffersPerPeriod+1&nbsp;) &lt;&lt; " total; nextBuffer_in=" &lt;&lt; nextBuffer_in &lt;&lt; "; curBuffer_in=" &lt;&lt; curBuffer_in&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			DoProcess1( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;Int i=0;i&lt;skip;i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
@@ -1037,12 +1067,12 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			goto asdf;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       603">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;603&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
+<A NAME="filter.H:       633">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;633&nbsp;&nbsp;</A>		inline void __warn( &nbsp;UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; InBuffers = " &lt;&lt; InBuffers &lt;&lt; "; length = " &lt;&lt; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "filter buffer overflow: BufferSize = " &lt;&lt; BufferSize &lt;&lt; "; InBuffers = " &lt;&lt; InBuffer.Length( &nbsp;&nbsp;) &lt;&lt; "/" &lt;&lt; InBuffers &lt;&lt; "; length = " &lt;&lt; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       608">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;608&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       638">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;638&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
@@ -1064,7 +1094,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if ( &nbsp;inbuffer_pos &gt;= BufferSize&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					InBuffer.EndAppend( &nbsp;inbuffer_index&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					//WARN( &nbsp;3, &nbsp; "inbuffer_pos &gt;= BufferSize"&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					WARN( &nbsp;3, &nbsp; "inbuffer_pos &gt;= BufferSize"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					inbuffer_index = -1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					inbuffer_pos = 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					proc( &nbsp;&nbsp;);<BR>
@@ -1073,8 +1103,8 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				length -= l;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       639">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;639&nbsp;&nbsp;</A>		virtual UInt OutputSize( &nbsp;&nbsp;)=0;<BR>
-<A NAME="filter.H:       640">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;640&nbsp;&nbsp;</A>		virtual bool GetData( &nbsp;NUMTYPE* out&nbsp;)<BR>
+<A NAME="filter.H:       669">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;669&nbsp;&nbsp;</A>		virtual UInt OutputSize( &nbsp;&nbsp;)=0;<BR>
+<A NAME="filter.H:       670">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;670&nbsp;&nbsp;</A>		virtual bool GetData( &nbsp;NUMTYPE* out&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			auto tmp = OutBuffer.BeginDequeue( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if ( &nbsp;tmp &lt; 0&nbsp;)<BR>
@@ -1083,8 +1113,8 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			OutBuffer.EndDequeue( &nbsp;tmp&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return true;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       649">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;649&nbsp;&nbsp;</A>		OverlappedFilter3( &nbsp;UInt buffersize_in, &nbsp; UInt buffersize_out, &nbsp; UInt inbuffers, &nbsp; UInt outbuffers, &nbsp;<BR>
-<A NAME="filter.H:       650">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;650&nbsp;&nbsp;</A>				UInt overlapcount, &nbsp; UInt BuffersPerPeriod&nbsp;) :<BR>
+<A NAME="filter.H:       679">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;679&nbsp;&nbsp;</A>		OverlappedFilter3( &nbsp;UInt buffersize_in, &nbsp; UInt buffersize_out, &nbsp; UInt inbuffers, &nbsp; UInt outbuffers, &nbsp;<BR>
+<A NAME="filter.H:       680">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;680&nbsp;&nbsp;</A>				UInt overlapcount, &nbsp; UInt BuffersPerPeriod&nbsp;) :<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		InBuffer( &nbsp;inbuffers, &nbsp; buffersize_in&nbsp;), &nbsp; OutBuffer( &nbsp;outbuffers, &nbsp; buffersize_out&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		curBuffer_in( &nbsp;0&nbsp;), &nbsp; nextBuffer_in( &nbsp;0&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		BufferSize( &nbsp;buffersize_in&nbsp;), &nbsp; OutBuffers( &nbsp;outbuffers&nbsp;), &nbsp; InBuffers( &nbsp;inbuffers&nbsp;), &nbsp;<BR>
@@ -1095,23 +1125,23 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			alloc_buffer( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			InBufferPtrs = new UInt[( &nbsp;BuffersPerPeriod+1&nbsp;)];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       661">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;661&nbsp;&nbsp;</A>		~OverlappedFilter3( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       691">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;691&nbsp;&nbsp;</A>		~OverlappedFilter3( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			free_buffer( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			delete[] InBufferPtrs;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
-<A NAME="filter.H:       667">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;667&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt;class FilterBuffer<BR>
+<A NAME="filter.H:       697">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;697&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt;class FilterBuffer<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:       670">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;670&nbsp;&nbsp;</A>		NUMTYPE* data;<BR>
-<A NAME="filter.H:       671">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;671&nbsp;&nbsp;</A>		UInt length;<BR>
-<A NAME="filter.H:       672">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;672&nbsp;&nbsp;</A>		UInt size;<BR>
-<A NAME="filter.H:       673">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;673&nbsp;&nbsp;</A>		FilterBuffer( &nbsp;NUMTYPE* buf, &nbsp; UInt size&nbsp;):data( &nbsp;buf&nbsp;), &nbsp;length( &nbsp;0&nbsp;), &nbsp;size( &nbsp;size&nbsp;)<BR>
+<A NAME="filter.H:       700">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;700&nbsp;&nbsp;</A>		NUMTYPE* data;<BR>
+<A NAME="filter.H:       701">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;701&nbsp;&nbsp;</A>		UInt length;<BR>
+<A NAME="filter.H:       702">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;702&nbsp;&nbsp;</A>		UInt size;<BR>
+<A NAME="filter.H:       703">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;703&nbsp;&nbsp;</A>		FilterBuffer( &nbsp;NUMTYPE* buf, &nbsp; UInt size&nbsp;):data( &nbsp;buf&nbsp;), &nbsp;length( &nbsp;0&nbsp;), &nbsp;size( &nbsp;size&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       677">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;677&nbsp;&nbsp;</A>		UInt Append( &nbsp;NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       707">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;707&nbsp;&nbsp;</A>		UInt Append( &nbsp;NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt length2=size-this-&gt;length;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;length2&lt;length&nbsp;)length=length2;<BR>
@@ -1120,25 +1150,25 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			this-&gt;length+=length;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return length;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       686">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;686&nbsp;&nbsp;</A>		class AppendData<BR>
+<A NAME="filter.H:       716">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;716&nbsp;&nbsp;</A>		class AppendData<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		public:<BR>
-<A NAME="filter.H:       689">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;689&nbsp;&nbsp;</A>			FilterBuffer&lt;NUMTYPE&gt;&amp; buf;<BR>
-<A NAME="filter.H:       690">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;690&nbsp;&nbsp;</A>			NUMTYPE* data;<BR>
-<A NAME="filter.H:       691">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;691&nbsp;&nbsp;</A>			UInt length;<BR>
-<A NAME="filter.H:       692">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;692&nbsp;&nbsp;</A>			AppendData( &nbsp;FilterBuffer&lt;NUMTYPE&gt;&amp; buf, &nbsp; NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
+<A NAME="filter.H:       719">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;719&nbsp;&nbsp;</A>			FilterBuffer&lt;NUMTYPE&gt;&amp; buf;<BR>
+<A NAME="filter.H:       720">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;720&nbsp;&nbsp;</A>			NUMTYPE* data;<BR>
+<A NAME="filter.H:       721">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;721&nbsp;&nbsp;</A>			UInt length;<BR>
+<A NAME="filter.H:       722">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;722&nbsp;&nbsp;</A>			AppendData( &nbsp;FilterBuffer&lt;NUMTYPE&gt;&amp; buf, &nbsp; NUMTYPE* data, &nbsp; UInt length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				:buf( &nbsp;buf&nbsp;), &nbsp; data( &nbsp;data&nbsp;), &nbsp; length( &nbsp;length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				UInt tmp=buf.Append( &nbsp;data, &nbsp; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				this-&gt;data+=tmp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				this-&gt;length-=tmp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
-<A NAME="filter.H:       699">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;699&nbsp;&nbsp;</A>			~AppendData( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       729">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;729&nbsp;&nbsp;</A>			~AppendData( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;length&lt;=0&nbsp;)return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				buf.Append( &nbsp;data, &nbsp; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
-<A NAME="filter.H:       704">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;704&nbsp;&nbsp;</A>			inline NUMTYPE* operator( &nbsp;&nbsp;)( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       734">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;734&nbsp;&nbsp;</A>			inline NUMTYPE* operator( &nbsp;&nbsp;)( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;buf.length&gt;=buf.size&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				{<BR>
@@ -1149,21 +1179,21 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		};<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	};<BR>
-<A NAME="filter.H:       715">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;715&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt;class FilterBuffer2<BR>
+<A NAME="filter.H:       745">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;745&nbsp;&nbsp;</A>	template&lt;class NUMTYPE&gt;class FilterBuffer2<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	public:<BR>
-<A NAME="filter.H:       718">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;718&nbsp;&nbsp;</A>		CircularQueue&lt;NUMTYPE&gt; OutBuffer;<BR>
-<A NAME="filter.H:       719">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;719&nbsp;&nbsp;</A>		Int BufferSize, &nbsp;index, &nbsp;pos, &nbsp;index2, &nbsp;pos2;<BR>
-<A NAME="filter.H:       720">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;720&nbsp;&nbsp;</A>		FilterBuffer2( &nbsp;UInt size, &nbsp;UInt buffers&nbsp;):OutBuffer( &nbsp;buffers, &nbsp;size&nbsp;), &nbsp;BufferSize( &nbsp;size&nbsp;), &nbsp;index( &nbsp;-1&nbsp;), &nbsp;pos( &nbsp;0&nbsp;), &nbsp;<BR>
+<A NAME="filter.H:       748">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;748&nbsp;&nbsp;</A>		CircularQueue&lt;NUMTYPE&gt; OutBuffer;<BR>
+<A NAME="filter.H:       749">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;749&nbsp;&nbsp;</A>		Int BufferSize, &nbsp;index, &nbsp;pos, &nbsp;index2, &nbsp;pos2;<BR>
+<A NAME="filter.H:       750">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;750&nbsp;&nbsp;</A>		FilterBuffer2( &nbsp;UInt size, &nbsp;UInt buffers&nbsp;):OutBuffer( &nbsp;buffers, &nbsp;size&nbsp;), &nbsp;BufferSize( &nbsp;size&nbsp;), &nbsp;index( &nbsp;-1&nbsp;), &nbsp;pos( &nbsp;0&nbsp;), &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			index2( &nbsp;-1&nbsp;), &nbsp;pos2( &nbsp;0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//alt_buffer=new NUMTYPE[length];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       725">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;725&nbsp;&nbsp;</A>		~FilterBuffer2( &nbsp;&nbsp;)<BR>
+<A NAME="filter.H:       755">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;755&nbsp;&nbsp;</A>		~FilterBuffer2( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//delete[] alt_buffer;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-<A NAME="filter.H:       729">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;729&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; Int length&nbsp;)<BR>
+<A NAME="filter.H:       759">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;759&nbsp;&nbsp;</A>		virtual void PutData( &nbsp;const NUMTYPE* data, &nbsp; Int length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			while ( &nbsp;length &gt; 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
@@ -1192,7 +1222,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//Int outbuffer_index;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//UInt outbuffer_pos;<BR>
-<A NAME="filter.H:       758">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;758&nbsp;&nbsp;</A>		virtual bool GetData( &nbsp;NUMTYPE* out, &nbsp; Int length&nbsp;)<BR>
+<A NAME="filter.H:       788">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;788&nbsp;&nbsp;</A>		virtual bool GetData( &nbsp;NUMTYPE* out, &nbsp; Int length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt br = 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//cerr &lt;&lt; "OutBuffer.Length( &nbsp;&nbsp;)=" &lt;&lt;OutBuffer.Length( &nbsp;&nbsp;)&lt;&lt;endl;<BR>
@@ -1234,26 +1264,27 @@ source file
 <TT>
 <A NAME="jackfft.C:         1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;</A>/*<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * jackfft.C<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Copyright 2012  &lt;xaxaxa@xaxaxa-mac&gt;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * This program is free software; you can redistribute it and/or modify<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * it under the terms of the GNU General Public License as published by<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * the Free Software Foundation; either version 2 of the License, &nbsp; or<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * ( &nbsp;at your option&nbsp;) any later version.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * This program is distributed in the hope that it will be useful, &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * but WITHOUT ANY WARRANTY; without even the implied warranty of<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * GNU General Public License for more details.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * You should have received a copy of the GNU General Public License<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * along with this program; if not, &nbsp; write to the Free Software<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Foundation, &nbsp; Inc., &nbsp; 51 Franklin Street, &nbsp; Fifth Floor, &nbsp; Boston, &nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * MA 02110-1301, &nbsp; USA.<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#define WARNLEVEL 3<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#define cplib_glib_wrappers<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#include &lt;iostream&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#include &lt;jack/jack.h&gt;<BR>
@@ -1271,67 +1302,72 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#include &lt;math.h&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;using namespace std;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vector&lt;jack_port_t *&gt; inputs;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vector&lt;jack_port_t *&gt; outputs;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#define CHANNELS 2<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#define CONCAT( &nbsp;X&nbsp;) ( &nbsp;( &nbsp;( &nbsp;stringstream&amp;&nbsp;)( &nbsp;stringstream( &nbsp;&nbsp;)&lt;&lt;X&nbsp;)&nbsp;).str( &nbsp;&nbsp;)&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;double cur_index=0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;double cur_index = 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int srate;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bool display_spectrum=false;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bool display_spectrum = false;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;using namespace xaxaxa;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;using namespace std;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+<A NAME="jackfft.C:        55">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;55&nbsp;&nbsp;</A>File efd( &nbsp;eventfd( &nbsp;0, &nbsp;0&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;* filt[CHANNELS];<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;** filt2=NULL;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;** filt2 = NULL;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;struct timespec last_refreshed;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#define EQ_POINTS 1500<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EQControl* c;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EQControl* c2;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Glib::RefPtr&lt;Gtk::Builder&gt; b;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string fname=".default.jfft";<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string fname = ".default.jfft";<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:        62">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;62&nbsp;&nbsp;</A>inline double scale_freq( &nbsp;double x&nbsp;)<BR>
+<A NAME="jackfft.C:        66">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;66&nbsp;&nbsp;</A>inline double scale_freq( &nbsp;double x&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x=pow( &nbsp;2, &nbsp;x*10&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x=x-1;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;x&lt;0&nbsp;)return 0;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return x/1024;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x = pow( &nbsp;2, &nbsp; x * 10&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x = x - 1;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;x &lt; 0&nbsp;)return 0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return x / 1024;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/*<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * y=5x^2<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * <BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * y=( &nbsp;( &nbsp;x*2&nbsp;)^2&nbsp;)/4<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * 4y=( &nbsp;2x&nbsp;)^2<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * sqrt( &nbsp;4y&nbsp;)=2x<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * sqrt( &nbsp;4y&nbsp;)/2=x<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * */<BR>
-<A NAME="jackfft.C:        77">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;77&nbsp;&nbsp;</A>inline double scale_freq_r( &nbsp;double x&nbsp;)<BR>
+<A NAME="jackfft.C:        81">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;81&nbsp;&nbsp;</A>inline double scale_freq_r( &nbsp;double x&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//cout &lt;&lt; x &lt;&lt; " " &lt;&lt; log2( &nbsp;x*256&nbsp;) &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x=x*1024+1;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x = x * 1024 + 1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//if( &nbsp;x&lt;1.0&nbsp;)return 0;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x=log2( &nbsp;x&nbsp;)/10;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	x = log2( &nbsp;x&nbsp;) / 10;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//if( &nbsp;::isinf( &nbsp;x&nbsp;)||::isnan( &nbsp;x&nbsp;)&nbsp;)return 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//cout &lt;&lt; x &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return x&lt;0?-x:x;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return x &lt; 0 ? -x : x;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:        87">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;87&nbsp;&nbsp;</A>double logn( &nbsp;double n, &nbsp; double x&nbsp;)<BR>
+<A NAME="jackfft.C:        91">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;91&nbsp;&nbsp;</A>inline double logn( &nbsp;double n, &nbsp; double x&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return log( &nbsp;x&nbsp;)/log( &nbsp;n&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return log( &nbsp;x&nbsp;) / log( &nbsp;n&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//graph to coefficient<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//x: [0.0, &nbsp;2.0]<BR>
-<A NAME="jackfft.C:        92">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;92&nbsp;&nbsp;</A>double scale_value( &nbsp;double x&nbsp;)<BR>
+<A NAME="jackfft.C:        98">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;98&nbsp;&nbsp;</A>inline double scale_value( &nbsp;double x&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//return x*x;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	double tmp = x - 1.;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	tmp*=5.;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	tmp *= 5.;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/*if( &nbsp;tmp&lt;0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		return 1.0/( &nbsp;-tmp*19.0+1.0&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	else return tmp*19.0+1.0;*/<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return pow( &nbsp;2, &nbsp;tmp&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return pow( &nbsp;2, &nbsp; tmp&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/*<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * y=1/( &nbsp;-19x+1&nbsp;)<BR>
@@ -1340,52 +1376,58 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * -19x=1/y-1<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * x=-( &nbsp;1/y-1&nbsp;)/19<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * */<BR>
-<A NAME="jackfft.C:       109">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;109&nbsp;&nbsp;</A>double scale_value_r( &nbsp;double x&nbsp;)<BR>
+<A NAME="jackfft.C:       115">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;115&nbsp;&nbsp;</A>inline double scale_value_r( &nbsp;double x&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//return x*x;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//cout &lt;&lt; x &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return logn( &nbsp;2, &nbsp;x&nbsp;)/5.+1.;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return logn( &nbsp;2, &nbsp; x&nbsp;) / 5. + 1.;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/*if( &nbsp;std::isnan( &nbsp;x&nbsp;)&nbsp;)return 1.0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//else if( &nbsp;x&gt;1.0&nbsp;)return 2.0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//else if( &nbsp;x&lt;-1.0&nbsp;)return 0.0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	else return x+1.0;*/<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:       121">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;121&nbsp;&nbsp;</A>long long get_nsec( &nbsp;const timespec&amp; t&nbsp;)<BR>
+<A NAME="jackfft.C:       127">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;127&nbsp;&nbsp;</A>inline Long get_nsec( &nbsp;const timespec&amp; t&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return ( &nbsp;( &nbsp;long long&nbsp;)t.tv_sec&nbsp;)*1000000000+( &nbsp;long long&nbsp;)t.tv_nsec;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return ( &nbsp;( &nbsp;Long&nbsp;)t.tv_sec&nbsp;) * 1000000000 + ( &nbsp;Long&nbsp;)t.tv_nsec;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       125">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;125&nbsp;&nbsp;</A>template&lt;class t&gt; inline double complex_to_real( &nbsp;const t&amp; x&nbsp;)<BR>
+<A NAME="jackfft.C:       131">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;131&nbsp;&nbsp;</A>template&lt;class t&gt; inline double complex_to_real( &nbsp;const t&amp; x&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	auto r=x[0];<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	auto i=x[1];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	auto r = x[0];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	auto i = x[1];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//return r;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return sqrt( &nbsp;pow( &nbsp;r, &nbsp;2&nbsp;)+pow( &nbsp;i, &nbsp;2&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return sqrt( &nbsp;pow( &nbsp;r, &nbsp; 2&nbsp;) + pow( &nbsp;i, &nbsp; 2&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       132">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;132&nbsp;&nbsp;</A>int process ( &nbsp;jack_nframes_t length, &nbsp; void *arg&nbsp;)<BR>
+<A NAME="jackfft.C:       138">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;138&nbsp;&nbsp;</A>int process( &nbsp;jack_nframes_t length, &nbsp; void *arg&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i=0;i&lt;inputs.size( &nbsp;&nbsp;);i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_default_audio_sample_t* in_samples[inputs.size( &nbsp;&nbsp;)];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_default_audio_sample_t* out_samples[inputs.size( &nbsp;&nbsp;)];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i = 0; i &lt; inputs.size( &nbsp;&nbsp;); i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		jack_default_audio_sample_t *out = <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					( &nbsp;jack_default_audio_sample_t *&nbsp;) <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					jack_port_get_buffer ( &nbsp;outputs[i], &nbsp; length&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		jack_default_audio_sample_t *in = <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					( &nbsp;jack_default_audio_sample_t *&nbsp;) <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					jack_port_get_buffer ( &nbsp;inputs[i], &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		in_samples[i]=( &nbsp;jack_default_audio_sample_t *&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			jack_port_get_buffer( &nbsp;inputs[i], &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		out_samples[i]=( &nbsp;jack_default_audio_sample_t *&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			jack_port_get_buffer( &nbsp;outputs[i], &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i = 0; i &lt; inputs.size( &nbsp;&nbsp;); i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		jack_default_audio_sample_t *out = out_samples[i];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		jack_default_audio_sample_t *in = in_samples[i];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;filt2!=NULL &amp;&amp; filt2[i]!=NULL&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;filt2 != NULL &amp;&amp; filt2[i] != NULL&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			filt2[i]-&gt;PutData( &nbsp;in, &nbsp; length&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i]-&gt;GetData( &nbsp;out, &nbsp; length&nbsp;)&gt;0&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i]-&gt;GetData( &nbsp;out, &nbsp; length&nbsp;) &gt; 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				delete filt[i];<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				filt[i]=NULL;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;filt[i]!=NULL&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					delete filt[i];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				filt[i]=filt2[i];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				filt2[i]=NULL;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				continue;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]-&gt;PutData( &nbsp;in, &nbsp; length&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]-&gt;GetData( &nbsp;out, &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]-&gt;Process( &nbsp;in, &nbsp; out, &nbsp; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		/*Int a;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		while( &nbsp;( &nbsp;a = ( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[i]&nbsp;)-&gt;OutBuffer.BeginDequeue( &nbsp;&nbsp;)&nbsp;) &gt;= 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
@@ -1395,121 +1437,145 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//for( &nbsp;UInt i=0;i&lt;length;i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//	out[i] = in[i];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i=0;i&lt;inputs.size( &nbsp;&nbsp;);i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/*for( &nbsp;size_t i=0; i&lt;length; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;filt[i]!=NULL&nbsp;)goto asdfghjkl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i=0;i&lt;inputs.size( &nbsp;&nbsp;);i++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]=filt2[i];<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	delete[] filt2;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	filt2=NULL;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;asdfghjkl:<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	FFTFilter&lt;jack_default_audio_sample_t&gt;* trololo=( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[0]&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	struct timespec t;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	clock_gettime( &nbsp;CLOCK_MONOTONIC, &nbsp; &amp;t&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;display_spectrum &amp;&amp; get_nsec( &nbsp;last_refreshed&nbsp;)+( &nbsp;50*1000000&nbsp;)&lt;get_nsec( &nbsp;t&nbsp;) &amp;&amp; trololo-&gt;didprocess&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		last_refreshed=t;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		trololo-&gt;didprocess=false;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//refresh<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;decltype( &nbsp;c2-&gt;datalen&nbsp;) i=0;i&lt;c2-&gt;datalen;i++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			c2-&gt;data[i]=0;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;size_t ii=0;ii&lt;inputs.size( &nbsp;&nbsp;);ii++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		double avg=0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;register unsigned int ii=0;ii&lt;CHANNELS;ii++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			avg+=( &nbsp;( &nbsp;double&nbsp;)out_samples[ii][i]&nbsp;)/CHANNELS;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;register unsigned int ii=0;ii&lt;CHANNELS;ii++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			out_samples[ii][i]=avg+( &nbsp;out_samples[ii][i]-avg&nbsp;)*3;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}*/<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;filt2&nbsp;) {<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;size_t i = 0; i &lt; inputs.size( &nbsp;&nbsp;); i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt[ii]==NULL&nbsp;)continue;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt complexsize = ( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[ii]&nbsp;)-&gt;ComplexSize( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;decltype( &nbsp;c2-&gt;datalen&nbsp;) i=0;i&lt;c2-&gt;datalen;i++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				UInt complex_index=scale_freq( &nbsp;( &nbsp;double&nbsp;)i/( &nbsp;c2-&gt;datalen-1&nbsp;)&nbsp;)*( &nbsp;complexsize-1&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				c2-&gt;data[i]+=( &nbsp;complex_to_real( &nbsp;( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[ii]&nbsp;)-&gt;tmpcomplex[complex_index]&nbsp;)&nbsp;)/100/inputs.size( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i] != NULL&nbsp;)goto asdfghjkl;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		c2-&gt;queue_draw( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		delete[] filt2;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt2 = NULL;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;asdfghjkl:<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	FFTFilter&lt;jack_default_audio_sample_t&gt;* trololo = ( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[0]&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;display_spectrum &amp;&amp; trololo-&gt;didprocess&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		trololo-&gt;didprocess = false;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Long tmp_i=1;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		efd.Write( &nbsp;BufferRef( &nbsp;&amp;tmp_i, &nbsp;sizeof( &nbsp;tmp_i&nbsp;)&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       199">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;199&nbsp;&nbsp;</A>void error ( &nbsp;const char *desc&nbsp;)<BR>
+<A NAME="jackfft.C:       202">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;202&nbsp;&nbsp;</A>void* thread1( &nbsp;void* v&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	fprintf ( &nbsp;stderr, &nbsp; "JACK error: %s\n", &nbsp; desc&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	while( &nbsp;true&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Long tmp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		efd.Read( &nbsp;BufferRef( &nbsp;&amp;tmp, &nbsp;sizeof( &nbsp;tmp&nbsp;)&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		WARN( &nbsp;8, &nbsp;tmp&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		struct timespec t;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		clock_gettime( &nbsp;CLOCK_MONOTONIC, &nbsp; &amp;t&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;get_nsec( &nbsp;last_refreshed&nbsp;) + ( &nbsp;60 * 1000000&nbsp;) &lt; get_nsec( &nbsp;t&nbsp;)&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			last_refreshed = t;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//refresh<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;decltype( &nbsp;c2-&gt;datalen&nbsp;) i = 0; i &lt; c2-&gt;datalen; i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				c2-&gt;data[i] = 0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;size_t ii = 0; ii &lt; inputs.size( &nbsp;&nbsp;); ii++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				if( &nbsp;filt[ii] == NULL&nbsp;)continue;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				UInt complexsize = ( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[ii]&nbsp;)-&gt;ComplexSize( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				for( &nbsp;decltype( &nbsp;c2-&gt;datalen&nbsp;) i = 0; i &lt; c2-&gt;datalen; i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					UInt complex_index = scale_freq( &nbsp;( &nbsp;double&nbsp;)i / ( &nbsp;c2-&gt;datalen - 1&nbsp;)&nbsp;) * ( &nbsp;complexsize - 1&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					c2-&gt;data[i] += ( &nbsp;complex_to_real( &nbsp;( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[ii]&nbsp;)-&gt;tmpcomplex[complex_index]&nbsp;)&nbsp;) / 100 / inputs.size( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			gdk_threads_enter( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			c2-&gt;do_draw( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			gdk_threads_leave( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return NULL;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       203">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;203&nbsp;&nbsp;</A>void jack_shutdown ( &nbsp;void *arg&nbsp;)<BR>
+<A NAME="jackfft.C:       234">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;234&nbsp;&nbsp;</A>void error( &nbsp;const char *desc&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	exit ( &nbsp;1&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	fprintf( &nbsp;stderr, &nbsp; "JACK error: %s\n", &nbsp; desc&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+<A NAME="jackfft.C:       238">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;238&nbsp;&nbsp;</A>void jack_shutdown( &nbsp;void *arg&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	exit( &nbsp;1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//UInt pb_size=0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//Gtk::ProgressBar* pb;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//UInt freqs = 50;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:       211">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;211&nbsp;&nbsp;</A>void update_fft( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;** filt2=NULL&nbsp;)<BR>
+<A NAME="jackfft.C:       246">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;246&nbsp;&nbsp;</A>void update_fft( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;** filt2 = NULL&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;filt2!=NULL&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;filt2 != NULL&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt i=0;i&lt;CHANNELS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt i = 0; i &lt; CHANNELS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i]==NULL&nbsp;)continue;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			auto f=filt2[i];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i] == NULL&nbsp;)continue;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			auto f = filt2[i];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt complexsize = f-&gt;ComplexSize( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;UInt n=0;n&lt;complexsize;n++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				f-&gt;coefficients[n]=scale_value( &nbsp;c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n/complexsize&nbsp;)*EQ_POINTS&nbsp;)*2.0&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;UInt n = 0; n &lt; complexsize; n++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				f-&gt;coefficients[n] = scale_value( &nbsp;c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n / complexsize&nbsp;) * EQ_POINTS&nbsp;) * 2.0&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i=0;i&lt;CHANNELS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i = 0; i &lt; CHANNELS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		auto f=( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)( &nbsp;filt[i]&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		auto f = ( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)( &nbsp;filt[i]&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt complexsize = f-&gt;ComplexSize( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt n=0;n&lt;complexsize;n++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			f-&gt;coefficients[n]=scale_value( &nbsp;c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n/complexsize&nbsp;)*EQ_POINTS&nbsp;)*2.0&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt n = 0; n &lt; complexsize; n++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			f-&gt;coefficients[n] = scale_value( &nbsp;c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n / complexsize&nbsp;) * EQ_POINTS&nbsp;) * 2.0&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       233">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;233&nbsp;&nbsp;</A>void on_change( &nbsp;void* user, &nbsp; UInt i1, &nbsp; UInt i2&nbsp;)<BR>
+<A NAME="jackfft.C:       268">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;268&nbsp;&nbsp;</A>void on_change( &nbsp;void* user, &nbsp; UInt i1, &nbsp; UInt i2&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	EQControl* c=( &nbsp;EQControl*&nbsp;)user;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i=0;i&lt;CHANNELS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	EQControl* c = ( &nbsp;EQControl*&nbsp;)user;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i = 0; i &lt; CHANNELS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		auto f=( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)( &nbsp;filt[i]&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		auto f = ( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)( &nbsp;filt[i]&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt complexsize = f-&gt;ComplexSize( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//complexsize /= 5;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt min_index=floor( &nbsp;scale_freq( &nbsp;( &nbsp;double&nbsp;)i1/EQ_POINTS&nbsp;)*( &nbsp;double&nbsp;)complexsize&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt max_index=ceil( &nbsp;scale_freq( &nbsp;( &nbsp;double&nbsp;)i2/EQ_POINTS&nbsp;)*( &nbsp;double&nbsp;)complexsize&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt min_index = floor( &nbsp;scale_freq( &nbsp;( &nbsp;double&nbsp;)i1 / EQ_POINTS&nbsp;) * ( &nbsp;double&nbsp;)complexsize&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt max_index = ceil( &nbsp;scale_freq( &nbsp;( &nbsp;double&nbsp;)i2 / EQ_POINTS&nbsp;) * ( &nbsp;double&nbsp;)complexsize&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//cout &lt;&lt; "i1="&lt;&lt;i1&lt;&lt;"; i2="&lt;&lt;i2&lt;&lt;"; scale_freq="&lt;&lt;scale_freq( &nbsp;( &nbsp;double&nbsp;)i1/EQ_POINTS&nbsp;)&lt;&lt;endl;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//cout &lt;&lt; "min_index="&lt;&lt;min_index&lt;&lt;"; max_index="&lt;&lt;max_index&lt;&lt;endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt max_n=floor( &nbsp;max_index&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;max_n&gt;complexsize&nbsp;)max_n=complexsize;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt n=min_index;n&lt;max_n;n++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt max_n = floor( &nbsp;max_index&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;max_n &gt; complexsize&nbsp;)max_n = complexsize;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt n = min_index; n &lt; max_n; n++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double tmp=( &nbsp;c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n/complexsize&nbsp;)*EQ_POINTS&nbsp;)*2.0&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double tmp = ( &nbsp;c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n / complexsize&nbsp;) * EQ_POINTS&nbsp;) * 2.0&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//cout &lt;&lt; c-&gt;GetPoint( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)n/complexsize&nbsp;)*EQ_POINTS&nbsp;) &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmp=scale_value( &nbsp;tmp&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmp = scale_value( &nbsp;tmp&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//if( &nbsp;tmp1&gt;4&nbsp;)cout &lt;&lt; tmp1 &lt;&lt; " " &lt;&lt; tmp &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			f-&gt;coefficients[n]=tmp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			f-&gt;coefficients[n] = tmp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       257">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;257&nbsp;&nbsp;</A>void on_mousemove( &nbsp;void* user, &nbsp; double i&nbsp;)<BR>
+<A NAME="jackfft.C:       292">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;292&nbsp;&nbsp;</A>void on_mousemove( &nbsp;void* user, &nbsp; double i&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	EQControl* c=( &nbsp;EQControl*&nbsp;)user;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	double freq=scale_freq( &nbsp;i/c-&gt;datalen&nbsp;)*srate/2.0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	EQControl* c = ( &nbsp;EQControl*&nbsp;)user;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	double freq = scale_freq( &nbsp;i / c-&gt;datalen&nbsp;) * srate / 2.0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Label* l;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"label1", &nbsp;l&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	l-&gt;set_text( &nbsp;CONCAT( &nbsp;( &nbsp;UInt&nbsp;)freq&lt;&lt;" Hz"&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"label1", &nbsp; l&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	l-&gt;set_text( &nbsp;CONCAT( &nbsp;( &nbsp;UInt&nbsp;)freq &lt;&lt; " Hz"&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:       266">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;266&nbsp;&nbsp;</A>void do_save( &nbsp;Stream&amp; fs&nbsp;)<BR>
+<A NAME="jackfft.C:       301">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;301&nbsp;&nbsp;</A>void do_save( &nbsp;Stream&amp; fs&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	try<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		struct<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double freq; double val;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double freq;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double val;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		} buf;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Buffer b( &nbsp;&amp;buf, &nbsp;sizeof( &nbsp;buf&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt i=0;i&lt;EQ_POINTS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Buffer b( &nbsp;&amp;buf, &nbsp; sizeof( &nbsp;buf&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt i = 0; i &lt; EQ_POINTS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			buf.freq=scale_freq( &nbsp;( &nbsp;double&nbsp;)i/EQ_POINTS&nbsp;)*srate/2;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			buf.val=scale_value( &nbsp;c-&gt;GetPoint( &nbsp;i&nbsp;)*2.0&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			buf.freq = scale_freq( &nbsp;( &nbsp;double&nbsp;)i / EQ_POINTS&nbsp;) * srate / 2;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			buf.val = scale_value( &nbsp;c-&gt;GetPoint( &nbsp;i&nbsp;) * 2.0&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//cout &lt;&lt; buf.val &lt;&lt; endl;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			fs.Write( &nbsp;b&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
@@ -1518,171 +1584,175 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       287">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;287&nbsp;&nbsp;</A>void saveas( &nbsp;&nbsp;);<BR>
-<A NAME="jackfft.C:       288">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;288&nbsp;&nbsp;</A>void save( &nbsp;&nbsp;)<BR>
+<A NAME="jackfft.C:       323">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;323&nbsp;&nbsp;</A>void saveas( &nbsp;&nbsp;);<BR>
+<A NAME="jackfft.C:       324">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;324&nbsp;&nbsp;</A>void save( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;fname.length( &nbsp;&nbsp;)==0&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;fname.length( &nbsp;&nbsp;) == 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		saveas( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	FileStream fs( &nbsp;File( &nbsp;fname.c_str( &nbsp;&nbsp;), &nbsp;O_CREAT|O_WRONLY|O_TRUNC, &nbsp;0666&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	FileStream fs( &nbsp;File( &nbsp;fname.c_str( &nbsp;&nbsp;), &nbsp; O_CREAT | O_WRONLY | O_TRUNC, &nbsp; 0666&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	do_save( &nbsp;fs&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	fs.Close( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:       300">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;300&nbsp;&nbsp;</A>void do_load( &nbsp;Stream&amp; fs&nbsp;)<BR>
+<A NAME="jackfft.C:       336">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;336&nbsp;&nbsp;</A>void do_load( &nbsp;Stream&amp; fs&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	try<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//FileStream fs( &nbsp;File( &nbsp;fname.c_str( &nbsp;&nbsp;), &nbsp;O_RDONLY&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		struct<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double freq; double val;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double freq;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			double val;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		} buf;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Buffer b( &nbsp;&amp;buf, &nbsp;sizeof( &nbsp;buf&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt i1=0;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		double last_v=0.5;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		while( &nbsp;fs.Read( &nbsp;b&nbsp;)&gt;=b.Length&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Buffer b( &nbsp;&amp;buf, &nbsp; sizeof( &nbsp;buf&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		UInt i1 = 0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		double last_v = 0.5;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		while( &nbsp;fs.Read( &nbsp;b&nbsp;) &gt;= b.Length&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//cout &lt;&lt; buf.freq &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt i2=( &nbsp;UInt&nbsp;)round( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)buf.freq/( &nbsp;srate/2&nbsp;)&nbsp;)*EQ_POINTS&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			UInt i2 = ( &nbsp;UInt&nbsp;)round( &nbsp;scale_freq_r( &nbsp;( &nbsp;double&nbsp;)buf.freq / ( &nbsp;srate / 2&nbsp;)&nbsp;) * EQ_POINTS&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//cout &lt;&lt; i2 &lt;&lt; endl;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;i2&gt;EQ_POINTS&nbsp;)break;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;UInt i=i1;i&lt;i2;i++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				c-&gt;data[i]=scale_value_r( &nbsp;last_v*( &nbsp;i2-i&nbsp;)/( &nbsp;i2-i1&nbsp;)+buf.val*( &nbsp;i-i1&nbsp;)/( &nbsp;i2-i1&nbsp;)&nbsp;)/2.0;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			i1=i2;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			last_v=buf.val;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;i2 &gt; EQ_POINTS&nbsp;)break;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			for( &nbsp;UInt i = i1; i &lt; i2; i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;				c-&gt;data[i] = scale_value_r( &nbsp;last_v * ( &nbsp;i2 - i&nbsp;) / ( &nbsp;i2 - i1&nbsp;) + buf.val * ( &nbsp;i - i1&nbsp;) / ( &nbsp;i2 - i1&nbsp;)&nbsp;) / 2.0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			i1 = i2;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			last_v = buf.val;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt i=i1;i&lt;EQ_POINTS;i++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			c-&gt;data[i]=scale_value_r( &nbsp;last_v&nbsp;)/2.0;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;UInt i = i1; i &lt; EQ_POINTS; i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			c-&gt;data[i] = scale_value_r( &nbsp;last_v&nbsp;) / 2.0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		c-&gt;queue_draw( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		update_fft( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	catch( &nbsp;Exception&amp; ex&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	catch( &nbsp;Exception&amp; ex&nbsp;) {}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	catch( &nbsp;exception&amp; ex&nbsp;) {}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	catch( &nbsp;Glib::Exception&amp; ex&nbsp;) {}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:       333">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;333&nbsp;&nbsp;</A>void loadfile( &nbsp;&nbsp;);<BR>
-<A NAME="jackfft.C:       334">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;334&nbsp;&nbsp;</A>void load( &nbsp;&nbsp;)<BR>
+<A NAME="jackfft.C:       370">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;370&nbsp;&nbsp;</A>void loadfile( &nbsp;&nbsp;);<BR>
+<A NAME="jackfft.C:       371">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;371&nbsp;&nbsp;</A>void load( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	try{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;fname.length( &nbsp;&nbsp;)==0&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	try {<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;fname.length( &nbsp;&nbsp;) == 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			loadfile( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		FileStream fs( &nbsp;File( &nbsp;fname.c_str( &nbsp;&nbsp;), &nbsp;O_RDONLY&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		FileStream fs( &nbsp;File( &nbsp;fname.c_str( &nbsp;&nbsp;), &nbsp; O_RDONLY&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		do_load( &nbsp;fs&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fs.Close( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}catch( &nbsp;Exception&amp; ex&nbsp;){}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	} catch( &nbsp;Exception&amp; ex&nbsp;) {}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	catch( &nbsp;exception&amp; ex&nbsp;) {}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	catch( &nbsp;Glib::FileError&amp; ex&nbsp;) {}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-<A NAME="jackfft.C:       348">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;348&nbsp;&nbsp;</A>void saveas( &nbsp;&nbsp;)<BR>
+<A NAME="jackfft.C:       387">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;387&nbsp;&nbsp;</A>void saveas( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::FileChooserDialog* d;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"filechooserdialog1", &nbsp;d&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"filechooserdialog1", &nbsp; d&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Window* w;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"window1", &nbsp;w&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"window1", &nbsp; w&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;set_transient_for( &nbsp;*w&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;set_action( &nbsp;FILE_CHOOSER_ACTION_SAVE&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Button* b1=d-&gt;add_button( &nbsp;Stock::SAVE, &nbsp;RESPONSE_OK&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;d-&gt;run( &nbsp;&nbsp;)==RESPONSE_OK&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Button* b1 = d-&gt;add_button( &nbsp;Stock::SAVE, &nbsp; RESPONSE_OK&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;d-&gt;run( &nbsp;&nbsp;) == RESPONSE_OK&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		GIOGenericStream s=Glib::RefPtr&lt;Gio::OutputStream&gt;::cast_dynamic( &nbsp;d-&gt;get_file( &nbsp;&nbsp;)-&gt;replace( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		GIOGenericStream s = Glib::RefPtr&lt;Gio::OutputStream&gt;::cast_dynamic( &nbsp;d-&gt;get_file( &nbsp;&nbsp;)-&gt;replace( &nbsp;&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		do_save( &nbsp;s&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		s.Close( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fname=d-&gt;get_filename( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;fname.length( &nbsp;&nbsp;)&lt;=0&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fname = d-&gt;get_filename( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;fname.length( &nbsp;&nbsp;) &lt;= 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp;"current file name could not be updated because the file path is not obtainable( &nbsp;not a local file?&nbsp;)"&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "current file name could not be updated because the file path is not obtainable( &nbsp;not a local file?&nbsp;)"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;hide( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b1-&gt;get_parent( &nbsp;&nbsp;)-&gt;Gtk::Container::remove( &nbsp;*b1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	delete b1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       372">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;372&nbsp;&nbsp;</A>void loadfile( &nbsp;&nbsp;)<BR>
+<A NAME="jackfft.C:       411">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;411&nbsp;&nbsp;</A>void loadfile( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::FileChooserDialog* d;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"filechooserdialog1", &nbsp;d&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"filechooserdialog1", &nbsp; d&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Window* w;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"window1", &nbsp;w&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"window1", &nbsp; w&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;set_transient_for( &nbsp;*w&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;set_action( &nbsp;FILE_CHOOSER_ACTION_OPEN&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Button* b=d-&gt;add_button( &nbsp;Stock::OPEN, &nbsp;RESPONSE_OK&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;d-&gt;run( &nbsp;&nbsp;)==RESPONSE_OK&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Button* b = d-&gt;add_button( &nbsp;Stock::OPEN, &nbsp; RESPONSE_OK&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;d-&gt;run( &nbsp;&nbsp;) == RESPONSE_OK&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		GIOGenericStream s=Glib::RefPtr&lt;Gio::InputStream&gt;::cast_dynamic( &nbsp;d-&gt;get_file( &nbsp;&nbsp;)-&gt;read( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		GIOGenericStream s = Glib::RefPtr&lt;Gio::InputStream&gt;::cast_dynamic( &nbsp;d-&gt;get_file( &nbsp;&nbsp;)-&gt;read( &nbsp;&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		do_load( &nbsp;s&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		s.Close( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fname=d-&gt;get_filename( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;fname.length( &nbsp;&nbsp;)&lt;=0&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fname = d-&gt;get_filename( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;fname.length( &nbsp;&nbsp;) &lt;= 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp;"current file name could not be updated because the file path is not obtainable( &nbsp;not a local file?&nbsp;)"&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			WARN( &nbsp;1, &nbsp; "current file name could not be updated because the file path is not obtainable( &nbsp;not a local file?&nbsp;)"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;hide( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_parent( &nbsp;&nbsp;)-&gt;Gtk::Container::remove( &nbsp;*b&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	delete b;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       396">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;396&nbsp;&nbsp;</A>void apply_pitchshift1( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;** filt2&nbsp;)<BR>
+<A NAME="jackfft.C:       435">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;435&nbsp;&nbsp;</A>void apply_pitchshift1( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;** filt2&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	double asdf=1.;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	double asdf = 1.;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::CheckButton* cb;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Entry* e;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"c_pitchshift", &nbsp;cb&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"c_pitchshift", &nbsp; cb&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;cb-&gt;get_active( &nbsp;&nbsp;)&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_pitch1", &nbsp;e&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		asdf=strtod( &nbsp;e-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;), &nbsp;NULL&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_pitch2", &nbsp;e&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		asdf/=strtod( &nbsp;e-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;), &nbsp;NULL&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_pitch", &nbsp; e&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		asdf = strtod( &nbsp;e-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;), &nbsp; NULL&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		asdf=pow( &nbsp;2, &nbsp;asdf/8.d&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//b-&gt;get_widget( &nbsp;"t_pitch2", &nbsp; e&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//asdf /= strtod( &nbsp;e-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;), &nbsp; NULL&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;filt2!=NULL&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;filt2 != NULL&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;size_t i=0;i&lt;inputs.size( &nbsp;&nbsp;);i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;size_t i = 0; i &lt; inputs.size( &nbsp;&nbsp;); i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i]==NULL&nbsp;)continue;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			filt2[i]-&gt;freq_scale=asdf;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			if( &nbsp;filt2[i] == NULL&nbsp;)continue;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			filt2[i]-&gt;freq_scale = asdf;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		return;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i=0;i&lt;inputs.size( &nbsp;&nbsp;);i++&nbsp;)<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[i]&nbsp;)-&gt;freq_scale=asdf;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;size_t i = 0; i &lt; inputs.size( &nbsp;&nbsp;); i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[i]&nbsp;)-&gt;freq_scale = asdf;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       421">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;421&nbsp;&nbsp;</A>void apply_pitchshift( &nbsp;&nbsp;)<BR>
+<A NAME="jackfft.C:       461">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;461&nbsp;&nbsp;</A>void apply_pitchshift( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	apply_pitchshift1( &nbsp;NULL&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       425">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;425&nbsp;&nbsp;</A>void apply_label_workaround( &nbsp;Gtk::Label* l&nbsp;)<BR>
+<A NAME="jackfft.C:       465">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;465&nbsp;&nbsp;</A>void apply_label_workaround( &nbsp;Gtk::Label* l&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	l-&gt;signal_size_allocate( &nbsp;&nbsp;).connect( &nbsp;[l]( &nbsp;Allocation&amp; a&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	l-&gt;signal_size_allocate( &nbsp;&nbsp;).connect( &nbsp;[l]( &nbsp;Allocation &amp; a&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		l-&gt;set_size_request( &nbsp;a.get_width( &nbsp;&nbsp;)-5, &nbsp;-1&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		l-&gt;set_size_request( &nbsp;a.get_width( &nbsp;&nbsp;) - 5, &nbsp; -1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//l-&gt;set_size_request( &nbsp;-1, &nbsp;-1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
-<A NAME="jackfft.C:       433">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;433&nbsp;&nbsp;</A>int main ( &nbsp;int argc, &nbsp; char *argv[]&nbsp;)<BR>
+<A NAME="jackfft.C:       473">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;473&nbsp;&nbsp;</A>int main( &nbsp;int argc, &nbsp; char *argv[]&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	memset( &nbsp;&amp;last_refreshed, &nbsp;0, &nbsp;sizeof( &nbsp;last_refreshed&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;int i=1;i&lt;argc;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	memset( &nbsp;&amp;last_refreshed, &nbsp; 0, &nbsp; sizeof( &nbsp;last_refreshed&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;int i = 1; i &lt; argc; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		string tmp( &nbsp;argv[i]&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;tmp=="-s"&nbsp;)display_spectrum=true;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;tmp == "-s"&nbsp;)display_spectrum = true;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Util.ChDir( &nbsp;Util.GetDirFromPath( &nbsp;Util.GetProgramPath( &nbsp;&nbsp;)&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//goto aaaaa;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//fft=rfftw_create_plan( &nbsp;8192, &nbsp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i=0;i&lt;CHANNELS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i = 0; i &lt; CHANNELS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		FFTFilter&lt;jack_default_audio_sample_t&gt;* trololo=new FFTFilter&lt;jack_default_audio_sample_t&gt;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		FFTFilter&lt;jack_default_audio_sample_t&gt;* trololo = new FFTFilter&lt;jack_default_audio_sample_t&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//bs, &nbsp; inbuffers, &nbsp;	outbuffers, &nbsp;	overlap, &nbsp;buffersperperiod, &nbsp;	padding, &nbsp;	fftsize<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		( &nbsp;1024, &nbsp; 16, &nbsp;			16, &nbsp;			2, &nbsp;		12, &nbsp;					2, &nbsp;			8192*2&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		( &nbsp;1024, &nbsp; 20, &nbsp;			20, &nbsp;			2, &nbsp;		12, &nbsp;					2, &nbsp;			8192 * 2&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//trololo-&gt;freq_scale=9./10.;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]=trololo;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i] = trololo;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/*CircularQueue&lt;int&gt; q( &nbsp;2, &nbsp;3&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	auto tmp=q.BeginAppend( &nbsp;&nbsp;);<BR>
@@ -1707,7 +1777,7 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	( &nbsp;&amp;q.GetPointer( &nbsp;tmp&nbsp;)&nbsp;)[1]=7890;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	( &nbsp;&amp;q.GetPointer( &nbsp;tmp&nbsp;)&nbsp;)[2]=78901;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	q.EndAppend( &nbsp;tmp&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	while( &nbsp;( &nbsp;tmp=q.BeginDequeue( &nbsp;&nbsp;)&nbsp;)&gt;=0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		cout &lt;&lt; ( &nbsp;&amp;q.GetPointer( &nbsp;tmp&nbsp;)&nbsp;)[0] &lt;&lt; endl;<BR>
@@ -1715,123 +1785,145 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		cout &lt;&lt; ( &nbsp;&amp;q.GetPointer( &nbsp;tmp&nbsp;)&nbsp;)[2] &lt;&lt; endl &lt;&lt; "-----" &lt;&lt; endl;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		q.EndDequeue( &nbsp;tmp&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return 0;*/<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_client_t *client;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_set_error_function ( &nbsp;error&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_set_error_function( &nbsp;error&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	JackStatus st;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if ( &nbsp;( &nbsp;client = jack_client_open ( &nbsp;"jackfft", &nbsp;JackNoStartServer, &nbsp;&amp;st&nbsp;)&nbsp;) == 0&nbsp;) {<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fprintf ( &nbsp;stderr, &nbsp; "could not connect to server: status %i\n", &nbsp;st&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;( &nbsp;client = jack_client_open( &nbsp;"jackfft", &nbsp; JackNoStartServer, &nbsp; &amp;st&nbsp;)&nbsp;) == 0&nbsp;) {<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fprintf( &nbsp;stderr, &nbsp; "could not connect to server: status %i\n", &nbsp; st&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		return 1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_set_process_callback ( &nbsp;client, &nbsp; process, &nbsp; 0&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_on_shutdown ( &nbsp;client, &nbsp; jack_shutdown, &nbsp; 0&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	printf ( &nbsp;"engine sample rate: %u\n", &nbsp; srate=jack_get_sample_rate ( &nbsp;client&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_set_process_callback( &nbsp;client, &nbsp; process, &nbsp; 0&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_on_shutdown( &nbsp;client, &nbsp; jack_shutdown, &nbsp; 0&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	printf( &nbsp;"engine sample rate: %u\n", &nbsp; srate = jack_get_sample_rate( &nbsp;client&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/* create ports */<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	int i;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;i=0;i&lt;CHANNELS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;i = 0; i &lt; CHANNELS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		inputs.push_back( &nbsp;jack_port_register ( &nbsp;client, &nbsp; CONCAT( &nbsp;"input_"&lt;&lt;i&nbsp;).c_str( &nbsp;&nbsp;), &nbsp; <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						 JACK_DEFAULT_AUDIO_TYPE, &nbsp; JackPortIsInput, &nbsp; 0&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		outputs.push_back( &nbsp;jack_port_register ( &nbsp;client, &nbsp; CONCAT( &nbsp;"output_"&lt;&lt;i&nbsp;).c_str( &nbsp;&nbsp;), &nbsp; <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						 JACK_DEFAULT_AUDIO_TYPE, &nbsp; JackPortIsOutput, &nbsp; 0&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		inputs.push_back( &nbsp;jack_port_register( &nbsp;client, &nbsp; CONCAT( &nbsp;"input_" &lt;&lt; i&nbsp;).c_str( &nbsp;&nbsp;), &nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						JACK_DEFAULT_AUDIO_TYPE, &nbsp; JackPortIsInput, &nbsp; 0&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		outputs.push_back( &nbsp;jack_port_register( &nbsp;client, &nbsp; CONCAT( &nbsp;"output_" &lt;&lt; i&nbsp;).c_str( &nbsp;&nbsp;), &nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;						JACK_DEFAULT_AUDIO_TYPE, &nbsp; JackPortIsOutput, &nbsp; 0&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//aaaaa:<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Main kit( &nbsp;argc, &nbsp; argv&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b = Gtk::Builder::create_from_file( &nbsp;"main2.ui"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Window* w;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//Gtk::Grid* g;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//Gtk::EventBox* eb;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Button* bt;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"window1", &nbsp;w&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c=new EQControl( &nbsp;EQ_POINTS&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c-&gt;Change+=EQControl::ChangeDelegate( &nbsp;&amp;on_change, &nbsp;c&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c-&gt;MouseMove+=EQControl::MouseDelegate( &nbsp;&amp;on_mousemove, &nbsp;c&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"window1", &nbsp; w&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c = new EQControl( &nbsp;EQ_POINTS&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c-&gt;Change += EQControl::ChangeDelegate( &nbsp;&amp;on_change, &nbsp; c&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c-&gt;MouseMove += EQControl::MouseDelegate( &nbsp;&amp;on_mousemove, &nbsp; c&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//UInt complexsize = ( &nbsp;UInt&nbsp;)( &nbsp;( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[0]&nbsp;)-&gt;PeriodSize( &nbsp;&nbsp;) / 2&nbsp;) + 1;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_save", &nbsp;bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_save", &nbsp; bt&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;&amp;save&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_saveas", &nbsp;bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_saveas", &nbsp; bt&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;&amp;saveas&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_open", &nbsp;bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_open", &nbsp; bt&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;&amp;loadfile&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_revert", &nbsp;bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_revert", &nbsp; bt&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;&amp;load&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_apply", &nbsp;bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_apply", &nbsp; bt&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;&amp;apply_pitchshift&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::CheckButton* cb;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"c_pitchshift", &nbsp;cb&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"c_pitchshift", &nbsp; cb&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	cb-&gt;signal_toggled( &nbsp;&nbsp;).connect( &nbsp;&amp;apply_pitchshift&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Label* lb;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"label8", &nbsp;lb&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"label8", &nbsp; lb&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	apply_label_workaround( &nbsp;lb&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_params", &nbsp;bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_params", &nbsp; bt&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;[]( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Window* w1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Dialog* d;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"window1", &nbsp;w1&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"dialog1", &nbsp;d&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"window1", &nbsp; w1&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"dialog1", &nbsp; d&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		d-&gt;set_transient_for( &nbsp;*w1&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;d-&gt;run( &nbsp;&nbsp;)!=RESPONSE_APPLY&nbsp;)goto hhhhh;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;d-&gt;run( &nbsp;&nbsp;) != RESPONSE_APPLY&nbsp;)goto hhhhh;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		FFTFilter&lt;jack_default_audio_sample_t&gt;** tmp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		tmp=new FFTFilter&lt;jack_default_audio_sample_t&gt;*[CHANNELS];<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		tmp = new FFTFilter&lt;jack_default_audio_sample_t&gt;*[CHANNELS];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Int bs, &nbsp; overlap, &nbsp; bpp, &nbsp; padding, &nbsp; fftsize;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Entry* ent;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_bs", &nbsp;ent&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		bs=atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_overlap", &nbsp;ent&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		overlap=atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_bpp", &nbsp;ent&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		bpp=atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_padding", &nbsp;ent&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		padding=atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_fftsize", &nbsp;ent&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fftsize=atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_bs", &nbsp; ent&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		bs = atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_overlap", &nbsp; ent&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		overlap = atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_bpp", &nbsp; ent&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		bpp = atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_padding", &nbsp; ent&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		padding = atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_fftsize", &nbsp; ent&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fftsize = atoi( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Int buffers;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		buffers=bpp+padding*2;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;int i=0;i&lt;CHANNELS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		buffers = ( &nbsp;bpp + padding * 2&nbsp;) + 4;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;int i = 0; i &lt; CHANNELS; i++&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmp[i]=new FFTFilter&lt;jack_default_audio_sample_t&gt;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			tmp[i] = new FFTFilter&lt;jack_default_audio_sample_t&gt;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			//bs, &nbsp; inbuffers, &nbsp;	outbuffers, &nbsp;	overlap, &nbsp;buffersperperiod, &nbsp;	padding, &nbsp;	fftsize<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			( &nbsp;bs, &nbsp;  buffers, &nbsp;		buffers, &nbsp;	overlap, &nbsp;bpp, &nbsp;				padding, &nbsp;	fftsize&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			( &nbsp;bs, &nbsp;  buffers, &nbsp;		buffers, &nbsp;	overlap, &nbsp; bpp, &nbsp;				padding, &nbsp;	fftsize&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		update_fft( &nbsp;tmp&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		apply_pitchshift1( &nbsp;tmp&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt2=tmp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt2 = tmp; //assumed to be atomic on all cpus, &nbsp; otherwise the cpu sucks and is not supported<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hhhhh:<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		d-&gt;hide( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"b_shift", &nbsp; bt&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	bt-&gt;signal_clicked( &nbsp;&nbsp;).connect( &nbsp;[]( &nbsp;&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Window* w1;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Dialog* d;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"window1", &nbsp; w1&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"dialog_shift", &nbsp; d&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		d-&gt;set_transient_for( &nbsp;*w1&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		if( &nbsp;d-&gt;run( &nbsp;&nbsp;) != RESPONSE_OK&nbsp;)goto hhhhh;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Entry* ent;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"t_x", &nbsp; ent&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		double x;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		x = atof( &nbsp;ent-&gt;get_text( &nbsp;&nbsp;).c_str( &nbsp;&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		for( &nbsp;Int i=0;i&lt;EQ_POINTS;i++&nbsp;)<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;			c-&gt;data[i]=scale_value_r( &nbsp;scale_value( &nbsp;c-&gt;data[i]&nbsp;)*pow( &nbsp;2, &nbsp;x&nbsp;)&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		c-&gt;do_draw( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		update_fft( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	hhhhh:<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		d-&gt;hide( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::FileChooserDialog* d;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"filechooserdialog1", &nbsp;d&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"filechooserdialog1", &nbsp; d&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//d-&gt;signal_response( &nbsp;&nbsp;).connect( &nbsp;&amp;on_response&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;add_button( &nbsp;Stock::CANCEL, &nbsp;RESPONSE_CANCEL&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	d-&gt;add_button( &nbsp;Stock::CANCEL, &nbsp; RESPONSE_CANCEL&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	Gtk::Viewport* v;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"viewport1", &nbsp;v&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"viewport1", &nbsp; v&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	v-&gt;add( &nbsp;*c&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//c-&gt;set_hexpand( &nbsp;true&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//c-&gt;set_vexpand( &nbsp;true&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c-&gt;show( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"viewport2", &nbsp;v&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"viewport2", &nbsp; v&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//if( &nbsp;display_spectrum&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		c2=new EQControl( &nbsp;EQ_POINTS&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		v-&gt;add( &nbsp;*c2&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		c2-&gt;show( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		c2-&gt;MouseMove+=EQControl::MouseDelegate( &nbsp;&amp;on_mousemove, &nbsp;c2&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c2 = new EQControl( &nbsp;EQ_POINTS&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	v-&gt;add( &nbsp;*c2&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c2-&gt;show( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	c2-&gt;MouseMove += EQControl::MouseDelegate( &nbsp;&amp;on_mousemove, &nbsp; c2&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/*}<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	else<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
@@ -1839,22 +1931,22 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"table1", &nbsp;t1&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		t1-&gt;remove( &nbsp;*v&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}*/<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"c_spectrum", &nbsp;cb&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	b-&gt;get_widget( &nbsp;"c_spectrum", &nbsp; cb&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	cb-&gt;set_active( &nbsp;display_spectrum&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	v-&gt;set_visible( &nbsp;display_spectrum&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	cb-&gt;signal_toggled( &nbsp;&nbsp;).connect( &nbsp;[cb]( &nbsp;&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		display_spectrum=cb-&gt;get_active( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		display_spectrum = cb-&gt;get_active( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		Gtk::Viewport* vp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"viewport2", &nbsp;vp&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		b-&gt;get_widget( &nbsp;"viewport2", &nbsp; vp&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		vp-&gt;set_visible( &nbsp;display_spectrum&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//b-&gt;get_widget( &nbsp;"grid1", &nbsp;g&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//b-&gt;get_widget( &nbsp;"eventbox1", &nbsp;eb&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	/*eb-&gt;signal_motion_notify_event( &nbsp;&nbsp;).connect( &nbsp;sigc::ptr_fun( &nbsp;&amp;on_motion_notify&nbsp;)&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	pb=new Gtk::ProgressBar[freqs];<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	for( &nbsp;UInt i=0;i&lt;freqs;i++&nbsp;)<BR>
@@ -1873,16 +1965,23 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//if( &nbsp;i==0&nbsp;)pb_size=p-&gt;get_allocation( &nbsp;&nbsp;).get_width( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}*/<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	load( &nbsp;&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if ( &nbsp;jack_activate ( &nbsp;client&nbsp;)&nbsp;) {<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fprintf ( &nbsp;stderr, &nbsp; "cannot activate client"&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	if( &nbsp;jack_activate( &nbsp;client&nbsp;)&nbsp;) {<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		fprintf( &nbsp;stderr, &nbsp; "cannot activate client"&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		return 1;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	}<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	kit.run( &nbsp;*w&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	g_thread_init ( &nbsp;NULL&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	gdk_threads_init( &nbsp;&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	//glib_threads_init( &nbsp;&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_client_close ( &nbsp;client&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	pthread_t thr;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	pthread_create( &nbsp;&amp;thr, &nbsp;NULL, &nbsp;&amp;thread1, &nbsp;NULL&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	kit.run( &nbsp;*w&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	jack_client_close( &nbsp;client&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	return 0;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
 </TT>
 <H1><A NAME="">jackfftc.C</A></H1>
 <TT>
@@ -1922,8 +2021,8 @@ source file
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					( &nbsp;jack_default_audio_sample_t *&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;					jack_port_get_buffer ( &nbsp;inputs[i], &nbsp; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]-&gt;PutData( &nbsp;in, &nbsp; length&nbsp;);<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]-&gt;GetData( &nbsp;out, &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		filt[i]-&gt;Process( &nbsp;in, &nbsp; out, &nbsp; length&nbsp;);<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		//filt[i]-&gt;GetData( &nbsp;out, &nbsp; length&nbsp;);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		/*Int a;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		while( &nbsp;( &nbsp;a = ( &nbsp;( &nbsp;FFTFilter&lt;jack_default_audio_sample_t&gt;*&nbsp;)filt[i]&nbsp;)-&gt;OutBuffer.BeginDequeue( &nbsp;&nbsp;)&nbsp;) &gt;= 0&nbsp;)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;		{<BR>

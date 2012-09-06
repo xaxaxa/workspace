@@ -30,40 +30,40 @@
 <module>
 <name>CircularQueue</name>
 <client_module>
-<name>BufferedFilter</name>
+<name>BufferedFilterHelper</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="47" />
+<source_reference file="filter.H" line="75" />
 </extent>
 <name>FilterBuffer2</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="718" />
+<source_reference file="filter.H" line="748" />
 </extent>
 <name>OverlappedFilter</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="144" />
+<source_reference file="filter.H" line="172" />
 </extent>
 <name>OverlappedFilter2</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="328" />
+<source_reference file="filter.H" line="356" />
 </extent>
 <name>OverlappedFilter3</name>
 <visible>true</visible>
 <concrete>true</concrete>
 <extent>
 <description>has by value</description>
-<source_reference file="filter.H" line="540" />
+<source_reference file="filter.H" line="570" />
 </extent>
 </client_module>
 <supplier_module>

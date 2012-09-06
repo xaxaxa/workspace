@@ -1,0 +1,1 @@
+cmd_/home/xaxaxa/nfs/workspace/trollfs/trollfs.ko.unsigned := ld -r -m elf_x86_64 -T /usr/src/linux-headers-2.6.32-042stab059.7/scripts/module-common.lds --build-id -o /home/xaxaxa/nfs/workspace/trollfs/trollfs.ko.unsigned /home/xaxaxa/nfs/workspace/trollfs/trollfs.o /home/xaxaxa/nfs/workspace/trollfs/trollfs.mod.o 

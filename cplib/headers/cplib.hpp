@@ -1546,8 +1546,10 @@ namespace xaxaxa
 				if((c&Cap::Seek)==Cap::None)throw NotSupportedException();
 				Glib::RefPtr<Gio::Seekable> s=Glib::RefPtr<Gio::Seekable>::cast_dynamic(f);
 				s->truncate(newlen);
+				return newlen;
 			}
 			else throw NotSupportedException();
+			//return 0;
 		}
 		virtual Cap Capabilities()
 		{	return c;}
@@ -2607,7 +2609,7 @@ namespace xaxaxa
 
 		}
 	};
-	
+
 
 	class Util_c
 	{
@@ -2743,13 +2745,13 @@ namespace xaxaxa
 			// Get the address at the time the signal was raised from the EIP (x86)
 			void * caller_address = (void *) uc->uc_mcontext.eip;
 
-			std::cerr << "signal " << sig_num 
-					  << " (" << strsignal(sig_num) << "), address is " 
-					  << info->si_addr << " from " 
+			std::cerr << "signal " << sig_num
+					  << " (" << strsignal(sig_num) << "), address is "
+					  << info->si_addr << " from "
 					  << caller_address << std::endl;
 			void * array[50];
 			int size = backtrace(array, 50);
-			std::cerr << __FUNCTION__ << " backtrace returned " 
+			std::cerr << __FUNCTION__ << " backtrace returned "
 					  << size << " frames\n\n";
 			// overwrite sigaction with caller's address
 			array[1] = caller_address;
