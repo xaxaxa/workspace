@@ -178,6 +178,10 @@ namespace xaxaxa
 				__current_task_ = NULL;
 			}
 		}
+		void SocketManager::BeginRead(Socket s, const Buffer& buf, const Callback& cb, bool fill)
+		{
+			BeginRecv(s,buf,cb,fill);
+		}
 		void SocketManager::BeginRecv(Socket s, const Buffer& buf, const Callback& cb, bool fill)
 		{
 			if (__current_task_ != NULL && s._f == __current_task_->s)
@@ -255,6 +259,27 @@ namespace xaxaxa
 					return tmp;
 			}
 		}
+		int SocketManager::EndRead(Socket s)
+		{
+			taskInfo *i = (
+					(__current_task_ != NULL && s._f == __current_task_->s) ? __current_task_ :
+																				&this->info[s._f]);
+			if (!i->bits)
+				throw Exception(
+						"attempted to call SocketManager::EndRecv() on a socket you did not call BeginRecv() on!");
+			if (i->r_errno != 0)
+				throw Exception(i->r_errno);
+			if (i->bits & 2)
+				return i->r_length;
+			else
+			{
+				int tmp = s.Read(i->r_buf);
+				if (tmp < 0)
+					throw Exception(errno);
+				else
+					return tmp;
+			}
+		}
 		int SocketManager::EndRecvFrom(Socket s, EndPoint& ep)
 		{
 			taskInfo *i = (
@@ -298,7 +323,10 @@ namespace xaxaxa
 					return tmp;
 			}
 		}
-
+		void SocketManager::BeginWrite(Socket s, const Buffer& buf, const Callback& cb, bool fill)
+		{
+			BeginSend(s,buf,cb,fill);
+		}
 		void SocketManager::BeginSend(Socket s, const Buffer& buf, const Callback& cb, bool fill)
 		{
 			if (__current_task_ != NULL && s._f == __current_task_->s)
@@ -354,6 +382,27 @@ namespace xaxaxa
 					throw Exception(errno);
 			}
 			//this->info[s._s] = i;
+		}
+		int SocketManager::EndWrite(Socket s)
+		{
+			taskInfo *i = (
+					(__current_task_ != NULL && s._f == __current_task_->s) ? __current_task_ :
+																				&this->info[s._f]);
+			if (!i->bits)
+				throw Exception(
+						"attempted to call SocketManager::EndSend() on a socket you did not call BeginSend() on!");
+			if (i->w_errno != 0)
+				throw Exception(i->w_errno);
+			if (i->bits & 4)
+				return i->w_length;
+			else
+			{
+				int tmp = s.Write(i->w_buf);
+				if (tmp < 0)
+					throw Exception(errno);
+				else
+					return tmp;
+			}
 		}
 		int SocketManager::EndSend(Socket s)
 		{

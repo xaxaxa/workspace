@@ -123,7 +123,31 @@ static struct dentry_operations trollfs_d_op = {
 	d_delete:		trollfs_d_delete,
 	d_iput:		trollfs_d_iput,
 };
-static struct inode_operations trollfs_inode_ops = {
-	
+static struct inode_operations trollfs_file_inode_ops = {
+	setattr:		trollfs_setattr,
+	getattr:		trollfs_getattr,
+	setxattr:		trollfs_setxattr,
+	getxattr:		trollfs_getxattr,
+	listxattr:		trollfs_listxattr,
+	removexattr:	trollfs_removexattr
 };
+struct inode_operations trollfs_dir_inode_iops =
+{
+	create:	trollfs_create,
+	lookup:	trollfs_lookup,
+	link:		trollfs_link,
+	unlink:	trollfs_unlink,
+	symlink:	trollfs_symlink,
+	mkdir:	trollfs_mkdir,
+	rmdir:	trollfs_rmdir,
+	mknod:	trollfs_mknod,
+	rename:	trollfs_rename,
+	getattr:	trollfs_getattr,
+	setattr:	trollfs_setattr,
+	setxattr:	trollfs_setxattr,
+	getxattr:	trollfs_getxattr,
+	listxattr:	trollfs_listxattr,
+	removexattr:trollfs_removexattr
+};
+
 

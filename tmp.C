@@ -2,6 +2,12 @@
 #include <cplib/cplib.hpp>
 #include <cplib/asyncsock.hpp>
 
+#define NICK "hussain12"
+#define USER "hussain12"
+#define RNAME "hussain"
+#define SERV "irc.freenode.net"
+#define PORT 8001
+
 using namespace xaxaxa;
 using namespace Sockets;
 int main()
@@ -15,43 +21,16 @@ int main()
 	sigaction(SIGHUP, &sa, NULL);
 	
 	Socket s(AF_INET,SOCK_STREAM,0);
-	s.Bind(IPEndPoint(IPAddress("0.0.0.0"),16969));
-	s.Listen(10);
-	while(true)
-	{
-		Socket c=s.Accept();
-		//int tmp12345=1;
-		//setsockopt(c._s,SOL_SOCKET,SO_LINGER,&tmp12345,sizeof(tmp12345));
-		try
-		{
-			SocketStream ss(c);
-			StreamReader sr(ss);
-			StringBuilder sb1;
-			while(sr.ReadLine(sb1)>0)
-			{
-				cout << sb1.ToCString() << endl;
-				sb1.Clear();
-			}
-			
-			itr++;
-			StringBuilder sb;
-			sb<<itr;
-			
-			sb << " troll";
-			for(int i=0;i<100;i++)
-				sb << "ol";
-			sb << "\n";
-			
-			for(int i=0;i<1000;i++)
-				c.Send(sb.ToBuffer());
-			c.Shutdown(SHUT_WR);
-			Buffer b(4096);
-			while(c.Recv(b)>0);
-		}catch(Exception& ex){}
-		try
-		{
-			c.Close();
-		}catch(Exception& ex){}
-	}
-	s.Close();
+	s.Connect({"89.16.176.16",PORT});
+	s.BeginRead()
+	
+	stringstream ss;
+	string serv=SERV;
+	string port=PORT;
+	ss << "CAP LS\r\nNICK " << NICK << "\r\nUSER "<< USER << " " << USER << " " << "irc.freenode.org" << " :" << RNAME << "\r\n" << "CAP END\r\n";
+	string s=ss.str();
+	
+	
+	SocketManager* m=SocketManager::GetDefault();
+	m->EventLoop();
 }

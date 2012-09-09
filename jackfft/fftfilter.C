@@ -164,7 +164,7 @@ namespace xaxaxa
 			Int skip_samples=this->PeriodSize()/overlapcount;*/
 
 			//for(Int i=complexsize-1;i>=0;i--)
-			for(UInt i=0;i<complexsize;i++)
+			for(Int i=0;i<(Int)complexsize;i++)
 			{
 				int i2;
 				//if(i>50)

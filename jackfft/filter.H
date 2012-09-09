@@ -419,7 +419,7 @@ trolled:
 			{
 				FLOATTYPE* out1=&OutBuffer.GetPointer(OutBufferPtrs[i1]);
 				//memcpy(out1, tmpbuffer + offset, BufferSize * sizeof(FLOATTYPE));
-				for (UInt i = 0; i < BufferSize; i++)
+				for (Int i = 0; i < (Int)BufferSize; i++)
 				{
 					FLOATTYPE fade;
 					if(overlapcount<=1) fade=0;

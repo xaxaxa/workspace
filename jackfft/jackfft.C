@@ -156,10 +156,8 @@ int process(jack_nframes_t length, void *arg)
 			filt2[i]->PutData(in, length);
 			if(filt2[i]->GetData(out, length) > 0)
 			{
-				if(filt[i]!=NULL)
-					delete filt[i];
-				filt[i]=filt2[i];
-				filt2[i]=NULL;
+				delete filt[i];
+				filt[i] = NULL;
 				continue;
 			}
 		}
@@ -181,14 +179,16 @@ int process(jack_nframes_t length, void *arg)
 		for(register unsigned int ii=0;ii<CHANNELS;ii++)
 			out_samples[ii][i]=avg+(out_samples[ii][i]-avg)*3;
 	}*/
-	if(filt2) {
-		for(size_t i = 0; i < inputs.size(); i++)
-		{
-			if(filt2[i] != NULL)goto asdfghjkl;
-		}
-		delete[] filt2;
-		filt2 = NULL;
+	for(size_t i = 0; i < inputs.size(); i++)
+	{
+		if(filt[i] != NULL)goto asdfghjkl;
 	}
+	for(size_t i = 0; i < inputs.size(); i++)
+	{
+		filt[i] = filt2[i];
+	}
+	delete[] filt2;
+	filt2 = NULL;
 asdfghjkl:
 	FFTFilter<jack_default_audio_sample_t>* trololo = ((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
 	if(display_spectrum && trololo->didprocess)

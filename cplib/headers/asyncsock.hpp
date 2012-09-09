@@ -670,12 +670,16 @@ namespace xaxaxa
 			~SocketManager();
 			virtual void EventLoop();
 			void BeginRecv(Socket s, const Buffer& buf, const Callback& cb, bool fill = false);
+			void BeginRead(Socket s, const Buffer& buf, const Callback& cb, bool fill = false);
 			int EndRecv(Socket s);
+			int EndRead(Socket s);
 			int EndRecvFrom(Socket s, EndPoint& ep);
 			void BeginAccept(Socket s, const Callback& cb);
 			Socket EndAccept(Socket s, int flags = 0);
 			void BeginSend(Socket s, const Buffer& buf, const Callback& cb, bool fill = false);
+			void BeginWrite(Socket s, const Buffer& buf, const Callback& cb, bool fill = false);
 			int EndSend(Socket s);
+			int EndWrite(Socket s);
 			int EndSendTo(Socket s, EndPoint& ep);
 			void BeginConnect(Socket s, EndPoint* ep, const Callback& cb);
 			void EndConnect(Socket s);
