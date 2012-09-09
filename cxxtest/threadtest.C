@@ -1,5 +1,7 @@
 #include <iostream>
 #include <pthread.h>
+#include <stdlib.h>
+
 using namespace std;
 
 pthread_mutex_t mutex;
@@ -39,7 +41,7 @@ int main()
 	{
 		pthread_create(&t[x],NULL,th,(void*)x);
 	}
-	return 0;
-	//while(1)sleep(10);
+	//return 0;
+	while(1)sleep(10);
 }
 
