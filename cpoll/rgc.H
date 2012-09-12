@@ -1,0 +1,161 @@
+//RGC: simple reference counting based garbage collection framework
+#include <cstddef>
+#include <utility>
+namespace RGC
+{
+	typedef volatile int atomic_t;
+	#define atomic_read(v)                  v
+	#define atomic_set(v,i)                 v = i
+	#define atomic_add(i,v)                 v += i
+	#define atomic_sub(i,v)                 v -= i
+	#define atomic_sub_and_test(i,v)        (v -= i) == 0
+	#define atomic_inc(v)                   v++
+	#define atomic_dec(v)                   v--
+	#define atomic_dec_and_test(v)          --v == 0
+	#define atomic_inc_and_test(v)          ++v == 0
+	#define atomic_add_negative(i,v)        (v += i) < 0
+	//static int objs=0;
+	class Object
+	{
+	public:
+		atomic_t refCount; //reference counter
+		Object()
+		{
+			refCount = 1;
+			/*objs++;
+			cout << objs << " objects" << endl;*/
+		}
+		Object(const Object& other)
+		{
+			refCount = 1;
+		}
+		virtual ~Object()
+		{
+			/*objs--;
+			cout << objs << " objects" << endl;*/
+		}
+		inline void retain()
+		{
+			atomic_inc(refCount);
+		}
+		inline void release()
+		{
+			atomic_dec(refCount);
+			if (refCount <= 0) {
+				delete this;
+				//cout << o;
+			}
+		}
+		/*Object& operator=(const Object& other)
+		{
+			//refCount = 1;
+			return *this;
+		}*/
+	};
+	//template<class T> struct Ref;
+	template<class T> struct Ref
+	{
+		T* obj;
+		inline Ref() :
+				obj(NULL)
+		{
+		}
+		//inline Ref(const Ref<T>& other);
+		inline Ref(T* obj) :
+				obj(obj)
+		{
+			if (obj != NULL) obj->retain();
+		}
+		inline Ref(T& obj) :
+				obj(&obj)
+		{
+			if (&obj != NULL) obj.retain();
+		}
+		/*template<class ... ARGS> inline Ref(ARGS&& ... args)
+		:obj(new T(std::forward<ARGS>(args)...))
+		{
+		}*/
+		inline ~Ref()
+		{
+			if (this->obj != NULL) this->obj->release();
+		}
+		Ref(const Ref<T>& other) :
+				obj(other.obj)
+		{
+			if (obj != NULL) obj->retain();
+		}
+		T* operator=(T* obj)
+		{
+			if (this->obj != NULL) this->obj->release();
+			this->obj = obj;
+			if (obj != NULL) obj->retain();
+			return obj;
+		}
+		T* operator=(T& obj)
+		{
+			return operator=(*obj);
+		}
+		Ref& operator=(const Ref& other)
+		{
+			if (this->obj != NULL) this->obj->release();
+			this->obj = other.obj;
+			if (obj != NULL) obj->retain();
+			return *this;
+		}
+		inline T* operator()() const
+		{
+			return obj;
+		}
+		inline T& operator*() const
+		{
+			return *obj;
+		}
+		inline T* operator->() const
+		{
+			return obj;
+		}
+		inline T* get() const
+		{
+			return obj;
+		}
+	};
+	//creates a new instance, but disowns it
+	template<class T, class ... ARGS> inline T* newObj(ARGS&&... args)
+	{
+		T* tmp = new T(std::forward<ARGS>(args)...);
+		tmp->refCount = 0;
+		return tmp;
+	}
+	/*template<class T> struct Ref
+	{
+		T* obj;
+		template<class ... ARGS> inline Ref(ARGS&& ... args)
+		:obj(new T(std::forward<ARGS>(args)...))
+		{
+		}
+		Ref(const Property<T>& prop):obj(prop.obj)
+		{
+			obj->retain();
+		}
+		~Ref()
+		{
+			obj->release();
+		}
+		inline T* operator()() const
+		{
+			return obj;
+		}
+		inline T* operator->() const
+		{
+			return obj;
+		}
+		inline T& operator*() const
+		{
+			return *obj;
+		}
+		inline T* get() const
+		{
+			return obj;
+		}
+	};*/
+}
