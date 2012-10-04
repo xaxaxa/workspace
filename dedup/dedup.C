@@ -220,6 +220,10 @@ struct fileItem1
 	uint64_t fileSize;
 	fileItem f;
 };
+bool comparefileItem1(const fileItem1& a, const fileItem1& b)
+{
+	return a.fileSize<b.fileSize;
+}
 int main(int argc, char** argv)
 {
 	if(argc<2) {
@@ -237,6 +241,7 @@ int main(int argc, char** argv)
 			return;
 		entries.push_back({st.st_size, {path}});
 	}, argv[1]);
+	sort(entries.begin(),entries.end(),comparefileItem1);
 	
 	vector<fileItem> cur_queue;
 	uint64_t cur_filesize=0;
