@@ -12,6 +12,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
+#include "dnstroll.H"
 #include "defines.H"
 #include <iostream>
 #include <cplib/cplib.hpp>
@@ -436,6 +437,11 @@ int main(int argc, char** argv)
 		return iptsocks_main(argc, argv);
 	if (argc > 1 && strcmp(argv[1], "iptsocks") == 0)
 		return iptsocks_main(argc - 1, argv + 1);
+
+	if (argc > 0 && strcmp(argv[0], "dnstroll") == 0)
+		return dnstroll_main(argc, argv);
+	if (argc > 1 && strcmp(argv[1], "dnstroll") == 0)
+		return dnstroll_main(argc - 1, argv + 1);
 	signal(SIGPIPE, SIG_IGN);
 	struct sigaction sa;
 	sa.sa_handler = SIG_IGN;

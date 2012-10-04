@@ -1,0 +1,6 @@
+#!/bin/bash
+. ./vars
+setfacl -m u:"$1":rx "$XAUTHORITY"
+./clean_user "$1"
+su "$1" -c "./run_ssh_lm $SSHLM_DEFAULT_SERVER"
+

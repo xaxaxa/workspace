@@ -1,0 +1,13 @@
+#!/bin/bash
+#do NOT symlink to this script from /etc/init.d
+#instead, use a script like this:
+#cd /path/to/ssh_lm
+#exec ./initscript "$1"
+
+. vars
+case "$1" in
+  start)
+	./run_setsid :0 "$SSHLM_USER" &
+  ;;
+esac
+

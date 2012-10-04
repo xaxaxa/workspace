@@ -1,0 +1,52 @@
+# $1 = executable file
+# $2 = destination
+copy_libs() {
+	local exe
+	local dest
+
+	exe="${1}"
+	dest="${2}"
+
+	[ -f "${exe}" ] || return 1
+
+	# Copy the dependant libraries
+	for x in $(ldd ${exe} 2>/dev/null | sed -e '
+		/\//!d;
+		/linux-gate/d;
+		/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};
+		s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' 2>/dev/null); do
+
+		# Try to use non-optimised libraries where possible.
+		# We assume that all HWCAP libraries will be in tls,
+		# sse2, vfp or neon.
+		nonoptlib=$(echo "${x}" | sed -e 's#/lib/\(tls\|i686\|sse2\|neon\|vfp\).*/\(lib.*\)#/lib/\2#')
+
+		if [ -e "${nonoptlib}" ]; then
+			x="${nonoptlib}"
+		fi
+
+		libname=$(basename "${x}")	
+		dirname=$(dirname "${x}")
+
+		
+		mkdir -p "${dest}/${dirname}"
+		#if [ ! -e "${dest}/${dirname}/${libname}" ]; then
+		#	cp -pL "${x}" "${dest}/${dirname}"
+		#	[ "${verbose}" = "y" ] && echo "Adding library ${x}" || true
+		#fi
+		cp "${x}" "${dest}/${dirname}/"
+	done
+}
+
+copy_exec() {
+	copy_libs "$1" "$2"
+	dirname=$(dirname "${1}")
+	mkdir -p "$2/$dirname"
+	cp -a "$1" "$2/$dirname"
+}
+copy_cmd() {
+	exe="$(which "$1")";
+	copy_exec "$exe" "$2"
+}
+
+

@@ -95,11 +95,12 @@ inline double logn(double n, double x)
 
 //graph to coefficient
 //x: [0.0,2.0]
+static const int graph_range=7.;
 inline double scale_value(double x)
 {
 	//return x*x;
 	double tmp = x - 1.;
-	tmp *= 5.;
+	tmp *= graph_range;
 	/*if(tmp<0)
 		return 1.0/(-tmp*19.0+1.0);
 	else return tmp*19.0+1.0;*/
@@ -116,7 +117,7 @@ inline double scale_value_r(double x)
 {
 	//return x*x;
 	//cout << x << endl;
-	return logn(2, x) / 5. + 1.;
+	return logn(2, x) / graph_range + 1.;
 
 	/*if(std::isnan(x))return 1.0;
 	//else if(x>1.0)return 2.0;
@@ -206,6 +207,13 @@ void* thread1(void* v)
 		Long tmp;
 		efd.Read(BufferRef(&tmp,sizeof(tmp)));
 		WARN(8,tmp);
+		/*bool b=false;
+		for(int i=0;i<CHANNELS;i++) {
+			filt[i]->didprocess=false;
+			filt[i]->doProc();
+			b |= filt[i]->didprocess;
+		}
+		if(!b)continue;*/
 		struct timespec t;
 		clock_gettime(CLOCK_MONOTONIC, &t);
 		if(get_nsec(last_refreshed) + (60 * 1000000) < get_nsec(t))
@@ -470,6 +478,13 @@ void apply_label_workaround(Gtk::Label* l)
 		//l->set_size_request(-1,-1);
 	});
 }
+void setFilterParams(FFTFilter<jack_default_audio_sample_t>& f)
+{
+	/*f.proc=[]() {
+		Long tmp_i=1;
+		efd.Write(BufferRef(&tmp_i,sizeof(tmp_i)));
+	};*/
+}
 int main(int argc, char *argv[])
 {
 	memset(&last_refreshed, 0, sizeof(last_refreshed));
@@ -488,6 +503,7 @@ int main(int argc, char *argv[])
 		(1024, 20,			20,			2,		12,					2,			8192 * 2);
 
 		//trololo->freq_scale=9./10.;
+		setFilterParams(*trololo);
 		filt[i] = trololo;
 	}
 	/*CircularQueue<int> q(2,3);
@@ -611,6 +627,7 @@ int main(int argc, char *argv[])
 			tmp[i] = new FFTFilter<jack_default_audio_sample_t>
 			//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
 			(bs,  buffers,		buffers,	overlap, bpp,				padding,	fftsize);
+			setFilterParams(*(tmp[i]));
 		}
 		update_fft(tmp);
 		apply_pitchshift1(tmp);

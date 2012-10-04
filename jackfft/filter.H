@@ -362,6 +362,7 @@ namespace xaxaxa
 		UInt overlapcount;
 		Int BuffersPerPeriod;
 		Int padding;
+		function<void()> proc;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
 		bool didprocess;
 		inline UInt PeriodSize()
@@ -432,8 +433,7 @@ trolled:
 			}
 		}
 
-
-		void proc()
+		void doProc()
 		{
 			//while((curBuffer_in = InBuffer.BeginDequeue()) >= 0)
 			//	InBuffer.EndDequeue(curBuffer_in);
@@ -553,6 +553,7 @@ trolled:
 		didprocess(false)
 		{
 			//InBuffer = (NUMTYPE*)malloc(sizeof(NUMTYPE)*BufferSize);
+			proc=[this](){this->doProc();};
 			alloc_buffer();
 			BuffersPerPeriod+=padding*2;
 			InBufferPtrs = new UInt[(BuffersPerPeriod+1)+(this->BuffersPerPeriod+1)];

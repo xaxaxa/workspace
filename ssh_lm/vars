@@ -1,0 +1,5 @@
+export SSHLM_USER="xaxaxa"
+export SSHLM_HOME_NEW="/home/xaxaxa/newhome"
+export SSHLM_HOME_OLD="/home/xaxaxa/defaulthome"
+export SSHLM_HOME_SYMLINK="/home/xaxaxa/home"
+export SSHLM_DEFAULT_SERVER="10.2.0.1"

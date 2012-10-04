@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "running user session";
+cd;
+xfce4-session
+

@@ -1,0 +1,7 @@
+#!/bin/bash
+#usage: run DISPLAY USER
+while [ 1 ]; do
+	xinit ./run_session "$2" -- "$1" </dev/null
+	sleep 0.2;
+done;
+

@@ -492,7 +492,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_save">
                 <property name="label">gtk-save</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
@@ -505,7 +505,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_saveas">
                 <property name="label">gtk-save-as</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
@@ -520,7 +520,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_open">
                 <property name="label">gtk-open</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
@@ -535,7 +535,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_revert">
                 <property name="label">gtk-revert-to-saved</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
@@ -550,7 +550,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_shift">
                 <property name="label">Shift...</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
               </object>
@@ -579,7 +579,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkCheckButton" id="c_pitchshift">
                 <property name="label" translatable="yes">Pitch shift</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
                 <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">False</property>
@@ -613,7 +613,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_apply">
                 <property name="label" translatable="yes">apply</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
               </object>
@@ -627,7 +627,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkButton" id="b_params">
                 <property name="label" translatable="yes">Filter parameters...</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
               </object>
@@ -641,7 +641,7 @@ note: if the period size(buffersize*buffersperperiod) is smaller than the FFT si
               <object class="GtkCheckButton" id="c_spectrum">
                 <property name="label" translatable="yes">show spectrum</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
                 <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>

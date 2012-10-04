@@ -12,6 +12,7 @@ CPP_SRCS += \
 C_UPPER_SRCS += \
 ../DNSServer.C \
 ../PacketQueue.C \
+../dnstroll.C \
 ../iptsocks.C 
 
 OBJS += \
@@ -19,6 +20,7 @@ OBJS += \
 ./JoinStream.o \
 ./PacketQueue.o \
 ./asdfghjkl.o \
+./dnstroll.o \
 ./iptsocks.o \
 ./main.o \
 ./socketmux.o 
@@ -32,6 +34,7 @@ CPP_DEPS += \
 C_UPPER_DEPS += \
 ./DNSServer.d \
 ./PacketQueue.d \
+./dnstroll.d \
 ./iptsocks.d 
 
 

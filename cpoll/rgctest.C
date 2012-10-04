@@ -48,7 +48,7 @@ void aaaaa()
 
 
 
-int main(int argc, char **argv)
+int rgctest_main(int argc, char **argv)
 {
 	//aaaaa();
 	/*Ref<FileStream> fs("/dev/urandom",O_RDONLY);

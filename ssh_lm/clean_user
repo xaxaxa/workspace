@@ -1,0 +1,10 @@
+#!/bin/bash
+. vars
+pkill -9 -u "$SSHLM_USER"
+fuser -kMm "$SSHLM_HOME_NEW"
+fusermount -u "$SSHLM_HOME_NEW"
+umount "$SSHLM_HOME_NEW"
+umount -l "$SSHLM_HOME_NEW"
+rm -f "$SSHLM_HOME_SYMLINK"
+ln -s "$SSHLM_HOME_OLD" "$SSHLM_HOME_SYMLINK"
+chown "$SSHLM_USER" "$SSHLM_HOME_SYMLINK"

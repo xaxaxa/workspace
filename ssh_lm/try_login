@@ -1,0 +1,14 @@
+#!/bin/bash
+. ./vars
+echo "aaaaaa"
+export SSHLM_PASSWORD="$4"
+#echo "password is: $PASSWORD"
+export SSH_ASKPASS=`pwd`"/ssh-askpass"
+#echo "$SSH_ASKPASS"
+echo "mounting sshfs filesystem..."
+sshfs "$3@$1:." "$SSHLM_HOME_NEW" -o nonempty,port="$2" || exit 1
+rm -f "$SSHLM_HOME_SYMLINK"
+ln -s "$SSHLM_HOME_NEW" "$SSHLM_HOME_SYMLINK"
+unset SSHLM_PASSWORD
+#xfce4-session
+exit 0

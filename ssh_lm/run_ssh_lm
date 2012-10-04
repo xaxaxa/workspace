@@ -1,0 +1,4 @@
+#!/bin/bash
+xfwm4 &
+./ssh_lm "$1"
+
