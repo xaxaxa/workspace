@@ -81,7 +81,7 @@ int doRead(int fd, uint8_t* buf, int len)
 	return off;
 }
 long long int bytesSaved=0;
-void processDuplicates(int filesize, const vector<fileItem>& q)
+void processDuplicates(uint64_t filesize, const vector<fileItem>& q)
 {
 	cout << "the following files of size " << filesize << " are identical:" << endl;
 	for(int i=0;i<q.size();i++) {
@@ -99,7 +99,7 @@ bool compareBuffers(const bufferItem& b1, const bufferItem& b2)
 	return memcmp(b1.buf, b2.buf, BUFFERSIZE)<0;
 }
 
-void compareFiles(int filesize, int& br, const vector<openedFileItem>& files)
+void compareFiles(uint64_t filesize, uint64_t& br, const vector<openedFileItem>& files)
 {
 	//cout << "comparing " << files.size() << " files" << endl;
 	if(files.size()<2)return;
@@ -110,10 +110,10 @@ void compareFiles(int filesize, int& br, const vector<openedFileItem>& files)
 		uint8_t* buf=new uint8_t[BUFFERSIZE*files.size()];
 		while(br<filesize) {
 			vector<bufferItem> bufs;
-			int expected_br=filesize-br;
+			uint64_t expected_br=filesize-br;
 			if(expected_br>BUFFERSIZE)expected_br=BUFFERSIZE;
 			for(int i=0;i<files.size();i++) {
-				int _br=doRead(files[i].fd,buf+(BUFFERSIZE*i), BUFFERSIZE);
+				uint64_t _br=doRead(files[i].fd,buf+(BUFFERSIZE*i), BUFFERSIZE);
 				if(_br==expected_br) {
 					bufs.push_back({buf+(BUFFERSIZE*i), files[i]});
 					if(br<BUFFERSIZE) memset(buf+(BUFFERSIZE*i)+_br, 0, BUFFERSIZE-_br);
@@ -149,7 +149,7 @@ void compareFiles(int filesize, int& br, const vector<openedFileItem>& files)
 	}
 do_diverge:
 	for(int i=0;i<cur_queues.size();i++) {
-		int br1=br;
+		uint64_t br1=br;
 		compareFiles(filesize, br1, cur_queues[i]);
 	}
 	return;
@@ -161,7 +161,7 @@ aaaaa:
 	processDuplicates(filesize, fileItems);
 }
 
-void processQueue(int filesize, const vector<fileItem>& q)
+void processQueue(uint64_t filesize, const vector<fileItem>& q)
 {
 	if(q.size()<=1 || filesize<DEDUP_MIN_FILESIZE) return;
 	//cout << "processing queue of " << q.size() << " " << filesize << " byte files" << endl;
@@ -194,7 +194,7 @@ void processQueue(int filesize, const vector<fileItem>& q)
 		return;
 	} else {*/
 		uint8_t* buf;
-		int br;
+		uint64_t br;
 		vector<openedFileItem> files;
 		//open all files
 		for(int i=0;i<q.size();i++) {
@@ -210,21 +210,23 @@ void processQueue(int filesize, const vector<fileItem>& q)
 		compareFiles(filesize, br, files);
 		
 	_fail1:
-		for(int i=0;i<q.size();i++)
+		for(int i=0;i<files.size();i++)
 			close(files[i].fd);
 		return;
 	//}
-	
-	
-	
 }
+struct fileItem1
+{
+	uint64_t fileSize;
+	fileItem f;
+};
 int main(int argc, char** argv)
 {
 	if(argc<2) {
 		cout << "usage: " << argv[0] << " DIR" << endl;
 		return 1;
 	}
-	multimap<int,fileItem> entries;
+	vector<fileItem1> entries;
 	scanDir([&entries](const string& p, dirent& ent) {
 		
 		//cout << path << endl;
@@ -233,21 +235,20 @@ int main(int argc, char** argv)
 		struct stat st;
 		if(stat(path.c_str(), &st)!=0)
 			return;
-		entries.insert({st.st_size, {path}});
-		
+		entries.push_back({st.st_size, {path}});
 	}, argv[1]);
 	
 	vector<fileItem> cur_queue;
-	int cur_filesize=0;
+	uint64_t cur_filesize=0;
 	for(auto it=entries.begin();it!=entries.end();it++) {
 		//cout << (*it).first << " " << (*it).second.path << endl;
-		if((*it).first!=0 && (*it).first==cur_filesize) {
+		if((*it).fileSize!=0 && (*it).fileSize==cur_filesize) {
 		} else {
 			processQueue(cur_filesize, cur_queue);
 			cur_queue.resize(0);
-			cur_filesize=(*it).first;
+			cur_filesize=(*it).fileSize;
 		}
-		cur_queue.push_back((*it).second);
+		cur_queue.push_back((*it).f);
 	}
 	cout << "you can save " << bytesSaved << " bytes of disk space" << endl;
 }
