@@ -20,6 +20,11 @@ int main()
 		for(ii=0;ii<bufsize/sizeof(int)-2;ii+=3) {
 			ints[ii+2]=ints[ii]*2+ints[ii+1]*3;
 		}
+		ints[0]=ints[bufsize/sizeof(int)-2];
+		ints[1]=ints[bufsize/sizeof(int)-1];
+		for(ii=0;ii<bufsize/sizeof(int)-2;ii+=3) {
+			ints[ii+2]=ints[ii]*2+ints[ii+1]*3;
+		}
 		asdf+=ints[bufsize/sizeof(int)-1];
 	}
 	
