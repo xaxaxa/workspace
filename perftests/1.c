@@ -5,7 +5,6 @@ int a;
 int main()
 {
 	int i,ii;
-	char* ch="";
 	int asdf=0;
 	for(i=0;i<iterations;i++) {
 		char c[bufsize];
