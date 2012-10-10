@@ -17,7 +17,7 @@ using namespace std;
 
 //1KiB minimum size
 #define DEDUP_MIN_FILESIZE 1024
-#define BUFFERSIZE (1024*64)
+#define BUFFERSIZE (1024*4)
 
 
 //structs
