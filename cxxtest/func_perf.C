@@ -2,9 +2,9 @@
 #include <list>
 #include <vector>
 #include <functional>
-#include <cplib/cplib.hpp>
+//#include <cplib/cplib.hpp>
 using namespace std;
-using namespace xaxaxa;
+//using namespace xaxaxa;
 
 typedef int (*func_t)(int, int);
 struct str1
