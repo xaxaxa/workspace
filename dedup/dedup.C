@@ -19,6 +19,51 @@ using namespace std;
 #define DEDUP_MIN_FILESIZE 1024
 #define BUFFERSIZE (1024*64)
 
+
+//structs
+struct fileItem
+{
+	string path;
+};
+struct openedFileItem
+{
+	fileItem f;
+	int fd;
+};
+struct bufferItem
+{
+	uint8_t* buf;
+	openedFileItem f;
+};
+struct fileItem1
+{
+	uint64_t fileSize;
+	fileItem f;
+};
+struct fileGroup
+{
+	uint64_t fileSize;
+	vector<fileItem> files;
+};
+
+
+//global vars
+volatile uint64_t bytesSaved=0;
+volatile int cur_pos;
+vector<fileGroup> tasks;
+pthread_mutex_t stdio_mutex;
+
+//utility functions
+
+//the variable passed in to cur_iterator should also be declared as volatile
+int atomic_get_and_increment(volatile int& cur_iterator)
+{
+	/*int tmp=cur_iterator;
+	while(!__sync_bool_compare_and_swap(&cur_iterator, tmp, tmp+1));
+	return tmp;*/
+	return __sync_fetch_and_add(&cur_iterator, 1);
+}
+
 string path_combine(string p1, string p2) {
 	/*int i=0, next_i;
 	bool first=true;
@@ -61,15 +106,7 @@ void scanDir(const function<void(const string&,dirent&)>& cb, string dir)
 	closedir(d);
 	
 }
-struct fileItem
-{
-	string path;
-};
-struct openedFileItem
-{
-	fileItem f;
-	int fd;
-};
+
 int doRead(int fd, uint8_t* buf, int len)
 {
 	int off=0;
@@ -80,20 +117,18 @@ int doRead(int fd, uint8_t* buf, int len)
 	}
 	return off;
 }
-long long int bytesSaved=0;
+
 void processDuplicates(uint64_t filesize, const vector<fileItem>& q)
 {
+	pthread_mutex_lock(&stdio_mutex);
 	cout << "the following files of size " << filesize << " are identical:" << endl;
 	for(int i=0;i<q.size();i++) {
 		cout << "\t" << q[i].path << endl;
 	}
-	bytesSaved+=filesize*(q.size()-1);
+	pthread_mutex_unlock(&stdio_mutex);
+	__sync_fetch_and_add(&bytesSaved,filesize*(q.size()-1));
 }
-struct bufferItem
-{
-	uint8_t* buf;
-	openedFileItem f;
-};
+
 bool compareBuffers(const bufferItem& b1, const bufferItem& b2)
 {
 	return memcmp(b1.buf, b2.buf, BUFFERSIZE)<0;
@@ -215,14 +250,26 @@ void processQueue(uint64_t filesize, const vector<fileItem>& q)
 		return;
 	//}
 }
-struct fileItem1
-{
-	uint64_t fileSize;
-	fileItem f;
-};
+
+
 bool comparefileItem1(const fileItem1& a, const fileItem1& b)
 {
 	return a.fileSize<b.fileSize;
+}
+
+void* comparerThread(void* unused)
+{
+	while(true) {
+		int tmp=atomic_get_and_increment(cur_pos);
+		//printf("i: %i\n", tmp);
+		if(tmp>=tasks.size()) return NULL;
+		processQueue(tasks[tmp].fileSize, tasks[tmp].files);
+	}
+}
+fileGroup* appendTask()
+{
+	tasks.resize(tasks.size()+1);
+	return &tasks[tasks.size()-1];
 }
 int main(int argc, char** argv)
 {
@@ -243,17 +290,30 @@ int main(int argc, char** argv)
 	}, argv[1]);
 	sort(entries.begin(),entries.end(),comparefileItem1);
 	
-	vector<fileItem> cur_queue;
+	fileGroup* cur_queue;
 	uint64_t cur_filesize=0;
+	
 	for(auto it=entries.begin();it!=entries.end();it++) {
 		//cout << (*it).first << " " << (*it).second.path << endl;
 		if((*it).fileSize!=0 && (*it).fileSize==cur_filesize) {
 		} else {
-			processQueue(cur_filesize, cur_queue);
-			cur_queue.resize(0);
+			///processQueue(cur_filesize, cur_queue);
+			cur_queue=appendTask();
 			cur_filesize=(*it).fileSize;
+			cur_queue->fileSize=cur_filesize;
 		}
-		cur_queue.push_back((*it).f);
+		cur_queue->files.push_back((*it).f);
+	}
+	
+	int nthreads=32;
+	pthread_t threads[nthreads];
+	cur_pos=0;
+	for(int i=0;i<nthreads;i++) {
+		pthread_create(&threads[i],NULL,comparerThread,NULL);
+	}
+	for(int i=0;i<nthreads;i++) {
+		void* ret;
+		pthread_join(threads[i],&ret);
 	}
 	cout << "you can save " << bytesSaved << " bytes of disk space" << endl;
 }
