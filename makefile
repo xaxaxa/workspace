@@ -1,4 +1,4 @@
-CFLAGS=-L ~/bin -I ~/include
+CFLAGS=-L `pwd`/lib -I `pwd`/include
 all: server123 termchat tmp tmp1 tmp2 nc.xaxaxa
 install: termchat_install nc.xaxaxa_install
 clean:
@@ -19,6 +19,8 @@ tmp2:
 	g++ tmp2.C -o tmp2 --std=c++0x -lcplib -O3 $(CFLAGS)
 nc.xaxaxa:
 	g++ nc.xaxaxa.C -o nc.xaxaxa --std=c++0x -lcplib -O3 $(CFLAGS)
+tcpfuck:
+	g++ tcpfuck.C -o tcpfuck --std=c++0x -lcpoll $(CFLAGS)
 nc.xaxaxa_install:
 	cp -f nc.xaxaxa /usr/local/bin/
 
