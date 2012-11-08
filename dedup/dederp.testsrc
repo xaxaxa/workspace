@@ -1,0 +1,10 @@
+	int nthreads=1;
+	pthread_t threads[nthreads];
+	cur_pos=0;
+	for(int i=0;i<nthreads;i++) {
+		pthread_create(&threads[i],NULL,comparerThread,NULL);
+	}
+	for(int i=0;i<nthreads;i++) {
+		void* ret;
+		pthread_join(threads[i],&ret);
+	}

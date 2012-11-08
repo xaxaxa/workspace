@@ -14,6 +14,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 * */
 
 //RGC: simple reference counting based garbage collection framework
+#ifndef __RGC_H
+#define __RGC_H
 #include <cstddef>
 #include <utility>
 namespace RGC
@@ -53,12 +55,15 @@ namespace RGC
 		{
 			atomic_inc(refCount);
 		}
+		inline void destruct()
+		{
+			delete this;
+		}
 		inline void release()
 		{
 			atomic_dec(refCount);
 			if (refCount <= 0) {
-				delete this;
-				//cout << o;
+				destruct();
 			}
 		}
 		/*Object& operator=(const Object& other)
@@ -189,3 +194,4 @@ namespace RGC
 		
 	};*/
 }
+#endif

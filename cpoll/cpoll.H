@@ -50,9 +50,11 @@
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
 /*
- * CPoll: low level c++ wrapper for poll() and epoll(); can be emulated on other OS's
+ * CPoll: low level c++ wrapper for poll() and epoll(); can be implemented on
+ * other OS's using mechanisms such as overlapped I/O(windows), but currently
+ * there is only a linux implementation; for other OS's patches are welcome ;)
  *
- * usage example:
+ * simple usage example:
  *
  * char buf[4096];
  * char buf2[4096];
@@ -69,7 +71,7 @@
  *
  *
  *
- * complex example:
+ * nested example:
  *
  * File f(0); //stdin
  * char buf[4096];
@@ -182,7 +184,7 @@ namespace CP
 		virtual ~EndPoint() {
 		}
 		static vector<RGC::Ref<EndPoint> > lookupHost(const char* hostname, const char* port,
-				int flags = 0, int socktype = 0, int proto = 0);
+				int family = AF_UNSPEC, int socktype = 0, int proto = 0, int flags = 0);
 		//static EndPoint Resolve(
 	};
 	class IPEndPoint: public EndPoint
@@ -231,59 +233,48 @@ namespace CP
 		virtual void clone(EndPoint& to) const;
 	};
 	
-	
-
 	//===========================================================
 	//======================DATA STRUCTURES======================
 	//===========================================================
 	
 	enum class Events
-:	event_t
-	{
-		none=0,
-		in=1,
-		out=2,
-		other=4,
-		all=7
+		: event_t
+		{
+			none = 0, in = 1, out = 2, other = 4, all = 7
 	};
 
 	enum class Operations
-:	uint8_t
-	{
-		none=0,
-		read=1,
-		write,
-		send,
-		recv,
-		accept,
-		writeAll,
-		sendAll,
-		shutdown
+		: uint8_t
+		{
+			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect
 	};
 
 	struct EventHandlerData
 	{
 	public:
 		Callback cb;
-		union miscUnion {
-			struct {
+		union miscUnion
+		{
+			struct
+			{
 				void* buf;
 				int len;
 				int flags;
 				int len_done;
 			} bufferIO;
-			struct {
+			struct
+			{
 				int how;
 			} shutdown;
 		} misc;
 		Operations op;
 		enum class States
-:		uint8_t {
-			invalid=0,
-			once=1,
-			repeat
+			: uint8_t {
+				invalid = 0, once = 1, repeat
 		} state;
-		EventHandlerData(): state(States::invalid) {}
+		EventHandlerData() :
+				state(States::invalid) {
+		}
 	};
 	struct EventData
 	{
@@ -304,9 +295,11 @@ namespace CP
 		//void* __private;
 		HANDLE handle;
 		bool __deleted;
+		Handle();
 		Handle(HANDLE handle);
 		function<void(Events old_events)> onEventsChange;
-		
+
+		virtual void init(HANDLE handle);
 		///calls the callback associated with the event
 		///only accepts one event
 		virtual void dispatch(Events event, const EventData& evtd)=0;
@@ -325,9 +318,9 @@ namespace CP
 		
 		EventHandlerData eventData[numEvents];
 		bool _supportsEPoll;
-		File(HANDLE handle, bool supportsEPoll=false) :
-				Handle(handle), _supportsEPoll(supportsEPoll) {
-		}
+		File();
+		File(HANDLE handle, bool supportsEPoll = false);
+		virtual void init(HANDLE handle, bool supportsEPoll);
 		Events _getEvents();
 		///only accepts one event
 		EventHandlerData* beginAddEvent(Events event);
@@ -367,28 +360,42 @@ namespace CP
 	public:
 		int addressFamily, type, protocol;
 		//RGC::Ref<EndPoint> peer;
+		Socket();
 		Socket(HANDLE handle, int d, int t, int p);
-		Socket(int d = AF_INET, int t = SOCK_STREAM, int p = 0);
-		
+		Socket(int d, int t = SOCK_STREAM, int p = 0);
+		virtual void init(HANDLE handle, int d, int t, int p);
+		virtual void init(int d, int t, int p);
+
 		//the caller must release() or free() the returned object
 		EndPoint* getLocalEndPoint();
 		//the caller must release() or free() the returned object
 		EndPoint* getRemoteEndPoint();
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
+
 		void connect(const sockaddr *addr, int addr_size);
+		void connect(const EndPoint &ep);
+		void connect(const char* hostname, const char* port, int family = AF_UNSPEC, int socktype =
+				0, int proto = 0, int flags = 0);
 		void bind(const sockaddr *addr, int addr_size);
 		void bind(const EndPoint &ep);
-		void listen(int backlog = 8);
+
 		int shutdown(int how);
 		void shutdown(int how, const Callback& cb);
+		void listen(int backlog = 8);
 		//the caller must release() or free() the returned object
 		Socket* accept();
+
+		void connect(const sockaddr *addr, int addr_size, const Callback& cb);
+		void connect(const EndPoint &ep, const Callback& cb);
+		void connect(const char* hostname, const char* port, const Callback& cb, int family =
+				AF_UNSPEC, int socktype = 0, int proto = 0, int flags = 0);
+
 		//callback function must release() or free() the received object
 		void accept(const function<void(Socket*)>& cb, bool repeat = false);
-		void connect(const EndPoint &ep);
 		inline void repeatAccept(const function<void(Socket*)>& cb) {
 			accept(cb, true);
 		}
+
 	};
 	class SignalFD: public Handle
 	{
@@ -409,10 +416,10 @@ namespace CP
 	//Because of the said reasons, AIO will not be implemented
 	//for now
 	/*class AIO: public SignalFD
-	{
-		
-	};*/
-	
+	 {
+
+	 };*/
+
 	//epoll wrapper
 	class Poll: public Handle
 	{
@@ -432,7 +439,7 @@ namespace CP
 		virtual Events getEvents();
 		virtual int waitAndDispatch();
 		void fillEPollEvents(Handle& h, epoll_event& evt, Events e);
-		
+
 		inline void applyHandle(Handle& h, Events old_e);
 		void add(Handle& h);
 		void del(Handle& h);

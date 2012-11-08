@@ -1,0 +1,3 @@
+<app>
+<button onclick="main.asdf([this.text])">asdfg</button>
+</app>

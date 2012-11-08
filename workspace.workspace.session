@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session Name="/home/xaxaxa/workspace/workspace.workspace">
+  <int Value="0" Name="m_selectedTab"/>
+  <wxString Value="/home/xaxaxa/workspace/workspace.workspace" Name="m_workspaceName"/>
+  <TabInfoArray Name="TabInfoArray">
+    <TabInfo>
+      <wxString Value="/dd/workspace/generic_ui/generic_ui.H" Name="FileName"/>
+      <int Value="6" Name="FirstVisibleLine"/>
+      <int Value="23" Name="CurrentLine"/>
+      <wxArrayString Name="Bookmarks"/>
+    </TabInfo>
+  </TabInfoArray>
+  <SerializedObject Name="m_breakpoints">
+    <long Value="0" Name="Count"/>
+  </SerializedObject>
+</Session>

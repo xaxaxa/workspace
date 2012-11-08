@@ -20,6 +20,69 @@ using namespace std;
 #define BUFFERSIZE (1024*4)
 
 
+
+/*template<class T, int groupSize=64>class workQueue
+{
+	class itemGroup
+	{
+		T items[groupSize];
+		int start,length;
+		itemGroup* next;
+		itemGroup(): start(0), length(0), next(NULL)
+		{}
+	};
+	itemGroup* firstGroup;
+	itemGroup* lastGroup;
+	workQueue():firstGroup(NULL), lastGroup(NULL)
+	{}
+	void appendGroup()
+	{
+		itemGroup* g=new itemGroup();
+		lastGroup->next=g;
+		lastGroup=g;
+	}
+	void popGroup()
+	{
+		itemGroup* tmp=firstGroup;
+		if(tmp==lastGroup)
+			firstGroup=lastGroup=NULL;
+		else {
+			firstGroup=firstGroup->next;
+		}
+		delete tmp;
+	}
+	void append(const T& item)
+	{
+		if(lastGroup==NULL) {
+			lastGroup=new itemGroup();
+			if(firstGroup==NULL)firstGroup=lastGroup;
+		}
+		if(lastGroup->start+lastGroup->length>=groupSize)
+			appendGroup();
+		lastGroup->items[lastGroup->start+lastGroup->length]=item;
+		lastGroup->length++;
+	}
+	bool pop(T& out)
+	{
+	retry:
+		if(firstGroup==NULL)return false;
+		if(firstGroup->length<=0)return false;
+	
+		int tmp_start=firstGroup->start;
+		int tmp_length=firstGroup->length;
+		if(tmp_start>=groupSize) goto retry;
+		out=firstGroup->items[tmp_start];
+		
+		if(!__sync_bool_compare_and_swap(&firstGroup->start, tmp_start, tmp_start+1);
+		if(!__sync_bool_compare_and_swap(&firstGroup->length, tmp_length, tmp_length-1);
+		if((--firstGroup->length)==0)
+			popGroup();
+		return true;
+	}
+};*/
+
+
+
 //structs
 struct fileItem
 {
@@ -207,6 +270,11 @@ void processQueue(uint64_t filesize, const vector<fileItem>& q)
 		if((f1=open(q[0].path.c_str(), O_RDONLY))<0) goto fail1;
 		if((f2=open(q[1].path.c_str(), O_RDONLY))<0) goto fail2;
 		
+		
+
+		
+		
+		
 		buf=new uint8_t[BUFFERSIZE*2];
 		while(true) {
 			int i1=doRead(f1,buf,BUFFERSIZE);
@@ -305,7 +373,7 @@ int main(int argc, char** argv)
 		cur_queue->files.push_back((*it).f);
 	}
 	
-	int nthreads=32;
+	int nthreads=16;
 	pthread_t threads[nthreads];
 	cur_pos=0;
 	for(int i=0;i<nthreads;i++) {
@@ -315,6 +383,7 @@ int main(int argc, char** argv)
 		void* ret;
 		pthread_join(threads[i],&ret);
 	}
+	
 	cout << "you can save " << bytesSaved << " bytes of disk space" << endl;
 }
 

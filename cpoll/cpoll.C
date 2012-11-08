@@ -7,7 +7,8 @@
 
 #include "cpoll.H"
 #include "cpoll_internal.H"
-
+#include <unistd.h>
+#include <fcntl.h>
 namespace CP
 {
 	//CPollException
@@ -28,11 +29,11 @@ namespace CP
 	}
 
 	vector<RGC::Ref<EndPoint> > EndPoint::lookupHost(const char* hostname, const char* port,
-			int flags, int socktype, int proto) {
+			int family, int socktype, int proto, int flags) {
 		vector<RGC::Ref<EndPoint> > tmp;
 		addrinfo hints, *result, *rp;
 		memset(&hints, 0, sizeof(struct addrinfo));
-		hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+		hints.ai_family = family; /* Allow IPv4 or IPv6 */
 		hints.ai_socktype = socktype;
 		hints.ai_flags = flags;
 		hints.ai_protocol = proto;
@@ -90,8 +91,9 @@ namespace CP
 		this->port = ntohs(addr.sin_port);
 	}
 	void IPEndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_INET) throw CPollException(
-				"attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
+		if (addr->sa_family != AF_INET)
+			throw CPollException(
+					"attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
 		set_addr(*(sockaddr_in*) addr);
 	}
 	IPEndPoint::IPEndPoint(const sockaddr_in& addr) {
@@ -107,8 +109,9 @@ namespace CP
 		return sizeof(sockaddr_in);
 	}
 	void IPEndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily) throw CPollException(
-				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily)
+			throw CPollException(
+					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		IPEndPoint& tmp((IPEndPoint&) to);
 		tmp.address = address;
 		tmp.port = port;
@@ -140,8 +143,9 @@ namespace CP
 		set_addr(addr);
 	}
 	void IPv6EndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_INET6) throw CPollException(
-				"attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
+		if (addr->sa_family != AF_INET6)
+			throw CPollException(
+					"attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
 		set_addr(*(sockaddr_in6*) addr);
 	}
 	void IPv6EndPoint::getSockAddr(sockaddr* addr) const {
@@ -156,8 +160,9 @@ namespace CP
 		return sizeof(sockaddr_in);
 	}
 	void IPv6EndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily) throw CPollException(
-				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily)
+			throw CPollException(
+					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		IPv6EndPoint& tmp((IPv6EndPoint&) to);
 		tmp.address = address;
 		tmp.port = port;
@@ -186,8 +191,9 @@ namespace CP
 		set_addr(addr);
 	}
 	void UNIXEndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_UNIX) throw CPollException(
-				"attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
+		if (addr->sa_family != AF_UNIX)
+			throw CPollException(
+					"attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
 		set_addr(*(sockaddr_un*) addr);
 	}
 	void UNIXEndPoint::getSockAddr(sockaddr* addr) const {
@@ -200,14 +206,23 @@ namespace CP
 		return sizeof(sa_family_t) + name.length() + 1;
 	}
 	void UNIXEndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily) throw CPollException(
-				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily)
+			throw CPollException(
+					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		UNIXEndPoint& tmp((UNIXEndPoint&) to);
 		tmp.name = name;
 	}
 
-	Handle::Handle(HANDLE handle) :
-			handle(checkError(handle)), __deleted(false) {
+	Handle::Handle() :
+			handle(-1), __deleted(false) {
+	}
+	Handle::Handle(HANDLE handle) {
+		init(handle);
+	}
+	void Handle::init(HANDLE handle) {
+		this->handle = handle;
+		checkError(handle);
+		__deleted = false;
 	}
 	int Handle::dispatchMultiple(Events events, const EventData& evtd) {
 		//cout << (int)events << endl;
@@ -257,21 +272,30 @@ namespace CP
 	}
 
 	//File
-
+	File::File() :
+			_supportsEPoll(false) {
+	}
+	File::File(HANDLE handle, bool supportsEPoll) {
+		init(handle, supportsEPoll);
+	}
+	void File::init(HANDLE handle, bool supportsEPoll) {
+		Handle::init(handle);
+		_supportsEPoll = supportsEPoll;
+	}
 	Events File::_getEvents() {
 		Events e = Events::none;
 		for (int i = 0; i < numEvents; i++)
-			if (eventData[i].state != EventHandlerData::States::invalid) e = (Events) (((event_t) e)
-					| ((event_t) indexToEvent(i)));
+			if (eventData[i].state != EventHandlerData::States::invalid)
+				e = (Events) (((event_t) e) | ((event_t) indexToEvent(i)));
 		//cout << "_getEvents: " << (int)e << endl;
 		return e;
 	}
 	///only accepts one event
 	EventHandlerData* File::beginAddEvent(Events event) {
 		EventHandlerData *ed = &eventData[eventToIndex(event)];
-		if (ed->state != EventHandlerData::States::invalid) throw CPollException(
-				"Already listening for the specified event on the specified file. "
-						"For example, you may not read() and recv() on one socket at the same time.");
+		if (ed->state != EventHandlerData::States::invalid)
+			throw CPollException("Already listening for the specified event on the specified file. "
+					"For example, you may not read() and recv() on one socket at the same time.");
 		return ed;
 	}
 	void File::endAddEvent(Events event, bool repeat) {
@@ -303,43 +327,36 @@ namespace CP
 				r = write(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
 				break;
 			case Operations::writeAll:
-				r = write(((char*)ed.misc.bufferIO.buf)
-					+ ed.misc.bufferIO.len_done,
-					ed.misc.bufferIO.len - ed.misc.bufferIO.len_done);
+				r = write(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
+						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done);
 				//cout << "wrote " << r << " bytes on fd " << handle << endl;
-				if(r<=0) {
+				if (r <= 0) {
 					ed.state = EventHandlerData::States::invalid;
-					ed.cb(ed.misc.bufferIO.len_done == 0 ?
-						r : ed.misc.bufferIO.len_done);
+					ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
 				}
-				ed.misc.bufferIO.len_done+=r;
+				ed.misc.bufferIO.len_done += r;
 				//cout << "len_done = " << ed.misc.bufferIO.len_done
 				//		<< " of " << ed.misc.bufferIO.len << endl;
-				if(ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
+				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
 					ed.cb(ed.misc.bufferIO.len_done);
 				}
 				return;
 			case Operations::recv:
-				r = recv(ed.misc.bufferIO.buf, ed.misc.bufferIO.len,
-					ed.misc.bufferIO.flags);
+				r = recv(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags);
 				break;
 			case Operations::send:
-				r = send(ed.misc.bufferIO.buf, ed.misc.bufferIO.len,
-					ed.misc.bufferIO.flags);
+				r = send(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags);
 				break;
 			case Operations::sendAll:
-				r = send(((char*)ed.misc.bufferIO.buf)
-					+ ed.misc.bufferIO.len_done,
-					ed.misc.bufferIO.len - ed.misc.bufferIO.len_done,
-					ed.misc.bufferIO.flags);
-				if(r<=0) {
+				r = send(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
+						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done, ed.misc.bufferIO.flags);
+				if (r <= 0) {
 					ed.state = EventHandlerData::States::invalid;
-					ed.cb(ed.misc.bufferIO.len_done == 0 ?
-						-1 : ed.misc.bufferIO.len_done);
+					ed.cb(ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
 				}
 				ed.misc.bufferIO.len_done += r;
-				if(ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
+				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
 					ed.cb(ed.misc.bufferIO.len_done);
 				}
@@ -347,7 +364,7 @@ namespace CP
 			default:
 				break;
 		}
-		if(r<=0) {
+		if (r <= 0) {
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
 		}
@@ -383,11 +400,10 @@ namespace CP
 		ed->op = op;
 	}
 	void File::read(void* buf, int len, const Callback& cb, bool repeat) {
-		if(!_supportsEPoll) {
-		asdfg:
-			int r=read(buf, len);
+		if (!_supportsEPoll) {
+			asdfg: int r = read(buf, len);
 			cb(r);
-			if(repeat && r>0) goto asdfg;
+			if (repeat && r > 0) goto asdfg;
 			return;
 		}
 		static const Events e = Events::in;
@@ -396,11 +412,10 @@ namespace CP
 		endAddEvent(e, repeat);
 	}
 	void File::write(const void* buf, int len, const Callback& cb, bool repeat) {
-		if(!_supportsEPoll) {
-			asdfg:
-			int r=write(buf, len);
+		if (!_supportsEPoll) {
+			asdfg: int r = write(buf, len);
 			cb(r);
-			if(repeat && r>0) goto asdfg;
+			if (repeat && r > 0) goto asdfg;
 			return;
 		}
 		static const Events e = Events::out;
@@ -409,11 +424,11 @@ namespace CP
 		endAddEvent(e, repeat);
 	}
 	void File::writeAll(const void* buf, int len, const Callback& cb) {
-		if(!_supportsEPoll) {
-			int bw=0, bw1=-2;
-			while(bw<len && (bw1=write(((char*)buf)+bw, len-bw))>0)
-				bw+=bw1;
-			cb(bw1==-2?-1:bw);
+		if (!_supportsEPoll) {
+			int bw = 0, bw1 = -2;
+			while (bw < len && (bw1 = write(((char*) buf) + bw, len - bw)) > 0)
+				bw += bw1;
+			cb(bw1 == -2 ? -1 : bw);
 			return;
 		}
 		static const Events e = Events::out;
@@ -445,15 +460,28 @@ namespace CP
 		endAddEvent(e, true);
 	}
 	
-	
-
 	//Socket
+	Socket::Socket() :
+			addressFamily(AF_UNSPEC), type(0), protocol(0) {
 
-	Socket::Socket(HANDLE handle, int d, int t, int p) :
-			File(handle, true), addressFamily(d), type(t), protocol(p) {
 	}
-	Socket::Socket(int d, int t, int p) :
-			File(checkError(socket(d, t, p)), true), addressFamily(d), type(t), protocol(p) {
+	Socket::Socket(HANDLE handle, int d, int t, int p) {
+		init(handle, d, t, p);
+	}
+	Socket::Socket(int d, int t, int p) {
+		init(d, t, p);
+	}
+	void Socket::init(HANDLE handle, int d, int t, int p) {
+		File::init(handle, true);
+		addressFamily = d;
+		type = t;
+		protocol = p;
+	}
+	void Socket::init(int d, int t, int p) {
+		File::init(socket(d, t, p), true);
+		addressFamily = d;
+		type = t;
+		protocol = p;
 	}
 	//the caller must release() or free() the returned object
 	EndPoint* Socket::getLocalEndPoint() {
@@ -482,18 +510,16 @@ namespace CP
 			case Operations::shutdown:
 				ed.cb(shutdown(ed.misc.shutdown.how));
 				break;
+			case Operations::connect:
+				ed.cb((evtd.error || evtd.hungUp) ? -1 : 0);
+				break;
 			default:
 				File::doOperation(ed, evtd);
 		}
 	}
-	void Socket::connect(const sockaddr *addr, int addr_size) {
-		retry: int tmp = ::connect(handle, addr, addr_size);
-		if (tmp != 0 && errno != EINPROGRESS) {
-			if (errno == EINTR) goto retry;
-			throw CPollException(errno);
-		}
-	}
+
 	void Socket::bind(const sockaddr *addr, int addr_size) {
+		if (handle == -1) init(addr->sa_family, SOCK_STREAM, 0);
 		int tmp12345 = 1;
 		setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
 		if (::bind(handle, addr, addr_size) != 0) throw CPollException(errno);
@@ -517,8 +543,30 @@ namespace CP
 		ed->op = Operations::shutdown;
 		endAddEvent(e, false);
 	}
+
+	void __socket_init_if_not_already(Socket* s, int af) {
+		if (s->handle < 0) s->init(af, SOCK_STREAM, 0);
+	}
+	void Socket::connect(const sockaddr *addr, int addr_size) {
+		__socket_init_if_not_already(this, addr->sa_family);
+		retry: int tmp = ::connect(handle, addr, addr_size);
+		if (tmp != 0 && errno != EINPROGRESS) {
+			if (errno == EINTR) goto retry;
+			throw CPollException(errno);
+		}
+	}
+	void Socket::connect(const EndPoint &ep) {
+		int l = ep.getSockAddrSize();
+		char tmp[l];
+		ep.getSockAddr((sockaddr*) tmp);
+		connect((sockaddr*) tmp, l);
+	}
+	void Socket::connect(const char* hostname, const char* port, int family, int socktype,
+			int proto, int flags) {
+		//XXX
+	}
 	//the caller must release() or free() the returned object;
-	//will NOT automatically add the new socket to its Poll instance
+	//also this will NOT automatically add the new socket to this Poll instance
 	//because the user might want to handle the socket on a different thread
 	//which requires a different Poll instance
 	Socket* Socket::accept() {
@@ -539,7 +587,29 @@ namespace CP
 		//sock->peer=ep;
 		return sock;
 	}
-	//callback function must release() or free() the received object
+
+	void Socket::connect(const sockaddr* addr, int addr_size, const Callback& cb) {
+		__socket_init_if_not_already(this, addr->sa_family);
+		checkError(fcntl(handle, F_SETFL, checkError(fcntl(handle, F_GETFL, 0)) | O_NONBLOCK));
+		connect(addr, addr_size);
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		ed->cb = cb;
+		ed->op = Operations::connect;
+		endAddEvent(e, false);
+	}
+
+	void Socket::connect(const EndPoint& ep, const Callback& cb) {
+		__socket_init_if_not_already(this, ep.addressFamily);
+		checkError(fcntl(handle, F_SETFL, checkError(fcntl(handle, F_GETFL, 0)) | O_NONBLOCK));
+		connect(ep);
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		ed->cb = cb;
+		ed->op = Operations::connect;
+		endAddEvent(e, false);
+	}
+	//user must eventually release() or free() the received object
 	void Socket::accept(const function<void(Socket*)>& cb, bool repeat) {
 		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
@@ -550,24 +620,21 @@ namespace CP
 		ed->op = Operations::accept;
 		endAddEvent(e, repeat);
 	}
-	void Socket::connect(const EndPoint &ep) {
-
-	}
-	
-	
 	
 	//SignalFD
 	int SignalFD::MAX_EVENTS(4);
-	SignalFD::SignalFD(HANDLE handle, const sigset_t& mask):
-		Handle(handle), mask(mask) {}
-	SignalFD::SignalFD(const sigset_t& mask, int flags):
-		Handle(signalfd(-1, &mask, flags)), mask(mask) {}
+	SignalFD::SignalFD(HANDLE handle, const sigset_t& mask) :
+			Handle(handle), mask(mask) {
+	}
+	SignalFD::SignalFD(const sigset_t& mask, int flags) :
+			Handle(signalfd(-1, &mask, flags)), mask(mask) {
+	}
 	void SignalFD::dispatch(Events event, const EventData& evtd) {
 		Signal sig[MAX_EVENTS];
-		int br=::read(handle, sig, sizeof(sig));
-		if(callback != nullptr) {
+		int br = ::read(handle, sig, sizeof(sig));
+		if (callback != nullptr) {
 			br /= sizeof(Signal);
-			for(int i=0; i<br; i++) {
+			for (int i = 0; i < br; i++) {
 				callback(sig[i]);
 			}
 		}
@@ -576,8 +643,6 @@ namespace CP
 		return Events::in;
 	}
 	
-	
-
 	//Poll
 	int Poll::MAX_EVENTS(32);
 	Poll::Poll(HANDLE handle) :
@@ -642,7 +707,8 @@ namespace CP
 		epoll_event evts[MAX_EVENTS];
 		retry: int n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
 		if (n < 0) {
-			if (errno == EINTR) goto retry;
+			if (errno == EINTR)
+				goto retry;
 			else throw CPollException();
 		}
 		for (int i = 0; i < n; i++)

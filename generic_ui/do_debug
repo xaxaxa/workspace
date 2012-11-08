@@ -1,0 +1,2 @@
+export LD_PRELOAD=`pwd`/debug_ui
+

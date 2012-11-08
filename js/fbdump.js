@@ -39,8 +39,7 @@ function on_error(obj)
 	if(obj.error.type=="OAuthException") {
 		if((!(typeof noprompt === "undefined")) && noprompt) throw Error(obj.error.message);
 		else {
-			print("the access token has expired or is invalid; please enter a new one:",0);
-			s=lib.prompt();
+			s=lib.prompt("the access token has expired or is invalid; please enter a new one:");
 			if(s==null || s.length==0) throw Error("user cancelled");
 			a=s;
 			access_token_generation++;

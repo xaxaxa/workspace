@@ -12,10 +12,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <generic_struct.H>
+#include <generic_ui.H>
+#include "fbdump_ui.H"
 //#include <urdl.cpp>
 
 using namespace v8;
 using namespace std;
+using namespace GenericUI::Aliases;
+using GenericStruct::Types;
+
+
 namespace lib
 {
 	static inline Handle<Data> getfunc(InvocationCallback func)
@@ -289,7 +296,8 @@ namespace l
 		try
 		{
 			String::Utf8Value s(a[0]);
-			cout << *s << endl;
+			GenericUI::attach("main").attach("log").invoke({O(*s)});
+			//cout << *s << endl;
 			return Undefined();
 		}
 		catch(exception& ex)
@@ -299,18 +307,26 @@ namespace l
 	}
 	static Handle<Value> prompt(const Arguments& a)
 	{
+		if(!(a.Length()<1))goto cont;
+		return ThrowException(String::New("argument error: usage: prompt(String s)"));
+	cont:
 		try
 		{
+			String::Utf8Value s1(a[0]);
+			
 			char* line=NULL;
 			size_t len=0;
-			if(getline(&line,&len,stdin)<0) return ThrowException(String::New("EOF"));
+			O val=GenericUI::attach("main").attach("prompt").invokeSync({O(*s1)});
+			if(val.type!=Types::array) return ThrowException(String::New("could not prompt user"));
+			line=val.getString();
+			//if(getline(&line,&len,stdin)<0) return ThrowException(String::New("EOF"));
 			size_t len2=strlen(line);
-			for(;len2>=0;len2--) {
+			for(;len2>0;len2--) {
 				char c=line[len2-1];
 				if(c!='\x0A' && c!='\x0D')break;
 			}
 			Handle<String> s=String::New(line,len2);
-			free(line);
+			//free(line);
 			return s;
 		}
 		catch(exception& ex)
@@ -355,6 +371,51 @@ namespace fbd
 		return lib::gettemplate({{"dump",getfunc(dump)}});
 	}
 };
+struct runArg {
+	A scripts;
+	xaxaxa::StringBuilder header;
+	int concurrency;
+};
+void* do_run(void* arg1)
+{
+	Locker locker;
+	runArg *arg=(runArg*)arg1;
+	int concurrency=3;
+	HandleScope handle_scope;
+	Handle<ObjectTemplate> global = ObjectTemplate::New();
+	global->Set(String::New("lib"), l::gettemplate());
+	global->Set(String::New("fbd"), fbd::gettemplate());
+	Persistent<Context> context = Context::New(NULL,global);
+	Context::Scope context_scope(context);
+	xaxaxa::StringBuilder sb;
+	tm=new curl::transferManager(arg->concurrency);
+	{
+		ScriptOrigin origin(String::New("/fbdump.js"),Integer::New(0),Integer::New(0));
+		Handle<String> source = String::New(arg->header.ToString().c, arg->header.ToString().length); //"lib.get(\"http://xa.us.to\",function(s){lib.print(s);});"
+		Script::Compile(source,&origin)->Run();
+	}
+	//char* ch=(char*)0;
+	//*ch=2;
+	//xaxaxa::StringBuilder sb;
+	for(int i=0;i<(int)arg->scripts.length();i++)
+	{
+		sb.Clear();
+		{
+			xaxaxa::FileStream fs(arg->scripts[i].getString(),O_RDONLY);
+			while(sb.Append(fs,4096)>0);
+		}
+		//cout << sb.ToCString() << endl;
+		ScriptOrigin origin(String::New(arg->scripts[i].getString()),Integer::New(0),Integer::New(0));
+		Handle<String> source = String::New(sb.ToString().c, sb.Length()); //"lib.get(\"http://xa.us.to\",function(s){lib.print(s);});"
+		Script::Compile(source,&origin)->Run();
+	}
+	delete arg;
+	//curl::eventLoop(&curl_inst);
+	tm->eventLoop();
+	//l::io_service.run();
+	context.Dispose();
+	GenericUI::attach("main").attach("finish").invoke(O::undefined());
+}
 int main(int argc, char* argv[]) {
 	xaxaxa::Util.SetHandlers();
 	/*l::httpget("http://192.168.5.11",[](const void* data, int len, int state) {
@@ -364,65 +425,35 @@ int main(int argc, char* argv[]) {
 	});
 	l::io_service.run();
 	return 0;*/
-	if(argc<2) {
-		cout << "usage: " << argv[0] << " [-o a=access_token ...] [-c concurrency] filename.js [filename2.js ...]" << endl;
-		return 1;
-	}
-	int concurrency=3;
-	HandleScope handle_scope;
-	Handle<ObjectTemplate> global = ObjectTemplate::New();
-	global->Set(String::New("lib"), l::gettemplate());
-	global->Set(String::New("fbd"), fbd::gettemplate());
-	Persistent<Context> context = Context::New(NULL,global);
-	Context::Scope context_scope(context);
-	xaxaxa::StringBuilder sb;
-	string tmp_s1=(xaxaxa::Util.GetDirFromPath(xaxaxa::Util.GetProgramPath())+"/fbdump.js");
-	const char* fn1=tmp_s1.c_str();
-	//cout << fn1 << endl;
-	{
-		xaxaxa::FileStream fs(fn1,O_RDONLY);
-		while(sb.Append(fs,4096)>0);
-	}
-	vector<const char*> files;
-	for(int i=1;i<argc;i++)
-		if(strcmp(argv[i],"-o")==0 && (i+1)<argc) {
-			sb.Append(argv[i+1]);
-			sb.Append(";\n");
-			i++;
-		} else if(strcmp(argv[i],"-c")==0 && (i+1)<argc) {
-			concurrency=atoi(argv[i+1]);
-			i++;
-		} else {
-			files.push_back(argv[i]);
-		}
-	tm=new curl::transferManager(concurrency);
-	const char* env_vars=getenv("FBDUMP_VARS");
-	if(env_vars!=NULL) {
-		sb.Append(env_vars);
-		sb.Append(";\n");
-	}
-	{
-		ScriptOrigin origin(String::New(fn1),Integer::New(0),Integer::New(0));
-		Handle<String> source = String::New(sb.ToString().c, sb.ToString().length); //"lib.get(\"http://xa.us.to\",function(s){lib.print(s);});"
-		Script::Compile(source,&origin)->Run();
-	}
-	//char* ch=(char*)0;
-	//*ch=2;
-	for(int i=0;i<files.size();i++)
-	{
-		sb.Clear();
+	if(GenericUI::attach("main").attach("checkUI").invokeSync(O::undefined()).type==Types::undefined)
+		GenericUI::load("fbdump_cui.so");
+	if(GenericUI::attach("main").attach("checkUI").invokeSync(O::undefined()).type==Types::undefined)
+		cerr << "warn: there's no UI loaded and loading the default UI failed" << endl;
+	
+	//handlers
+	auto& iface=GenericUI::attach("main");
+	iface.attach("finish");
+	iface.attach("start").attach([](O o) {
+		//startArgs* a=(startArgs*)v;
+		pthread_t thr;
+		runArg* arg=new runArg();
+		arg->scripts=o.getArray()[1].getArray();
+		arg->concurrency=o.getArray()[2].getInt32();
+		xaxaxa::StringBuilder& sb=arg->header;
+		string tmp_s1=(xaxaxa::Util.GetDirFromPath(xaxaxa::Util.GetProgramPath())+"/fbdump.js");
+		const char* fn1=tmp_s1.c_str();
 		{
-			xaxaxa::FileStream fs(files[i],O_RDONLY);
+			xaxaxa::FileStream fs(fn1,O_RDONLY);
 			while(sb.Append(fs,4096)>0);
-		}
-		//cout << sb.ToCString() << endl;
-		ScriptOrigin origin(String::New(files[i]),Integer::New(0),Integer::New(0));
-		Handle<String> source = String::New(sb.ToString().c, sb.Length()); //"lib.get(\"http://xa.us.to\",function(s){lib.print(s);});"
-		Script::Compile(source,&origin)->Run();
-	}
-	//curl::eventLoop(&curl_inst);
-	tm->eventLoop();
-	//l::io_service.run();
-	context.Dispose();
-	return 0;
+        }
+        sb.Append(o.getArray()[0].getString());
+		pthread_create(&thr, NULL, &do_run, arg);
+		return O::undefined();
+	});
+	
+	A tmp_a(Types::array);
+	for(int i=0;i<argc;i++)
+		tmp_a.append(argv[i]);
+	return GenericUI::attach("main").attach("run").invokeSync(A{O(argc), O(tmp_a)}).getInt32();
+	//return 0;
 }
