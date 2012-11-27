@@ -137,12 +137,15 @@ public:
 	}
 	void childExited(pid_t pid, int32_t status) {
 		int32_t tid;
+		int32_t stdinfd;
 		{
 			scopeLock l(procs_lock);
 			auto it=pidmap.find(pid);
 			if(it==pidmap.end()) return;
 			tid=(*it).second;
+			stdinfd=procs[tid].stdin;
 		}
+		close(stdinfd);
 		send({O((int8_t)EXECD::events::exit), O{tid, status}});
 		
 	}
@@ -159,11 +162,12 @@ public:
 	
 	//fd is not used
 	void startRead(CP::File& f, int32_t tid, int32_t fd) {
+		DEBUGPRINT("creating output fd %i (hostfd %i)\n", fd, f.handle);
 		int8_t* buf=new int8_t[BUFSIZE];
 		f.retain();
 		f.repeatRead(buf, BUFSIZE, [this,buf,tid,fd,&f](int l) {
 			if(l<=0) {
-				DEBUGPRINT("deleting stdout/stderr buffer for fd %i\n", fd);
+				DEBUGPRINT("deleting stdout/stderr buffer for fd %i (hostfd %i)\n", fd, f.handle);
 				f.release();
 				delete buf;
 				//buf=NULL;

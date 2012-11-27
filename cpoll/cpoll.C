@@ -402,6 +402,7 @@ namespace CP
 			ed.state = EventHandlerData::States::invalid;
 		}
 		ed.cb(r);
+		if (r > 0 && (evtd.error || evtd.hungUp)) ed.cb(-1);
 	}
 	void File::dispatch(Events event, const EventData& evtd) {
 		//cout << (int32_t)event << " dispatched" << endl;

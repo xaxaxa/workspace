@@ -110,6 +110,8 @@ int main() {
 		dup2(_o[1], 1);
 		close(_i[1]);
 		close(_o[0]);
+		close(_i[0]);
+		close(_o[1]);
 		
 		//method 1: directly spawn on local machine
 		//*
