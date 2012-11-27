@@ -112,12 +112,12 @@ int main() {
 		close(_o[0]);
 		
 		//method 1: directly spawn on local machine
-		/*
+		//*
 		execlp("./execd", "execd",NULL);
 		//*/
 		
 		//method 2: ssh
-		//*
+		/*
 		const char* sshserver="user1@192.168.5.11";
 		execlp("ssh","ssh",sshserver,"execd",NULL);
 		//*/
@@ -141,8 +141,8 @@ int main() {
 	client.onEvent=[](O o) {
 		cerr << "\x1B[41;1;33mevent: " << o << "\x1B[0;0;0m" << endl;
 	};
-	CP::File gsdfhkjgh(_o[0],true);
 	CP::Poll p;
+	CP::File gsdfhkjgh(_o[0],true);
 	client.start(p, gsdfhkjgh);
 	start_cpoll_loop(p);
 	

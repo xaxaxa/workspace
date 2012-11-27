@@ -43,6 +43,7 @@
 #include <sys/un.h>
 #include <netdb.h>
 #include <rgc.H>
+#include <set>
 #include <vector>
 #include <sstream>
 #include <sys/signalfd.h>
@@ -344,10 +345,10 @@ namespace CP
 	public:
 		//void* __private;
 		HANDLE handle;
-		bool __deleted;
 		Handle();
 		Handle(HANDLE handle);
 		function<void(Events old_events)> onEventsChange;
+		function<void()> onClose;
 
 		virtual void init(HANDLE handle);
 		///calls the callback associated with the event
@@ -405,6 +406,7 @@ namespace CP
 		virtual Events getEvents() {
 			return _getEvents();
 		}
+		~File();
 	};
 	class Socket: public File
 	{
@@ -493,7 +495,7 @@ namespace CP
 		HANDLE cur_handle;
 		Events cur_last_events;
 		//map<HANDLE, Ref<Handle> > handles;
-		vector<Handle*> tmp_deleted;
+		set<Handle*> tmp_deleted;
 		Poll(HANDLE handle);
 		Poll();
 		void _applyHandle(Handle& h, Events old_e);

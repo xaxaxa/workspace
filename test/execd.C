@@ -160,9 +160,11 @@ public:
 	//fd is not used
 	void startRead(CP::File& f, int32_t tid, int32_t fd) {
 		int8_t* buf=new int8_t[BUFSIZE];
-		f.repeatRead(buf, BUFSIZE, [this,buf,tid,fd](int l) {
+		f.retain();
+		f.repeatRead(buf, BUFSIZE, [this,buf,tid,fd,&f](int l) {
 			if(l<=0) {
 				DEBUGPRINT("deleting stdout/stderr buffer for fd %i\n", fd);
+				f.release();
 				delete buf;
 				//buf=NULL;
 				return;
@@ -182,13 +184,17 @@ public:
 		w.notifyFork();
 		
 		CP::File* f;
+		
 		f=new CP::File(pinfo.stdout, true);
-		startRead(*f,tid,1);
 		p->add(*f);
+		startRead(*f,tid,1);
+		f->release();
+		
 		
 		f=new CP::File(pinfo.stderr, true);
-		startRead(*f,tid,2);
 		p->add(*f);
+		startRead(*f,tid,2);
+		f->release();
 	}
 	
 	

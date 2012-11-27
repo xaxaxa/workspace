@@ -243,7 +243,7 @@ namespace CP
 	}
 
 	Handle::Handle() :
-			handle(-1), __deleted(false) {
+			handle(-1) {
 	}
 	Handle::Handle(HANDLE handle) {
 		init(handle);
@@ -251,7 +251,6 @@ namespace CP
 	void Handle::init(HANDLE handle) {
 		this->handle = handle;
 		checkError(handle);
-		__deleted = false;
 	}
 	int32_t Handle::dispatchMultiple(Events events, const EventData& evtd) {
 		//cout << (int32_t)events << endl;
@@ -301,7 +300,8 @@ namespace CP
 	 ::close(handle);
 	 }*/
 	Handle::~Handle() {
-		::close(handle);
+		//if (onClose != nullptr) onClose();
+		//::close(handle);
 	}
 
 	//File
@@ -495,6 +495,10 @@ namespace CP
 		ed->misc.bufferIO.len_done = 0;
 		ed->misc.bufferIO.flags = flags;
 		endAddEvent(e, true);
+	}
+	File::~File() {
+		if (onClose != nullptr) onClose();
+		::close(handle);
 	}
 	
 	//Socket
@@ -760,7 +764,7 @@ namespace CP
 	}
 	int32_t Poll::_doDispatch(const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
-		if (h->__deleted) return 0;
+		if (tmp_deleted.find(h) != tmp_deleted.end()) return 0;
 		int32_t ret = 0;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
@@ -797,9 +801,9 @@ namespace CP
 		}
 		for (int32_t i = 0; i < n; i++)
 			ret += _doDispatch(evts[i]);
-		for (uint32_t i = 0; i < tmp_deleted.size(); i++)
-			tmp_deleted[i]->release();
-		tmp_deleted.resize(0);
+		for (auto it = tmp_deleted.begin(); it != tmp_deleted.end(); it++)
+			(*it)->release();
+		tmp_deleted.clear();
 		return ret;
 	}
 	void Poll::dispatch(Events event, const EventData& evtd) {
@@ -826,20 +830,23 @@ namespace CP
 	}
 	void Poll::add(Handle& h) {
 		//h.retain();
-		h.__deleted = false;
 		h.onEventsChange = [this,&h](Events old_events) {this->applyHandle(h,old_events);};
 		_applyHandle(h, Events::none);
+		h.onClose = [this,&h]() {
+			del(h);
+		};
 	}
 	void Poll::del(Handle& h) {
 		//h.release();
 		//tmp_deleted.push_back(&h);
-		h.__deleted = true;
 		if (h.getEvents() != Events::none) {
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
 			//h.release();
-			tmp_deleted.push_back(&h);
+			tmp_deleted.insert(&h);
 			active--;
 		}
+		h.onEventsChange = nullptr;
+		h.onClose = nullptr;
 	}
 
 }
