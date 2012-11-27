@@ -98,6 +98,7 @@ namespace GenericStruct
 		float toFloat32() const;
 		double toFloat64() const;
 		Array toArray() const;
+		char* toString() const;
 		Object();
 		Object(const Object& other);
 		Object(Types type);
@@ -127,9 +128,14 @@ namespace GenericStruct
 		float operator=(float obj);
 		double operator=(double obj);
 		const Array& operator=(const Array& obj);
-		void serialize(const function<void(int8_t*, int)>& cb) const;
-		void deserialize(const function<void(int8_t*, int)>& cb);
+		inline void serialize(const function<void(int8_t*, int)>& cb) const;
+		inline void deserialize(const function<void(int8_t*, int)>& cb);
 	};
+	namespace Aliases
+	{
+		typedef GenericStruct::Object O;
+		typedef GenericStruct::Array A;
+	}
 	struct ArrayBase: public RGC::Object
 	{
 		Types type;
@@ -144,7 +150,7 @@ namespace GenericStruct
 		virtual void append(const GenericStruct::Object& o)=0;
 		virtual void serialize(const function<void(int8_t*, int)>& cb) const=0;
 		virtual void deserialize_array(const function<void(int8_t*, int)>& cb)=0;
-		static void deserialize(ArrayBase*& arr, const function<void(int8_t*, int)>& cb);
+		static inline void deserialize(ArrayBase*& arr, const function<void(int8_t*, int)>& cb);
 	};
 	template<class T> struct ArrayType: public ArrayBase
 	{
@@ -159,8 +165,8 @@ namespace GenericStruct
 		ArrayType(const char* s);
 		ArrayType(const string& s);
 		~ArrayType();ArrayType& operator=(const ArrayType& other)=delete;
-		void serialize(const function<void(int8_t*, int)>& cb) const;
-		void deserialize_array(const function<void(int8_t*, int)>& cb);
+		void serialize(const function<void(int8_t*, int32_t)>& cb) const;
+		void deserialize_array(const function<void(int8_t*, int32_t)>& cb);
 	};
 
 } /* namespace GenericStruct */
@@ -175,21 +181,21 @@ namespace GenericStruct
 	template<class T> Array::Array(std::initializer_list<T> list) {
 		arr = new ArrayType<T>(list);
 	}
-	template<class T> Array::Array(const T* arr, int len) {
-		arr = new ArrayType<T>(arr, len);
+	template<class T> Array::Array(const T* arr, int32_t len) {
+		this->arr = new ArrayType<T>(arr, len);
 	}
 	template<class T> T* Array::getArray() const {
 		return &(((ArrayType<T>*) arr)->arr[0]);
 	}
 
-	template<class T> Object ArrayType<T>::operator[](int i) const {
+	template<class T> Object ArrayType<T>::operator[](int32_t i) const {
 		return arr[i];
 	}
-	template<class T> void ArrayType<T>::length(int newlen) {
+	template<class T> void ArrayType<T>::length(int32_t newlen) {
 		arr.resize(newlen);
 	}
-	template<class T> int ArrayType<T>::length() const {
-		return (int) arr.size();
+	template<class T> int32_t ArrayType<T>::length() const {
+		return (int32_t) arr.size();
 	}
 	inline void __do_append(ArrayType<int8_t>* th, const Object& o) {
 		th->arr.push_back(o.toInt8());
@@ -262,7 +268,7 @@ namespace GenericStruct
 	 if (boost::is_base_of<ArrayBase*, T>::value) {
 
 	 th->type = Types::array;
-	 for (int i = 0; i < (int) th->arr.size(); i++)
+	 for (int32_t i = 0; i < (int32_t) th->arr.size(); i++)
 	 th->arr[i]->retain();
 	 } else if (boost::is_base_of<GenericStruct::Object, T>::value) {
 	 cout << "asdfzxcv" << endl;
@@ -279,13 +285,13 @@ namespace GenericStruct
 		__do_init_array(this);
 	}
 	template<class T>
-	ArrayType<T>::ArrayType(const T* arr, int len) :
+	ArrayType<T>::ArrayType(const T* arr, int32_t len) :
 			arr(arr, arr + len) {
 		__do_init_array(this);
 	}
 	template<class T> void __do_destruct_array(ArrayType<T>* th, const boost::true_type& sdfgh) {
 		if (th->type == Types::array) {
-			for (int i = 0; i < (int) th->arr.size(); i++)
+			for (int32_t i = 0; i < (int32_t) th->arr.size(); i++)
 				th->arr[i]->release();
 		}
 	}
@@ -296,81 +302,226 @@ namespace GenericStruct
 		__do_destruct_array(this, boost::is_pointer<T>());
 
 	}
-	inline void __do_serialize(int8_t o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(int8_t o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 1);
 	}
-	inline void __do_serialize(int16_t o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(int16_t o, const function<void(int8_t*, int32_t)>& cb) {
 		uint16_t tmp = htons((uint16_t) o);
 		cb((int8_t*) &tmp, 2);
 	}
-	inline void __do_serialize(int32_t o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(int32_t o, const function<void(int8_t*, int32_t)>& cb) {
 		uint32_t tmp = htonl((uint32_t) o);
 		cb((int8_t*) &tmp, 4);
 	}
-	inline void __do_serialize(int64_t o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(int64_t o, const function<void(int8_t*, int32_t)>& cb) {
 		uint64_t tmp = htonll((uint64_t) o);
 		cb((int8_t*) &tmp, 8);
 	}
-	inline void __do_serialize(float o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(float o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 4);
 	}
-	inline void __do_serialize(double o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(double o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 8);
 	}
-	inline void __do_serialize(const Array& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(const Array& o, const function<void(int8_t*, int32_t)>& cb) {
 		o.serialize(cb);
 	}
-	inline void __do_serialize(const Object& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_serialize(const Object& o, const function<void(int8_t*, int32_t)>& cb) {
 		o.serialize(cb);
 	}
 
-	inline void __do_deserialize(int8_t& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(int8_t& o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 1);
 	}
-	inline void __do_deserialize(int16_t& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(int16_t& o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 2);
 		o = (int16_t) ntohs((uint16_t) o);
 	}
-	inline void __do_deserialize(int32_t& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(int32_t& o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 4);
 		o = (int32_t) ntohl((uint32_t) o);
 	}
-	inline void __do_deserialize(int64_t& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(int64_t& o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 8);
 		o = (int64_t) ntohll((uint64_t) o);
 	}
-	inline void __do_deserialize(float& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(float& o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 4);
 	}
-	inline void __do_deserialize(double& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(double& o, const function<void(int8_t*, int32_t)>& cb) {
 		cb((int8_t*) &o, 8);
 	}
-	inline void __do_deserialize(Array& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(Array& o, const function<void(int8_t*, int32_t)>& cb) {
 		o.deserialize(cb);
 	}
-	inline void __do_deserialize(Object& o, const function<void(int8_t*, int)>& cb) {
+	inline void __do_deserialize(Object& o, const function<void(int8_t*, int32_t)>& cb) {
 		o.deserialize(cb);
 	}
 
-	template<class T> void ArrayType<T>::serialize(const function<void(int8_t*, int)>& cb) const {
+	template<class T> void ArrayType<T>::serialize(
+			const function<void(int8_t*, int32_t)>& cb) const {
 		int8_t tmp[5];
 		tmp[0] = (int8_t) type;
 		*(uint32_t*) (tmp + 1) = htonl((uint32_t) arr.size());
 		cb(tmp, 5);
-		for (int i = 0; i < (int) arr.size(); i++) {
+		for (int32_t i = 0; i < (int32_t) arr.size(); i++) {
 			__do_serialize((T) arr[i], cb);
 		}
 	}
-	template<class T> void ArrayType<T>::deserialize_array(const function<void(int8_t*, int)>& cb) {
+	template<class T> void ArrayType<T>::deserialize_array(
+			const function<void(int8_t*, int32_t)>& cb) {
 		uint32_t l;
 		cb((int8_t*) &l, 4);
 		l = ntohl(l);
 		arr.resize(l);
 		//*(uint32_t*) (tmp + 1) = htonl((uint32_t) arr.size());
 
-		for (int i = 0; i < (int) arr.size(); i++) {
+		for (int32_t i = 0; i < (int32_t) arr.size(); i++) {
 			__do_deserialize((T&) arr[i], cb);
 		}
+	}
+	void __object_do_release_if_needed(Object* o);
+	void Object::serialize(const function<void(int8_t*, int32_t)>& cb) const {
+		cb((int8_t*) &type, 1);
+		switch (type) {
+			case Types::int8:
+			{
+				__do_serialize(data.int8, cb);
+				break;
+			}
+			case Types::int16:
+			{
+				__do_serialize(data.int16, cb);
+				break;
+			}
+			case Types::int32:
+			{
+				__do_serialize(data.int32, cb);
+				break;
+			}
+			case Types::int64:
+			{
+				__do_serialize(data.int64, cb);
+				break;
+			}
+			case Types::float32:
+			{
+				__do_serialize(data.float32, cb);
+				break;
+			}
+			case Types::float64:
+			{
+				__do_serialize(data.float64, cb);
+				break;
+			}
+			case Types::array:
+			{
+				data.array->serialize(cb);
+				break;
+			}
+			default:
+				break;
+		}
+	}
+	void Object::deserialize(const function<void(int8_t*, int32_t)>& cb) {
+		__object_do_release_if_needed(this);
+		type = Types::undefined;
+		Types _type;
+		cb((int8_t*) &_type, 1);
+
+		switch (_type) {
+			case Types::int8:
+			{
+				__do_deserialize(data.int8, cb);
+				break;
+			}
+			case Types::int16:
+			{
+				__do_deserialize(data.int16, cb);
+				break;
+			}
+			case Types::int32:
+			{
+				__do_deserialize(data.int32, cb);
+				break;
+			}
+			case Types::int64:
+			{
+				__do_deserialize(data.int64, cb);
+				break;
+			}
+			case Types::float32:
+			{
+				__do_deserialize(data.float32, cb);
+				break;
+			}
+			case Types::float64:
+			{
+				__do_deserialize(data.float64, cb);
+				break;
+			}
+			case Types::array:
+			{
+				ArrayBase::deserialize(data.array, cb);
+				break;
+			}
+			default:
+				break;
+		}
+		type = _type;
+	}
+
+	void ArrayBase::deserialize(ArrayBase*& arr, const function<void(int8_t*, int32_t)>& cb) {
+		Types type;
+		cb((int8_t*) &type, 1);
+		switch (type) {
+			case Types::int8:
+			{
+				arr = new ArrayType<int8_t>();
+				break;
+			}
+			case Types::int16:
+			{
+				arr = new ArrayType<int16_t>();
+				break;
+			}
+			case Types::int32:
+			{
+				arr = new ArrayType<int32_t>();
+				break;
+			}
+			case Types::int64:
+			{
+				arr = new ArrayType<int64_t>();
+				break;
+			}
+			case Types::float32:
+			{
+				arr = new ArrayType<float>();
+				break;
+			}
+			case Types::float64:
+			{
+				arr = new ArrayType<double>();
+				break;
+			}
+			case Types::array:
+			{
+				arr = new ArrayType<Array>();
+				break;
+			}
+			case Types::object:
+			{
+				arr = new ArrayType<GenericStruct::Object>();
+				break;
+			}
+			default:
+			{
+				arr = NULL;
+				return;
+			}
+		}
+		arr->deserialize_array(cb);
 	}
 }
 

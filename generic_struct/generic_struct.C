@@ -9,15 +9,20 @@
 
 namespace GenericStruct
 {
+	/*struct dataWriter
+	 {
+	 function<void(const int8_t*, int32_t)> onWrite;
+	 inline void writeInt8(int8_t i) {}
+	 };*/
 	const char* TypeNames[10] = { "undefined", "int8", "int16", "int32", "int64", "float32",
 			"float64", "dict", "array", "object" };
 	const char* getTypeName(Types type) {
-		if ((int) type > 9) return "unknown";
-		return TypeNames[(int) type];
+		if ((int32_t) type > 9) return "unknown";
+		return TypeNames[(int32_t) type];
 	}
 	uint64_t htonll(uint64_t value) {
 		// The answer is 42
-		static const int num = 42;
+		static const int32_t num = 42;
 
 		// Check the endianness
 		if (*reinterpret_cast<const char*>(&num) == num) {
@@ -31,7 +36,7 @@ namespace GenericStruct
 	}
 	uint64_t ntohll(uint64_t value) {
 		// The answer is 42
-		static const int num = 42;
+		static const int32_t num = 42;
 
 		// Check the endianness
 		if (*reinterpret_cast<const char*>(&num) == num) {
@@ -114,28 +119,30 @@ namespace GenericStruct
 		if (arr != NULL) arr->retain();
 		return *this;
 	}
-	void Array::length(int newlen) {
+	void Array::length(int32_t newlen) {
 		if (arr == NULL) return;
 		arr->length(newlen);
 	}
-	int Array::length() const {
+	int32_t Array::length() const {
 		if (arr == NULL) return 0;
 		return arr->length();
 	}
 	void Array::append(const GenericStruct::Object& o) {
 		arr->append(o);
 	}
-	Object Array::operator[](int i) const {
+	Object Array::operator[](int32_t i) const {
 		return (*arr)[i];
 	}
 	Array::~Array() {
 		if (arr != NULL) arr->release();
 	}
 	char* Array::getString() const {
+		if((*arr)[arr->length()-1].toInt8()!=0)
+			arr->append(Object((int8_t)0));
 		return (char*) &(((ArrayType<int8_t>*) arr)->arr[0]);
 	}
 	
-	void Array::serialize(const function<void(int8_t*, int)>& cb) const {
+	void Array::serialize(const function<void(int8_t*, int32_t)>& cb) const {
 		if (arr == NULL) {
 			Types t = Types::undefined;
 			cb((int8_t*) t, 1);
@@ -143,7 +150,7 @@ namespace GenericStruct
 			arr->serialize(cb);
 		}
 	}
-	void Array::deserialize(const function<void(int8_t*, int)>& cb) {
+	void Array::deserialize(const function<void(int8_t*, int32_t)>& cb) {
 		if (arr != NULL) arr->release();
 		ArrayBase::deserialize(arr, cb);
 	}
@@ -222,6 +229,11 @@ namespace GenericStruct
 			return Array(data.array);
 		else throw TypeException(type, Types::array);
 	}
+	char* Object::toString() const {
+		if (type == Types::array)
+			return getArray().getString();
+		else throw TypeException(type, Types::array);
+	}
 	ArrayBase* Object::getArrayBase() const {
 		return data.array;
 	}
@@ -271,7 +283,7 @@ namespace GenericStruct
 	}
 	Object::Object(const char* str) :
 			type(Types::array) {
-		data.array = new ArrayType<int8_t>((int8_t*) str, (int) (strlen(str) + 1));
+		data.array = new ArrayType<int8_t>((int8_t*) str, (int32_t) (strlen(str) + 1));
 	}
 	Object Object::int8(int8_t o) {
 		Object tmp(Types::int8);
@@ -359,154 +371,12 @@ namespace GenericStruct
 		return obj;
 	}
 
-	void Object::serialize(const function<void(int8_t*, int)>& cb) const {
-		cb((int8_t*) &type, 1);
-		switch (type) {
-			case Types::int8:
-			{
-				__do_serialize(data.int8, cb);
-				break;
-			}
-			case Types::int16:
-			{
-				__do_serialize(data.int16, cb);
-				break;
-			}
-			case Types::int32:
-			{
-				__do_serialize(data.int32, cb);
-				break;
-			}
-			case Types::int64:
-			{
-				__do_serialize(data.int64, cb);
-				break;
-			}
-			case Types::float32:
-			{
-				__do_serialize(data.float32, cb);
-				break;
-			}
-			case Types::float64:
-			{
-				__do_serialize(data.float64, cb);
-				break;
-			}
-			case Types::array:
-			{
-				data.array->serialize(cb);
-				break;
-			}
-			default:
-				break;
-		}
-	}
-	void Object::deserialize(const function<void(int8_t*, int)>& cb) {
-		__object_do_release_if_needed(this);
-		type = Types::undefined;
-		Types _type;
-		cb((int8_t*) &_type, 1);
-		
-		switch (_type) {
-			case Types::int8:
-			{
-				__do_deserialize(data.int8, cb);
-				break;
-			}
-			case Types::int16:
-			{
-				__do_deserialize(data.int16, cb);
-				break;
-			}
-			case Types::int32:
-			{
-				__do_deserialize(data.int32, cb);
-				break;
-			}
-			case Types::int64:
-			{
-				__do_deserialize(data.int64, cb);
-				break;
-			}
-			case Types::float32:
-			{
-				__do_deserialize(data.float32, cb);
-				break;
-			}
-			case Types::float64:
-			{
-				__do_deserialize(data.float64, cb);
-				break;
-			}
-			case Types::array:
-			{
-				ArrayBase::deserialize(data.array, cb);
-				break;
-			}
-			default:
-				break;
-		}
-		type = _type;
-	}
-	
-	void ArrayBase::deserialize(ArrayBase*& arr, const function<void(int8_t*, int)>& cb) {
-		Types type;
-		cb((int8_t*) &type, 1);
-		switch (type) {
-			case Types::int8:
-			{
-				arr = new ArrayType<int8_t>();
-				break;
-			}
-			case Types::int16:
-			{
-				arr = new ArrayType<int16_t>();
-				break;
-			}
-			case Types::int32:
-			{
-				arr = new ArrayType<int32_t>();
-				break;
-			}
-			case Types::int64:
-			{
-				arr = new ArrayType<int64_t>();
-				break;
-			}
-			case Types::float32:
-			{
-				arr = new ArrayType<float>();
-				break;
-			}
-			case Types::float64:
-			{
-				arr = new ArrayType<double>();
-				break;
-			}
-			case Types::array:
-			{
-				arr = new ArrayType<Array>();
-				break;
-			}
-			case Types::object:
-			{
-				arr = new ArrayType<GenericStruct::Object>();
-				break;
-			}
-			default:
-			{
-				arr = NULL;
-				return;
-			}
-		}
-		arr->deserialize_array(cb);
-	}
 /*ArrayType<int8_t>::ArrayType(const char* s) {
- int l=strlen(s);
+ int32_t l=strlen(s);
  arr=vector<int8_t>(s,s+l);
  }
  ArrayType<int8_t>::ArrayType(const string& s) {
- int l=s.length();
+ int32_t l=s.length();
  const char* ch=s.data();
  arr=vector<int8_t>(ch,ch+l);
  }*/

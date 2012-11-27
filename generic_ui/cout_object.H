@@ -1,3 +1,5 @@
+#ifndef __COUT_OBJECT_H
+#define __COUT_OBJECT_H
 #include <iostream>
 #include <string>
 #include "generic_ui.H"
@@ -27,7 +29,7 @@ template<class OSTREAM> OSTREAM& operator<<(OSTREAM& o, const Object& ob) {
 	switch(ob.type) {
 		case Types::int8:
 		{
-			o << ob.getInt8();
+			o << (int)ob.getInt8();
 			break;
 		}
 		case Types::int16:
@@ -73,3 +75,4 @@ template<class OSTREAM> OSTREAM& operator<<(OSTREAM& o, const Object& ob) {
 	}
 	return o;
 }
+#endif

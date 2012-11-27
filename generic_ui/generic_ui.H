@@ -24,6 +24,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <generic_struct.H>
+#include <pthread.h>
+#include <stdexcept>
 using namespace std;
 namespace GenericUI
 {
@@ -66,7 +68,7 @@ namespace GenericUI
 		//interface
 		newSlot,
 		//slot
-		newAttachment, invocation, ret,
+		newAttachment, invocation, invocationSync, ret,
 		//module loading
 		loadUI
 	};
@@ -78,7 +80,7 @@ namespace GenericUI
 		Interface* interface;
 		Slot* slot;
 		Object o; //argument(s) or return value(s)
-		void* scope; //user-modifiable field
+		uint64_t scope; //user-modifiable field
 		function<Object(Object)> cb;
 	};
 
@@ -93,6 +95,7 @@ namespace GenericUI
 		function<Object(Object)> callback;
 		//void invoke(const function<void*()>& cb, A&&... a...)
 		Object invokeSync(Object a);
+		Object invokeLocal(Object a);
 		void invoke(Object a);
 		void attach(const function<Object(Object)>& callback);
 		void listen(const function<bool(EventTypes, EventData&)>& func);
@@ -112,18 +115,24 @@ namespace GenericUI
 		function<bool(EventTypes, EventData&)> listener;
 		map<string, Slot> items;
 		string name;
+		pthread_mutex_t mutex;
 		Slot& attach(string name);
 		void listen(const function<bool(EventTypes, EventData&)>& func);
+		Interface();
+		~Interface();
 	};
 	struct Instance
 	{
 		map<string, Interface> interfaces;
+		pthread_mutex_t mutex;
 		Interface& attach(string name);
 		function<bool(EventTypes, EventData&)> listener;
 
 		//currently only one listener is supported
 		void listen(const function<bool(EventTypes, EventData&)>& func);
 		void load(string fileName);
+		Instance();
+		~Instance();
 	};
 #ifdef IS_UI
 	__attribute__ ((visibility("hidden"))) Instance* instance;
@@ -141,8 +150,8 @@ namespace GenericUI
 	extern Instance* instance;
 #endif
 	/*Interface& attach(string name);
-	void listen(const function<bool(EventTypes, EventData&)>& func);
-	void load(string fileName);*/
+	 void listen(const function<bool(EventTypes, EventData&)>& func);
+	 void load(string fileName);*/
 
 	inline Interface& attach(string name) {
 		return instance->attach(name);
@@ -159,6 +168,25 @@ namespace GenericUI
 #ifdef COMPILE_GENERIC_UI
 namespace GenericUI
 {
+	struct scopeLock
+	{
+		pthread_mutex_t& mutex;
+		scopeLock(pthread_mutex_t& m):mutex(m)
+		{	pthread_mutex_lock(&mutex);}
+		~scopeLock()
+		{	pthread_mutex_unlock(&mutex);}
+	};
+	static void initMutex(pthread_mutex_t& mutex) {
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init(&attr);
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+		int e;
+		if((e=pthread_mutex_init(&mutex,&attr))!=0) {
+			const char* err=strerror(e);
+			throw runtime_error("mutex initialization failed: "+string(err));
+		}
+		pthread_mutexattr_destroy(&attr);
+	}
 	Instance *instance=new Instance();
 	Exception::Exception() throw () :
 	msg("Exception occured") {
@@ -181,8 +209,8 @@ namespace GenericUI
 	{
 		EventData ed;
 		if(listener!=nullptr) {
-			ed= {name, interface, this, a, NULL};
-			if(!listener(EventTypes::invocation, ed)) return ed.o;
+			ed= {name, interface, this, a, 0};
+			if(!listener(EventTypes::invocationSync, ed)) return ed.o;
 		}
 		if(callback!=nullptr) ed.o=callback(a);
 		else ed.o=Object::undefined();
@@ -191,11 +219,18 @@ namespace GenericUI
 		}
 		return ed.o;
 	}
+	Object Slot::invokeLocal(Object a)
+	{
+		EventData ed;
+		if(callback!=nullptr) ed.o=callback(a);
+		else ed.o=Object::undefined();
+		return ed.o;
+	}
 	void Slot::invoke(Object a)
 	{
 		EventData ed;
 		if(listener!=nullptr) {
-			ed= {name, interface, this, a, NULL};
+			ed= {name, interface, this, a, 0};
 			if(!listener(EventTypes::invocation, ed)) return;
 		}
 		if(callback!=nullptr)
@@ -207,7 +242,7 @@ namespace GenericUI
 	void Slot::attach(const function<Object(Object)>& callback)
 	{
 		if(listener!=nullptr) {
-			EventData ed {name, interface, this, Object::undefined(), NULL};
+			EventData ed {name, interface, this, Object::undefined(), 0};
 			if(!listener(EventTypes::newAttachment, ed)) return;
 		}
 		this->callback=callback;
@@ -219,18 +254,24 @@ namespace GenericUI
 	}
 	Slot& Interface::attach(string name)
 	{
-		auto it=items.find(name);
-		if(it==items.end()) {
-			auto& tmp=items[name];
-			tmp.interface=this;
-			tmp.name=name;
-			if(listener!=nullptr) {
-				EventData ed {name, this, &tmp, Object::undefined(), NULL};
-				listener(EventTypes::newSlot, ed);
+		Slot* s;
+		bool b;
+		{
+			scopeLock l(mutex);
+			auto it=items.find(name);
+			if((b=(it==items.end()))) {
+				auto& tmp=items[name];
+				tmp.interface=this;
+				tmp.name=name;
+				s=&tmp;
 			}
-			return tmp;
+			else return (*it).second;
 		}
-		else return (*it).second;
+		if(listener!=nullptr) {
+			EventData ed {name, this, s, Object::undefined(), 0};
+			listener(EventTypes::newSlot, ed);
+		}
+		return *s;
 	}
 	void Interface::listen(const function<bool(EventTypes, EventData&)>& func) {
 		listener=func;
@@ -238,22 +279,27 @@ namespace GenericUI
 	Interface& Instance::attach(string name)
 	{
 		//cout << "attach: " << this << endl;
-		auto it=interfaces.find(name);
-		if(it==interfaces.end()) {
-			auto& tmp=interfaces[name];
-			tmp.name=name;
-			if(listener!=nullptr) {
-				EventData ed {name, &tmp, NULL, Object::undefined(), NULL};
-				listener(EventTypes::newInterface, ed);
+		Interface* iface;
+		{
+			scopeLock l(mutex);
+			auto it=interfaces.find(name);
+			if(it==interfaces.end()) {
+				auto& tmp=interfaces[name];
+				tmp.name=name;
+				iface=&tmp;
 			}
-			return tmp;
+			else return (*it).second;
 		}
-		else return (*it).second;
+		if(listener!=nullptr) {
+			EventData ed {name, iface, NULL, Object::undefined(), 0};
+			listener(EventTypes::newInterface, ed);
+		}
+		return *iface;
 	}
 	void Instance::load(string fileName)
 	{
 		if(listener!=nullptr) {
-			EventData ed {fileName, NULL, NULL, Object::undefined(), NULL};
+			EventData ed {fileName, NULL, NULL, Object::undefined(), 0};
 			if(!listener(EventTypes::loadUI, ed)) return;
 		}
 		//cout << "fileName="<<fileName << endl;
@@ -268,6 +314,19 @@ namespace GenericUI
 
 	void Instance::listen(const function<bool(EventTypes, EventData&)>& func) {
 		listener=func;
+	}
+
+	Interface::Interface() {
+		initMutex(mutex);
+	}
+	Instance::Instance() {
+		initMutex(mutex);
+	}
+	Interface::~Interface() {
+		pthread_mutex_destroy(&mutex);
+	}
+	Instance::~Instance() {
+		pthread_mutex_destroy(&mutex);
 	}
 
 }

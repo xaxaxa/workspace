@@ -34,7 +34,7 @@ copy_libs() {
 		#	cp -pL "${x}" "${dest}/${dirname}"
 		#	[ "${verbose}" = "y" ] && echo "Adding library ${x}" || true
 		#fi
-		cp "${x}" "${dest}/${dirname}/"
+		cp -f "${x}" "${dest}/${dirname}/"
 	done
 }
 
@@ -42,7 +42,7 @@ copy_exec() {
 	copy_libs "$1" "$2"
 	dirname=$(dirname "${1}")
 	mkdir -p "$2/$dirname"
-	cp -a "$1" "$2/$dirname"
+	cp -af "$1" "$2/$dirname"
 }
 copy_cmd() {
 	exe="$(which "$1")";

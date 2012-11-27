@@ -5,7 +5,7 @@ clean:
 v8_test:
 	g++ v8_test.C -o v8_test $(ARGS)
 fbdump: curl_httpreq.o
-	g++ fbdump.C curl_httpreq.o -o fbdump $(ARGS)
+	g++ fbdump.C curl_httpreq.o -o fbdump -fPIC -fPIE -pie $(ARGS)
 fbdump_cui.so:
 	g++ -shared -fPIC fbdump_cui.C -o fbdump_cui.so -Wl,--unresolved-symbols=ignore-all $(ARGS)
 urdl.o:

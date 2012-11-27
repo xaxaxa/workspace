@@ -4,7 +4,20 @@
  *  Created on: 2012-09-14
  *      Author: xaxaxa
  */
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
 #include "cpoll.H"
 #include "cpoll_internal.H"
 #include <unistd.h>
@@ -16,10 +29,10 @@ namespace CP
 	CPollException::CPollException() :
 			message(strerror(errno)), number(errno) {
 	}
-	CPollException::CPollException(int number) :
+	CPollException::CPollException(int32_t number) :
 			message(strerror(number)), number(number) {
 	}
-	CPollException::CPollException(string message, int number) :
+	CPollException::CPollException(string message, int32_t number) :
 			message(message), number(number) {
 	}
 	CPollException::~CPollException() throw () {
@@ -28,8 +41,24 @@ namespace CP
 		return message.c_str();
 	}
 
+	AbortException::AbortException() {
+	}
+	AbortException::~AbortException() throw () {
+	}
+	const char* AbortException::what() const throw () {
+		return "aborting cpoll loop";
+	}
+
+	CancelException::CancelException() {
+	}
+	CancelException::~CancelException() throw () {
+	}
+	const char* CancelException::what() const throw () {
+		return "cancelling current cpoll operation";
+	}
+
 	vector<RGC::Ref<EndPoint> > EndPoint::lookupHost(const char* hostname, const char* port,
-			int family, int socktype, int proto, int flags) {
+			int32_t family, int32_t socktype, int32_t proto, int32_t flags) {
 		vector<RGC::Ref<EndPoint> > tmp;
 		addrinfo hints, *result, *rp;
 		memset(&hints, 0, sizeof(struct addrinfo));
@@ -38,7 +67,7 @@ namespace CP
 		hints.ai_flags = flags;
 		hints.ai_protocol = proto;
 
-		int s = getaddrinfo(hostname, port, &hints, &result);
+		int32_t s = getaddrinfo(hostname, port, &hints, &result);
 		if (s != 0) {
 			throw CPollException(gai_strerror(s));
 		}
@@ -62,7 +91,7 @@ namespace CP
 				return NULL;
 		}
 	}
-	EndPoint* EndPoint::create(int AddressFamily) {
+	EndPoint* EndPoint::create(int32_t AddressFamily) {
 		switch (AddressFamily) {
 			case AF_INET:
 				return new IPEndPoint();
@@ -80,7 +109,7 @@ namespace CP
 	IPEndPoint::IPEndPoint() {
 		this->addressFamily = AF_INET;
 	}
-	IPEndPoint::IPEndPoint(IPAddress address, int port) {
+	IPEndPoint::IPEndPoint(IPAddress address, in_port_t port) {
 		this->addressFamily = AF_INET;
 		this->address = address;
 		this->port = port;
@@ -105,7 +134,7 @@ namespace CP
 		addr_in->sin_port = htons(port);
 		addr_in->sin_addr = address.a;
 	}
-	int IPEndPoint::getSockAddrSize() const {
+	int32_t IPEndPoint::getSockAddrSize() const {
 		return sizeof(sockaddr_in);
 	}
 	void IPEndPoint::clone(EndPoint& to) const {
@@ -156,7 +185,7 @@ namespace CP
 		addr_in->sin6_flowinfo = flowInfo;
 		addr_in->sin6_scope_id = scopeID;
 	}
-	int IPv6EndPoint::getSockAddrSize() const {
+	int32_t IPv6EndPoint::getSockAddrSize() const {
 		return sizeof(sockaddr_in);
 	}
 	void IPv6EndPoint::clone(EndPoint& to) const {
@@ -202,7 +231,7 @@ namespace CP
 		strncpy(a->sun_path, name.c_str(), name.length());
 		a->sun_path[name.length()] = '\0';
 	}
-	int UNIXEndPoint::getSockAddrSize() const {
+	int32_t UNIXEndPoint::getSockAddrSize() const {
 		return sizeof(sa_family_t) + name.length() + 1;
 	}
 	void UNIXEndPoint::clone(EndPoint& to) const {
@@ -224,12 +253,12 @@ namespace CP
 		checkError(handle);
 		__deleted = false;
 	}
-	int Handle::dispatchMultiple(Events events, const EventData& evtd) {
-		//cout << (int)events << endl;
-		int ret = 0;
-		for (int i = 0; i < numEvents; i++) {
+	int32_t Handle::dispatchMultiple(Events events, const EventData& evtd) {
+		//cout << (int32_t)events << endl;
+		int32_t ret = 0;
+		for (int32_t i = 0; i < numEvents; i++) {
 			Events e = indexToEvent(i);
-			//cout << (int)e << " " << (((event_t)e)&((event_t)events)) << endl;
+			//cout << (int32_t)e << " " << (((event_t)e)&((event_t)events)) << endl;
 			if ((((event_t) e) & ((event_t) events)) == (event_t) e) {
 				dispatch(e, evtd);
 				ret++;
@@ -248,21 +277,25 @@ namespace CP
 		poll(&pfd, 1, -1);
 		evtd.hungUp = (pfd.revents & POLLHUP);
 		evtd.error = (pfd.revents & POLLERR);
-		/*for(int i=0;i<numEvents;i++) {
+		/*for(int32_t i=0;i<numEvents;i++) {
 		 Events e=indexToEvent(i);
 		 short p=eventToPoll(e);
 		 if(p&pfd.revents!=0) events=(Events)((event_t)events | (event_t)e);
 		 }*/
 		return pollToEvents(pfd.revents);
 	}
-	int Handle::waitAndDispatch() {
+	int32_t Handle::waitAndDispatch() {
 		EventData evtd;
 		Events e = wait(evtd);
 		return dispatchMultiple(e, evtd);
 	}
 	void Handle::loop() {
-		while (waitAndDispatch() > 0)
-			;
+		try {
+			while (waitAndDispatch() > 0)
+				;
+		} catch (const AbortException& ex) {
+
+		}
 	}
 	/*void Handle::close() {
 	 ::close(handle);
@@ -284,10 +317,10 @@ namespace CP
 	}
 	Events File::_getEvents() {
 		Events e = Events::none;
-		for (int i = 0; i < numEvents; i++)
+		for (int32_t i = 0; i < numEvents; i++)
 			if (eventData[i].state != EventHandlerData::States::invalid)
 				e = (Events) (((event_t) e) | ((event_t) indexToEvent(i)));
-		//cout << "_getEvents: " << (int)e << endl;
+		//cout << "_getEvents: " << (int32_t)e << endl;
 		return e;
 	}
 	///only accepts one event
@@ -304,21 +337,21 @@ namespace CP
 				repeat ? (EventHandlerData::States::repeat) : (EventHandlerData::States::once);
 		if (onEventsChange != nullptr) onEventsChange(old_events);
 	}
-	int File::read(void* buf, int len) {
+	int32_t File::read(void* buf, int32_t len) {
 		return ::read(handle, buf, len);
 	}
-	int File::write(const void* buf, int len) {
+	int32_t File::write(const void* buf, int32_t len) {
 		return ::write(handle, buf, len);
 	}
-	int File::send(const void* buf, int len, int flags) {
+	int32_t File::send(const void* buf, int32_t len, int32_t flags) {
 		return ::send(handle, buf, len, flags);
 	}
-	int File::recv(void* buf, int len, int flags) {
+	int32_t File::recv(void* buf, int32_t len, int32_t flags) {
 		return ::recv(handle, buf, len, flags);
 	}
 	void File::doOperation(EventHandlerData& ed, const EventData& evtd) {
 		Operations op = ed.op;
-		int r = 0;
+		int32_t r = 0;
 		switch (op) {
 			case Operations::read:
 				r = read(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
@@ -371,16 +404,20 @@ namespace CP
 		ed.cb(r);
 	}
 	void File::dispatch(Events event, const EventData& evtd) {
-		//cout << (int)event << " dispatched" << endl;
+		//cout << (int32_t)event << " dispatched" << endl;
 		EventHandlerData& ed = eventData[eventToIndex(event)];
 		if (ed.state == EventHandlerData::States::invalid) return;
-
+		Events old_events = _getEvents();
 		if ((ed.state == EventHandlerData::States::once) || evtd.hungUp || evtd.error) ed.state =
 				EventHandlerData::States::invalid;
 
-		doOperation(ed, evtd);
+		try {
+			doOperation(ed, evtd);
+		} catch (const CancelException& ex) {
+			ed.state = EventHandlerData::States::invalid;
+		}
 		//cout << "clear event" << endl;
-		Events old_events = _getEvents();
+
 		//cout << (eventData[eventToIndex(event)].state==EventHandlerData::States::once
 		//		? "true" : "false") << endl;
 		//if(evtd.hungUp) cout << "socket hung up" << endl;
@@ -389,19 +426,19 @@ namespace CP
 		//cout << "b=" << b << endl;
 		///if (!b) ed.state = EventHandlerData::States::invalid;
 		
-		//else cout << (int)eventData[eventToIndex(event)].state << endl;
+		//else cout << (int32_t)eventData[eventToIndex(event)].state << endl;
 		if (onEventsChange != nullptr) onEventsChange(old_events);
 	}
-	void File::fillIOEventHandlerData(EventHandlerData* ed, void* buf, int len, const Callback& cb,
-			Events e, Operations op) {
+	void File::fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
+			const Callback& cb, Events e, Operations op) {
 		ed->cb = cb;
 		ed->misc.bufferIO.buf = buf;
 		ed->misc.bufferIO.len = len;
 		ed->op = op;
 	}
-	void File::read(void* buf, int len, const Callback& cb, bool repeat) {
+	void File::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
 		if (!_supportsEPoll) {
-			asdfg: int r = read(buf, len);
+			asdfg: int32_t r = read(buf, len);
 			cb(r);
 			if (repeat && r > 0) goto asdfg;
 			return;
@@ -411,9 +448,9 @@ namespace CP
 		fillIOEventHandlerData(ed, buf, len, cb, e, Operations::read);
 		endAddEvent(e, repeat);
 	}
-	void File::write(const void* buf, int len, const Callback& cb, bool repeat) {
+	void File::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
 		if (!_supportsEPoll) {
-			asdfg: int r = write(buf, len);
+			asdfg: int32_t r = write(buf, len);
 			cb(r);
 			if (repeat && r > 0) goto asdfg;
 			return;
@@ -423,9 +460,9 @@ namespace CP
 		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::write);
 		endAddEvent(e, repeat);
 	}
-	void File::writeAll(const void* buf, int len, const Callback& cb) {
+	void File::writeAll(const void* buf, int32_t len, const Callback& cb) {
 		if (!_supportsEPoll) {
-			int bw = 0, bw1 = -2;
+			int32_t bw = 0, bw1 = -2;
 			while (bw < len && (bw1 = write(((char*) buf) + bw, len - bw)) > 0)
 				bw += bw1;
 			cb(bw1 == -2 ? -1 : bw);
@@ -437,21 +474,21 @@ namespace CP
 		ed->misc.bufferIO.len_done = 0;
 		endAddEvent(e, true);
 	}
-	void File::recv(void* buf, int len, int flags, const Callback& cb, bool repeat) {
+	void File::recv(void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat) {
 		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, buf, len, cb, e, Operations::recv);
 		ed->misc.bufferIO.flags = flags;
 		endAddEvent(e, repeat);
 	}
-	void File::send(const void* buf, int len, int flags, const Callback& cb, bool repeat) {
+	void File::send(const void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat) {
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::send);
 		ed->misc.bufferIO.flags = flags;
 		endAddEvent(e, repeat);
 	}
-	void File::sendAll(const void* buf, int len, int flags, const Callback& cb) {
+	void File::sendAll(const void* buf, int32_t len, int32_t flags, const Callback& cb) {
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::sendAll);
@@ -465,19 +502,19 @@ namespace CP
 			addressFamily(AF_UNSPEC), type(0), protocol(0) {
 
 	}
-	Socket::Socket(HANDLE handle, int d, int t, int p) {
+	Socket::Socket(HANDLE handle, int32_t d, int32_t t, int32_t p) {
 		init(handle, d, t, p);
 	}
-	Socket::Socket(int d, int t, int p) {
+	Socket::Socket(int32_t d, int32_t t, int32_t p) {
 		init(d, t, p);
 	}
-	void Socket::init(HANDLE handle, int d, int t, int p) {
+	void Socket::init(HANDLE handle, int32_t d, int32_t t, int32_t p) {
 		File::init(handle, true);
 		addressFamily = d;
 		type = t;
 		protocol = p;
 	}
-	void Socket::init(int d, int t, int p) {
+	void Socket::init(int32_t d, int32_t t, int32_t p) {
 		File::init(socket(d, t, p), true);
 		addressFamily = d;
 		type = t;
@@ -518,25 +555,25 @@ namespace CP
 		}
 	}
 
-	void Socket::bind(const sockaddr *addr, int addr_size) {
+	void Socket::bind(const sockaddr *addr, int32_t addr_size) {
 		if (handle == -1) init(addr->sa_family, SOCK_STREAM, 0);
-		int tmp12345 = 1;
+		int32_t tmp12345 = 1;
 		setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
 		if (::bind(handle, addr, addr_size) != 0) throw CPollException(errno);
 	}
 	void Socket::bind(const EndPoint &ep) {
-		int size = ep.getSockAddrSize();
+		int32_t size = ep.getSockAddrSize();
 		uint8_t tmp[size];
 		ep.getSockAddr((sockaddr*) tmp);
 		bind((sockaddr*) tmp, size);
 	}
-	void Socket::listen(int backlog) {
+	void Socket::listen(int32_t backlog) {
 		checkError(::listen(handle, backlog));
 	}
-	int Socket::shutdown(int how) {
+	int32_t Socket::shutdown(int32_t how) {
 		return ::shutdown(handle, how);
 	}
-	void Socket::shutdown(int how, const Callback& cb) {
+	void Socket::shutdown(int32_t how, const Callback& cb) {
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		ed->cb = cb;
@@ -544,25 +581,25 @@ namespace CP
 		endAddEvent(e, false);
 	}
 
-	void __socket_init_if_not_already(Socket* s, int af) {
+	void __socket_init_if_not_already(Socket* s, int32_t af) {
 		if (s->handle < 0) s->init(af, SOCK_STREAM, 0);
 	}
-	void Socket::connect(const sockaddr *addr, int addr_size) {
+	void Socket::connect(const sockaddr *addr, int32_t addr_size) {
 		__socket_init_if_not_already(this, addr->sa_family);
-		retry: int tmp = ::connect(handle, addr, addr_size);
+		retry: int32_t tmp = ::connect(handle, addr, addr_size);
 		if (tmp != 0 && errno != EINPROGRESS) {
 			if (errno == EINTR) goto retry;
 			throw CPollException(errno);
 		}
 	}
 	void Socket::connect(const EndPoint &ep) {
-		int l = ep.getSockAddrSize();
+		int32_t l = ep.getSockAddrSize();
 		char tmp[l];
 		ep.getSockAddr((sockaddr*) tmp);
 		connect((sockaddr*) tmp, l);
 	}
-	void Socket::connect(const char* hostname, const char* port, int family, int socktype,
-			int proto, int flags) {
+	void Socket::connect(const char* hostname, const char* port, int32_t family, int32_t socktype,
+			int32_t proto, int32_t flags) {
 		//XXX
 	}
 	//the caller must release() or free() the returned object;
@@ -575,20 +612,20 @@ namespace CP
 		char addr[l];
 		HANDLE h = ::accept(handle, (struct sockaddr*) addr, &l);
 		if (h < 0) {
-			int e = errno;
+			int32_t e = errno;
 			ep->release();
 			onError(e);
 		}
 		ep->setSockAddr((struct sockaddr*) addr);
 		ep->release();
 		Socket* sock = new Socket(h, addressFamily, type, protocol);
-		//int tmp12345 = 1;
+		//int32_t tmp12345 = 1;
 		//setsockopt(h, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
 		//sock->peer=ep;
 		return sock;
 	}
 
-	void Socket::connect(const sockaddr* addr, int addr_size, const Callback& cb) {
+	void Socket::connect(const sockaddr* addr, int32_t addr_size, const Callback& cb) {
 		__socket_init_if_not_already(this, addr->sa_family);
 		checkError(fcntl(handle, F_SETFL, checkError(fcntl(handle, F_GETFL, 0)) | O_NONBLOCK));
 		connect(addr, addr_size);
@@ -613,7 +650,7 @@ namespace CP
 	void Socket::accept(const function<void(Socket*)>& cb, bool repeat) {
 		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
-		ed->cb = [cb,this](int i) {
+		ed->cb = [cb,this](int32_t i) {
 			Socket* s=accept();
 			cb(s);
 		};
@@ -622,19 +659,19 @@ namespace CP
 	}
 	
 	//SignalFD
-	int SignalFD::MAX_EVENTS(4);
+	int32_t SignalFD::MAX_EVENTS(4);
 	SignalFD::SignalFD(HANDLE handle, const sigset_t& mask) :
 			Handle(handle), mask(mask) {
 	}
-	SignalFD::SignalFD(const sigset_t& mask, int flags) :
+	SignalFD::SignalFD(const sigset_t& mask, int32_t flags) :
 			Handle(signalfd(-1, &mask, flags)), mask(mask) {
 	}
 	void SignalFD::dispatch(Events event, const EventData& evtd) {
 		Signal sig[MAX_EVENTS];
-		int br = ::read(handle, sig, sizeof(sig));
+		int32_t br = ::read(handle, sig, sizeof(sig));
 		if (callback != nullptr) {
 			br /= sizeof(Signal);
-			for (int i = 0; i < br; i++) {
+			for (int32_t i = 0; i < br; i++) {
 				callback(sig[i]);
 			}
 		}
@@ -643,8 +680,55 @@ namespace CP
 		return Events::in;
 	}
 	
+	//EventFD
+	EventFD::EventFD(HANDLE handle) :
+			File(handle, true) {
+	}
+	EventFD::EventFD(uint32_t initval, int32_t flags) :
+			File(eventfd(initval, flags), true) {
+	}
+	void EventFD::doOperation(EventHandlerData& ed, const EventData& evtd) {
+		int32_t r = 0;
+		switch (ed.op) {
+			case Operations::read:
+				r = eventfd_read(handle, &ed.misc.eventfd.evt);
+				break;
+			case Operations::write:
+				r = eventfd_write(handle, ed.misc.eventfd.evt);
+				break;
+			default:
+				break;
+		}
+		ed.cb(r);
+	}
+	eventfd_t EventFD::getEvent() {
+		eventfd_t tmp;
+		if (eventfd_read(handle, &tmp) == 0) return tmp;
+		return -1;
+	}
+	void EventFD::getEvent(const function<void(eventfd_t)>& cb, bool repeat) {
+		Events e = Events::in;
+		EventHandlerData* ed = beginAddEvent(e);
+		ed->cb = [cb,ed](int i) {
+			cb((i<0)?-1:(ed->misc.eventfd.evt));
+		};
+		ed->op = Operations::read;
+		endAddEvent(e, repeat);
+	}
+	int32_t EventFD::sendEvent(eventfd_t evt) {
+		return eventfd_write(handle, evt);
+	}
+	void EventFD::sendEvent(eventfd_t evt, const function<void(int32_t)>& cb) {
+		Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		ed->cb = cb;
+		ed->misc.eventfd.evt = evt;
+		ed->op = Operations::write;
+		endAddEvent(e, false);
+	}
+
 	//Poll
-	int Poll::MAX_EVENTS(32);
+	int32_t Poll::MAX_EVENTS(32);
 	Poll::Poll(HANDLE handle) :
 			Handle(handle), active(0), cur_handle(-1) {
 		disableSignals();
@@ -674,46 +758,46 @@ namespace CP
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_MOD, h.handle, &evt));
 		}
 	}
-	int Poll::_doDispatch(const epoll_event& event) {
+	int32_t Poll::_doDispatch(const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
 		if (h->__deleted) return 0;
-		int ret = 0;
+		int32_t ret = 0;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-		//cerr << "evt=" << (int)evt << endl;
+		//cerr << "evt=" << (int32_t)evt << endl;
 
-		/*for(int i=0;i<numEvents;i++) {
+		/*for(int32_t i=0;i<numEvents;i++) {
 		 Events e=indexToEvent(i);
 		 uint32_t ep=eventToEPoll(e);
 		 if(event.events&ep != 0)
 		 evt |= (event_t)e;
 		 }*/
 		//cout << "handle fd: " << h->handle << endl;
-		//cout << "getevents: " << (int)(h->getEvents()) << endl;
+		//cout << "getevents: " << (int32_t)(h->getEvents()) << endl;
 		cur_handle = h->handle;
 		cur_last_events = h->getEvents();
 		ret = h->dispatchMultiple((Events) evt, evtd);
 		Events new_events = h->getEvents();
-		//cout << (int)new_events << " " << (int)cur_last_events << endl;
+		//cout << (int32_t)new_events << " " << (int32_t)cur_last_events << endl;
 		if (new_events != cur_last_events) _applyHandle(*h, cur_last_events);
-		//else cout << "new_events==cur_last_events==" << (int)new_events << endl;
+		//else cout << "new_events==cur_last_events==" << (int32_t)new_events << endl;
 		return ret;
 	}
-	int Poll::_doEPoll(int timeout) {
+	int32_t Poll::_doEPoll(int32_t timeout) {
 		if (active <= 0) return 0;
-		int ret = 0;
+		int32_t ret = 0;
 		epoll_event evts[MAX_EVENTS];
-		retry: int n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
+		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
 		if (n < 0) {
 			if (errno == EINTR)
 				goto retry;
 			else throw CPollException();
 		}
-		for (int i = 0; i < n; i++)
+		for (int32_t i = 0; i < n; i++)
 			ret += _doDispatch(evts[i]);
-		for (unsigned int i = 0; i < tmp_deleted.size(); i++)
+		for (uint32_t i = 0; i < tmp_deleted.size(); i++)
 			tmp_deleted[i]->release();
 		tmp_deleted.resize(0);
 		return ret;
@@ -726,7 +810,7 @@ namespace CP
 		//throw CPollException("Poll::getEvents() not implemented");
 		return active ? (Events::all) : (Events::none);
 	}
-	int Poll::waitAndDispatch() {
+	int32_t Poll::waitAndDispatch() {
 		return _doEPoll(-1);
 	}
 	void Poll::fillEPollEvents(Handle& h, epoll_event& evt, Events e) {

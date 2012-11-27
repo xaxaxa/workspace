@@ -9,18 +9,15 @@ O_SRCS += \
 
 C_UPPER_SRCS += \
 ../cpoll.C \
-../rgctest.C \
-../t1.C 
+../rgctest.C 
 
 OBJS += \
 ./cpoll.o \
-./rgctest.o \
-./t1.o 
+./rgctest.o 
 
 C_UPPER_DEPS += \
 ./cpoll.d \
-./rgctest.d \
-./t1.d 
+./rgctest.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

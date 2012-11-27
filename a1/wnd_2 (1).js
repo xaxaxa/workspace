@@ -1,4 +1,4 @@
-﻿
+
 var RS_IMG_MODE_BG=1;
 var RS_IMG_MODE_IMG=2;
 var RS_IMG_MODE_ALL=3;

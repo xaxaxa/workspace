@@ -46,6 +46,7 @@
 #include <vector>
 #include <sstream>
 #include <sys/signalfd.h>
+#include <sys/eventfd.h>
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -86,18 +87,33 @@
 namespace CP
 {
 	using namespace std;
-	typedef int HANDLE; //file descriptor or handle
-	typedef function<void(int)> Callback;
+	typedef int32_t HANDLE; //file descriptor or handle
+	typedef function<void(int32_t)> Callback;
 	typedef uint8_t event_t;
 	class CPollException: public std::exception
 	{
 	public:
 		string message;
-		int number;
+		int32_t number;
 		CPollException();
-		CPollException(int number);
-		CPollException(string message, int number = 0);
+		CPollException(int32_t number);
+		CPollException(string message, int32_t number = 0);
 		~CPollException() throw ();
+		const char* what() const throw ();
+	};
+	class AbortException: public std::exception
+	{ //used for aborting the event loop
+	public:
+		AbortException();
+		~AbortException() throw ();
+		const char* what() const throw ();
+	};
+	class CancelException: public std::exception
+	{ //used for cancelling a repeat[Read|Write] operation
+	  //do NOT throw this exception on one-shot operations such as read()
+	public:
+		CancelException();
+		~CancelException() throw ();
 		const char* what() const throw ();
 	};
 	
@@ -174,31 +190,32 @@ namespace CP
 	class EndPoint: public RGC::Object
 	{
 	public:
-		int addressFamily;
+		int32_t addressFamily;
 		virtual void getSockAddr(sockaddr* addr) const=0;
 		virtual void setSockAddr(const sockaddr* addr)=0;
-		virtual int getSockAddrSize() const=0;
+		virtual int32_t getSockAddrSize() const=0;
 		static EndPoint* fromSockAddr(const sockaddr* addr);
-		static EndPoint* create(int addressFamily);
+		static EndPoint* create(int32_t addressFamily);
 		virtual void clone(EndPoint& to) const=0;
 		virtual ~EndPoint() {
 		}
 		static vector<RGC::Ref<EndPoint> > lookupHost(const char* hostname, const char* port,
-				int family = AF_UNSPEC, int socktype = 0, int proto = 0, int flags = 0);
+				int32_t family = AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags =
+						0);
 		//static EndPoint Resolve(
 	};
 	class IPEndPoint: public EndPoint
 	{
 	public:
 		IPAddress address;
-		int port;
+		in_port_t port;
 		IPEndPoint();
-		IPEndPoint(IPAddress address, int port);
+		IPEndPoint(IPAddress address, in_port_t port);
 		void set_addr(const sockaddr_in& addr);
 		virtual void setSockAddr(const sockaddr* addr);
 		IPEndPoint(const sockaddr_in& addr);
 		virtual void getSockAddr(sockaddr* addr) const;
-		virtual int getSockAddrSize() const;
+		virtual int32_t getSockAddrSize() const;
 		virtual void clone(EndPoint& to) const;
 		virtual string toStr() const;
 	};
@@ -215,7 +232,7 @@ namespace CP
 		IPv6EndPoint(const sockaddr_in6& addr);
 		virtual void setSockAddr(const sockaddr* addr);
 		virtual void getSockAddr(sockaddr* addr) const;
-		virtual int getSockAddrSize() const;
+		virtual int32_t getSockAddrSize() const;
 		virtual void clone(EndPoint& to) const;
 		virtual string tostr() const;
 	};
@@ -229,8 +246,36 @@ namespace CP
 		UNIXEndPoint(const sockaddr_un& addr);
 		virtual void setSockAddr(const sockaddr* addr);
 		virtual void getSockAddr(sockaddr* addr) const;
-		virtual int getSockAddrSize() const;
+		virtual int32_t getSockAddrSize() const;
 		virtual void clone(EndPoint& to) const;
+	};
+	//===========================================================
+	//======================ABSTRACT CLASSES=====================
+	//===========================================================
+	class Stream
+	{
+	public:
+		//sync
+		virtual int32_t read(void* buf, int32_t len)=0;
+		virtual int32_t write(const void* buf, int32_t len)=0;
+
+		//async
+		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
+		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
+			read(buf, len, cb, true);
+		}
+		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
+		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
+			write(buf, len, cb, true);
+		}
+		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+
+		//=========misc===========
+		//sync
+		virtual void close(); //may block
+		virtual void flush();
+		//virtual void
+
 	};
 	
 	//===========================================================
@@ -246,7 +291,8 @@ namespace CP
 	enum class Operations
 		: uint8_t
 		{
-			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect
+			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect,
+		lastItem
 	};
 
 	struct EventHandlerData
@@ -258,14 +304,18 @@ namespace CP
 			struct
 			{
 				void* buf;
-				int len;
-				int flags;
-				int len_done;
+				int32_t len;
+				int32_t flags;
+				int32_t len_done;
 			} bufferIO;
 			struct
 			{
-				int how;
+				int32_t how;
 			} shutdown;
+			struct
+			{
+				eventfd_t evt;
+			} eventfd;
 		} misc;
 		Operations op;
 		enum class States
@@ -282,7 +332,7 @@ namespace CP
 		bool hungUp, error;
 	};
 	
-	static const int numEvents = 3;
+	static const int32_t numEvents = 3;
 	//============================================================
 	//============================================================
 	//=======================MAIN CLASSES=========================
@@ -304,10 +354,10 @@ namespace CP
 		///only accepts one event
 		virtual void dispatch(Events event, const EventData& evtd)=0;
 		virtual Events getEvents()=0;
-		virtual int dispatchMultiple(Events events, const EventData& evtd);
+		virtual int32_t dispatchMultiple(Events events, const EventData& evtd);
 		///get some events from the queue.
 		virtual Events wait(EventData& evtd);
-		virtual int waitAndDispatch();
+		virtual int32_t waitAndDispatch();
 		virtual void loop();
 		//void close();
 		~Handle();
@@ -325,32 +375,33 @@ namespace CP
 		///only accepts one event
 		EventHandlerData* beginAddEvent(Events event);
 		void endAddEvent(Events event, bool repeat = false);
-		int read(void* buf, int len);
-		int write(const void* buf, int len);
-		int send(const void* buf, int len, int flags = 0);
-		int recv(void* buf, int len, int flags = 0);
+		int32_t read(void* buf, int32_t len);
+		int32_t write(const void* buf, int32_t len);
+		int32_t send(const void* buf, int32_t len, int32_t flags = 0);
+		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
 		void dispatch(Events event, const EventData& evtd);
-		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int len,
+		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 				const Callback& cb, Events e, Operations op);
-		void read(void* buf, int len, const Callback& cb, bool repeat = false);
-		inline void repeatRead(void* buf, int len, const Callback& cb) {
+		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
 			read(buf, len, cb, true);
 		}
-		void write(const void* buf, int len, const Callback& cb, bool repeat = false);
-		inline void repeatWrite(const void* buf, int len, const Callback& cb) {
+		void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
 			write(buf, len, cb, true);
 		}
-		void writeAll(const void* buf, int len, const Callback& cb);
-		void recv(void* buf, int len, int flags, const Callback& cb, bool repeat = false);
-		inline void repeatRecv(void* buf, int len, int flags, const Callback& cb) {
+		void writeAll(const void* buf, int32_t len, const Callback& cb);
+		void recv(void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat = false);
+		inline void repeatRecv(void* buf, int32_t len, int32_t flags, const Callback& cb) {
 			recv(buf, len, flags, cb, true);
 		}
-		void send(const void* buf, int len, int flags, const Callback& cb, bool repeat = false);
-		inline void repeatSend(const void* buf, int len, int flags, const Callback& cb) {
+		void send(const void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat =
+				false);
+		inline void repeatSend(const void* buf, int32_t len, int32_t flags, const Callback& cb) {
 			send(buf, len, flags, cb, true);
 		}
-		void sendAll(const void* buf, int len, int flags, const Callback& cb);
+		void sendAll(const void* buf, int32_t len, int32_t flags, const Callback& cb);
 		virtual Events getEvents() {
 			return _getEvents();
 		}
@@ -358,13 +409,13 @@ namespace CP
 	class Socket: public File
 	{
 	public:
-		int addressFamily, type, protocol;
+		int32_t addressFamily, type, protocol;
 		//RGC::Ref<EndPoint> peer;
 		Socket();
-		Socket(HANDLE handle, int d, int t, int p);
-		Socket(int d, int t = SOCK_STREAM, int p = 0);
-		virtual void init(HANDLE handle, int d, int t, int p);
-		virtual void init(int d, int t, int p);
+		Socket(HANDLE handle, int32_t d, int32_t t, int32_t p);
+		Socket(int32_t d, int32_t t = SOCK_STREAM, int32_t p = 0);
+		virtual void init(HANDLE handle, int32_t d, int32_t t, int32_t p);
+		virtual void init(int32_t d, int32_t t, int32_t p);
 
 		//the caller must release() or free() the returned object
 		EndPoint* getLocalEndPoint();
@@ -372,23 +423,23 @@ namespace CP
 		EndPoint* getRemoteEndPoint();
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
 
-		void connect(const sockaddr *addr, int addr_size);
+		void connect(const sockaddr *addr, int32_t addr_size);
 		void connect(const EndPoint &ep);
-		void connect(const char* hostname, const char* port, int family = AF_UNSPEC, int socktype =
-				0, int proto = 0, int flags = 0);
-		void bind(const sockaddr *addr, int addr_size);
+		void connect(const char* hostname, const char* port, int32_t family = AF_UNSPEC,
+				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
+		void bind(const sockaddr *addr, int32_t addr_size);
 		void bind(const EndPoint &ep);
 
-		int shutdown(int how);
-		void shutdown(int how, const Callback& cb);
-		void listen(int backlog = 8);
+		int32_t shutdown(int32_t how);
+		void shutdown(int32_t how, const Callback& cb);
+		void listen(int32_t backlog = 8);
 		//the caller must release() or free() the returned object
 		Socket* accept();
 
-		void connect(const sockaddr *addr, int addr_size, const Callback& cb);
+		void connect(const sockaddr *addr, int32_t addr_size, const Callback& cb);
 		void connect(const EndPoint &ep, const Callback& cb);
-		void connect(const char* hostname, const char* port, const Callback& cb, int family =
-				AF_UNSPEC, int socktype = 0, int proto = 0, int flags = 0);
+		void connect(const char* hostname, const char* port, const Callback& cb, int32_t family =
+				AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 
 		//callback function must release() or free() the received object
 		void accept(const function<void(Socket*)>& cb, bool repeat = false);
@@ -399,14 +450,27 @@ namespace CP
 	};
 	class SignalFD: public Handle
 	{
-		static int MAX_EVENTS;
+		static int32_t MAX_EVENTS;
 		typedef struct signalfd_siginfo Signal;
 		function<void(Signal& sig)> callback;
 		sigset_t mask;
 		SignalFD(HANDLE handle, const sigset_t& mask);
-		SignalFD(const sigset_t& mask, int flags);
+		SignalFD(const sigset_t& mask, int32_t flags);
 		virtual void dispatch(Events event, const EventData& evtd);
 		virtual Events getEvents();
+	};
+	class EventFD: public File
+	{
+		EventFD(HANDLE handle);
+		EventFD(uint32_t initval = 0, int32_t flags = 0);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
+		eventfd_t getEvent();
+		void getEvent(const function<void(eventfd_t)>& cb, bool repeat = false);
+		void repeatGetEvent(const function<void(eventfd_t)>& cb) {
+			getEvent(cb, true);
+		}
+		int32_t sendEvent(eventfd_t evt = 1);
+		void sendEvent(eventfd_t evt, const function<void(int32_t)>& cb);
 	};
 	//XXX: AIO support in the linux kernel is incomplete, and
 	//	has many serious limitations such as:
@@ -424,8 +488,8 @@ namespace CP
 	class Poll: public Handle
 	{
 	public:
-		static int MAX_EVENTS;
-		int active;
+		static int32_t MAX_EVENTS;
+		int32_t active;
 		HANDLE cur_handle;
 		Events cur_last_events;
 		//map<HANDLE, Ref<Handle> > handles;
@@ -433,11 +497,11 @@ namespace CP
 		Poll(HANDLE handle);
 		Poll();
 		void _applyHandle(Handle& h, Events old_e);
-		int _doDispatch(const epoll_event& event);
-		int _doEPoll(int timeout);
+		int32_t _doDispatch(const epoll_event& event);
+		int32_t _doEPoll(int32_t timeout);
 		virtual void dispatch(Events event, const EventData& evtd);
 		virtual Events getEvents();
-		virtual int waitAndDispatch();
+		virtual int32_t waitAndDispatch();
 		void fillEPollEvents(Handle& h, epoll_event& evt, Events e);
 
 		inline void applyHandle(Handle& h, Events old_e);

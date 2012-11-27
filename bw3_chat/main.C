@@ -76,7 +76,8 @@ WApplication* newapp(const WEnvironment& env, Wt::WServer& srv)
 	auto ptr = servers.Get(id);
 	if (!ptr.Valid())
 	{
-		bw3_chatserver* s = new bw3_chatserver(srv, id);
+		//bw3_chatserver* s = new bw3_chatserver(srv, id);
+		GenericServer* s=new GenericServer(srv);
 		ptr = servers.Add(id, s);
 	}
 	return new App(env, ptr);

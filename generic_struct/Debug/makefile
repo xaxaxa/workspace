@@ -43,7 +43,7 @@ all: libgeneric_struct.so
 libgeneric_struct.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/media/data1/workspace/lib" -shared -o "libgeneric_struct.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/dd/workspace/lib" -shared -o "libgeneric_struct.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
