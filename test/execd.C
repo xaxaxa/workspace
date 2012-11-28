@@ -245,6 +245,7 @@ public:
 			close(O[1]);
 			close(E[1]);
 			execvp(cmdline[0], cmdline+1);
+			perror("execvp");
 			_exit(1);
 		} else {
 			return errno;

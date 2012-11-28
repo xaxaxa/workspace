@@ -114,12 +114,12 @@ int main() {
 		close(_o[1]);
 		
 		//method 1: directly spawn on local machine
-		//*
+		/*
 		execlp("./execd", "execd",NULL);
 		//*/
 		
 		//method 2: ssh
-		/*
+		//*
 		const char* sshserver="user1@192.168.5.11";
 		execlp("ssh","ssh",sshserver,"execd",NULL);
 		//*/
@@ -153,22 +153,33 @@ int main() {
 	eprintf("setreturnoutput: r taskid [1/0]\n");
 	eprintf("kill: k taskid signal\n");
 	eprintf("sendinput: i taskid string\x1B[0;0;0m\n");
+	bool shell=false;
 	while(true) {
-		eprintf("\x1B[1;1;1mexecd # \x1B[0;0;0m");
+		if(shell)
+			eprintf("\x1B[1;1;1mexecd sh # \x1B[0;0;0m");
+		else
+			eprintf("\x1B[1;1;1mexecd # \x1B[0;0;0m");
 		fflush(stdout);
 		char* line=NULL;
 		size_t n=0;
 		ssize_t len=getline(&line, &n, stdin);
 		deallocator d([line](){ if(line!=NULL)free(line); });
-		if(len<=0) break;
+		if(len<=0) {
+			if(shell) {
+				shell=false;
+				continue;
+			}
+			break;
+		}
 		
 		char* tmp1=strchr(line, ' ');
-		if(tmp1==NULL) continue;
-		
-		//tmp1++;
-		if(tmp1>=(line+len)) continue;
-		string cmdstr(tmp1);
-		trim(cmdstr);
+		string cmdstr;
+		if(tmp1!=NULL) {
+			//tmp1++;
+			if(tmp1>=(line+len)) continue;
+			cmdstr=string(tmp1);
+			trim(cmdstr);
+		}
 		
 		switch(*line) {
 			case 'x':
@@ -210,6 +221,10 @@ int main() {
 				//data.append((int8_t)'\n');
 				client.do_sendInput(atoi(taskid.c_str()),data);
 				break;
+			}
+			case 's':
+			{
+				
 			}
 		}
 	}

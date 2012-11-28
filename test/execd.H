@@ -20,7 +20,7 @@
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 #endif
-#define DEBUGPRINT(...) fprintf(stderr,__VA_ARGS__)
+#define DEBUGPRINT(...) //fprintf(stderr,__VA_ARGS__)
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>

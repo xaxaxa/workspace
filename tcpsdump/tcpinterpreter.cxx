@@ -37,6 +37,22 @@ using namespace xaxaxa;
 using namespace std;
 
 namespace xaxaxa{
+const char* hexchars="0123456789ABCDEF";
+void getHex(char* ch, int8_t byte) {
+	ch[1]=hexchars[byte&0x0F];
+	ch[0]=hexchars[(byte>>4)&0x0F];
+}
+void printHex(const void* data, int len) {
+	const int8_t* d=(const int8_t*)data;
+	char tmp[3];
+	tmp[2]=0;
+	cerr << "0x";
+	for(int i=0;i<len;i++) {
+		getHex(tmp, d[i]);
+		cerr << tmp;
+	}
+	cerr << endl;
+}
 namespace net
 {
 	
@@ -218,12 +234,18 @@ namespace net
 					const Buffer& b=p.data;
 					iphdr* h=(iphdr*)b.Data;
 					Int hdrlen;
-					if(b.Length<1 || b.Length<(hdrlen=h->ihl*4))
-					{
+					
+					if(b.Length<1 || b.Length<(hdrlen=h->ihl*4)) {
 						WARN(5,"Invalid IP packet");
 						return;
 					}
-					RAISEEVENT(dataout,DataEvent{packet{this,h,b.SubBuffer(hdrlen),(protoid)(h->protocol)},&e});
+					uint16_t tot_len=ntohs(h->tot_len);
+					if(int64_t(tot_len)>int64_t(b.Length)) {
+						WARN(5,"Invalid IP packet");
+						return;
+					}
+					
+					RAISEEVENT(dataout,DataEvent{packet{this,h,b.SubBuffer(hdrlen, tot_len-hdrlen),(protoid)(h->protocol)},&e});
 				}
 			}
 			virtual string identify() const{return "Internet Protocol";}
@@ -258,7 +280,12 @@ namespace net
 						WARN(5,"Invalid IPv6 packet");
 						return;
 					}
-					RAISEEVENT(dataout,DataEvent{packet{this,h,b.SubBuffer(sizeof(ip6_hdr)),(protoid)(h->ip6_ctlun.ip6_un1.ip6_un1_nxt)},&e});
+					uint16_t payload_len=ntohs(h->ip6_ctlun.ip6_un1.ip6_un1_plen);
+					if(int64_t(sizeof(ip6_hdr))+payload_len > (int64_t)b.Length) {
+						WARN(5,"Invalid IPv6 packet");
+						return;
+					}
+					RAISEEVENT(dataout,DataEvent{packet{this,h,b.SubBuffer(sizeof(ip6_hdr),payload_len),(protoid)(h->ip6_ctlun.ip6_un1.ip6_un1_nxt)},&e});
 				}
 			}
 			virtual string identify() const{return "Internet Protocol Version 6";}

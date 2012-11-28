@@ -57,21 +57,34 @@ EventQueue<Buffer> q;
 void* processorThread(void* v);
 int main(int argc, char **argv)
 {
+	//printHex("asdfg ",6);
 	char errbuf[PCAP_ERRBUF_SIZE];
-	if((cap=pcap_create(argv[1],errbuf))==NULL)
-	{
-		cerr << errbuf;
-		return 1;
+	//bool offline=false;
+	if(strcmp(argv[1], "-f")==0) {
+		if((cap=pcap_open_offline(argv[2],errbuf))==NULL)
+		{
+			cerr << errbuf;
+			return 1;
+		}
+		//offline=true;
 	}
-	pcap_set_promisc(cap,1);
-	pcap_set_timeout(cap,500);
-	pcap_set_snaplen(cap,65535);
-	pcap_set_buffer_size(cap,1024*1024*8);
-	int ret=pcap_activate(cap);
-	if(ret&PCAP_ERROR)
-	{
-		pcap_perror(cap,(char*)"error opening capture device");
-		return 1;
+	else {
+		if((cap=pcap_create(argv[1],errbuf))==NULL)
+		{
+			cerr << errbuf;
+			return 1;
+		}
+	
+		pcap_set_promisc(cap,1);
+		pcap_set_timeout(cap,500);
+		pcap_set_snaplen(cap,65535);
+		pcap_set_buffer_size(cap,1024*1024*8);
+		int ret=pcap_activate(cap);
+		if(ret&PCAP_ERROR)
+		{
+			pcap_perror(cap,(char*)"error opening capture device");
+			return 1;
+		}
 	}
 	//capture
 	//pcap_pkthdr* packetheader;
@@ -112,6 +125,9 @@ int main(int argc, char **argv)
 	pthread_create(&thr,NULL,processorThread,NULL);
 	pcap_loop(cap,-1,cb,NULL);
 	
+	Buffer tmpb((void*)NULL,0);
+	q.Append(tmpb);
+	pthread_join(thr, NULL);
 	return 0;
 }
 void chkpacket(const pcap_pkthdr *header, const u_char *bytes)
@@ -167,6 +183,7 @@ void* processorThread(void* v)
 	while(true)
 	{
 		Buffer b=q.Dequeue();
+		if(b.Data==NULL) return NULL;
 		//WARN(3,"I/O thread received packet");
 		processPacket(b);
 		time_t tmp=time(NULL);
@@ -218,6 +235,7 @@ void cb3(void* user, const protocols::Event& e)
 	//get connection
 	connection_ptr conn{(connection*)&e1.Connection};
 	//const packet* pack=&p;
+	//printHex(p.data.Data,p.data.Length);
 	
 	/*while(true)
 	{

@@ -752,7 +752,7 @@ namespace xaxaxa
 		typedef int refc_t;
 		refc_t* pbuf;
 		//Byte* Data;
-		bool IsRaw;
+		//bool IsRaw;
 		//Int Length;
 		inline void __inc()
 		{
