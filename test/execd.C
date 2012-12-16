@@ -144,6 +144,8 @@ public:
 			if(it==pidmap.end()) return;
 			tid=(*it).second;
 			stdinfd=procs[tid].stdin;
+			pidmap.erase(it);
+			procs.erase(tid);
 		}
 		close(stdinfd);
 		send({O((int8_t)EXECD::events::exit), O{tid, status}});

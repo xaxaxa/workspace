@@ -349,7 +349,8 @@ namespace CP
 	int32_t File::recv(void* buf, int32_t len, int32_t flags) {
 		return ::recv(handle, buf, len, flags);
 	}
-	void File::doOperation(EventHandlerData& ed, const EventData& evtd) {
+	void File::doOperation(EventHandlerData& ed, const EventData& evtd,
+			EventHandlerData::States oldstate) {
 		Operations op = ed.op;
 		int32_t r = 0;
 		switch (op) {
@@ -402,18 +403,20 @@ namespace CP
 			ed.state = EventHandlerData::States::invalid;
 		}
 		ed.cb(r);
-		if (r > 0 && (evtd.error || evtd.hungUp)) ed.cb(-1);
+		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat)
+			ed.cb(-1);
 	}
 	void File::dispatch(Events event, const EventData& evtd) {
 		//cout << (int32_t)event << " dispatched" << endl;
 		EventHandlerData& ed = eventData[eventToIndex(event)];
 		if (ed.state == EventHandlerData::States::invalid) return;
 		Events old_events = _getEvents();
+		EventHandlerData::States oldstate = ed.state;
 		if ((ed.state == EventHandlerData::States::once) || evtd.hungUp || evtd.error) ed.state =
 				EventHandlerData::States::invalid;
 
 		try {
-			doOperation(ed, evtd);
+			doOperation(ed, evtd, oldstate);
 		} catch (const CancelException& ex) {
 			ed.state = EventHandlerData::States::invalid;
 		}
@@ -543,7 +546,8 @@ namespace CP
 		ep->setSockAddr((struct sockaddr*) addr);
 		return ep;
 	}
-	void Socket::doOperation(EventHandlerData& ed, const EventData& evtd) {
+	void Socket::doOperation(EventHandlerData& ed, const EventData& evtd,
+			EventHandlerData::States oldstate) {
 		Operations op = ed.op;
 		switch (op) {
 			case Operations::accept:
@@ -556,7 +560,7 @@ namespace CP
 				ed.cb((evtd.error || evtd.hungUp) ? -1 : 0);
 				break;
 			default:
-				File::doOperation(ed, evtd);
+				File::doOperation(ed, evtd, oldstate);
 		}
 	}
 
@@ -692,7 +696,8 @@ namespace CP
 	EventFD::EventFD(uint32_t initval, int32_t flags) :
 			File(eventfd(initval, flags), true) {
 	}
-	void EventFD::doOperation(EventHandlerData& ed, const EventData& evtd) {
+	void EventFD::doOperation(EventHandlerData& ed, const EventData& evtd,
+			EventHandlerData::States oldstate) {
 		int32_t r = 0;
 		switch (ed.op) {
 			case Operations::read:

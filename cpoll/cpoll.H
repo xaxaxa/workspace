@@ -380,7 +380,7 @@ namespace CP
 		int32_t write(const void* buf, int32_t len);
 		int32_t send(const void* buf, int32_t len, int32_t flags = 0);
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd, EventHandlerData::States oldstate);
 		void dispatch(Events event, const EventData& evtd);
 		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 				const Callback& cb, Events e, Operations op);
@@ -423,7 +423,7 @@ namespace CP
 		EndPoint* getLocalEndPoint();
 		//the caller must release() or free() the returned object
 		EndPoint* getRemoteEndPoint();
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd, EventHandlerData::States oldstate);
 
 		void connect(const sockaddr *addr, int32_t addr_size);
 		void connect(const EndPoint &ep);
@@ -465,7 +465,7 @@ namespace CP
 	{
 		EventFD(HANDLE handle);
 		EventFD(uint32_t initval = 0, int32_t flags = 0);
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd, EventHandlerData::States oldstate);
 		eventfd_t getEvent();
 		void getEvent(const function<void(eventfd_t)>& cb, bool repeat = false);
 		void repeatGetEvent(const function<void(eventfd_t)>& cb) {

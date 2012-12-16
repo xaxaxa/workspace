@@ -40,8 +40,8 @@ function on_error(obj)
 		if((!(typeof noprompt === "undefined")) && noprompt) throw Error(obj.error.message);
 		else {
 			s=lib.prompt("the access token has expired or is invalid; please enter a new one:");
-			if(s==null || s.length==0) throw Error("user cancelled");
-			a=s;
+			if(s!=null && s.length>0)//else retry without change atoken
+				a=s;
 			access_token_generation++;
 		}
 	} else throw Error(obj.error.message);
@@ -64,6 +64,32 @@ function patch_arg(url,n,v)
 		return url+"&"+n+"="+encodeURIComponent(v);
 	}
 }
+function do_delete(url, cb, traps) {
+	var g=access_token_generation;
+	url=patch_arg(url,"access_token",a);
+	url=patch_arg(url,"method","delete");
+	lib.print("deleting: "+url);
+	if(traps && "onrequest" in traps)traps.onrequest(url);
+	lib.get(url, function(s) {
+		if(traps && "onresponse" in traps)traps.onresponse(url);
+		lib.print("response: "+s);
+		var d=JSON.parse(s);
+		if(d===false)return;
+		if("error" in d) {
+			while(true) {
+				if(access_token_generation>g) {
+					do_delete(url,cb,traps);
+					return;
+				}
+				on_error(d);
+			}
+		} else if(cb) cb(new fbobj(d,null,s));
+		if(traps && "oncomplete" in traps)traps.oncomplete(url);
+	});
+}
+function fbdelete(p, cb, traps) {
+	do_delete("https://graph.facebook.com/"+p, cb, traps);
+}
 function do_dump(url, cb, follow, path, tmp_obj, traps)
 {
 	var g=access_token_generation;
@@ -74,7 +100,7 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 	{
 		//lib.print(s);
 		if(traps && "onresponse" in traps)traps.onresponse(url);
-		d=JSON.parse(s);
+		var d=JSON.parse(s);
 		if(d===false)return;
 		if("error" in d) {
 			while(true) {

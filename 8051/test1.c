@@ -1,4 +1,4 @@
-#include <8051.h>
+#include <8052.h>
 void delay(int i)
 {
 	int a,b;
@@ -15,19 +15,19 @@ void delay(int i)
 	}
 }
 //unsigned int t[]={0,903,852,759,716,638,568,506,478,426,379,0};
-unsigned int t[]={0,956,852,759,716,638,568,506,478,426,379,0};
+unsigned int code t[]={0,956,852,759,716,638,568,506,478,426,379,0};
 //unsigned int t[]={0,1912,1704,1517,1433,1276,1136,1012,956,852,759,0};
-unsigned int time[]=	{500,500,500,500,500,500,500,500,500,500,500,500,500,500,
+unsigned int code time[]=	{500,500,500,500,500,500,500,500,500,500,500,500,500,500,
 						500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500};
 //unsigned char s[]={1,2,3,1,1,2,3,1,3,4,5,3,4,5,		5,6,5,4,3,1,5,6,5,4,3,1,1,5,1,1,5,1,0};
 //unsigned char s[]={1,1,2,1,4,3,11,1,1,2,1,5,4,11,						1,1,8,6,4,3,9,11,7,7,6,4,5,4,11};
-unsigned char s[]={1,1,2,1,4,3,0,1,1,2,1,5,4,0,1,1,8,6,4,3,2,0,7,7,6,4,5,4,0};
+unsigned char code s[]={1,1,2,1,4,3,0,1,1,2,1,5,4,0,1,1,8,6,4,3,2,0,7,7,6,4,5,4,0};
 //unsigned char s[]={2,2,3,2,5,4,0,2,2,3,2,6,5,0,2,2,9,7,5,4,3,0,8,8,6,5,6,5,0};
 //unsigned char s[]={1,2,3,4,5,6,7,8,9,10,0};
 unsigned char t_h,t_l;
-unsigned char display_seg[]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90,0x7f};
+unsigned char code display_seg[]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90,0x7f};
 //unsigned char seg_position[]={0x0e,0x0d,0x0b,0x07,0x00};
-unsigned char seg_position[]={0x06,0x05,0x03,0x07,0x00};
+unsigned char code seg_position[]={0x06,0x05,0x03,0x07,0x00};
 int count=29;//33;
 #define int_from_bit(i) (1<<i)
 #define set_bit(x,i,v) x=(v?(x|int_from_bit(i)):x&~int_from_bit(i))

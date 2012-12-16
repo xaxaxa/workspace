@@ -128,7 +128,7 @@ namespace curl
 	struct transferInfo
 	{
 		function<bool(const void* data, int len, int state)> cb;
-		
+		CURL* c;
 	};
 	size_t cb_data(void *data, size_t size, size_t nmemb, void *userdata)
 	{
@@ -136,7 +136,7 @@ namespace curl
 		if(!t->cb(data,size*nmemb,3))return 0;
 		return size*nmemb;
 	}
-	void addTransfer(instance* inst, const char* url,
+	transferInfo* addTransfer(instance* inst, const char* url,
 		const function<bool(const void* data, int len, int state)>& cb)
 											/*-1:failed 1:connected 2:sent 3:recving 4:closed*/
 	{
@@ -144,9 +144,13 @@ namespace curl
 		curl_easy_setopt(c, CURLOPT_URL, url);
 		transferInfo* t=new transferInfo();
 		t->cb=cb;
+		t->c=c;
 		curl_easy_setopt(c, CURLOPT_WRITEDATA, t);
 		curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, cb_data);
-		addCurlTask(inst,c,[t](CURL* c,CURLcode res)
+		return t;
+	}
+	void beginTransfer(instance* inst, transferInfo* t) {
+		addCurlTask(inst,t->c,[t](CURL* c,CURLcode res)
 		{
 			if(res==CURLE_OK)
 				t->cb(NULL,0,4);
@@ -192,28 +196,28 @@ namespace curl
 		curl_multi_cleanup(inst->m);
 	}
 	
-	void transferManager::addTransfer(const char* url,
+	void transferManager::addTransfer(const char* url, bool post,
 			const function<bool(const void* data, int len, int state)>& cb)
 	{
 		if(itemsProcessing<concurrency) {
-			doTransfer(url, cb);
+			doTransfer(url, post, cb);
 		} else {
-			q.push({url,cb});
+			q.push({url, post, cb});
 		}
 	}
 	void transferManager::checkQueue()
 	{
 		if(itemsProcessing<concurrency && q.size()>0) {
 			item& it=q.front();
-			doTransfer(it.url.c_str(),it.cb);
+			doTransfer(it.url.c_str(), it.post,it.cb);
 			q.pop();
 		}
 	}
-	void transferManager::doTransfer(const char* url,
+	void transferManager::doTransfer(const char* url, bool post,
 			const function<bool(const void* data, int len, int state)>& cb)
 	{
 		itemsProcessing++;
-		curl::addTransfer(&inst,url,[cb,this](const void* data, int len, int state)
+		transferInfo* t=curl::addTransfer(&inst,url,[cb,this](const void* data, int len, int state)
 		{
 			if(state==4) {
 				itemsProcessing--;
@@ -221,6 +225,9 @@ namespace curl
 			}
 			return cb(data, len, state);
 		});
+		if(post)
+			curl_easy_setopt(t->c, CURLOPT_POST, 1);
+		curl::beginTransfer(&inst, t);
 	}
 }
 /*

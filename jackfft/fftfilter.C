@@ -87,7 +87,7 @@ namespace xaxaxa
 		{
 			return fft.size_c;
 		}
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding),freq_scale(1.0),fft(FFTSize)
+		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding1, Int padding2, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
 		{
 			asdf=0;
 			//memset(&last_refreshed,0,sizeof(last_refreshed));

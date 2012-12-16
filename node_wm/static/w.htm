@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
+	<title>Untitled Page</title>
+</head>
+<body topmargin="0" bottommargin="0" leftmargin="0" rightmargin="0" scroll="no" style="overflow:hidden;" onselectstart="return false;">
+	<div style="position:absolute; bottom:28px; left:0px; right:0px; top:0px; overflow: hidden;" id="di">
+		<button onclick="createwindow();"></button>
+	</div>
+	<div id="tb" style="z-index:1000;position:fixed; bottom:0px; left:0px; right:0px; height:28px; overflow:hidden; border-top: #d0d0d0 1px solid; background-color: #d4d0c8;"></div>
+	<script src="jswindow.js"></script>
+	<script src="taskbar.js"></script>
+	<script src="prototype.js"></script>
+	<script>
+	var aaa=0;
+	function createwindow(src, param)
+	{
+		if(param.x==null)param.x=aaa*20;
+		if(param.y==null) {
+			param.y=aaa*20;
+			aaa++;
+		}
+		if(param.w==null)param.w=175;
+		if(param.h==null)param.h=150;
+		var w=(new wnd2(param.x,param.y,param.w,param.h,window,document.getElementById("di"),null,null,null));
+		w.marginBottom=29;
+		var b=new browser(w);
+		w.show();
+		b.loadpage(src);
+		return w;
+	}
+	var asdf=new wnd2_helper(window);
+	taskbar_init(document.getElementById("tb"),window);
+	new Ajax.Request('../clientAPI/getWindows', {
+		method:'get',
+		onComplete: function(a){
+			var obj=JSON.parse(a.responseText);
+			for(var i=0;i<obj.length;i++) {
+				createwindow("../app/"+obj[i].id, obj[i].param);
+			}
+		}
+	});
+	/*for(var i=0;i<5;i++)
+	{
+		createwindow();
+	}*/
+	</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

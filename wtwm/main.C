@@ -7,8 +7,11 @@
 #include <Wt/WResource>
 #include <Wt/Http/Request>
 #include <Wt/Http/Response>
-class JSWindow: public Wt::WContainerWidget
-class WMWidget: public 
+//class JSWindow: public Wt::WContainerWidget
+class WMWidget: public Wt::WContainerWidget
+{
+	
+};
 class WTWM: public WApplication
 {
 	WTWM(const WEnvironment& env): WApplication(env) {

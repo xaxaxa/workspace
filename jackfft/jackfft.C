@@ -499,8 +499,8 @@ int main(int argc, char *argv[])
 	for(UInt i = 0; i < CHANNELS; i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* trololo = new FFTFilter<jack_default_audio_sample_t>
-		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
-		(1024, 20,			20,			2,		12,					2,			8192 * 2);
+		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	paddingL,paddingR,	fftsize
+		(1024, 20,			20,			2,		12,					4,		 0,			8192 * 2);
 
 		//trololo->freq_scale=9./10.;
 		setFilterParams(*trololo);
@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
 
 		FFTFilter<jack_default_audio_sample_t>** tmp;
 		tmp = new FFTFilter<jack_default_audio_sample_t>*[CHANNELS];
-		Int bs, overlap, bpp, padding, fftsize;
+		Int bs, overlap, bpp, padding1, padding2, fftsize;
 		Gtk::Entry* ent;
 		b->get_widget("t_bs", ent);
 		bs = atoi(ent->get_text().c_str());
@@ -616,17 +616,19 @@ int main(int argc, char *argv[])
 		overlap = atoi(ent->get_text().c_str());
 		b->get_widget("t_bpp", ent);
 		bpp = atoi(ent->get_text().c_str());
-		b->get_widget("t_padding", ent);
-		padding = atoi(ent->get_text().c_str());
+		b->get_widget("t_padding1", ent);
+		padding1 = atoi(ent->get_text().c_str());
+		b->get_widget("t_padding2", ent);
+		padding2 = atoi(ent->get_text().c_str());
 		b->get_widget("t_fftsize", ent);
 		fftsize = atoi(ent->get_text().c_str());
 		Int buffers;
-		buffers = (bpp + padding * 2) + 4;
+		buffers = (bpp + padding1 + padding2) + 4;
 		for(int i = 0; i < CHANNELS; i++)
 		{
 			tmp[i] = new FFTFilter<jack_default_audio_sample_t>
-			//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding,	fftsize
-			(bs,  buffers,		buffers,	overlap, bpp,				padding,	fftsize);
+			//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	padding1,padding2	fftsize
+			(bs,  buffers,		buffers,	overlap,bpp,				padding1,padding2,	fftsize);
 			setFilterParams(*(tmp[i]));
 		}
 		update_fft(tmp);

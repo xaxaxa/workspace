@@ -361,13 +361,13 @@ namespace xaxaxa
 		UInt outbuffer_pos, inbuffer_pos;
 		UInt overlapcount;
 		Int BuffersPerPeriod;
-		Int padding;
+		Int padding1, padding2;
 		function<void()> proc;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
 		bool didprocess;
 		inline UInt PeriodSize()
 		{
-			return BufferSize*(BuffersPerPeriod+(padding*2));
+			return BufferSize*(BuffersPerPeriod+padding1+padding2);
 		}
 		FLOATTYPE* tmpbuffer;
 		virtual void alloc_buffer()
@@ -383,7 +383,7 @@ namespace xaxaxa
 		virtual void DoProcess() = 0;
 		virtual void DoProcess(FLOATTYPE coeff_o, FLOATTYPE coeff_n)
 		{
-			Int BuffersPerPeriod=this->BuffersPerPeriod+(padding*2);
+			Int BuffersPerPeriod=this->BuffersPerPeriod+padding1+padding2;
 			Int offset=0;
 			Int half = BufferSize*this->BuffersPerPeriod / 2;
 			for(Int i1=curBuffer_in;i1!=nextBuffer_in;i1=modulus(i1+1,BuffersPerPeriod+1))
@@ -399,9 +399,9 @@ namespace xaxaxa
 				}*/
 				offset+=BufferSize;
 			}
-			Int trololo,troll;
-			if(padding<=0)goto trolled;
-			trololo=BufferSize*padding/2;
+			//Int trololo,troll;
+			//if(padding<=0)goto trolled;
+			/*trololo=BufferSize*padding;
 			for(Int i=0;i<trololo;i++)
 			{
 				tmpbuffer[i]*=((double)i)/(double)(trololo-1);
@@ -410,12 +410,12 @@ namespace xaxaxa
 			for(Int i=troll-trololo;i<troll;i++)
 			{
 				tmpbuffer[i]*=((double)(troll-i-1))/(double)(trololo-1);
-			}
+			}*/
 trolled:
 			DoProcess();
 			didprocess=true;
 
-			offset=BufferSize*padding;
+			offset=BufferSize*padding1;
 			for(Int i1=curBuffer_out;i1!=nextBuffer_out;i1=modulus(i1+1,this->BuffersPerPeriod+1))
 			{
 				FLOATTYPE* out1=&OutBuffer.GetPointer(OutBufferPtrs[i1]);
@@ -424,7 +424,10 @@ trolled:
 				{
 					FLOATTYPE fade;
 					if(overlapcount<=1) fade=0;
-					else fade = (FLOATTYPE) abs(offset - (Int)(BufferSize*padding) + i - half) / (FLOATTYPE) half;
+					else {
+						//Int offset_from_internal=offset-(Int)(BufferSize*padding1);
+						fade = (FLOATTYPE) abs(offset - (Int)(BufferSize*padding1) + i - half) / (FLOATTYPE) half;
+					}
 					//fade=0;
 					out1[i] = (out1[i] * (coeff_o)) + (tmpbuffer[offset+i] * coeff_n * (1.0 - fade));
 					//out1[i] = (out1[i] * (coeff_o)) + (tmpbuffer[offset+i] * coeff_n);
@@ -441,7 +444,7 @@ trolled:
 			Int skip=this->BuffersPerPeriod/this->overlapcount;
 			if(skip<1)skip=1;
 			UInt overlapcount=this->BuffersPerPeriod/skip;
-			Int BuffersPerPeriod=this->BuffersPerPeriod+(padding*2);
+			Int BuffersPerPeriod=this->BuffersPerPeriod+padding1+padding2;
 			//WARN(3,"asdf0");
 		asdf:
 			Int tmp;
@@ -544,18 +547,18 @@ trolled:
 			return br;
 		}
 		OverlappedFilter2(UInt buffersize, UInt inbuffers, UInt outbuffers,
-				UInt overlapcount, Int BuffersPerPeriod, Int padding=1) :
+				UInt overlapcount, Int BuffersPerPeriod, Int padding1=0, Int padding2=0) :
 		InBuffer(inbuffers, buffersize), OutBuffer(outbuffers, buffersize),
 		curBuffer_in(0), nextBuffer_in(0), curBuffer_out(0), nextBuffer_out(0),
 		BufferSize(buffersize), OutBuffers(outbuffers), InBuffers(inbuffers),
 		outbuffer_index(-1), inbuffer_index(-1), outbuffer_pos(0), inbuffer_pos(0),
-		overlapcount(overlapcount), BuffersPerPeriod(BuffersPerPeriod), padding(padding),
-		didprocess(false)
+		overlapcount(overlapcount), BuffersPerPeriod(BuffersPerPeriod), padding1(padding1),
+		padding2(padding2), didprocess(false)
 		{
 			//InBuffer = (NUMTYPE*)malloc(sizeof(NUMTYPE)*BufferSize);
 			proc=[this](){this->doProc();};
 			alloc_buffer();
-			BuffersPerPeriod+=padding*2;
+			BuffersPerPeriod+=padding1+padding2;
 			InBufferPtrs = new UInt[(BuffersPerPeriod+1)+(this->BuffersPerPeriod+1)];
 			OutBufferPtrs = InBufferPtrs+(BuffersPerPeriod+1);
 		}

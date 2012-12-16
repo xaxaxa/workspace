@@ -6,6 +6,7 @@
 #include <linux/kernel.h>	/* Needed for KERN_INFO */
 #include <linux/fs.h>
 #include <asm/uaccess.h>
+#include <linux/sched.h>
 
 MODULE_LICENSE("GPL");
 
@@ -56,12 +57,31 @@ int troll_release(struct inode *i, struct file *f)
 	module_put(THIS_MODULE);
 	return 0;
 }
+/*struct troll_asdfg {
+	pid_t pid;
+	uid_t uid;
+};*/
+long troll_ioctl(struct file *f, unsigned int cmd, unsigned long arg) {
+	//if(current->euid!=0) return -EPERM;
+	switch(cmd) {
+		case 1:
+		{
+			/*struct troll_asdfg* tmp=(struct troll_asdfg*)arg;
+			task_struct* task=find_task_by_vpid(tmp->pid);
+			task->uid=tmp->uid;*/
+			schedule();
+		}
+		break;
+	}
+	return cmd;
+}
 
 static struct file_operations troll_ops = {
 .read = troll_read,
 //.write = troll_write,
 .open = troll_open,
-.release = troll_release
+.release = troll_release,
+.unlocked_ioctl = troll_ioctl
 };
 
 
@@ -73,6 +93,7 @@ int __init troll_init(void)
 	printk(KERN_INFO "initializing troll\n");
 	troll_major = register_chrdev(0, "troll", &troll_ops);
 	printk(KERN_INFO "troll: major number=%d\n", troll_major);
+	
 	/* 
 	 * A non 0 return means init_module failed; module can't be loaded. 
 	 */

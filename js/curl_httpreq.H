@@ -12,6 +12,7 @@ using std::string;
 
 namespace curl
 {
+	struct transferInfo;
 	struct instance
 	{
 		event_base* eb;
@@ -24,9 +25,10 @@ namespace curl
 	
 	void cb_event(int fd, short events, void *userdata);
 	void addCurlTask(instance* inst, CURL* c, const function<void(CURL*,CURLcode)>& cb);
-	void addTransfer(instance* inst, const char* url,
+	transferInfo* addTransfer(instance* inst, const char* url,
 		const function<bool(const void* data, int len, int state)>& cb);
 											/*-1:failed 1:connected 2:sent 3:recving 4:closed*/
+	void beginTransfer(instance* inst, transferInfo* t);
 	class transferManager
 	{
 	public:
@@ -35,6 +37,7 @@ namespace curl
 		struct item
 		{
 			string url;
+			bool post;
 			function<bool(const void* data, int len, int state)> cb;
 		};
 		queue<item> q;
@@ -47,9 +50,9 @@ namespace curl
 			curl::dispose(&inst);
 		}
 		void checkQueue();
-		void doTransfer(const char* url,
+		void doTransfer(const char* url, bool post,
 			const function<bool(const void* data, int len, int state)>& cb);
-		void addTransfer(const char* url,
+		void addTransfer(const char* url, bool post,
 			const function<bool(const void* data, int len, int state)>& cb);
 		inline void eventLoop()
 		{

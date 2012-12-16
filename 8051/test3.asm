@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
-; Version 2.9.0 #5416 (Feb  3 2010) (UNIX)
-; This file was generated Sun May 13 19:22:03 2012
+; Version 3.1.0 #7066 (Feb 26 2012) (Linux)
+; This file was generated Sat Dec  1 15:18:20 2012
 ;--------------------------------------------------------
 	.module test3
 	.optsdcc -mmcs51 --model-small
@@ -115,7 +115,8 @@
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
-	.area RSEG    (DATA)
+	.area RSEG    (ABS,DATA)
+	.org 0x0000
 _P0	=	0x0080
 _SP	=	0x0081
 _DPL	=	0x0082
@@ -140,7 +141,8 @@ _B	=	0x00f0
 ;--------------------------------------------------------
 ; special function bits
 ;--------------------------------------------------------
-	.area RSEG    (DATA)
+	.area RSEG    (ABS,DATA)
+	.org 0x0000
 _P0_0	=	0x0080
 _P0_1	=	0x0081
 _P0_2	=	0x0082
@@ -333,48 +335,48 @@ __sdcc_program_startup:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'delay'
 ;------------------------------------------------------------
-;i                         Allocated to registers r2 r3 
+;i                         Allocated to registers r6 r7 
 ;a                         Allocated to registers r4 r5 
-;b                         Allocated to registers r6 r7 
+;b                         Allocated to registers r2 r3 
 ;------------------------------------------------------------
 ;	test3.c:6: void delay(int i)
 ;	-----------------------------------------
 ;	 function delay
 ;	-----------------------------------------
 _delay:
-	ar2 = 0x02
-	ar3 = 0x03
-	ar4 = 0x04
-	ar5 = 0x05
-	ar6 = 0x06
 	ar7 = 0x07
-	ar0 = 0x00
+	ar6 = 0x06
+	ar5 = 0x05
+	ar4 = 0x04
+	ar3 = 0x03
+	ar2 = 0x02
 	ar1 = 0x01
-	mov	r2,dpl
-	mov	r3,dph
+	ar0 = 0x00
+	mov	r6,dpl
+	mov	r7,dph
 ;	test3.c:9: for(a=0;a<i;a++)
 	mov	r4,#0x00
 	mov	r5,#0x00
 00104$:
 	clr	c
 	mov	a,r4
-	subb	a,r2
+	subb	a,r6
 	mov	a,r5
 	xrl	a,#0x80
-	mov	b,r3
+	mov	b,r7
 	xrl	b,#0x80
 	subb	a,b
 	jnc	00108$
 ;	test3.c:11: for(b=0;b<120;b++);
-	mov	r6,#0x78
-	mov	r7,#0x00
+	mov	r2,#0x78
+	mov	r3,#0x00
 00103$:
-	dec	r6
-	cjne	r6,#0xff,00117$
-	dec	r7
+	dec	r2
+	cjne	r2,#0xFF,00117$
+	dec	r3
 00117$:
-	mov	a,r6
-	orl	a,r7
+	mov	a,r2
+	orl	a,r3
 	jnz	00103$
 ;	test3.c:9: for(a=0;a<i;a++)
 	inc	r4
@@ -411,34 +413,35 @@ _display:
 ;	test3.c:29: if(i/600>=60*100)
 	mov	__divulong_PARM_2,#0x58
 	mov	(__divulong_PARM_2 + 1),#0x02
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__divulong
-	mov	r1,dpl
-	mov	r0,dph
-	mov	r7,b
-	mov	r6,a
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
 	clr	c
-	mov	a,r1
-	subb	a,#0x70
 	mov	a,r0
+	subb	a,#0x70
+	mov	a,r1
 	subb	a,#0x17
-	mov	a,r7
+	mov	a,r2
 	subb	a,#0x00
-	mov	a,r6
+	mov	a,r3
 	subb	a,#0x00
 	jnc	00118$
 	ljmp	00110$
 00118$:
-;	test3.c:31: i=i/60/60/100*1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/6000*10000;
+;	test3.c:31: i=i/60/60/(unsigned long int)100*(unsigned long int)1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/(unsigned long int)6000*(unsigned long int)10000;
 	mov	__divulong_PARM_2,#0x00
 	mov	(__divulong_PARM_2 + 1),#0x97
-	mov	(__divulong_PARM_2 + 2),#0xFF
-	mov	(__divulong_PARM_2 + 3),#0xFF
+	mov	(__divulong_PARM_2 + 2),#0x49
+	mov	(__divulong_PARM_2 + 3),#0x01
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
@@ -465,10 +468,19 @@ _display:
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__modulong
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
 	mov	__divulong_PARM_2,#0x70
 	mov	(__divulong_PARM_2 + 1),#0x17
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
+	mov	dpl,r0
+	mov	dph,r1
+	mov	b,r2
+	mov	a,r3
 	lcall	__divulong
 	mov	__mullong_PARM_2,dpl
 	mov	(__mullong_PARM_2 + 1),dph
@@ -478,27 +490,28 @@ _display:
 	clr	a
 	mov	b,a
 	lcall	__mullong
-	mov	r6,dpl
-	mov	r7,dph
-	mov	r0,b
-	mov	r1,a
-	mov	a,r6
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
+	mov	a,r0
 	add	a,_display_sloc0_1_0
 	mov	_display_i_1_1,a
-	mov	a,r7
+	mov	a,r1
 	addc	a,(_display_sloc0_1_0 + 1)
 	mov	(_display_i_1_1 + 1),a
-	mov	a,r0
+	mov	a,r2
 	addc	a,(_display_sloc0_1_0 + 2)
 	mov	(_display_i_1_1 + 2),a
-	mov	a,r1
+	mov	a,r3
 	addc	a,(_display_sloc0_1_0 + 3)
 	mov	(_display_i_1_1 + 3),a
-;	test3.c:32: i/=10000;
+;	test3.c:32: i/=(unsigned long int)10000;
 	mov	__divulong_PARM_2,#0x10
 	mov	(__divulong_PARM_2 + 1),#0x27
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
@@ -521,27 +534,27 @@ _display:
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__divulong
-	mov	r6,dpl
-	mov	r7,dph
-	mov	r0,b
-	mov	r1,a
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
 	clr	c
-	mov	a,r6
-	subb	a,#0x70
-	mov	a,r7
-	subb	a,#0x17
 	mov	a,r0
-	subb	a,#0x00
+	subb	a,#0x70
 	mov	a,r1
+	subb	a,#0x17
+	mov	a,r2
+	subb	a,#0x00
+	mov	a,r3
 	subb	a,#0x00
 	jnc	00119$
 	ljmp	00107$
 00119$:
-;	test3.c:39: i=i/60/60/100*1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/6000*10000 + i%6000;
+;	test3.c:39: i=i/60/60/(unsigned long int)100*(unsigned long int)1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/(unsigned long int)6000*(unsigned long int)10000 + i%(unsigned long int)6000;
 	mov	__divulong_PARM_2,#0x00
 	mov	(__divulong_PARM_2 + 1),#0x97
-	mov	(__divulong_PARM_2 + 2),#0xFF
-	mov	(__divulong_PARM_2 + 3),#0xFF
+	mov	(__divulong_PARM_2 + 2),#0x49
+	mov	(__divulong_PARM_2 + 3),#0x01
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
@@ -555,10 +568,10 @@ _display:
 	mov	b,#0x0F
 	clr	a
 	lcall	__mullong
-	mov	r6,dpl
-	mov	r7,dph
-	mov	r0,b
-	mov	r1,a
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
 	mov	__modulong_PARM_2,#0x40
 	mov	(__modulong_PARM_2 + 1),#0x7E
 	mov	(__modulong_PARM_2 + 2),#0x05
@@ -567,15 +580,24 @@ _display:
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
-	push	ar6
-	push	ar7
-	push	ar0
+	push	ar3
+	push	ar2
 	push	ar1
+	push	ar0
 	lcall	__modulong
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
 	mov	__divulong_PARM_2,#0x70
 	mov	(__divulong_PARM_2 + 1),#0x17
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
+	mov	dpl,r4
+	mov	dph,r5
+	mov	b,r6
+	mov	a,r7
 	lcall	__divulong
 	mov	__mullong_PARM_2,dpl
 	mov	(__mullong_PARM_2 + 1),dph
@@ -585,64 +607,66 @@ _display:
 	clr	a
 	mov	b,a
 	lcall	__mullong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	pop	ar1
-	pop	ar0
-	pop	ar7
-	pop	ar6
-	mov	a,r2
-	add	a,r6
-	mov	r6,a
-	mov	a,r3
-	addc	a,r7
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
 	mov	r7,a
+	pop	ar0
+	pop	ar1
+	pop	ar2
+	pop	ar3
 	mov	a,r4
-	addc	a,r0
+	add	a,r0
 	mov	r0,a
 	mov	a,r5
 	addc	a,r1
 	mov	r1,a
+	mov	a,r6
+	addc	a,r2
+	mov	r2,a
+	mov	a,r7
+	addc	a,r3
+	mov	r3,a
 	mov	__modulong_PARM_2,#0x70
 	mov	(__modulong_PARM_2 + 1),#0x17
-	mov	(__modulong_PARM_2 + 2),#0x00
-	mov	(__modulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__modulong_PARM_2 + 2),a
+	mov	(__modulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
-	push	ar6
-	push	ar7
-	push	ar0
+	push	ar3
+	push	ar2
 	push	ar1
+	push	ar0
 	lcall	__modulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
-	pop	ar1
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
 	pop	ar0
-	pop	ar7
-	pop	ar6
-	mov	a,r2
-	add	a,r6
-	mov	_display_i_1_1,a
-	mov	a,r3
-	addc	a,r7
-	mov	(_display_i_1_1 + 1),a
+	pop	ar1
+	pop	ar2
+	pop	ar3
 	mov	a,r4
-	addc	a,r0
-	mov	(_display_i_1_1 + 2),a
+	add	a,r0
+	mov	_display_i_1_1,a
 	mov	a,r5
 	addc	a,r1
+	mov	(_display_i_1_1 + 1),a
+	mov	a,r6
+	addc	a,r2
+	mov	(_display_i_1_1 + 2),a
+	mov	a,r7
+	addc	a,r3
 	mov	(_display_i_1_1 + 3),a
 ;	test3.c:40: i/=1000;
 	mov	__divulong_PARM_2,#0xE8
 	mov	(__divulong_PARM_2 + 1),#0x03
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
@@ -676,8 +700,9 @@ _display:
 ;	test3.c:47: i=i/6000*10000+i%6000;
 	mov	__divulong_PARM_2,#0x70
 	mov	(__divulong_PARM_2 + 1),#0x17
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
@@ -691,42 +716,43 @@ _display:
 	clr	a
 	mov	b,a
 	lcall	__mullong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
 	mov	__modulong_PARM_2,#0x70
 	mov	(__modulong_PARM_2 + 1),#0x17
-	mov	(__modulong_PARM_2 + 2),#0x00
-	mov	(__modulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__modulong_PARM_2 + 2),a
+	mov	(__modulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
-	push	ar2
-	push	ar3
-	push	ar4
+	push	ar7
+	push	ar6
 	push	ar5
+	push	ar4
 	lcall	__modulong
-	mov	r6,dpl
-	mov	r7,dph
-	mov	r0,b
-	mov	r1,a
-	pop	ar5
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
 	pop	ar4
-	pop	ar3
-	pop	ar2
-	mov	a,r6
-	add	a,r2
-	mov	_display_i_1_1,a
-	mov	a,r7
-	addc	a,r3
-	mov	(_display_i_1_1 + 1),a
+	pop	ar5
+	pop	ar6
+	pop	ar7
 	mov	a,r0
-	addc	a,r4
-	mov	(_display_i_1_1 + 2),a
+	add	a,r4
+	mov	_display_i_1_1,a
 	mov	a,r1
 	addc	a,r5
+	mov	(_display_i_1_1 + 1),a
+	mov	a,r2
+	addc	a,r6
+	mov	(_display_i_1_1 + 2),a
+	mov	a,r3
+	addc	a,r7
 	mov	(_display_i_1_1 + 3),a
 ;	test3.c:48: i/=100;
 	mov	__divulong_PARM_2,#0x64
@@ -761,8 +787,9 @@ _display:
 ;	test3.c:56: i=i/6000*10000+i%6000;
 	mov	__divulong_PARM_2,#0x70
 	mov	(__divulong_PARM_2 + 1),#0x17
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
@@ -776,42 +803,43 @@ _display:
 	clr	a
 	mov	b,a
 	lcall	__mullong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
 	mov	__modulong_PARM_2,#0x70
 	mov	(__modulong_PARM_2 + 1),#0x17
-	mov	(__modulong_PARM_2 + 2),#0x00
-	mov	(__modulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__modulong_PARM_2 + 2),a
+	mov	(__modulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
-	push	ar2
-	push	ar3
-	push	ar4
+	push	ar7
+	push	ar6
 	push	ar5
+	push	ar4
 	lcall	__modulong
-	mov	r6,dpl
-	mov	r7,dph
-	mov	r0,b
-	mov	r1,a
-	pop	ar5
+	mov	r0,dpl
+	mov	r1,dph
+	mov	r2,b
+	mov	r3,a
 	pop	ar4
-	pop	ar3
-	pop	ar2
-	mov	a,r6
-	add	a,r2
-	mov	_display_i_1_1,a
-	mov	a,r7
-	addc	a,r3
-	mov	(_display_i_1_1 + 1),a
+	pop	ar5
+	pop	ar6
+	pop	ar7
 	mov	a,r0
-	addc	a,r4
-	mov	(_display_i_1_1 + 2),a
+	add	a,r4
+	mov	_display_i_1_1,a
 	mov	a,r1
 	addc	a,r5
+	mov	(_display_i_1_1 + 1),a
+	mov	a,r2
+	addc	a,r6
+	mov	(_display_i_1_1 + 2),a
+	mov	a,r3
+	addc	a,r7
 	mov	(_display_i_1_1 + 3),a
 ;	test3.c:57: i/=10;
 	mov	__divulong_PARM_2,#0x0A
@@ -845,29 +873,30 @@ _display:
 ;	test3.c:65: P0=display_seg[i/1000] & d3;
 	mov	__divulong_PARM_2,#0xE8
 	mov	(__divulong_PARM_2 + 1),#0x03
-	mov	(__divulong_PARM_2 + 2),#0x00
-	mov	(__divulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__divulong_PARM_2 + 2),a
+	mov	(__divulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__divulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	a,r2
+	mov	r4,dpl
+	mov	r5,dph
+	mov	a,r4
 	add	a,#_display_seg
 	mov	dpl,a
-	mov	a,r3
+	mov	a,r5
 	addc	a,#(_display_seg >> 8)
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
-	mov	r2,a
+	mov	r7,a
 	mov	a,_display_d3_1_1
-	anl	a,r2
+	anl	a,r7
 	mov	_P0,a
-;	test3.c:66: delay(2);
-	mov	dptr,#0x0002
+;	test3.c:66: delay(3);
+	mov	dptr,#0x0003
 	lcall	_delay
 ;	test3.c:68: P0=255;
 	mov	_P0,#0xFF
@@ -879,43 +908,44 @@ _display:
 ;	test3.c:70: P0=display_seg[i%1000/100] & d2;
 	mov	__modulong_PARM_2,#0xE8
 	mov	(__modulong_PARM_2 + 1),#0x03
-	mov	(__modulong_PARM_2 + 2),#0x00
-	mov	(__modulong_PARM_2 + 3),#0x00
+	clr	a
+	mov	(__modulong_PARM_2 + 2),a
+	mov	(__modulong_PARM_2 + 3),a
 	mov	dpl,_display_i_1_1
 	mov	dph,(_display_i_1_1 + 1)
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__modulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
 	mov	__divulong_PARM_2,#0x64
 	clr	a
 	mov	(__divulong_PARM_2 + 1),a
 	mov	(__divulong_PARM_2 + 2),a
 	mov	(__divulong_PARM_2 + 3),a
-	mov	dpl,r2
-	mov	dph,r3
-	mov	b,r4
-	mov	a,r5
+	mov	dpl,r4
+	mov	dph,r5
+	mov	b,r6
+	mov	a,r7
 	lcall	__divulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	a,r2
+	mov	r4,dpl
+	mov	r5,dph
+	mov	a,r4
 	add	a,#_display_seg
 	mov	dpl,a
-	mov	a,r3
+	mov	a,r5
 	addc	a,#(_display_seg >> 8)
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
-	mov	r2,a
+	mov	r7,a
 	mov	a,_display_d2_1_1
-	anl	a,r2
+	anl	a,r7
 	mov	_P0,a
-;	test3.c:71: delay(2);
-	mov	dptr,#0x0002
+;	test3.c:71: delay(3);
+	mov	dptr,#0x0003
 	lcall	_delay
 ;	test3.c:72: P0=255;
 	mov	_P0,#0xFF
@@ -935,36 +965,36 @@ _display:
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__modulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-	mov	r5,a
+	mov	r4,dpl
+	mov	r5,dph
+	mov	r6,b
+	mov	r7,a
 	mov	__divulong_PARM_2,#0x0A
 	clr	a
 	mov	(__divulong_PARM_2 + 1),a
 	mov	(__divulong_PARM_2 + 2),a
 	mov	(__divulong_PARM_2 + 3),a
-	mov	dpl,r2
-	mov	dph,r3
-	mov	b,r4
-	mov	a,r5
+	mov	dpl,r4
+	mov	dph,r5
+	mov	b,r6
+	mov	a,r7
 	lcall	__divulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	a,r2
+	mov	r4,dpl
+	mov	r5,dph
+	mov	a,r4
 	add	a,#_display_seg
 	mov	dpl,a
-	mov	a,r3
+	mov	a,r5
 	addc	a,#(_display_seg >> 8)
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
-	mov	r2,a
+	mov	r7,a
 	mov	a,_display_d1_1_1
-	anl	a,r2
+	anl	a,r7
 	mov	_P0,a
-;	test3.c:75: delay(2);
-	mov	dptr,#0x0002
+;	test3.c:75: delay(3);
+	mov	dptr,#0x0003
 	lcall	_delay
 ;	test3.c:76: P0=255;
 	mov	_P0,#0xFF
@@ -984,23 +1014,20 @@ _display:
 	mov	b,(_display_i_1_1 + 2)
 	mov	a,(_display_i_1_1 + 3)
 	lcall	__modulong
-	mov	r2,dpl
-	mov	r3,dph
-	mov	a,r2
+	mov	r4,dpl
+	mov	r5,dph
+	mov	a,r4
 	add	a,#_display_seg
 	mov	dpl,a
-	mov	a,r3
+	mov	a,r5
 	addc	a,#(_display_seg >> 8)
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
 	mov	_P0,a
-;	test3.c:79: delay(2);
-	mov	dptr,#0x0002
-	ljmp	_delay
+	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'main'
-;------------------------------------------------------------
 ;------------------------------------------------------------
 ;	test3.c:85: void main()
 ;	-----------------------------------------
@@ -1029,7 +1056,6 @@ _main:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'timer'
 ;------------------------------------------------------------
-;------------------------------------------------------------
 ;	test3.c:102: void timer() interrupt 1
 ;	-----------------------------------------
 ;	 function timer
@@ -1037,7 +1063,6 @@ _main:
 _timer:
 	push	acc
 	push	psw
-	mov	psw,#0x00
 ;	test3.c:104: TH0=(65536-10000)/256;
 	mov	_TH0,#0xD8
 ;	test3.c:105: TL0=(65536-10000)%256;
@@ -1055,28 +1080,29 @@ _timer:
 	pop	psw
 	pop	acc
 	reti
+;	eliminated unneeded mov psw,# (no regs used in bank)
 ;	eliminated unneeded push/pop dpl
 ;	eliminated unneeded push/pop dph
 ;	eliminated unneeded push/pop b
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 _display_seg:
-	.db #0xC0
-	.db #0xF9
-	.db #0xA4
-	.db #0xB0
-	.db #0x99
-	.db #0x92
-	.db #0x82
-	.db #0xF8
-	.db #0x80
-	.db #0x90
-	.db #0x7F
+	.db #0xC0	; 192
+	.db #0xF9	; 249
+	.db #0xA4	; 164
+	.db #0xB0	; 176
+	.db #0x99	; 153
+	.db #0x92	; 146
+	.db #0x82	; 130
+	.db #0xF8	; 248
+	.db #0x80	; 128
+	.db #0x90	; 144
+	.db #0x7F	; 127
 _seg_position:
-	.db #0xFE
-	.db #0xFD
-	.db #0xFB
-	.db #0xF7
-	.db #0xF0
+	.db #0xFE	; 254
+	.db #0xFD	; 253
+	.db #0xFB	; 251
+	.db #0xF7	; 247
+	.db #0xF0	; 240
 	.area XINIT   (CODE)
 	.area CABS    (ABS,CODE)

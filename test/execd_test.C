@@ -87,6 +87,31 @@ void start_cpoll_loop(CP::Poll& p) {
 	pthread_create(&thr,NULL,do_cpoll_loop,(void*)&p);
 }
 
+void do_exec_command(execd_client& client, string cmdstr, bool shell=false) {
+	A cmdarray(Types::array);
+	bool first=true;
+	split(cmdstr.c_str(), -1, ' ', [&](const char* s, int len) {
+		//cerr << len << endl;
+		cmdarray.append(A((const int8_t*)s,len));
+		if(first && shell) {
+			cmdarray.append(A((const int8_t*)s,len));
+			first=false;
+		}
+	});
+	//cerr << cmdarray << endl;
+	//do_send(A{O((int8_t)EXECD::cmds::execute),O(++cmdid),O{O(cmdarray),O(++taskid),O(1)}});
+	int32_t taskid=client.do_exec(cmdarray, true);
+	eprintf("[%i]\n",taskid);
+}
+void help() {
+	eprintf("\x1B[41;1;33mcommands: eXec setReturnoutput Kill sendInput Shell iNteract\n");
+	eprintf("exec: x commandname arg0 [arg1 ...]\n");
+	eprintf("setreturnoutput: r taskid [1/0]\n");
+	eprintf("kill: k taskid signal\n");
+	eprintf("sendinput: i taskid string\n");
+	eprintf("shell: s\n");
+	eprintf("interact: n taskid\x1B[0;0;0m\n");
+}
 int main() {
 	execd_client client;
 	/*split("asd ghj zxc  d x", -1, ' ', [](const char* s, int len) {
@@ -114,12 +139,12 @@ int main() {
 		close(_o[1]);
 		
 		//method 1: directly spawn on local machine
-		/*
+		//*
 		execlp("./execd", "execd",NULL);
 		//*/
 		
 		//method 2: ssh
-		//*
+		/*
 		const char* sshserver="user1@192.168.5.11";
 		execlp("ssh","ssh",sshserver,"execd",NULL);
 		//*/
@@ -148,11 +173,7 @@ int main() {
 	client.start(p, gsdfhkjgh);
 	start_cpoll_loop(p);
 	
-	eprintf("\x1B[41;1;33mcommands: e(x)ec set(r)eturnoutput (k)ill send(i)nput\n");
-	eprintf("exec: x commandname arg0 [arg1 ...]\n");
-	eprintf("setreturnoutput: r taskid [1/0]\n");
-	eprintf("kill: k taskid signal\n");
-	eprintf("sendinput: i taskid string\x1B[0;0;0m\n");
+	help();
 	bool shell=false;
 	while(true) {
 		if(shell)
@@ -167,13 +188,22 @@ int main() {
 		if(len<=0) {
 			if(shell) {
 				shell=false;
+				eprintf("\n");
 				continue;
 			}
 			break;
 		}
+		string cmdstr;
+		if(shell) {
+			cmdstr=string(line);
+			trim(cmdstr);
+			if(cmdstr.length()<=0) continue;
+			do_exec_command(client, cmdstr, true);
+			continue;
+		}
 		
 		char* tmp1=strchr(line, ' ');
-		string cmdstr;
+		
 		if(tmp1!=NULL) {
 			//tmp1++;
 			if(tmp1>=(line+len)) continue;
@@ -184,25 +214,19 @@ int main() {
 		switch(*line) {
 			case 'x':
 			{
+				if(tmp1==NULL) break;
 				//cerr << cmdstr << endl;
-				A cmdarray(Types::array);
-				split(cmdstr.c_str(), -1, ' ', [&cmdarray](const char* s, int len) {
-					//cerr << len << endl;
-					cmdarray.append(A((const int8_t*)s,len));
-				});
-				//cerr << cmdarray << endl;
-				//do_send(A{O((int8_t)EXECD::cmds::execute),O(++cmdid),O{O(cmdarray),O(++taskid),O(1)}});
-				int32_t taskid=client.do_exec(cmdarray, true);
-				eprintf("[%i]\n",taskid);
+				do_exec_command(client, cmdstr);
 				break;
 			}
 			case 'r':
 			{
-				
+				if(tmp1==NULL) break;
 				break;
 			}
 			case 'k':
 			{
+				if(tmp1==NULL) break;
 				const char* tmp2=cmdstr.c_str();
 				const char* tmp3=strchr(tmp2, ' ');
 				string taskid(tmp2, tmp3-tmp2);
@@ -212,6 +236,7 @@ int main() {
 			}
 			case 'i':
 			{
+				if(tmp1==NULL) break;
 				cmdstr+="\n";
 				const char* tmp2=cmdstr.c_str();
 				const char* tmp3=strchr(tmp2, ' ');
@@ -222,10 +247,30 @@ int main() {
 				client.do_sendInput(atoi(taskid.c_str()),data);
 				break;
 			}
-			case 's':
+			case 'n':
 			{
-				
+				if(tmp1==NULL) break;
+				int32_t taskid(atoi(cmdstr.c_str()));
+				while(true) {
+					int8_t buf[4096];
+					int br=read(0,buf,4096);
+					if(br<=0) {
+						eprintf("\n");
+						break;
+					}
+					A data(buf, br);
+					client.do_sendInput(taskid,data);
+				}
+				break;
 			}
+			case 's':
+				shell=true;
+				break;
+			case '\n':
+				break;
+			default:
+				help();
+				break;
 		}
 	}
 	eprintf("\n");

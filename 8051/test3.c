@@ -28,15 +28,15 @@ void display(unsigned long int i)
 	//if(i>=(60*60*100))
 	if(i/600>=60*100)
 	{
-		i=i/60/60/100*1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/6000*10000;
-		i/=10000;
+		i=i/60/60/(unsigned long int)100*(unsigned long int)1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/(unsigned long int)6000*(unsigned long int)10000;
+		i/=(unsigned long int)10000;
 		//d2=0xFF;
 		//d1=0x7F;
 		//d3=0x7F;
 	}
 	else if(i/60>=60*100)
 	{
-		i=i/60/60/100*1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/6000*10000 + i%6000;
+		i=i/60/60/(unsigned long int)100*(unsigned long int)1000000+(i%((unsigned long int)60*(unsigned long int)60*(unsigned long int)100))/(unsigned long int)6000*(unsigned long int)10000 + i%(unsigned long int)6000;
 		i/=1000;
 		d2=0xFF;
 		d1=0x7F;
@@ -63,20 +63,20 @@ void display(unsigned long int i)
 	//tmp=((unsigned char)speaker>>4);
 	P2 = seg_position[3];
 	P0=display_seg[i/1000] & d3;
-	delay(2);
+	delay(3);
 	
 	P0=255;
 	P2 = seg_position[2];
 	P0=display_seg[i%1000/100] & d2;
-	delay(2);
+	delay(3);
 	P0=255;
 	P2 = seg_position[1];
 	P0=display_seg[i%100/10] & d1;
-	delay(2);
+	delay(3);
 	P0=255;
 	P2 = seg_position[0];
 	P0=display_seg[i%10] & d0;
-	delay(2);
+	//delay(3);
 	//P2=((unsigned char)speaker>>4);
 	//P0=0;
 }

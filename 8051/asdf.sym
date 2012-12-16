@@ -1,8 +1,17 @@
-ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 1.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Intel 8051), page 1.
 
 Symbol Table
 
-    A                                                              00D6 
+    .__.ABS.                                                    =  0000 G
+    A                                                              00E0 
+    A.0                                                            00E0 
+    A.1                                                            00E1 
+    A.2                                                            00E2 
+    A.3                                                            00E3 
+    A.4                                                            00E4 
+    A.5                                                            00E5 
+    A.6                                                            00E6 
+    A.7                                                            00E7 
     AC                                                             00D6 
     ACC                                                            00E0 
     ACC.0                                                          00E0 
@@ -266,15 +275,38 @@ Symbol Table
     _TR1                                                        =  008E G
     _TXD                                                        =  00B1 G
     _WR                                                         =  00B6 G
-  D __interrupt_vect                                               0000 R
+    __divulong                                                     **** GX
+    __divulong_PARM_2                                              **** GX
+    __gptrget                                                      **** GX
+    __gptrput                                                      **** GX
+  F __interrupt_vect                                               0000 R
     __mcs51_genRAMCLEAR                                            **** GX
     __mcs51_genXINIT                                               **** GX
     __mcs51_genXRAMCLEAR                                           **** GX
+    __modulong                                                     **** GX
+    __modulong_PARM_2                                              **** GX
+    __sdcc_call_dptr                                               **** GX
     __sdcc_gsinit_startup                                          **** GX
-  D __sdcc_program_startup                                         0003 GR
-  5 __start__stack                                                 0000 GR
- 16 _main                                                          0000 GR
-    a                                                              00D6 
+  F __sdcc_program_startup                                         0003 GR
+  7 __start__stack                                                 0000 GR
+ 18 _asd                                                           01BF GR
+ 18 _delay                                                         0000 GR
+ 18 _display                                                       002C GR
+ 19 _display_seg                                                   0000 GR
+ 18 _main                                                          01E2 GR
+  5 _main_a_1_1                                                    0002 R
+  5 _main_b_1_1                                                    0004 R
+  5 _main_i_1_1                                                    0000 R
+ 19 _seg_position                                                  000B GR
+    a                                                              00E0 
+    a.0                                                            00E0 
+    a.1                                                            00E1 
+    a.2                                                            00E2 
+    a.3                                                            00E3 
+    a.4                                                            00E4 
+    a.5                                                            00E5 
+    a.6                                                            00E6 
+    a.7                                                            00E7 
     ac                                                             00D6 
     acc                                                            00E0 
     acc.0                                                          00E0 
@@ -451,33 +483,35 @@ Symbol Table
     tr2                                                            00CA 
     txd                                                            00B1 
 
-ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 2.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Intel 8051), page 2.
 
 Area Table
 
-   0 _CODE                                                                              size    0   flags 0
-   1 RSEG                                                                               size    0   flags 0
-   2 REG_BANK_0                                                                         size    8   flags 4
-   3 DSEG                                                                               size    0   flags 0
-   4 OSEG                                                                               size    0   flags 4
-   5 SSEG                                                                               size    1   flags 0
-   6 ISEG                                                                               size    0   flags 0
-   7 IABS                                                                               size    0   flags 8
-   8 BSEG                                                                               size    0   flags 80
-   9 PSEG                                                                               size    0   flags 50
-   A XSEG                                                                               size    0   flags 40
-   B XABS                                                                               size    0   flags 48
-   C XISEG                                                                              size    0   flags 40
-   D HOME                                                                               size    8   flags 20
-   E GSINIT0                                                                            size    0   flags 20
-   F GSINIT1                                                                            size    0   flags 20
-  10 GSINIT2                                                                            size    0   flags 20
-  11 GSINIT3                                                                            size    0   flags 20
-  12 GSINIT4                                                                            size    0   flags 20
-  13 GSINIT5                                                                            size    0   flags 20
-  14 GSINIT                                                                             size    0   flags 20
-  15 GSFINAL                                                                            size    3   flags 20
-  16 CSEG                                                                               size   22   flags 20
-  17 CONST                                                                              size    0   flags 20
-  18 XINIT                                                                              size    0   flags 20
-  19 CABS                                                                               size    0   flags 28
+   0 _CODE                                      size    0   flags 0
+   1 RSEG                                       size    0   flags 8
+   2 RSEG0                                      size    0   flags 8
+   3 RSEG1                                      size    0   flags 8
+   4 REG_BANK_0                                 size    8   flags 4
+   5 DSEG                                       size    7   flags 0
+   6 OSEG                                       size    0   flags 4
+   7 SSEG                                       size    1   flags 0
+   8 ISEG                                       size    0   flags 0
+   9 IABS                                       size    0   flags 8
+   A BSEG                                       size    0   flags 80
+   B PSEG                                       size    0   flags 50
+   C XSEG                                       size    0   flags 40
+   D XABS                                       size    0   flags 48
+   E XISEG                                      size    0   flags 40
+   F HOME                                       size    8   flags 20
+  10 GSINIT0                                    size    0   flags 20
+  11 GSINIT1                                    size    0   flags 20
+  12 GSINIT2                                    size    0   flags 20
+  13 GSINIT3                                    size    0   flags 20
+  14 GSINIT4                                    size    0   flags 20
+  15 GSINIT5                                    size    0   flags 20
+  16 GSINIT                                     size    0   flags 20
+  17 GSFINAL                                    size    3   flags 20
+  18 CSEG                                       size  2A1   flags 20
+  19 CONST                                      size   10   flags 20
+  1A XINIT                                      size    0   flags 20
+  1B CABS                                       size    0   flags 28

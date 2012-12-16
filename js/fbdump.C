@@ -100,26 +100,30 @@ namespace l
 		boost::asio::placeholders::bytes_transferred));
 	}
 #endif
-	static void httpget(const char* url,
+	static void httpget(const char* url, bool post,
 		const function<bool(const void* data, int len, int state/*-1:failed 1:connected 2:sent 3:recving 4:closed*/)>& cb)
 	{
 		//httpreq* r=new httpreq(cb);
 		//r->get(url);
-		tm->addTransfer(url,cb);
+		tm->addTransfer(url, post, cb);
 	}
 	static Handle<Value> get(const Arguments& a)
 	{
 		//*
 		if(!(a.Length()<2))goto cont;
-		return ThrowException(String::New("argument error: usage: get(String url, Function<void(String s)> cb)"));
+		return ThrowException(String::New("argument error: usage: get(String url, Function<void(String s)> cb, bool post=false)"));
 	cont:
 		try
 		{
+			bool post=false;
 			String::Utf8Value s(a[0]);
 			Persistent<Function> func=Persistent<Function>::New(Handle<Function>::Cast(a[1]));
+			if(a.Length()>=3) {
+				post=(*(Handle<Boolean>((Boolean*)*a[2])))->Value();
+			}
 			Persistent<Object> obj=Persistent<Object>::New(a.Holder());
 			string* str=new string();
-			httpget(*s, [func,str,obj](const void* data, int len, int state) {
+			httpget(*s, post, [func,str,obj](const void* data, int len, int state) {
 				if(data!=NULL && len>0) str->append((const char*)data,len);
 				if(state>=4 || state==-1)
 				{
@@ -153,7 +157,7 @@ namespace l
 			//string* str=new string();
 			xaxaxa::FileStream* fs=new xaxaxa::FileStream(*filename,O_RDWR|O_CREAT|O_TRUNC,0644);
 			
-			httpget(*url, [func,fs,obj](const void* data, int len, int state) {
+			httpget(*url, false, [func,fs,obj](const void* data, int len, int state) {
 				if(data!=NULL && len>0) fs->Write({(void*)data,len});
 				if(state>=4 || state==-1)
 				{

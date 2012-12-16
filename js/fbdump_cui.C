@@ -55,6 +55,12 @@ void init()
 			} else {
 				scripts.append(argv[i]);
 			}
+		const char* env_vars=getenv("FBDUMP_VARS");
+		if(env_vars!=NULL) {
+			sb.Append(env_vars);
+			sb.Append(";\n");
+		}
+
 		
 		header=sb.ToCString();
 		GenericUI::attach("main").attach("finish").attach([](O o) {

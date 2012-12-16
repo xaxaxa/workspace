@@ -1,8 +1,17 @@
-ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 1.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Intel 8051), page 1.
 
 Symbol Table
 
-    A                                                              00D6 
+    .__.ABS.                                                    =  0000 G
+    A                                                              00E0 
+    A.0                                                            00E0 
+    A.1                                                            00E1 
+    A.2                                                            00E2 
+    A.3                                                            00E3 
+    A.4                                                            00E4 
+    A.5                                                            00E5 
+    A.6                                                            00E6 
+    A.7                                                            00E7 
     AC                                                             00D6 
     ACC                                                            00E0 
     ACC.0                                                          00E0 
@@ -173,15 +182,20 @@ Symbol Table
     _AC                                                         =  00D6 G
     _ACC                                                        =  00E0 G
     _B                                                          =  00F0 G
+    _CP_RL2                                                     =  00C8 G
     _CY                                                         =  00D7 G
+    _C_T2                                                       =  00C9 G
     _DPH                                                        =  0083 G
     _DPL                                                        =  0082 G
     _EA                                                         =  00AF G
     _ES                                                         =  00AC G
     _ET0                                                        =  00A9 G
     _ET1                                                        =  00AB G
+    _ET2                                                        =  00AD G
     _EX0                                                        =  00A8 G
     _EX1                                                        =  00AA G
+    _EXEN2                                                      =  00CB G
+    _EXF2                                                       =  00CE G
     _F0                                                         =  00D5 G
     _F1                                                         =  00D1 G
     _IE                                                         =  00A8 G
@@ -235,9 +249,13 @@ Symbol Table
     _PSW                                                        =  00D0 G
     _PT0                                                        =  00B9 G
     _PT1                                                        =  00BB G
+    _PT2                                                        =  00BD G
     _PX0                                                        =  00B8 G
     _PX1                                                        =  00BA G
     _RB8                                                        =  009A G
+    _RCAP2H                                                     =  00CB G
+    _RCAP2L                                                     =  00CA G
+    _RCLK                                                       =  00CD G
     _RD                                                         =  00B7 G
     _REN                                                        =  009C G
     _RI                                                         =  0098 G
@@ -252,26 +270,40 @@ Symbol Table
     _SP                                                         =  0081 G
     _T0                                                         =  00B4 G
     _T1                                                         =  00B5 G
+    _T2CON                                                      =  00C8 G
+    _T2CON_0                                                    =  00C8 G
+    _T2CON_1                                                    =  00C9 G
+    _T2CON_2                                                    =  00CA G
+    _T2CON_3                                                    =  00CB G
+    _T2CON_4                                                    =  00CC G
+    _T2CON_5                                                    =  00CD G
+    _T2CON_6                                                    =  00CE G
+    _T2CON_7                                                    =  00CF G
     _TB8                                                        =  009B G
+    _TCLK                                                       =  00CC G
     _TCON                                                       =  0088 G
     _TF0                                                        =  008D G
     _TF1                                                        =  008F G
+    _TF2                                                        =  00CF G
     _TH0                                                        =  008C G
     _TH1                                                        =  008D G
+    _TH2                                                        =  00CD G
     _TI                                                         =  0099 G
     _TL0                                                        =  008A G
     _TL1                                                        =  008B G
+    _TL2                                                        =  00CC G
     _TMOD                                                       =  0089 G
     _TR0                                                        =  008C G
     _TR1                                                        =  008E G
+    _TR2                                                        =  00CA G
     _TXD                                                        =  00B1 G
     _WR                                                         =  00B6 G
-  B __c                                                            0008 GR
+  6 __c                                                            0006 GR
     __divsint                                                      **** GX
     __divsint_PARM_2                                               **** GX
     __divslong                                                     **** GX
     __divslong_PARM_2                                              **** GX
-  E __interrupt_vect                                               0000 R
+ 10 __interrupt_vect                                               0000 R
     __mcs51_genRAMCLEAR                                            **** GX
     __mcs51_genXINIT                                               **** GX
     __mcs51_genXRAMCLEAR                                           **** GX
@@ -280,32 +312,32 @@ Symbol Table
     __modslong                                                     **** GX
     __modslong_PARM_2                                              **** GX
     __sdcc_gsinit_startup                                          **** GX
-  E __sdcc_program_startup                                         001E GR
-  6 __start__stack                                                 0000 GR
- 19 __xinit__count                                                 0087 R
- 19 __xinit__display_seg                                           0077 R
- 19 __xinit__s                                                     005A R
- 19 __xinit__seg_position                                          0082 R
- 19 __xinit__t                                                     0000 R
- 19 __xinit__time                                                  0018 R
- 17 _b                                                             0176 GR
- 17 _c                                                             01BA GR
-  4 _c_sloc0_1_0                                                   0000 R
-  D _count                                                         0087 GR
- 17 _delay                                                         0000 GR
-  B _delay_i_1_1                                                   0000 R
- 17 _display                                                       003B GR
-  B _display_i_1_1                                                 0004 R
-  D _display_seg                                                   0077 GR
-  B _i                                                             0006 GR
- 17 _main                                                          0117 GR
-  D _s                                                             005A GR
-  D _seg_position                                                  0082 GR
-  D _t                                                             0000 GR
-  B _t_h                                                           0002 GR
-  B _t_l                                                           0003 GR
-  D _time                                                          0018 GR
-    a                                                              00D6 
+ 10 __sdcc_program_startup                                         001E GR
+  8 __start__stack                                                 0000 GR
+ 19 _b                                                             013C GR
+ 19 _c                                                             0172 GR
+  6 _c_sloc0_1_0                                                   0008 R
+  6 _count                                                         0002 GR
+ 19 _delay                                                         0000 GR
+ 19 _display                                                       002C GR
+ 1A _display_seg                                                   0077 GR
+  6 _i                                                             0004 GR
+ 19 _main                                                          00EF GR
+ 1A _s                                                             005A GR
+ 1A _seg_position                                                  0082 GR
+ 1A _t                                                             0000 GR
+  6 _t_h                                                           0000 GR
+  6 _t_l                                                           0001 GR
+ 1A _time                                                          0018 GR
+    a                                                              00E0 
+    a.0                                                            00E0 
+    a.1                                                            00E1 
+    a.2                                                            00E2 
+    a.3                                                            00E3 
+    a.4                                                            00E4 
+    a.5                                                            00E5 
+    a.6                                                            00E6 
+    a.7                                                            00E7 
     ac                                                             00D6 
     acc                                                            00E0 
     acc.0                                                          00E0 
@@ -333,15 +365,15 @@ Symbol Table
     b.5                                                            00F5 
     b.6                                                            00F6 
     b.7                                                            00F7 
-  3 b0                                                          =  8000 R
-  3 b1                                                          =  8100 R
-  3 b2                                                          =  8200 R
-  3 b3                                                          =  8300 R
-  3 b4                                                          =  8400 R
-  3 b5                                                          =  8500 R
-  3 b6                                                          =  8600 R
-  3 b7                                                          =  8700 R
-  3 bits                                                           0000 R
+  5 b0                                                          =  8000 R
+  5 b1                                                          =  8100 R
+  5 b2                                                          =  8200 R
+  5 b3                                                          =  8300 R
+  5 b4                                                          =  8400 R
+  5 b5                                                          =  8500 R
+  5 b6                                                          =  8600 R
+  5 b7                                                          =  8700 R
+  5 bits                                                           0000 R
     cprl2                                                          00C8 
     ct2                                                            00C9 
     cy                                                             00D7 
@@ -491,34 +523,36 @@ Symbol Table
     tr2                                                            00CA 
     txd                                                            00B1 
 
-ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 2.
+ASxxxx Assembler V02.00 + NoICE + SDCC mods + Flat24  (Intel 8051), page 2.
 
 Area Table
 
-   0 _CODE                                                                              size    0   flags 0
-   1 RSEG                                                                               size    0   flags 0
-   2 REG_BANK_0                                                                         size    8   flags 4
-   3 BIT_BANK                                                                           size    1   flags 4
-   4 DSEG                                                                               size    4   flags 0
-   5 OSEG                                                                               size    0   flags 4
-   6 SSEG                                                                               size    1   flags 0
-   7 ISEG                                                                               size    0   flags 0
-   8 IABS                                                                               size    0   flags 8
-   9 BSEG                                                                               size    0   flags 80
-   A PSEG                                                                               size    0   flags 50
-   B XSEG                                                                               size    A   flags 40
-   C XABS                                                                               size    0   flags 48
-   D XISEG                                                                              size   89   flags 40
-   E HOME                                                                               size   23   flags 20
-   F GSINIT0                                                                            size    0   flags 20
-  10 GSINIT1                                                                            size    0   flags 20
-  11 GSINIT2                                                                            size    0   flags 20
-  12 GSINIT3                                                                            size    0   flags 20
-  13 GSINIT4                                                                            size    0   flags 20
-  14 GSINIT5                                                                            size    0   flags 20
-  15 GSINIT                                                                             size    0   flags 20
-  16 GSFINAL                                                                            size    3   flags 20
-  17 CSEG                                                                               size  30E   flags 20
-  18 CONST                                                                              size    0   flags 20
-  19 XINIT                                                                              size   89   flags 20
-  1A CABS                                                                               size    0   flags 28
+   0 _CODE                                      size    0   flags 0
+   1 RSEG                                       size    0   flags 8
+   2 RSEG0                                      size    0   flags 8
+   3 RSEG1                                      size    0   flags 8
+   4 REG_BANK_0                                 size    8   flags 4
+   5 BIT_BANK                                   size    1   flags 4
+   6 DSEG                                       size    C   flags 0
+   7 OSEG                                       size    0   flags 4
+   8 SSEG                                       size    1   flags 0
+   9 ISEG                                       size    0   flags 0
+   A IABS                                       size    0   flags 8
+   B BSEG                                       size    0   flags 80
+   C PSEG                                       size    0   flags 50
+   D XSEG                                       size    0   flags 40
+   E XABS                                       size    0   flags 48
+   F XISEG                                      size    0   flags 40
+  10 HOME                                       size   23   flags 20
+  11 GSINIT0                                    size    0   flags 20
+  12 GSINIT1                                    size    0   flags 20
+  13 GSINIT2                                    size    0   flags 20
+  14 GSINIT3                                    size    0   flags 20
+  15 GSINIT4                                    size    0   flags 20
+  16 GSINIT5                                    size    0   flags 20
+  17 GSINIT                                     size    6   flags 20
+  18 GSFINAL                                    size    3   flags 20
+  19 CSEG                                       size  28A   flags 20
+  1A CONST                                      size   87   flags 20
+  1B XINIT                                      size    0   flags 20
+  1C CABS                                       size    0   flags 28

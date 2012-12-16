@@ -1,17 +1,17 @@
 /*
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-* */
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
 
 //RGC: simple reference counting based garbage collection framework
 #ifndef __RGC_H
@@ -21,122 +21,113 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace RGC
 {
 	typedef volatile int atomic_t;
-	#define atomic_read(v)                  v
-	#define atomic_set(v,i)                 v = i
-	#define atomic_add(i,v)                 v += i
-	#define atomic_sub(i,v)                 v -= i
-	#define atomic_sub_and_test(i,v)        (v -= i) == 0
-	#define atomic_inc(v)                   v++
-	#define atomic_dec(v)                   v--
-	#define atomic_dec_and_test(v)          --v == 0
-	#define atomic_inc_and_test(v)          ++v == 0
-	#define atomic_add_negative(i,v)        (v += i) < 0
+#define atomic_read(v)                  v
+#define atomic_set(v,i)                 v = i
+#define atomic_add(i,v)                 v += i
+#define atomic_sub(i,v)                 v -= i
+#define atomic_sub_and_test(i,v)        (v -= i) == 0
+#define atomic_inc(v)                   v++
+#define atomic_dec(v)                   v--
+#define atomic_dec_and_test(v)          --v == 0
+#define atomic_inc_and_test(v)          ++v == 0
+#define atomic_add_negative(i,v)        (v += i) < 0
 	//static int objs=0;
 	class Object
 	{
 	public:
 		atomic_t refCount; //reference counter
-		Object()
-		{
+		Object() {
 			refCount = 1;
 			/*objs++;
-			cout << objs << " objects" << endl;*/
+			 cout << objs << " objects" << endl;*/
 		}
-		Object(const Object& other)
-		{
+		Object(const Object& other) {
 			refCount = 1;
 		}
-		virtual ~Object()
-		{
+		virtual ~Object() {
 			/*objs--;
-			cout << objs << " objects" << endl;*/
+			 cout << objs << " objects" << endl;*/
 		}
-		inline void retain()
-		{
+		inline void retain() {
 			atomic_inc(refCount);
 		}
-		inline void destruct()
-		{
+		inline void destruct() {
 			delete this;
 		}
-		inline void release()
-		{
+		inline void release() {
 			atomic_dec(refCount);
 			if (refCount <= 0) {
 				destruct();
 			}
 		}
 		/*Object& operator=(const Object& other)
-		{
-			//refCount = 1;
-			return *this;
-		}*/
+		 {
+		 //refCount = 1;
+		 return *this;
+		 }*/
 	};
 	//template<class T> struct Ref;
 	template<class T> struct Ref
 	{
 		T* obj;
 		inline Ref() :
-				obj(NULL)
-		{
+				obj(NULL) {
 		}
 		//inline Ref(const Ref<T>& other);
 		inline Ref(T* obj) :
-				obj(obj)
-		{
+				obj(obj) {
 			if (obj != NULL) obj->retain();
 		}
 		inline Ref(T& obj) :
-				obj(&obj)
-		{
+				obj(&obj) {
 			if (&obj != NULL) obj.retain();
 		}
 		/*template<class ... ARGS> inline Ref(ARGS&& ... args)
-		:obj(new T(std::forward<ARGS>(args)...))
-		{
-		}*/
-		inline ~Ref()
-		{
+		 :obj(new T(std::forward<ARGS>(args)...))
+		 {
+		 }*/
+		inline ~Ref() {
 			if (this->obj != NULL) this->obj->release();
 		}
 		Ref(const Ref<T>& other) :
-				obj(other.obj)
-		{
+				obj(other.obj) {
 			if (obj != NULL) obj->retain();
 		}
-		T* operator=(T* obj)
-		{
+		T* operator=(T* obj) {
 			if (this->obj != NULL) this->obj->release();
 			this->obj = obj;
 			if (obj != NULL) obj->retain();
 			return obj;
 		}
-		T* operator=(T& obj)
-		{
+		T* operator=(T& obj) {
 			return operator=(*obj);
 		}
-		Ref& operator=(const Ref& other)
-		{
+		Ref& operator=(const Ref& other) {
 			if (this->obj != NULL) this->obj->release();
 			this->obj = other.obj;
 			if (obj != NULL) obj->retain();
 			return *this;
 		}
-		inline T* operator()() const
-		{
+		inline T* operator()() const {
 			return obj;
 		}
-		inline T& operator*() const
-		{
+		inline T& operator*() const {
 			return *obj;
 		}
-		inline T* operator->() const
-		{
+		inline T* operator->() const {
 			return obj;
 		}
-		inline T* get() const
-		{
+		inline T* get() const {
 			return obj;
+		}
+		template<class A> Ref<A> staticCast() {
+			return Ref<A>(static_cast<A*>(obj));
+		}
+		template<class A> Ref<A> dynamicCast() {
+			return Ref<A>(dynamic_cast<A*>(obj));
+		}
+		template<class A> Ref<A> reinterpretCast() {
+			return Ref<A>(reinterpret_cast<A*>(obj));
 		}
 	};
 	//creates a new instance, but disowns it
@@ -146,52 +137,52 @@ namespace RGC
 		tmp->refCount = 0;
 		return tmp;
 	}
-	/*template<class T> struct Ref
-	{
-		T* obj;
-		template<class ... ARGS> inline Ref(ARGS&& ... args)
-		:obj(new T(std::forward<ARGS>(args)...))
-		{
-		}
-		Ref(const Property<T>& prop):obj(prop.obj)
-		{
-			obj->retain();
-		}
-		~Ref()
-		{
-			obj->release();
-		}
-		inline T* operator()() const
-		{
-			return obj;
-		}
-		inline T* operator->() const
-		{
-			return obj;
-		}
-		inline T& operator*() const
-		{
-			return *obj;
-		}
-		inline T* get() const
-		{
-			return obj;
-		}
-	};*/
-	
-	//callback mechanism similar to .NET events
-	/*template<class funcType> class Event
-	{
-	public:
-		vector<funcType> callbacks;
-		void operator()() {
-			for(int i=0;i<callbacks.size();i++)
-				callbacks[i]();
-		}
-		void operator+=(const funcType& cb) {
-			callbacks.push_back(cb);
-		}
-		
-	};*/
-}
+/*template<class T> struct Ref
+ {
+ T* obj;
+ template<class ... ARGS> inline Ref(ARGS&& ... args)
+ :obj(new T(std::forward<ARGS>(args)...))
+ {
+ }
+ Ref(const Property<T>& prop):obj(prop.obj)
+ {
+ obj->retain();
+ }
+ ~Ref()
+ {
+ obj->release();
+ }
+ inline T* operator()() const
+ {
+ return obj;
+ }
+ inline T* operator->() const
+ {
+ return obj;
+ }
+ inline T& operator*() const
+ {
+ return *obj;
+ }
+ inline T* get() const
+ {
+ return obj;
+ }
+ };*/
+
+//callback mechanism similar to .NET events
+			/*template<class funcType> class Event
+			 {
+			 public:
+			 vector<funcType> callbacks;
+			 void operator()() {
+			 for(int i=0;i<callbacks.size();i++)
+			 callbacks[i]();
+			 }
+			 void operator+=(const funcType& cb) {
+			 callbacks.push_back(cb);
+			 }
+
+			 };*/
+			}
 #endif

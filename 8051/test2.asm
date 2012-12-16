@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
-; Version 2.9.0 #5416 (Feb  3 2010) (UNIX)
-; This file was generated Sun May 13 18:25:48 2012
+; Version 3.1.0 #7066 (Feb 26 2012) (Linux)
+; This file was generated Sat Dec  1 15:04:55 2012
 ;--------------------------------------------------------
 	.module test2
 	.optsdcc -mmcs51 --model-small
@@ -139,7 +139,8 @@
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
-	.area RSEG    (DATA)
+	.area RSEG    (ABS,DATA)
+	.org 0x0000
 _P0	=	0x0080
 _SP	=	0x0081
 _DPL	=	0x0082
@@ -169,7 +170,8 @@ _TH2	=	0x00cd
 ;--------------------------------------------------------
 ; special function bits
 ;--------------------------------------------------------
-	.area RSEG    (DATA)
+	.area RSEG    (ABS,DATA)
+	.org 0x0000
 _P0_0	=	0x0080
 _P0_1	=	0x0081
 _P0_2	=	0x0082
@@ -359,48 +361,48 @@ __sdcc_program_startup:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'delay'
 ;------------------------------------------------------------
-;i                         Allocated to registers r2 r3 
+;i                         Allocated to registers r6 r7 
 ;a                         Allocated to registers r4 r5 
-;b                         Allocated to registers r6 r7 
+;b                         Allocated to registers r2 r3 
 ;------------------------------------------------------------
 ;	test2.c:16: void delay(int i)
 ;	-----------------------------------------
 ;	 function delay
 ;	-----------------------------------------
 _delay:
-	ar2 = 0x02
-	ar3 = 0x03
-	ar4 = 0x04
-	ar5 = 0x05
-	ar6 = 0x06
 	ar7 = 0x07
-	ar0 = 0x00
+	ar6 = 0x06
+	ar5 = 0x05
+	ar4 = 0x04
+	ar3 = 0x03
+	ar2 = 0x02
 	ar1 = 0x01
-	mov	r2,dpl
-	mov	r3,dph
+	ar0 = 0x00
+	mov	r6,dpl
+	mov	r7,dph
 ;	test2.c:19: for(a=0;a<i;a++)
 	mov	r4,#0x00
 	mov	r5,#0x00
 00104$:
 	clr	c
 	mov	a,r4
-	subb	a,r2
+	subb	a,r6
 	mov	a,r5
 	xrl	a,#0x80
-	mov	b,r3
+	mov	b,r7
 	xrl	b,#0x80
 	subb	a,b
 	jnc	00108$
 ;	test2.c:21: for(b=0;b<120;b++);
-	mov	r6,#0x78
-	mov	r7,#0x00
+	mov	r2,#0x78
+	mov	r3,#0x00
 00103$:
-	dec	r6
-	cjne	r6,#0xff,00117$
-	dec	r7
+	dec	r2
+	cjne	r2,#0xFF,00117$
+	dec	r3
 00117$:
-	mov	a,r6
-	orl	a,r7
+	mov	a,r2
+	orl	a,r3
 	jnz	00103$
 ;	test2.c:19: for(a=0;a<i;a++)
 	inc	r4
@@ -412,7 +414,7 @@ _delay:
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'main'
 ;------------------------------------------------------------
-;i                         Allocated to registers r2 r3 
+;i                         Allocated to registers r6 r7 
 ;i2                        Allocated to registers r4 r5 
 ;------------------------------------------------------------
 ;	test2.c:32: void main()
@@ -421,8 +423,8 @@ _delay:
 ;	-----------------------------------------
 _main:
 ;	test2.c:34: int i=0;
-	mov	r2,#0x00
-	mov	r3,#0x00
+	mov	r6,#0x00
+	mov	r7,#0x00
 ;	test2.c:35: int i2=0;
 	mov	r4,#0x00
 	mov	r5,#0x00
@@ -433,15 +435,15 @@ _main:
 ;	test2.c:40: while(1)
 00109$:
 ;	test2.c:42: P1=~display_seg6[i];
-	mov	a,r2
+	mov	a,r6
 	add	a,#_display_seg6
 	mov	dpl,a
-	mov	a,r3
+	mov	a,r7
 	addc	a,#(_display_seg6 >> 8)
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
-	mov	r6,a
+	mov	r3,a
 	cpl	a
 	mov	_P1,a
 ;	test2.c:43: P0=display_seg[i2];
@@ -459,9 +461,9 @@ _main:
 	mov	a,_P2
 	jnb	acc.0,00101$
 ;	test2.c:46: i++;
-	inc	r2
-	cjne	r2,#0x00,00119$
-	inc	r3
+	inc	r6
+	cjne	r6,#0x00,00119$
+	inc	r7
 00119$:
 ;	test2.c:47: /*if(tmp==0)*/i2++;
 	inc	r4
@@ -469,24 +471,25 @@ _main:
 	inc	r5
 00120$:
 ;	test2.c:48: if(display_seg6[i]==0x11)i=0;
-	mov	a,r2
+	mov	a,r6
 	add	a,#_display_seg6
 	mov	dpl,a
-	mov	a,r3
+	mov	a,r7
 	addc	a,#(_display_seg6 >> 8)
 	mov	dph,a
 	clr	a
 	movc	a,@a+dptr
-	mov	r6,a
-	cjne	r6,#0x11,00105$
-	mov	r2,#0x00
-	mov	r3,#0x00
+	mov	r3,a
+	cjne	r3,#0x11,00105$
+	mov	r6,#0x00
+	mov	r7,#0x00
 00105$:
 ;	test2.c:49: if(i2>9)i2=0;
 	clr	c
 	mov	a,#0x09
 	subb	a,r4
-	mov	a,#(0x00 ^ 0x80)
+	clr	a
+	xrl	a,#0x80
 	mov	b,r5
 	xrl	b,#0x80
 	subb	a,b
@@ -496,110 +499,110 @@ _main:
 00107$:
 ;	test2.c:52: delay(200);
 	mov	dptr,#0x00C8
-	push	ar2
-	push	ar3
-	push	ar4
+	push	ar7
+	push	ar6
 	push	ar5
+	push	ar4
 	lcall	_delay
-	pop	ar5
 	pop	ar4
-	pop	ar3
-	pop	ar2
+	pop	ar5
+	pop	ar6
+	pop	ar7
 	sjmp	00109$
 	.area CSEG    (CODE)
 	.area CONST   (CODE)
 _display_seg:
-	.db #0xC0
-	.db #0xF9
-	.db #0xA4
-	.db #0xB0
-	.db #0x99
-	.db #0x92
-	.db #0x82
-	.db #0xF8
-	.db #0x80
-	.db #0x90
-	.db #0x7F
+	.db #0xC0	; 192
+	.db #0xF9	; 249
+	.db #0xA4	; 164
+	.db #0xB0	; 176
+	.db #0x99	; 153
+	.db #0x92	; 146
+	.db #0x82	; 130
+	.db #0xF8	; 248
+	.db #0x80	; 128
+	.db #0x90	; 144
+	.db #0x7F	; 127
 _display_seg2:
-	.db #0xFE
-	.db #0xFD
-	.db #0xFB
-	.db #0xF7
-	.db #0xEF
-	.db #0xDF
+	.db #0xFE	; 254
+	.db #0xFD	; 253
+	.db #0xFB	; 251
+	.db #0xF7	; 247
+	.db #0xEF	; 239
+	.db #0xDF	; 223
 _display_seg3:
-	.db #0x01
-	.db #0x02
-	.db #0x04
-	.db #0x08
-	.db #0x10
-	.db #0x20
-	.db #0x40
-	.db #0x80
+	.db #0x01	; 1
+	.db #0x02	; 2
+	.db #0x04	; 4
+	.db #0x08	; 8
+	.db #0x10	; 16
+	.db #0x20	; 32
+	.db #0x40	; 64
+	.db #0x80	; 128
 _display_seg4:
-	.db #0xFF
-	.db #0x90
-	.db #0x90
-	.db #0x90
-	.db #0x00
-	.db #0xFF
-	.db #0x01
-	.db #0x01
-	.db #0xFF
-	.db #0x00
-	.db #0x18
-	.db #0x24
-	.db #0x42
-	.db #0x81
-	.db #0x00
-	.db #0xFF
-	.db #0x04
-	.db #0x0A
-	.db #0x11
-	.db #0x00
+	.db #0xFF	; 255
+	.db #0x90	; 144
+	.db #0x90	; 144
+	.db #0x90	; 144
+	.db #0x00	; 0
+	.db #0xFF	; 255
+	.db #0x01	; 1
+	.db #0x01	; 1
+	.db #0xFF	; 255
+	.db #0x00	; 0
+	.db #0x18	; 24
+	.db #0x24	; 36
+	.db #0x42	; 66	'B'
+	.db #0x81	; 129
+	.db #0x00	; 0
+	.db #0xFF	; 255
+	.db #0x04	; 4
+	.db #0x0A	; 10
+	.db #0x11	; 17
+	.db #0x00	; 0
 _display_seg5:
-	.db #0x88
-	.db #0x44
-	.db #0x22
-	.db #0x11
+	.db #0x88	; 136
+	.db #0x44	; 68	'D'
+	.db #0x22	; 34
+	.db #0x11	; 17
 _display_seg6:
-	.db #0x00
-	.db #0x01
-	.db #0x02
-	.db #0x04
-	.db #0x08
-	.db #0x10
-	.db #0x20
-	.db #0x40
-	.db #0x80
-	.db #0x81
-	.db #0x82
-	.db #0x84
-	.db #0x88
-	.db #0x90
-	.db #0xA0
-	.db #0xC0
-	.db #0xC1
-	.db #0xC2
-	.db #0xC4
-	.db #0xC8
-	.db #0xD0
-	.db #0xE0
-	.db #0xE1
-	.db #0xE2
-	.db #0xE4
-	.db #0xE8
-	.db #0xF0
-	.db #0xF1
-	.db #0xF2
-	.db #0xF4
-	.db #0xF8
-	.db #0xF9
-	.db #0xFA
-	.db #0xFC
-	.db #0xFD
-	.db #0xFE
-	.db #0xFF
-	.db #0x11
+	.db #0x00	; 0
+	.db #0x01	; 1
+	.db #0x02	; 2
+	.db #0x04	; 4
+	.db #0x08	; 8
+	.db #0x10	; 16
+	.db #0x20	; 32
+	.db #0x40	; 64
+	.db #0x80	; 128
+	.db #0x81	; 129
+	.db #0x82	; 130
+	.db #0x84	; 132
+	.db #0x88	; 136
+	.db #0x90	; 144
+	.db #0xA0	; 160
+	.db #0xC0	; 192
+	.db #0xC1	; 193
+	.db #0xC2	; 194
+	.db #0xC4	; 196
+	.db #0xC8	; 200
+	.db #0xD0	; 208
+	.db #0xE0	; 224
+	.db #0xE1	; 225
+	.db #0xE2	; 226
+	.db #0xE4	; 228
+	.db #0xE8	; 232
+	.db #0xF0	; 240
+	.db #0xF1	; 241
+	.db #0xF2	; 242
+	.db #0xF4	; 244
+	.db #0xF8	; 248
+	.db #0xF9	; 249
+	.db #0xFA	; 250
+	.db #0xFC	; 252
+	.db #0xFD	; 253
+	.db #0xFE	; 254
+	.db #0xFF	; 255
+	.db #0x11	; 17
 	.area XINIT   (CODE)
 	.area CABS    (ABS,CODE)
