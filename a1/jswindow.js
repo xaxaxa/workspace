@@ -24,7 +24,7 @@ function gety(oElement)
 }
 function get_zi()
 {
-	var ret=0;
+	var ret=2000;
 	var ifr=document.getElementsByTagName("div");
 	var i;
 	for(i=0;i<ifr.length;i++)
@@ -48,7 +48,7 @@ function sortf(a, b)
 function rearrange_zi()
 {
 	var zi=[];
-	var ifr=document.getElementsByTagName("iframe");
+	var ifr=document.getElementsByTagName("div");
 	var i;
 	for(i=0;i<ifr.length;i++)
 	{
@@ -63,7 +63,7 @@ function rearrange_zi()
 	zi=zi.sort(sortf);
 	for(i=0;i<zi.length;i++)
 	{
-		zi[i][1].style.zIndex=i;
+		zi[i][1].style.zIndex=i+1000;
 	}
 }
 function wnd2_helper(wnd)

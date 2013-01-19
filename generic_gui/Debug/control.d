@@ -945,7 +945,7 @@ control.d: ../control.C ../include/control.H \
  /usr/include/gtkmm-2.4/gtkmm/treestore.h \
  /usr/include/gtkmm-2.4/gtkmm/uimanager.h \
  /usr/include/gtkmm-2.4/gtkmm/actiongroup.h \
- /usr/include/gtkmm-2.4/gtkmm/viewport.h
+ /usr/include/gtkmm-2.4/gtkmm/viewport.h ../include/wtviewport.H
 
 ../include/control.H:
 
@@ -2970,3 +2970,5 @@ control.d: ../control.C ../include/control.H \
 /usr/include/gtkmm-2.4/gtkmm/actiongroup.h:
 
 /usr/include/gtkmm-2.4/gtkmm/viewport.h:
+
+../include/wtviewport.H:

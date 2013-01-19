@@ -5,15 +5,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_UPPER_SRCS += \
 ../control.C \
-../gtkviewport.C 
+../gtkviewport.C \
+../wtviewport.C 
 
 OBJS += \
 ./control.o \
-./gtkviewport.o 
+./gtkviewport.o \
+./wtviewport.o 
 
 C_UPPER_DEPS += \
 ./control.d \
-./gtkviewport.d 
+./gtkviewport.d \
+./wtviewport.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

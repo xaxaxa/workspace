@@ -170,6 +170,11 @@ namespace xaxaxa
 			set_redraw_on_allocate(true);
 			set_events(get_events()|POINTER_MOTION_MASK|BUTTON_MOTION_MASK|BUTTON_PRESS_MASK|BUTTON_RELEASE_MASK);
 		}
+		void resize(UInt newdatalen) {
+			datalen=newdatalen;
+			delete[] data;
+			data=new double[datalen];
+		}
 	};
 }
 

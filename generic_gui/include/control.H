@@ -14,7 +14,7 @@
 //note that implementing a control automatically implements their children as well
 //increasing this will use more ram
 #ifndef MAX_IMPLEMENTATIONS_PER_CONTROL
-#define MAX_IMPLEMENTATIONS_PER_CONTROL 3
+#define MAX_IMPLEMENTATIONS_PER_CONTROL 5
 #endif
 
 #define INIT_CONTROL_EVENT(t, field) field.init(offsetof(t, field))
@@ -107,6 +107,7 @@ namespace GenericGUI
 		if (this->h.size() == 0) callback(false);
 	}
 	class Element;
+	// messages from control to implementation
 	struct ImplEventData
 	{
 		enum Types
@@ -147,6 +148,7 @@ namespace GenericGUI
 
 		}
 	};
+	//messages from implementation to control
 	struct ImplMessageData
 	{
 		enum Types
@@ -218,6 +220,7 @@ namespace GenericGUI
 	class Implementation: public Object
 	{
 	public:
+
 		/*Implementation* parent;
 		 Implementation* firstChild;
 		 Implementation* lastChild;
@@ -227,13 +230,22 @@ namespace GenericGUI
 		 void removeChild(Implementation* impl);
 		 void clearChildren();*/
 
+		//these 4 functions below will be called by processMessage()
+		virtual void propertyChange(int offset);
+		virtual void methodCall(const char* name);
+		virtual void enableDisableEvent(int offset, bool disable);
+		virtual void addRemoveChild(Element* element, bool remove);
+
+		virtual void processEvent(const ImplEventData& data);
+
 		Control* control;
 		Viewport* viewport;
+		int eventHandlerID;
+		bool nodetach;
 		Implementation(Control* control, Viewport* viewport);
-		//initialize() MUST be called or else the behavior of the destructor is undefined
-		virtual void initialize();
 		virtual ~Implementation();
 	};
+	typedef function<Implementation*(Control*, Viewport*)> ImplementationCtor;
 	class Control: public Element
 	{
 	public:
@@ -258,6 +270,8 @@ namespace GenericGUI
 		//to "unimplement", or hide a control, just release() all references
 		//to the Implementation object
 		virtual RGC::Ref<Implementation> implement(Viewport* vp);
+		virtual RGC::Ref<Implementation> implement(Viewport* vp,
+				const ImplementationCtor& implCtor);
 		Control();
 	};
 	//NOT polymorphic
@@ -295,7 +309,7 @@ namespace GenericGUI
 			this->offset = offset;
 		}
 	};
-	typedef function<Implementation*(Control*, Viewport*)> ImplementationCtor;
+
 	ImplementationCtor* findImplementation(const type_info& ctrl, const type_info& viewport);
 	void registerImplementation(const type_info& ctrl, const type_info& viewport,
 			const ImplementationCtor& ctor);
@@ -343,7 +357,7 @@ namespace GenericGUI
 			array<int, 2> getSize(); //rows, cols
 			void setSize(array<int, 2> s);
 			Control* getChild(int y, int x);
-			void setChild(int y, int x, Control* c, int rowspan=1, int colspan=1);
+			void setChild(int y, int x, Control* c, int rowspan = 1, int colspan = 1);
 			Table();
 		};
 	}

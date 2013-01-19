@@ -1,5 +1,5 @@
 PKG_CONFIG=`pkg-config --cflags --libs gtkmm-2.4`
-FLAGS=-I../../include/ -L../../lib/ --std=c++0x -lgeneric_gui -g3
+FLAGS=-I../../include/ -L../../lib/ --std=c++0x -lgeneric_gui -lwt -lwthttp -g3
 a:
 	g++ a.C -o a $(FLAGS) $(PKG_CONFIG)
 gui_test1:

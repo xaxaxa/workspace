@@ -1,0 +1,2 @@
+g++ sha_name_brute.C -o sha_name_brute --std=c++0x -lcryptopp -pthread -march=native -Ofast
+

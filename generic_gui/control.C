@@ -6,7 +6,9 @@
  */
 #include "include/control.H"
 #include "include/gtkviewport.H"
+#include "include/wtviewport.H"
 #include <gtkmm.h>
+#include <Wt/WPushButton>
 namespace GenericGUI
 {
 	void Element::propertyChange(int offset) {
@@ -113,15 +115,53 @@ namespace GenericGUI
 	}
 
 	Implementation::Implementation(Control* control, Viewport* viewport) :
-			control(control), viewport(viewport) {
+			control(control), viewport(viewport), nodetach(false) {
+		printf("Implementation::Implementation(%p, %p, %p)\n", this, control, viewport);
+		if (unlikely(!control->implementations.add(viewport, this))) {
+			if (control->implementations[viewport] != NULL) nodetach = true;
+			else throw runtime_error("exceeded the maximum # of implementations per control");
+		}
 
+		eventHandlerID = control->ImplEvent += [this](const ImplEventData& ed) {
+			processEvent(ed);
+		};
 	}
 	Implementation::~Implementation() {
 		//clearChildren();
-		control->implementations.remove(viewport);
+		control->ImplEvent -= eventHandlerID;
+		if (!nodetach) control->implementations.remove(viewport);
 	}
-	void Implementation::initialize() {
+	void Implementation::propertyChange(int offset) {
 
+	}
+	void Implementation::methodCall(const char* name) {
+
+	}
+	void Implementation::enableDisableEvent(int offset, bool disable) {
+
+	}
+	void Implementation::addRemoveChild(Element* element, bool remove) {
+
+	}
+
+	void Implementation::processEvent(const ImplEventData& data) {
+		switch (data.type) {
+			case ImplEventData::t_addRemoveChild:
+				addRemoveChild(data.addRemoveChild.element, data.addRemoveChild.isRemove);
+				break;
+			case ImplEventData::t_enableEvent:
+				enableDisableEvent(data.enableEvent.offset, false);
+				break;
+			case ImplEventData::t_disableEvent:
+				enableDisableEvent(data.disableEvent.offset, true);
+				break;
+			case ImplEventData::t_methodCall:
+				methodCall(data.methodCall.name);
+				break;
+			case ImplEventData::t_propertyChange:
+				propertyChange(data.propertyChange.offset);
+				break;
+		}
 	}
 	/*void Implementation::addChild(Implementation* impl) {
 	 if (impl->parent == this) return;
@@ -194,12 +234,20 @@ namespace GenericGUI
 		if (func == NULL) throw runtime_error(
 				"could not find implementation for control " + string(typeid(*this).name())
 						+ " with viewport " + string(typeid(*vp).name()));
+		printf("Control::implement(%p, %p)\n", this, vp);
 		Implementation* impl = (*func)(this, vp);
-		impl->initialize();
+		printf("Control::implement 2(%p, %p)\n", this, vp);
 		RGC::Ref<Implementation> ref = impl;
 		impl->release();
-		if (likely(implementations.add(vp, impl))) return ref;
-		else throw runtime_error("exceeded the maximum # of implementations per control");
+		return ref;
+	}
+	RGC::Ref<Implementation> Control::implement(Viewport* vp, const ImplementationCtor& implCtor) {
+		auto tmp = implementations[vp];
+		if (tmp != NULL) return tmp;
+		Implementation* impl = implCtor(this, vp);
+		RGC::Ref<Implementation> ref = impl;
+		impl->release();
+		return ref;
 	}
 	struct implInfo
 	{
@@ -231,7 +279,6 @@ namespace GenericGUI
 		class GTKControlImpl: public Viewports::GTKImplementation
 		{
 		public:
-			int i_event;
 			int last_width, last_height;
 			int last_set_width, last_set_height;
 			sigc::connection c_size_allocate;
@@ -255,43 +302,48 @@ namespace GenericGUI
 			virtual void childGeometryChange(Control* c) {
 
 			}
-			virtual void initialize() {
-				Viewports::GTKImplementation::initialize();
+			virtual void propertyChange(int offset) override {
+				Viewports::GTKImplementation::propertyChange(offset);
+				switch (offset) {
+					case offsetof(Control,visible):
+					{
+						if(this->control->getVisible()) this->getWidget()->show();
+						else this->getWidget()->hide();
+					}
+					break;
+					case offsetof(Control,geometry):
+					{
+						Control* ctrl = dynamic_cast<Control*>(this->control->parent);
+						if (ctrl == NULL) {
+							this->getWidget()->set_size_request(this->control->geometry[4],this->control->geometry[5]);
+							return;
+						}
+						auto tmp = ctrl->implementations[this->viewport];
+						if (tmp == NULL) return;
+						GTKControlImpl* impl = dynamic_cast<GTKControlImpl*>(tmp);
+						impl->childGeometryChange(this->control);
+					}
+					break;
+				}
+			}
+			GTKControlImpl(Control* control, Viewport* viewport, Gtk::Widget* widg) :
+			Viewports::GTKImplementation(control, viewport, widg), last_width(-1),
+			last_height(-1) {
+				if (this->control->parent == NULL) {
+					this->getWidget()->set_size_request(control->geometry[4], control->geometry[5]);
+				}
 				auto wid = this->getWidget();
 				auto alloc = wid->get_allocation();
 				last_width = alloc.get_width();
 				last_height = alloc.get_height();
-				c_size_allocate = wid->signal_size_allocate().connect([this](Gtk::Allocation& a) {
-					if(a.get_width()==last_width && a.get_height()==last_height) return;
-					//printf("signal_size_allocate\n");
-						allocationChange(a.get_width(), a.get_height());
-					});
-				if (control->visible) wid->show();
-				i_event = control->ImplEvent += [this](const ImplEventData& ed) {
-					if(ed.type==ImplEventData::t_propertyChange)
-					switch(ed.propertyChange.offset) {
-						case offsetof(Control,visible):
-						{
-							if(control->getVisible()) this->getWidget()->show();
-							else this->getWidget()->hide();
-						}
-						break;
-						case offsetof(Control,geometry):
-						{
-							Control* ctrl = dynamic_cast<Control*>(this->control->parent);
-							if (ctrl == NULL) return;
-							auto tmp = ctrl->implementations[this->viewport];
-							if (tmp == NULL) return;
-							GTKControlImpl* impl = dynamic_cast<GTKControlImpl*>(tmp);
-							impl->childGeometryChange(control);
-						}
-						break;
-					}
-				};
-			}
-			GTKControlImpl(Control* control, Viewport* viewport) :
-					Viewports::GTKImplementation(control, viewport), last_width(-1), last_height(-1) {
+				printf("initial size of %s: %i %i\n", typeid(*control).name(), alloc.get_width(), alloc.get_height());
 
+				c_size_allocate = wid->signal_size_allocate().connect([this](Gtk::Allocation& a) {
+							if(a.get_width()==last_width && a.get_height()==last_height) return;
+							//printf("signal_size_allocate: %s %i %i; lastSize: %i %i\n", typeid(*this->control).name(), a.get_width(), a.get_height(), last_width, last_height);
+							allocationChange(a.get_width(), a.get_height());
+						});
+				if (control->visible) wid->show();
 				/*
 				 i_event = control->ImplEvent += [this](const ImplEventData& ed) {
 				 if(ed.type!=ImplEventData::t_propertyChange) return;
@@ -303,8 +355,67 @@ namespace GenericGUI
 			~GTKControlImpl() {
 				//control->ImplEvent -= i_event;
 				c_size_allocate.disconnect();
-				control->ImplEvent -= i_event;
 				this->getWidget()->hide();
+			}
+		};
+		class WTControlImpl: public Viewports::WTImplementation
+		{
+		public:
+			virtual void parentChange(Control* oldparent) {
+				Viewports::WTViewport* vp = static_cast<Viewports::WTViewport*>(viewport);
+				if (control->parent == NULL) {
+					vp->app->addChild(getWidget());
+				}
+			}
+			virtual void initialize() {
+
+			}
+			virtual void addRemoveChild(Element* element, bool remove) override {
+				Viewports::WTImplementation::addRemoveChild(element, remove);
+				if (remove) {
+					auto ctrl = dynamic_cast<Control*>(element);
+					if (!ctrl) return;
+					auto impl = ctrl->implementations[this->viewport];
+					if (!impl) return;
+					auto impl1 = dynamic_cast<WTControlImpl*>(impl);
+					impl1->parentChange(this->control);
+				}
+			}
+			virtual void propertyChange(int offset) override {
+				Viewports::WTImplementation::propertyChange(offset);
+				switch (offset) {
+					case offsetof(Control, visible):
+					{
+						if (this->control->visible) this->getWidget()->show();
+						else getWidget()->hide();
+					}
+				}
+			}
+
+			WTControlImpl(Control* control, Viewport* viewport, Wt::WWidget* widg) :
+			Viewports::WTImplementation(control, viewport, widg) {
+				Viewports::WTViewport* vp = static_cast<Viewports::WTViewport*>(viewport);
+				if (control->visible) getWidget()->show();
+				else getWidget()->hide();
+				printf("initializing wtcontrol; parent=%p visible=%i\n", control->parent,
+						(int) control->visible);
+				if (control->parent == NULL) {
+					vp->app->addChild(getWidget());
+					printf("adding child to root wt widget\n");
+				}
+			}
+			~WTControlImpl() {
+			}
+		};
+		class WTButtonImpl: public WTControlImpl
+		{
+		public:
+			WTButtonImpl(Control* control, Viewport* viewport, Wt::WWidget* w = NULL) :
+					WTControlImpl(control, viewport, (w == NULL ? new Wt::WPushButton() : w)) {
+
+			}
+			~WTButtonImpl() {
+
 			}
 		};
 		class GTKFixed1: public Gtk::Fixed
@@ -330,13 +441,7 @@ namespace GenericGUI
 		class GTKContainerImpl: public GTKControlImpl
 		{
 		public:
-			//Gtk::Fixed f;
-			int i_event;
-			virtual void createWidget() {
-				widget = new GTKFixed1();
-				//Gtk::Fixed& f(*(Gtk::Fixed*) widget);
-				//f.set_resize_mode(Gtk::RESIZE_PARENT);
-			}
+
 			void repositionChild(Control* c, int width, int height) {
 				Gtk::Fixed& f(*(Gtk::Fixed*) getWidget());
 				auto g = c->getGeometry();
@@ -374,28 +479,31 @@ namespace GenericGUI
 					else x = width - R - W;
 				} else x = L;
 
-				printf("x: %i y: %i w: %i h: %i\n", x, y, W, H);
+				//printf("repositioned %s: x: %i y: %i w: %i h: %i parentW: %i parentH: %i\n",
+				//		typeid(*c).name(), x, y, W, H, width, height);
 
 				f.move(*wid, x, y);
 			}
-			virtual void childAllocationChange(Control* c) {
-				//printf("childSizeChange()\n");
+			virtual void childAllocationChange(Control* c) override {
+				//printf("childAllocationChange()\n");
+				GTKControlImpl::childAllocationChange(c);
 				//auto pos = c->getPosition();
 				Gtk::Fixed& f(*(Gtk::Fixed*) getWidget());
 				//GTKControlImpl* impl = static_cast<GTKControlImpl*>(c->implementations[viewport]);
 				auto alloc = f.get_allocation();
-				int width = last_width = alloc.get_width();
-				int height = last_height = alloc.get_height();
+				int width = alloc.get_width();
+				int height = alloc.get_height();
 				repositionChild(static_cast<Control*>(c), width, height);
 			}
-			virtual void childGeometryChange(Control* c) {
+			virtual void childGeometryChange(Control* c) override {
+				GTKControlImpl::childGeometryChange(c);
 				Gtk::Fixed& f(*(Gtk::Fixed*) getWidget());
 				auto alloc = f.get_allocation();
-				int width = last_width = alloc.get_width();
-				int height = last_height = alloc.get_height();
+				int width = alloc.get_width();
+				int height = alloc.get_height();
 				repositionChild(static_cast<Control*>(c), width, height);
 			}
-			virtual void allocationChange(int nw, int nh) {
+			virtual void allocationChange(int nw, int nh) override {
 				//printf("reallocate\n");
 				GTKControlImpl::allocationChange(nw, nh);
 				for (Element* e = this->control->firstChild; e != NULL; e = e->next) {
@@ -416,39 +524,32 @@ namespace GenericGUI
 					repositionChild(c, alloc.get_width(), alloc.get_height());
 				}
 			}
-			virtual void initialize() {
-				GTKControlImpl::initialize();
+			virtual void addRemoveChild(Element* element, bool remove) override {
+				printf("addRemoveChild: element: %s\n", typeid(*element).name());
+				GTKControlImpl::addRemoveChild(element, remove);
 				Gtk::Fixed& f(*(Gtk::Fixed*) getWidget());
-				i_event =
-						control->ImplEvent +=
-								[this](const ImplEventData& ed) {
-									if(ed.type!=ImplEventData::t_addRemoveChild)return;
-
-									Gtk::Fixed& f(*(Gtk::Fixed*) getWidget());
-									if(ed.addRemoveChild.isRemove) {
-										Control* c = dynamic_cast<Control*>(ed.addRemoveChild.element);
-										auto tmp=dynamic_cast<GTKImplementation*>(c->implementations[this->viewport]);
-										f.remove(*(tmp->getWidget()));
-										if(tmp!=NULL) tmp->release();
-									} else {
-										processChild(ed.addRemoveChild.element);
-									}
-								};
+				if (remove) {
+					Control* c = dynamic_cast<Control*>(element);
+					auto tmp = dynamic_cast<GTKImplementation*>(c->implementations[this->viewport]);
+					f.remove(*(tmp->getWidget()));
+					if (tmp != NULL) tmp->release();
+				} else {
+					processChild(element);
+				}
+			}
+			GTKContainerImpl(Control* control, Viewport* viewport, Gtk::Widget* widg = NULL) :
+					GTKControlImpl(control, viewport, (widg == NULL ? new GTKFixed1() : widg)) {
+				Gtk::Fixed& f(*(Gtk::Fixed*) getWidget());
 				auto alloc = f.get_allocation();
-				int width = last_width = alloc.get_width();
-				int height = last_height = alloc.get_height();
+				int width = alloc.get_width();
+				int height = alloc.get_height();
 				Element* e;
 				for (e = control->firstChild; e != NULL; e = e->next) {
 					processChild(e, false);
 					repositionChild(static_cast<Control*>(e), width, height);
 				}
 			}
-			GTKContainerImpl(Control* control, Viewport* viewport) :
-					GTKControlImpl(control, viewport) {
-
-			}
 			~GTKContainerImpl() {
-				control->ImplEvent -= i_event;
 				Element* e;
 				for (e = control->firstChild; e != NULL; e = e->next) {
 					Control* c = dynamic_cast<Control*>(e);
@@ -460,85 +561,66 @@ namespace GenericGUI
 		class GTKWindowImpl: public GTKControlImpl
 		{
 		public:
-			//Gtk::Window wnd;
 			GTKContainerImpl cont;
-			int i_event;
-			virtual void childAllocationChange(Control* c) {
+
+			virtual void childAllocationChange(Control* c) override {
 				cont.childAllocationChange(c);
 			}
-			virtual void createWidget() {
-				widget = new Gtk::Window();
+			virtual void allocationChange(int nw, int nh) override {
+				GTKControlImpl::allocationChange(nw, nh);
 			}
-			virtual void initialize() {
-				GTKControlImpl::initialize();
-				cont.initialize();
+			virtual void propertyChange(int offset) override {
+				GTKControlImpl::propertyChange(offset);
+				Gtk::Window& wnd(*(Gtk::Window*) getWidget());
+				Window* ctrl = static_cast<Window*>(this->control);
+				if (offset == offsetof(Window, title)) {
+					wnd.set_title(ctrl->getTitle());
+				}
+			}
+			GTKWindowImpl(Control* control, Viewport* viewport, Gtk::Widget* widg = NULL) :
+			GTKControlImpl(control, viewport, (widg == NULL ? new Gtk::Window() : widg)),
+			cont((Container*) control, viewport) {
+				((Gtk::Window*) widget)->property_allow_shrink().set_value(true);
 				Gtk::Window& wnd(*(Gtk::Window*) getWidget());
 				Window* ctrl = static_cast<Window*>(control);
 				wnd.set_title(ctrl->getTitle());
 				wnd.add(*(cont.getWidget()));
-				i_event = control->ImplEvent += [this](const ImplEventData& ed) {
-					if(ed.type!=ImplEventData::t_propertyChange) return;
-					Gtk::Window& wnd(*(Gtk::Window*) getWidget());
-					Window* ctrl = static_cast<Window*>(this->control);
-					if(ed.propertyChange.offset==offsetof(Window, title)) {
-						wnd.set_title(ctrl->getTitle());
-					}
-				};
-			}
-			GTKWindowImpl(Control* control, Viewport* viewport) :
-					GTKControlImpl(control, viewport), cont((Container*) control, viewport) {
-
 			}
 			virtual ~GTKWindowImpl() {
-				control->ImplEvent -= i_event;
 			}
 		};
 		class GTKButtonImpl: public GTKControlImpl
 		{
 		public:
 			sigc::connection c_clicked;
-			int i_event;
-			//Gtk::Button b;
-			virtual void createWidget() {
-				widget = new GTKButton1();
+			virtual void propertyChange(int offset) override {
+				GTKControlImpl::propertyChange(offset);
+				Gtk::Button& b(*(Gtk::Button*) getWidget());
+				Button* ctrl = static_cast<Button*>(this->control);
+				if (offset == offsetof(Button,visible)) {
+					if(this->control->visible)b.show();
+					else b.hide();
+				} else if(offset==offsetof(Button,text)) {
+					b.set_label(ctrl->getText());
+				}
 			}
-			virtual void initialize() {
-				GTKControlImpl::initialize();
+			GTKButtonImpl(Control* control, Viewport* viewport, Gtk::Widget* widg = NULL) :
+			GTKControlImpl(control, viewport, widg == NULL ? new GTKButton1() : widg) {
 				Gtk::Button& b(*(Gtk::Button*) getWidget());
 				Button* ctrl = static_cast<Button*>(control);
 				b.set_label(ctrl->getText());
-				i_event = control->ImplEvent += [this](const ImplEventData& ed) {
-					if(ed.type!=ImplEventData::t_propertyChange) return;
-					Gtk::Button& b(*(Gtk::Button*) getWidget());
-					Button* ctrl = static_cast<Button*>(this->control);
-					if(ed.propertyChange.offset==offsetof(Button,visible)) {
-						if(this->control->visible)b.show();
-						else b.hide();
-					} else if(ed.propertyChange.offset==offsetof(Button,text)) {
-						b.set_label(ctrl->getText());
-					}
-				};
 				c_clicked = b.signal_clicked().connect([this]() {
-					Button* ctrl = static_cast<Button*>(this->control);
-					ctrl->click();
-				});
-			}
-			GTKButtonImpl(Control* control, Viewport* viewport) :
-					GTKControlImpl(control, viewport) {
-
+							Button* ctrl = static_cast<Button*>(this->control);
+							ctrl->click();
+						});
 			}
 			~GTKButtonImpl() {
-				control->ImplEvent -= i_event;
 				c_clicked.disconnect();
 			}
 		};
 		class GTKTableImpl: public GTKControlImpl
 		{
 		public:
-			int i_event;
-			virtual void createWidget() {
-				widget = new Gtk::Table();
-			}
 			void processChild(Control* c) {
 				Table* ctrl = static_cast<Table*>(control);
 				Gtk::Table& t(*(Gtk::Table*) getWidget());
@@ -552,8 +634,8 @@ namespace GenericGUI
 				//t.add(*(tmp->getWidget()));
 				t.attach(*(impl->getWidget()), pos[1], pos[1] + cell.colspan, pos[0],
 						pos[0] + cell.rowspan,
-						 Gtk::AttachOptions(Gtk::FILL | (g[4] == -1 ? Gtk::EXPAND : 0)),
-						 Gtk::AttachOptions(Gtk::FILL | (g[5] == -1 ? Gtk::EXPAND : 0)));
+						Gtk::AttachOptions(Gtk::FILL | (g[4] == -1 ? Gtk::EXPAND : 0)),
+						Gtk::AttachOptions(Gtk::FILL | (g[5] == -1 ? Gtk::EXPAND : 0)));
 				impl->getWidget()->set_size_request(g[4], g[5]);
 				ctrl->propertyChange(offsetof(Table,geometry));
 				printf(
@@ -564,59 +646,45 @@ namespace GenericGUI
 				//tmp->getWidget()->show();
 				t.show_all();
 			}
-			virtual void initialize() {
-				GTKControlImpl::initialize();
+			virtual void addRemoveChild(Element* element, bool remove) override {
+				GTKControlImpl::addRemoveChild(element, remove);
+				Gtk::Table& t(*(Gtk::Table*) getWidget());
+				if (remove) {
+					Control* c = dynamic_cast<Control*>(element);
+					auto tmp = dynamic_cast<GTKImplementation*>(c->implementations[this->viewport]);
+					t.remove(*(tmp->getWidget()));
+					if (tmp != NULL) tmp->release();
+				} else {
+					processChild(dynamic_cast<Control*>(element));
+				}
+			}
+			virtual void propertyChange(int offset) override {
+				GTKControlImpl::propertyChange(offset);
+				Table* ctrl = static_cast<Table*>(this->control);
+				Gtk::Table& t(*(Gtk::Table*) getWidget());
+				switch (offset) {
+					case offsetof(Table,cols):
+					{
+						t.property_n_rows().set_value(ctrl->items.size());
+						t.property_n_columns().set_value(ctrl->cols);
+					}
+					break;
+				}
+			}
+			GTKTableImpl(Control* control, Viewport* viewport, Gtk::Widget* widg = NULL) :
+			GTKControlImpl(control, viewport, widg == NULL ? new Gtk::Table() : widg) {
 				Gtk::Table& t(*(Gtk::Table*) getWidget());
 				Table* ctrl = static_cast<Table*>(control);
 				t.property_n_rows().set_value(ctrl->items.size());
 				t.property_n_columns().set_value(ctrl->cols);
 				printf("table rows: %i cols: %i\n", (int) ctrl->items.size(), ctrl->cols);
 				//Gtk::Table& t(*(Gtk::Table*) getWidget());
-				i_event =
-						control->ImplEvent +=
-								[this](const ImplEventData& ed) {
-									Gtk::Table& t(*(Gtk::Table*) getWidget());
-									Table* ctrl = static_cast<Table*>(control);
-									switch(ed.type) {
-										case ImplEventData::t_addRemoveChild:
-										{
-											if(ed.addRemoveChild.isRemove) {
-												Control* c = dynamic_cast<Control*>(ed.addRemoveChild.element);
-												auto tmp=dynamic_cast<GTKImplementation*>(c->implementations[this->viewport]);
-												t.remove(*(tmp->getWidget()));
-												if(tmp!=NULL) tmp->release();
-											} else {
-												processChild(dynamic_cast<Control*>(ed.addRemoveChild.element));
-											}
-										}
-										break;
-										case ImplEventData::t_propertyChange:
-										switch(ed.propertyChange.offset)
-										{
-											case offsetof(Table,cols):
-											{
-												t.property_n_rows().set_value(ctrl->items.size());
-												t.property_n_columns().set_value(ctrl->cols);
-											}
-											break;
-										}
-										break;
-										default:
-										break;
-									}
-
-								};
 				Element* e;
 				for (e = control->firstChild; e != NULL; e = e->next) {
 					processChild(static_cast<Control*>(e));
 				}
 			}
-			GTKTableImpl(Control* control, Viewport* viewport) :
-					GTKControlImpl(control, viewport) {
-
-			}
 			~GTKTableImpl() {
-				control->ImplEvent -= i_event;
 			}
 		};
 
@@ -702,6 +770,8 @@ namespace GenericGUI
 				IMPLEMENTATION_CTOR(Controls::GTKButtonImpl));
 		registerImplementation(typeid(Controls::Table), typeid(Viewports::GTKViewport),
 				IMPLEMENTATION_CTOR(Controls::GTKTableImpl));
+		registerImplementation(typeid(Controls::Button), typeid(Viewports::WTViewport),
+				IMPLEMENTATION_CTOR(Controls::WTButtonImpl));
 	}
 
 }

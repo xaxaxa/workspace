@@ -24,10 +24,8 @@ namespace GenericGUI
 		{
 		public:
 			Gtk::Widget* widget;
-			GTKImplementation(Control* control, Viewport* viewport);
+			GTKImplementation(Control* control, Viewport* viewport, Gtk::Widget* w);
 			~GTKImplementation();
-			virtual void createWidget()=0;
-			virtual void initialize();
 			Gtk::Widget* getWidget() {
 				return widget;
 			}

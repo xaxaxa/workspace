@@ -16,17 +16,14 @@ namespace GenericGUI
 		void GTKViewport::run() {
 			main.run();
 		}
-		GTKImplementation::GTKImplementation(Control* control, Viewport* viewport) :
-				Implementation(control, viewport), widget(NULL) {
+		GTKImplementation::GTKImplementation(Control* control, Viewport* viewport, Gtk::Widget* w) :
+				Implementation(control, viewport), widget(w) {
 
 		}
 		GTKImplementation::~GTKImplementation() {
+			if (unlikely(widget == NULL)) return;
 			delete widget;
 			widget = NULL;
-		}
-		void GTKImplementation::initialize() {
-			Implementation::initialize();
-			createWidget();
 		}
 	}
 }

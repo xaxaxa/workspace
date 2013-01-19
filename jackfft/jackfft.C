@@ -48,6 +48,7 @@ vector<jack_port_t *> outputs;
 double cur_index = 0;
 int srate;
 bool display_spectrum = false;
+bool spectrum2=false;
 
 using namespace xaxaxa;
 using namespace std;
@@ -57,11 +58,43 @@ FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
 FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
 struct timespec last_refreshed;
 #define EQ_POINTS 1500
+#define SPECTRUM2_POINTS 64
 EQControl* c;
 EQControl* c2;
 Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
 
+template<class t> inline double complex_to_real(const t& x)
+{
+	auto r = x[0];
+	auto i = x[1];
+	//return r;
+	return sqrt(pow(r, 2) + pow(i, 2));
+}
+
+inline double abs1(double d)
+{
+	return d<0?-d:d;
+}
+//accuracy is the # of output samples
+void asdasdasd(double* out, fftw_complex* in, int len, int accuracy, double multiplier=1) {
+	int max_exponent=(int)floor(log2(len));
+	for(int i=0;i<accuracy;i++) {
+		//out[i]=0;
+		double x=double(i)/accuracy;
+		for(int exponent=6;exponent<max_exponent;exponent++) {
+			int i1=pow(2,exponent+x);
+			int i2=pow(2,exponent+(double(i+1)/accuracy));
+			double dist=double(i2-i1)/2;
+			double center=i1+dist;
+			for(int zxc=i1;zxc<i2;zxc++) {
+				double dist1=dist-abs1(zxc-center);
+				dist1/=dist;
+				out[i]+=complex_to_real(in[zxc])*accuracy/16*multiplier/(i2-i1)/(max_exponent-5);
+			}
+		}
+	}
+}
 
 inline double scale_freq(double x)
 {
@@ -129,13 +162,7 @@ inline Long get_nsec(const timespec& t)
 {
 	return ((Long)t.tv_sec) * 1000000000 + (Long)t.tv_nsec;
 }
-template<class t> inline double complex_to_real(const t& x)
-{
-	auto r = x[0];
-	auto i = x[1];
-	//return r;
-	return sqrt(pow(r, 2) + pow(i, 2));
-}
+
 int process(jack_nframes_t length, void *arg)
 {
 	jack_default_audio_sample_t* in_samples[inputs.size()];
@@ -202,6 +229,7 @@ asdfghjkl:
 }
 void* thread1(void* v)
 {
+	//double* sdfsdfsdf=new double[EQ_POINTS];
 	while(true)
 	{
 		Long tmp;
@@ -222,15 +250,29 @@ void* thread1(void* v)
 			//refresh
 			for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
 				c2->data[i] = 0;
+			memset(c2->data, 0, c2->datalen*sizeof(double));
 			for(size_t ii = 0; ii < inputs.size(); ii++)
 			{
 				if(filt[ii] == NULL)continue;
-				UInt complexsize = ((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->ComplexSize();
-				for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
-				{
-					UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
-					c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
+				auto fftf=((FFTFilter<jack_default_audio_sample_t>*)filt[ii]);
+				UInt complexsize = fftf->ComplexSize();
+				
+				int eqpoints=spectrum2?SPECTRUM2_POINTS:EQ_POINTS;
+				if(c2->datalen!=eqpoints) {
+					gdk_threads_enter();
+					c2->resize(eqpoints);
+					gdk_threads_leave();
 				}
+				if(spectrum2) {
+					asdasdasd(c2->data, fftf->tmpcomplex, complexsize, c2->datalen, 1.d/100/inputs.size());
+				}
+				else
+					for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
+					{
+						UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
+						c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
+					}
+				//
 			}
 			gdk_threads_enter();
 			c2->do_draw();
@@ -696,6 +738,13 @@ hhhhh:
 		Gtk::Viewport* vp;
 		b->get_widget("viewport2", vp);
 		vp->set_visible(display_spectrum);
+	});
+	
+	b->get_widget("c_spectrum2", cb);
+	cb->set_active(spectrum2);
+	cb->signal_toggled().connect([cb]()
+	{
+		spectrum2 = cb->get_active();
 	});
 
 	//b->get_widget("grid1",g);
