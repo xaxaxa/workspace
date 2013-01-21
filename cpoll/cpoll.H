@@ -344,6 +344,7 @@ namespace CP
 	{
 	public:
 		//void* __private;
+		bool _supportsEPoll;
 		HANDLE handle;
 		Handle();
 		Handle(HANDLE handle);
@@ -366,12 +367,11 @@ namespace CP
 	class File: public Handle
 	{
 	public:
-		
 		EventHandlerData eventData[numEvents];
-		bool _supportsEPoll;
+		
 		File();
-		File(HANDLE handle, bool supportsEPoll = false);
-		virtual void init(HANDLE handle, bool supportsEPoll);
+		File(HANDLE handle);
+		virtual void init(HANDLE handle);
 		Events _getEvents();
 		///only accepts one event
 		EventHandlerData* beginAddEvent(Events event);

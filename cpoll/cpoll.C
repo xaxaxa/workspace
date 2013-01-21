@@ -243,6 +243,7 @@ namespace CP
 	}
 
 	Handle::Handle() :
+			_supportsEPoll(true),
 			handle(-1) {
 	}
 	Handle::Handle(HANDLE handle) {
@@ -305,15 +306,13 @@ namespace CP
 	}
 
 	//File
-	File::File() :
-			_supportsEPoll(false) {
+	File::File() {
 	}
-	File::File(HANDLE handle, bool supportsEPoll) {
-		init(handle, supportsEPoll);
+	File::File(HANDLE handle) {
+		init(handle);
 	}
-	void File::init(HANDLE handle, bool supportsEPoll) {
+	void File::init(HANDLE handle) {
 		Handle::init(handle);
-		_supportsEPoll = supportsEPoll;
 	}
 	Events File::_getEvents() {
 		Events e = Events::none;
@@ -517,13 +516,13 @@ namespace CP
 		init(d, t, p);
 	}
 	void Socket::init(HANDLE handle, int32_t d, int32_t t, int32_t p) {
-		File::init(handle, true);
+		File::init(handle);
 		addressFamily = d;
 		type = t;
 		protocol = p;
 	}
 	void Socket::init(int32_t d, int32_t t, int32_t p) {
-		File::init(socket(d, t, p), true);
+		File::init(socket(d, t, p));
 		addressFamily = d;
 		type = t;
 		protocol = p;
@@ -691,10 +690,10 @@ namespace CP
 	
 	//EventFD
 	EventFD::EventFD(HANDLE handle) :
-			File(handle, true) {
+			File(handle) {
 	}
 	EventFD::EventFD(uint32_t initval, int32_t flags) :
-			File(eventfd(initval, flags), true) {
+			File(eventfd(initval, flags)) {
 	}
 	void EventFD::doOperation(EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate) {
@@ -748,13 +747,25 @@ namespace CP
 		disableSignals();
 	}
 	void Poll::_applyHandle(Handle& h, Events old_e) {
+		if(!h._supportsEPoll)return;
 		Events new_e = h.getEvents();
 		if (new_e == old_e) return;
 		epoll_event evt;
 		if (old_e == Events::none) {
 			fillEPollEvents(h, evt, new_e);
 			//cout << "added " << h.handle << endl;
-			checkError(epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt));
+			int r=epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt);
+			if(r<0 && errno==EPERM) {
+				h._supportsEPoll=false;
+				EventData evtd;
+				evtd.hungUp = evtd.error = false;
+				while(new_e!=Events::none) {
+					h.dispatchMultiple(new_e, evtd);
+					new_e=h.getEvents();
+				}
+				return;
+			}
+			checkError(r);
 			h.retain();
 			active++;
 		} else if (new_e == Events::none) {
