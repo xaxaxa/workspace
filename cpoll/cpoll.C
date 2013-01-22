@@ -318,7 +318,8 @@ namespace CP
 		Events e = Events::none;
 		for (int32_t i = 0; i < numEvents; i++)
 			if (eventData[i].state != EventHandlerData::States::invalid)
-				e = (Events) (((event_t) e) | ((event_t) indexToEvent(i)));
+				(event_t&)e |= (event_t) indexToEvent(i);
+		
 		//cout << "_getEvents: " << (int32_t)e << endl;
 		return e;
 	}
@@ -739,7 +740,7 @@ namespace CP
 	//Poll
 	int32_t Poll::MAX_EVENTS(32);
 	Poll::Poll(HANDLE handle) :
-			Handle(handle), active(0), cur_handle(-1) {
+			Handle(handle), active(0), cur_handle(-1), has_deleted(false) {
 		disableSignals();
 	}
 	Poll::Poll() :
@@ -781,7 +782,7 @@ namespace CP
 	}
 	int32_t Poll::_doDispatch(const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
-		if (tmp_deleted.find(h) != tmp_deleted.end()) return 0;
+		if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
 		int32_t ret = 0;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
@@ -811,16 +812,18 @@ namespace CP
 		int32_t ret = 0;
 		epoll_event evts[MAX_EVENTS];
 		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
-		if (n < 0) {
-			if (errno == EINTR)
-				goto retry;
-			else throw CPollException();
+		if (unlikely(n < 0)) {
+			goto retry;
 		}
 		for (int32_t i = 0; i < n; i++)
 			ret += _doDispatch(evts[i]);
+		
+		if(likely(!has_deleted)) return ret;
 		for (auto it = tmp_deleted.begin(); it != tmp_deleted.end(); it++)
 			(*it)->release();
 		tmp_deleted.clear();
+		has_deleted=false;
+		
 		return ret;
 	}
 	void Poll::dispatch(Events event, const EventData& evtd) {
@@ -860,6 +863,7 @@ namespace CP
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
 			//h.release();
 			tmp_deleted.insert(&h);
+			has_deleted=true;
 			active--;
 		}
 		h.onEventsChange = nullptr;

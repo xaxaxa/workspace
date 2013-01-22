@@ -85,6 +85,11 @@
  * poll2.loop();
  */
 
+#ifndef likely
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+#endif
+
 namespace CP
 {
 	using namespace std;
@@ -496,6 +501,7 @@ namespace CP
 		Events cur_last_events;
 		//map<HANDLE, Ref<Handle> > handles;
 		set<Handle*> tmp_deleted;
+		bool has_deleted;
 		Poll(HANDLE handle);
 		Poll();
 		void _applyHandle(Handle& h, Events old_e);

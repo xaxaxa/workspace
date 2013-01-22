@@ -84,7 +84,7 @@ namespace CP
 		throw CPollException(err_no);
 	}
 	static inline int checkError(int err) {
-		if (err < 0 && errno != EINTR && errno != EINPROGRESS) throw CPollException();
+		if (unlikely(unlikely(err < 0) && errno != EINTR && errno != EINPROGRESS)) throw CPollException();
 		return err;
 	}
 	//disable the retarded SIGHUP and SIGPIPE
