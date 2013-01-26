@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	char buf1[4096*16], buf2[4096*16];
 	Callback recvcb1;
 	recvcb1=[&](int32_t r) {
-		if(r==0) {
+		if(r<=0) {
 			exit(0);
 		}
 		s_out->write(buf1,r,[&](int32_t r) {
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 	};
 	Callback recvcb2;
 	recvcb2=[&](int32_t r) {
-		if(r==0) {
+		if(r<=0) {
 			return;
 		}
 		//cout << "read " << r << " bytes" << endl;
