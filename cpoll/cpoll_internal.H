@@ -88,21 +88,21 @@ namespace CP
 		return err;
 	}
 	//disable the retarded SIGHUP and SIGPIPE
-	static void disableSignals(){
+	static void disableSignals() {
 		struct sigaction sa;
-			sa.sa_handler = SIG_IGN;
-			sigemptyset(&sa.sa_mask);
-			sa.sa_flags = SA_RESTART; /* Restart system calls if
-			 interrupted by handler */
-			sigaction(SIGHUP, &sa, NULL);
-			sigaction(SIGPIPE, &sa, NULL);
-			sa.sa_handler = SIG_DFL;
-			//cout<<sigaction(SIGSTOP, &sa, NULL)<<endl;
-			//cout<<errno<<endl;
-			sigaction(SIGCONT, &sa, NULL);
-			sigaction(SIGTSTP, &sa, NULL);
-			sigaction(SIGTTIN, &sa, NULL);
-			sigaction(SIGTTOU, &sa, NULL);
+		sa.sa_handler = SIG_IGN;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = SA_RESTART; /* Restart system calls if
+		 interrupted by handler */
+		sigaction(SIGHUP, &sa, NULL);
+		sigaction(SIGPIPE, &sa, NULL);
+		sa.sa_handler = SIG_DFL;
+		//cout<<sigaction(SIGSTOP, &sa, NULL)<<endl;
+		//cout<<errno<<endl;
+		sigaction(SIGCONT, &sa, NULL);
+		sigaction(SIGTSTP, &sa, NULL);
+		sigaction(SIGTTIN, &sa, NULL);
+		sigaction(SIGTTOU, &sa, NULL);
 	}
 }
 

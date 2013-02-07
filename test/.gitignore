@@ -23,4 +23,6 @@ tmp
 tro
 trololo
 fcgi_test
+cpoll_statemachine_test
+socketd_test
 

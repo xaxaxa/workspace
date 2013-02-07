@@ -193,7 +193,7 @@ namespace CP
 			return string(tmp);
 		}
 	};
-	class EndPoint: public RGC::Object
+	class EndPoint: virtual public RGC::Object
 	{
 	public:
 		int32_t addressFamily;
@@ -258,7 +258,7 @@ namespace CP
 	//===========================================================
 	//======================ABSTRACT CLASSES=====================
 	//===========================================================
-	class Stream
+	class Stream: virtual public RGC::Object
 	{
 	public:
 		//sync
@@ -274,16 +274,23 @@ namespace CP
 		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
 			write(buf, len, cb, true);
 		}
-		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+		virtual void writeAll(const void* buf, int32_t len, const Callback& cb)=0;
 
 		//=========misc===========
 		//sync
-		virtual void close(); //may block
-		virtual void flush();
-		//virtual void
+		virtual void close()=0; //may block
+		virtual void flush()=0;
+
+		//async
+		virtual void close(const Callback& cb)=0;
+		virtual void flush(const Callback& cb)=0;
 
 	};
 	
+	//===========================================================
+	//======================UTILITY CLASSES======================
+	//===========================================================
+
 	//===========================================================
 	//======================DATA STRUCTURES======================
 	//===========================================================
@@ -298,7 +305,7 @@ namespace CP
 		: uint8_t
 		{
 			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect,
-		lastItem
+		close, lastItem
 	};
 
 	struct EventHandlerData
@@ -345,7 +352,7 @@ namespace CP
 	//============================================================
 	//============================================================
 	
-	class Handle: public RGC::Object
+	class Handle: virtual public RGC::Object
 	{
 	public:
 		//void* __private;
@@ -357,6 +364,7 @@ namespace CP
 		function<void()> onClose;
 
 		virtual void init(HANDLE handle);
+		virtual void deinit();
 		///calls the callback associated with the event
 		///only accepts one event
 		virtual void dispatch(Events event, const EventData& evtd)=0;
@@ -369,11 +377,11 @@ namespace CP
 		//void close();
 		~Handle();
 	};
-	class File: public Handle
+	class File: public Handle, public Stream
 	{
 	public:
 		EventHandlerData eventData[numEvents];
-		
+
 		File();
 		File(HANDLE handle);
 		virtual void init(HANDLE handle);
@@ -385,7 +393,8 @@ namespace CP
 		int32_t write(const void* buf, int32_t len);
 		int32_t send(const void* buf, int32_t len, int32_t flags = 0);
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd, EventHandlerData::States oldstate);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
+				EventHandlerData::States oldstate);
 		void dispatch(Events event, const EventData& evtd);
 		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 				const Callback& cb, Events e, Operations op);
@@ -412,6 +421,15 @@ namespace CP
 			return _getEvents();
 		}
 		~File();
+
+		//=========misc===========
+		//sync
+		virtual void close(); //may block
+		virtual void flush();
+
+		//async
+		virtual void close(const Callback& cb);
+		virtual void flush(const Callback& cb);
 	};
 	class Socket: public File
 	{
@@ -428,7 +446,8 @@ namespace CP
 		EndPoint* getLocalEndPoint();
 		//the caller must release() or free() the returned object
 		EndPoint* getRemoteEndPoint();
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd, EventHandlerData::States oldstate);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
+				EventHandlerData::States oldstate);
 
 		void connect(const sockaddr *addr, int32_t addr_size);
 		void connect(const EndPoint &ep);
@@ -470,7 +489,8 @@ namespace CP
 	{
 		EventFD(HANDLE handle);
 		EventFD(uint32_t initval = 0, int32_t flags = 0);
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd, EventHandlerData::States oldstate);
+		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
+				EventHandlerData::States oldstate);
 		eventfd_t getEvent();
 		void getEvent(const function<void(eventfd_t)>& cb, bool repeat = false);
 		void repeatGetEvent(const function<void(eventfd_t)>& cb) {

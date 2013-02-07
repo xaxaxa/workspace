@@ -1,6 +1,9 @@
 #include <iostream>
 #include <fcgiapp.h>
+#include <string>
+#include <string.h>
 
+using namespace std;
 
 class ParserException: public std::exception
 {
@@ -29,11 +32,16 @@ const char* ParserException::what() const throw () {
 }
 
 
-void doWriteCPPHead(string& out) {
+void doParse_beginFunction(const string& name, string& out) {
+	out+="class __cpps_cls_"+name+": public RGC::Object {";
 	out+="int cppsp_main(FCGX_Stream *in, *out) {";
 }
+void doParse_endFunction(const string& name, string& out) {
+	out+="}";
+}
 //translates a c++ web page into c++
-void doParse(const string& in, string& out) {
+/*
+void doParse(const string& name, const string& in, string& out) {
 	const char* s=in.data();
 	const char* end=s+in.length();
 	int out_initlen=out.length();
@@ -51,9 +59,15 @@ void doParse(const string& in, string& out) {
 				
 				out.append(s,s1-s);
 			}
+			default:
+			{
+				
+			}
 		}
 	}
 }
+
+//*/
 
 int main(int argc, char** argv) {
 	FCGX_Stream *in, *out, *err;

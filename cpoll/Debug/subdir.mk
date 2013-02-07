@@ -8,13 +8,19 @@ O_SRCS += \
 ../rgc.o 
 
 C_UPPER_SRCS += \
-../cpoll.C 
+../cpoll.C \
+../sendfd.C \
+../statemachines.C 
 
 OBJS += \
-./cpoll.o 
+./cpoll.o \
+./sendfd.o \
+./statemachines.o 
 
 C_UPPER_DEPS += \
-./cpoll.d 
+./cpoll.d \
+./sendfd.d \
+./statemachines.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

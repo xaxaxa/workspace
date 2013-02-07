@@ -1,0 +1,1 @@
+sendfd.d: ../sendfd.C

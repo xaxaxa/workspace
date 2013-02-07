@@ -167,7 +167,7 @@ namespace GenericGUI
 			} raiseEvent;
 		};
 	};
-	class Object: public RGC::Object
+	class Object: virtual public RGC::Object
 	{
 	};
 	class Viewport: public Object

@@ -3,37 +3,27 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
-O_SRCS += \
-../cpoll.o \
-../rgc.o 
-
 C_UPPER_SRCS += \
-../cpoll.C \
-../rgctest.C \
-../sendfd.C \
-../statemachines.C \
-../t1.C 
+../config.C \
+../main.C \
+../test.C 
 
 OBJS += \
-./cpoll.o \
-./rgctest.o \
-./sendfd.o \
-./statemachines.o \
-./t1.o 
+./config.o \
+./main.o \
+./test.o 
 
 C_UPPER_DEPS += \
-./cpoll.d \
-./rgctest.d \
-./sendfd.d \
-./statemachines.d \
-./t1.d 
+./config.d \
+./main.d \
+./test.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.C
 	@echo 'Building file: $<'
-	@echo 'Invoking: Cross G++ Compiler'
-	g++ -I/home/xaxaxa/workspace/include -O3 -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ -I../../include/ -O0 -g3 -Wall -c -fmessage-length=0 --std=c++0x -fpie -pie -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

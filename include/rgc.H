@@ -1,1 +1,1 @@
-../cpoll/rgc.H
+../common_headers/rgc.H

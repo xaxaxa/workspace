@@ -47,7 +47,9 @@ int main(int c, char** v)
 	
 	//NullStream ns;
 	while(r.fast_readline(tmp_s)>=0)*/
-	while(r.ReadLine(buffer)>=0)
+	STRING delim[1]
+			{ "as" };
+	while(r.Read(buffer, delim, 1)>=0)
 	{
 		//r.Write(buffer.ToBuffer());
 		//r.Write("\n");

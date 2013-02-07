@@ -22,6 +22,7 @@
 #include "cpoll_internal.H"
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdexcept>
 namespace CP
 {
 	//CPollException
@@ -120,9 +121,8 @@ namespace CP
 		this->port = ntohs(addr.sin_port);
 	}
 	void IPEndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_INET)
-			throw CPollException(
-					"attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
+		if (addr->sa_family != AF_INET) throw CPollException(
+				"attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
 		set_addr(*(sockaddr_in*) addr);
 	}
 	IPEndPoint::IPEndPoint(const sockaddr_in& addr) {
@@ -138,9 +138,8 @@ namespace CP
 		return sizeof(sockaddr_in);
 	}
 	void IPEndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily)
-			throw CPollException(
-					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily) throw CPollException(
+				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		IPEndPoint& tmp((IPEndPoint&) to);
 		tmp.address = address;
 		tmp.port = port;
@@ -172,9 +171,8 @@ namespace CP
 		set_addr(addr);
 	}
 	void IPv6EndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_INET6)
-			throw CPollException(
-					"attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
+		if (addr->sa_family != AF_INET6) throw CPollException(
+				"attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
 		set_addr(*(sockaddr_in6*) addr);
 	}
 	void IPv6EndPoint::getSockAddr(sockaddr* addr) const {
@@ -189,9 +187,8 @@ namespace CP
 		return sizeof(sockaddr_in);
 	}
 	void IPv6EndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily)
-			throw CPollException(
-					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily) throw CPollException(
+				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		IPv6EndPoint& tmp((IPv6EndPoint&) to);
 		tmp.address = address;
 		tmp.port = port;
@@ -220,9 +217,8 @@ namespace CP
 		set_addr(addr);
 	}
 	void UNIXEndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_UNIX)
-			throw CPollException(
-					"attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
+		if (addr->sa_family != AF_UNIX) throw CPollException(
+				"attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
 		set_addr(*(sockaddr_un*) addr);
 	}
 	void UNIXEndPoint::getSockAddr(sockaddr* addr) const {
@@ -235,16 +231,14 @@ namespace CP
 		return sizeof(sa_family_t) + name.length() + 1;
 	}
 	void UNIXEndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily)
-			throw CPollException(
-					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily) throw CPollException(
+				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		UNIXEndPoint& tmp((UNIXEndPoint&) to);
 		tmp.name = name;
 	}
 
-	Handle::Handle() :
-			_supportsEPoll(true),
-			handle(-1) {
+	Handle::Handle() {
+		deinit();
 	}
 	Handle::Handle(HANDLE handle) {
 		init(handle);
@@ -252,6 +246,10 @@ namespace CP
 	void Handle::init(HANDLE handle) {
 		this->handle = handle;
 		checkError(handle);
+	}
+	void Handle::deinit() {
+		_supportsEPoll = true;
+		handle = -1;
 	}
 	int32_t Handle::dispatchMultiple(Events events, const EventData& evtd) {
 		//cout << (int32_t)events << endl;
@@ -317,8 +315,8 @@ namespace CP
 	Events File::_getEvents() {
 		Events e = Events::none;
 		for (int32_t i = 0; i < numEvents; i++)
-			if (eventData[i].state != EventHandlerData::States::invalid)
-				(event_t&)e |= (event_t) indexToEvent(i);
+			if (eventData[i].state != EventHandlerData::States::invalid) (event_t&) e |=
+					(event_t) indexToEvent(i);
 		
 		//cout << "_getEvents: " << (int32_t)e << endl;
 		return e;
@@ -326,9 +324,9 @@ namespace CP
 	///only accepts one event
 	EventHandlerData* File::beginAddEvent(Events event) {
 		EventHandlerData *ed = &eventData[eventToIndex(event)];
-		if (ed->state != EventHandlerData::States::invalid)
-			throw CPollException("Already listening for the specified event on the specified file. "
-					"For example, you may not read() and recv() on one socket at the same time.");
+		if (ed->state != EventHandlerData::States::invalid) throw CPollException(
+				"Already listening for the specified event on the specified file. "
+						"For example, you may not read() and recv() on one socket at the same time.");
 		return ed;
 	}
 	void File::endAddEvent(Events event, bool repeat) {
@@ -353,6 +351,10 @@ namespace CP
 			EventHandlerData::States oldstate) {
 		Operations op = ed.op;
 		int32_t r = 0;
+		if (unlikely(handle<0)) {
+			r = -1;
+			goto asdf;
+		}
 		switch (op) {
 			case Operations::read:
 				r = read(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
@@ -395,6 +397,8 @@ namespace CP
 					ed.cb(ed.misc.bufferIO.len_done);
 				}
 				return;
+			case Operations::close:
+				close();
 			default:
 				break;
 		}
@@ -402,9 +406,9 @@ namespace CP
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
 		}
-		ed.cb(r);
-		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat)
-			ed.cb(-1);
+		asdf: ed.cb(r);
+		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) ed.cb(
+				-1);
 	}
 	void File::dispatch(Events event, const EventData& evtd) {
 		//cout << (int32_t)event << " dispatched" << endl;
@@ -501,8 +505,34 @@ namespace CP
 		endAddEvent(e, true);
 	}
 	File::~File() {
+		if (handle < 0) return;
+		close();
+	}
+
+	void File::close() {
+		//if(handle<0)throw runtime_error("asdf");
 		if (onClose != nullptr) onClose();
 		::close(handle);
+		handle = -1;
+		deinit();
+	}
+	void File::flush() {
+
+	}
+	void File::close(const Callback& cb) {
+		if (!_supportsEPoll) {
+			close();
+			cb(0);
+			return;
+		}
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		ed->cb = cb;
+		ed->op = Operations::close;
+		endAddEvent(e, true);
+	}
+	void File::flush(const Callback& cb) {
+		cb(0);
 	}
 	
 	//Socket
@@ -523,7 +553,7 @@ namespace CP
 		protocol = p;
 	}
 	void Socket::init(int32_t d, int32_t t, int32_t p) {
-		File::init(socket(d, t, p));
+		File::init(socket(d, t | SOCK_CLOEXEC, p));
 		addressFamily = d;
 		type = t;
 		protocol = p;
@@ -619,7 +649,7 @@ namespace CP
 		EndPoint* ep = EndPoint::create(addressFamily);
 		socklen_t l = (socklen_t) (ep->getSockAddrSize());
 		char addr[l];
-		HANDLE h = ::accept(handle, (struct sockaddr*) addr, &l);
+		HANDLE h = ::accept4(handle, (struct sockaddr*) addr, &l, SOCK_CLOEXEC);
 		if (h < 0) {
 			int32_t e = errno;
 			ep->release();
@@ -673,7 +703,7 @@ namespace CP
 			Handle(handle), mask(mask) {
 	}
 	SignalFD::SignalFD(const sigset_t& mask, int32_t flags) :
-			Handle(signalfd(-1, &mask, flags)), mask(mask) {
+			Handle(signalfd(-1, &mask, flags | SFD_CLOEXEC)), mask(mask) {
 	}
 	void SignalFD::dispatch(Events event, const EventData& evtd) {
 		Signal sig[MAX_EVENTS];
@@ -694,7 +724,7 @@ namespace CP
 			File(handle) {
 	}
 	EventFD::EventFD(uint32_t initval, int32_t flags) :
-			File(eventfd(initval, flags)) {
+			File(eventfd(initval, flags | EFD_CLOEXEC)) {
 	}
 	void EventFD::doOperation(EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate) {
@@ -744,25 +774,36 @@ namespace CP
 		disableSignals();
 	}
 	Poll::Poll() :
-			Handle(checkError(epoll_create1(0))), active(0), cur_handle(-1) {
+			Handle(checkError(epoll_create1(EPOLL_CLOEXEC))), active(0), cur_handle(-1),
+					has_deleted(false) {
 		disableSignals();
 	}
 	void Poll::_applyHandle(Handle& h, Events old_e) {
-		if(!h._supportsEPoll)return;
+		if (!h._supportsEPoll) return;
 		Events new_e = h.getEvents();
 		if (new_e == old_e) return;
+		if (h.handle < 0) {
+			//throw runtime_error("test");
+			EventData evtd;
+			evtd.hungUp = evtd.error = true;
+			while (new_e != Events::none) {
+				h.dispatchMultiple(new_e, evtd);
+				new_e = h.getEvents();
+			}
+			return;
+		}
 		epoll_event evt;
 		if (old_e == Events::none) {
 			fillEPollEvents(h, evt, new_e);
 			//cout << "added " << h.handle << endl;
-			int r=epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt);
-			if(r<0 && errno==EPERM) {
-				h._supportsEPoll=false;
+			int r = epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt);
+			if (r < 0 && errno == EPERM) {
+				h._supportsEPoll = false;
 				EventData evtd;
 				evtd.hungUp = evtd.error = false;
-				while(new_e!=Events::none) {
+				while (new_e != Events::none) {
 					h.dispatchMultiple(new_e, evtd);
-					new_e=h.getEvents();
+					new_e = h.getEvents();
 				}
 				return;
 			}
@@ -818,11 +859,11 @@ namespace CP
 		for (int32_t i = 0; i < n; i++)
 			ret += _doDispatch(evts[i]);
 		
-		if(likely(!has_deleted)) return ret;
+		if (likely(!has_deleted)) return ret;
 		for (auto it = tmp_deleted.begin(); it != tmp_deleted.end(); it++)
 			(*it)->release();
 		tmp_deleted.clear();
-		has_deleted=false;
+		has_deleted = false;
 		
 		return ret;
 	}
@@ -860,10 +901,20 @@ namespace CP
 		//h.release();
 		//tmp_deleted.push_back(&h);
 		if (h.getEvents() != Events::none) {
+			/*if (h.handle < 0) {
+				//throw runtime_error("test");
+				Events new_e = h.getEvents();
+				EventData evtd;
+				evtd.hungUp = evtd.error = true;
+				while (new_e != Events::none) {
+					h.dispatchMultiple(new_e, evtd);
+					new_e = h.getEvents();
+				}
+			}*/
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
 			//h.release();
 			tmp_deleted.insert(&h);
-			has_deleted=true;
+			has_deleted = true;
 			active--;
 		}
 		h.onEventsChange = nullptr;
