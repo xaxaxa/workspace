@@ -26,8 +26,8 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1594311139" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../include/"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.pic.1729804421" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.1274566737" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -fpie -pie" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.pic.1729804421" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.1274566737" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -fpie -pie" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.132710918" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1083532738" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -43,6 +43,7 @@
 								<option id="gnu.cpp.link.option.paths.1080967587" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="../../lib/"/>
 								</option>
+								<option id="gnu.cpp.link.option.flags.49595677" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-pthread" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1366725832" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -83,8 +84,8 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1605373284" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../include/"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.pic.1985900202" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.1620743624" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -fpie -pie" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.pic.1985900202" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.1620743624" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -fpie -pie" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1748004843" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.991005626" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release">

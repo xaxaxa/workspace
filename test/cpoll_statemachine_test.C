@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 using namespace CP;
+#ifdef asdfg
 int main() {
 	
 	uint8_t sr_data[streamReader_getSize()+4096];
@@ -68,4 +69,66 @@ int main() {
 	streamReader_deinit(sr);
 	cout << count << endl;
 }
+#else
+
+int main() {
+	
+	persistentStreamReader sr(8192);
+	
+	int count=0;
+	auto cb1=[&sr,&count](uint8_t* buf, int len) {
+		count++;
+		//write(2,buf,len);
+		//printf("\n=======================\n");
+		sr.readUntilString("as");
+	};
+	sr.output=cb1;
+	sr.readUntilString("as");
+	bool reading=false;
+	CP::File f(0);
+	
+	function<void()> start_read;
+	start_read=[&]() {
+		if(reading) return;
+		uint8_t* buf;
+		buf = sr.beginPutData(4096);
+		reading=true;
+		f.read(buf, 4096, [&sr,&start_read,&reading](int r) {
+			reading=false;
+			if(r<=0) {
+				sr.endPutData(0);
+				return;
+			}
+			sr.endPutData(r);
+			start_read();
+		});
+	};
+	/*start_read();
+	CP::Poll p;
+	p.add(f);
+	p.loop();*/
+	
+	//synchronous read
+	while(true) {
+		uint8_t* buf;
+		buf = sr.beginPutData(4096);
+		int r=f.read(buf,4096);
+		if(r<=0) {
+			sr.endPutData(0);
+			break;
+		}
+		sr.endPutData(r);
+	}
+	
+	//force flush the buffered data
+	{
+		uint8_t* buf; int len;
+		std::tie(buf,len) = sr.getBufferData();
+		cb1(buf, len);
+	}
+	
+	cout << count << endl;
+}
+
+#endif
 

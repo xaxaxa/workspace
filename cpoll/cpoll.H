@@ -264,6 +264,7 @@ namespace CP
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0;
 		virtual int32_t write(const void* buf, int32_t len)=0;
+		virtual int32_t writeAll(const void* buf, int32_t len)=0;
 
 		//async
 		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
@@ -391,7 +392,9 @@ namespace CP
 		void endAddEvent(Events event, bool repeat = false);
 		int32_t read(void* buf, int32_t len);
 		int32_t write(const void* buf, int32_t len);
+		int32_t writeAll(const void* buf, int32_t len);
 		int32_t send(const void* buf, int32_t len, int32_t flags = 0);
+		int32_t sendAll(const void* buf, int32_t len, int32_t flags = 0);
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
 				EventHandlerData::States oldstate);
@@ -461,6 +464,7 @@ namespace CP
 		void listen(int32_t backlog = 8);
 		//the caller must release() or free() the returned object
 		Socket* accept();
+		HANDLE acceptHandle();
 
 		void connect(const sockaddr *addr, int32_t addr_size, const Callback& cb);
 		void connect(const EndPoint &ep, const Callback& cb);
@@ -469,8 +473,12 @@ namespace CP
 
 		//callback function must release() or free() the received object
 		void accept(const function<void(Socket*)>& cb, bool repeat = false);
+		void acceptHandle(const function<void(HANDLE)>& cb, bool repeat = false);
 		inline void repeatAccept(const function<void(Socket*)>& cb) {
 			accept(cb, true);
+		}
+		inline void repeatAcceptHandle(const function<void(HANDLE)>& cb) {
+			acceptHandle(cb, true);
 		}
 
 	};

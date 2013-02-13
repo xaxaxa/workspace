@@ -43,7 +43,7 @@ all: socketd
 socketd: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L../../lib/ -o "socketd" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L../../lib/ -pthread -o "socketd" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

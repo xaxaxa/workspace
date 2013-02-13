@@ -37,9 +37,9 @@ namespace socketd
 	{
 	public:
 		//user supplied fields
-		int listenID;
-		string httpPath;
+		string httpPath; //path must not have / at the end!!!!!
 		string httpHost;
+		int listenID;
 
 		//bitmap:
 		//0: match listenID
@@ -50,9 +50,11 @@ namespace socketd
 		{
 			match_listenID = 1, match_httpPath = 2, match_httpHost = 4
 		};
-		binding(){}
-		binding(int listenID, string httpPath, string httpHost, int matchLevel):
-			listenID(listenID), httpPath(httpPath), httpHost(httpHost), matchLevel(matchLevel) {}
+		binding() {
+		}
+		binding(int listenID, string httpPath, string httpHost, int matchLevel) :
+				httpPath(httpPath), httpHost(httpHost), listenID(listenID), matchLevel(matchLevel) {
+		}
 		//internal fields
 		vhost* vh;
 	};
@@ -83,14 +85,15 @@ namespace socketd
 		//for attaching to a running vhost; arbitrary string; leave blank (length==0) to
 		//disable attachments
 		string authCookie;
-		vhost(){}
+		vhost() {
+		}
 		vhost(const vector<binding>& bindings, string name, string exepath, string authCookie) :
 				bindings(bindings), name(name), exepath(exepath), authCookie(authCookie) {
 		}
 
 		//internal fields
-		RGC::Ref<appConnection> conn;
-		RGC::Ref<appConnection> attachmentConn;
+		vector<RGC::Ref<appConnection>> conns;//indexed by thread
+		RGC::Ref<appConnection> attachmentConn;//readonly by threads
 		bool hasAttachments;
 	};
 	class socketd

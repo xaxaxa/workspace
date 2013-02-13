@@ -18,7 +18,10 @@ void listenthread()
 	//CP::Poll p;
 	socketd::socketd sd;
 	sd.listens.push_back({newObj<CP::IPEndPoint>(CP::IPAddress("0.0.0.0"),16969),1,32});
-	sd.vhosts.push_back({{{1,"","",binding::match_listenID}},"vhost1","/home/xaxaxa/workspace/test/socketd_test",""});
+	sd.vhosts.push_back({{{0,"/asdf","",binding::match_httpPath}},"vhost1","/home/xaxaxa/workspace/test/socketd_test",""});
+	sd.vhosts.push_back({{{0,"/zxcv","",binding::match_httpPath}},"vhost2","/home/xaxaxa/workspace/test/socketd_test",""});
+
+	//sd.vhosts.push_back({{{1,"","",binding::match_listenID}},"vhost1","/home/xaxaxa/workspace/test/socketd_test",""});
 	sd.run();
 	/*config::rtconfigmanager *c=config::rtconfigmanager::getmainconfig();
 	SocketManager m;

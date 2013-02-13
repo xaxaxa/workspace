@@ -341,8 +341,20 @@ namespace CP
 	int32_t File::write(const void* buf, int32_t len) {
 		return ::write(handle, buf, len);
 	}
+	int32_t File::writeAll(const void* buf, int32_t len) {
+		int32_t bw = 0, bw1 = 0;
+		while (bw < len && (bw1 = write(((char*) buf) + bw, len - bw)) > 0)
+			bw += bw1;
+		return (bw1 < 0 && bw <= 0) ? -1 : bw;
+	}
 	int32_t File::send(const void* buf, int32_t len, int32_t flags) {
 		return ::send(handle, buf, len, flags);
+	}
+	int32_t File::sendAll(const void* buf, int32_t len, int32_t flags) {
+		int32_t bw = 0, bw1 = 0;
+		while (bw < len && (bw1 = send(((char*) buf) + bw, len - bw, flags)) > 0)
+			bw += bw1;
+		return (bw1 < 0 && bw <= 0) ? -1 : bw;
 	}
 	int32_t File::recv(void* buf, int32_t len, int32_t flags) {
 		return ::recv(handle, buf, len, flags);
@@ -470,10 +482,10 @@ namespace CP
 	}
 	void File::writeAll(const void* buf, int32_t len, const Callback& cb) {
 		if (!_supportsEPoll) {
-			int32_t bw = 0, bw1 = -2;
+			int32_t bw = 0, bw1 = 0;
 			while (bw < len && (bw1 = write(((char*) buf) + bw, len - bw)) > 0)
 				bw += bw1;
-			cb(bw1 == -2 ? -1 : bw);
+			cb((bw1 < 0 && bw <= 0) ? -1 : bw);
 			return;
 		}
 		static const Events e = Events::out;
@@ -646,22 +658,16 @@ namespace CP
 	//because the user might want to handle the socket on a different thread
 	//which requires a different Poll instance
 	Socket* Socket::accept() {
-		EndPoint* ep = EndPoint::create(addressFamily);
-		socklen_t l = (socklen_t) (ep->getSockAddrSize());
-		char addr[l];
-		HANDLE h = ::accept4(handle, (struct sockaddr*) addr, &l, SOCK_CLOEXEC);
+		Socket* sock = new Socket(acceptHandle(), addressFamily, type, protocol);
+		return sock;
+	}
+	HANDLE Socket::acceptHandle() {
+		HANDLE h = ::accept4(handle, NULL, NULL, SOCK_CLOEXEC);
 		if (h < 0) {
 			int32_t e = errno;
-			ep->release();
 			onError(e);
 		}
-		ep->setSockAddr((struct sockaddr*) addr);
-		ep->release();
-		Socket* sock = new Socket(h, addressFamily, type, protocol);
-		//int32_t tmp12345 = 1;
-		//setsockopt(h, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
-		//sock->peer=ep;
-		return sock;
+		return h;
 	}
 
 	void Socket::connect(const sockaddr* addr, int32_t addr_size, const Callback& cb) {
@@ -692,6 +698,16 @@ namespace CP
 		ed->cb = [cb,this](int32_t i) {
 			Socket* s=accept();
 			cb(s);
+		};
+		ed->op = Operations::accept;
+		endAddEvent(e, repeat);
+	}
+	void Socket::acceptHandle(const function<void(HANDLE)>& cb, bool repeat) {
+		static const Events e = Events::in;
+		EventHandlerData* ed = beginAddEvent(e);
+		ed->cb = [cb,this](int32_t i) {
+			HANDLE h=acceptHandle();
+			cb(h);
 		};
 		ed->op = Operations::accept;
 		endAddEvent(e, repeat);
@@ -780,6 +796,7 @@ namespace CP
 	}
 	void Poll::_applyHandle(Handle& h, Events old_e) {
 		if (!h._supportsEPoll) return;
+		if (unlikely(has_deleted) && tmp_deleted.find(&h) != tmp_deleted.end()) return;
 		Events new_e = h.getEvents();
 		if (new_e == old_e) return;
 		if (h.handle < 0) {
@@ -902,15 +919,15 @@ namespace CP
 		//tmp_deleted.push_back(&h);
 		if (h.getEvents() != Events::none) {
 			/*if (h.handle < 0) {
-				//throw runtime_error("test");
-				Events new_e = h.getEvents();
-				EventData evtd;
-				evtd.hungUp = evtd.error = true;
-				while (new_e != Events::none) {
-					h.dispatchMultiple(new_e, evtd);
-					new_e = h.getEvents();
-				}
-			}*/
+			 //throw runtime_error("test");
+			 Events new_e = h.getEvents();
+			 EventData evtd;
+			 evtd.hungUp = evtd.error = true;
+			 while (new_e != Events::none) {
+			 h.dispatchMultiple(new_e, evtd);
+			 new_e = h.getEvents();
+			 }
+			 }*/
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
 			//h.release();
 			tmp_deleted.insert(&h);

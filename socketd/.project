@@ -3,7 +3,7 @@
 	<name>socketd</name>
 	<comment></comment>
 	<projects>
-		<project>cplib</project>
+		<project>cpoll</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
