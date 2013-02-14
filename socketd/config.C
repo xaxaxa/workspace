@@ -20,7 +20,7 @@
 
 using namespace std;
 //8: debug; 5: info; 3: warn; 2: err; 1: fatal
-#define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<2)printf(__VA_ARGS__)
+#define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<4)printf(__VA_ARGS__)
 namespace socketd
 {
 	static int asdf = 0;
@@ -109,8 +109,9 @@ namespace socketd
 		void do_transfer(vhost* vh) {
 			//cout << "do_transfer" << endl;
 			retry: if ((++tries) > 3) {
-				SOCKETD_DEBUG(4, "exceeded 3 tries for connection %p\n", s);
-				delete this;
+				SOCKETD_DEBUG(3, "exceeded 3 tries for connection %p\n", s);
+				if (reading) deletionFlag = true;
+				else delete this;
 				return;
 			}
 			if (vh->conns[threadID]() == NULL && vh->exepath.length() > 0) {
@@ -299,6 +300,7 @@ namespace socketd
 //char sbuf[sizeof(protocolHeader)+sizeof(prot_handleConnection)];
 		bool dead;
 		bool down;
+
 		virtual void shutDown() {
 			if (!down) {
 				down = true;
@@ -406,13 +408,13 @@ namespace socketd
 				//socket has SOCK_NONBLOCK set, so regular send() won't block;
 				//if the socket buffer is full, then the application is already
 				//considered dead
-				r = unixsock->sendAll(hdr, len, 0);
+				r = unixsock->sendAll(hdr, len, MSG_DONTWAIT);
 				ph->~protocolHeader();
 				ph1->~prot_handleConnection();
 			}
 			if (r <= 0) goto fail;
 			if (sendfd(unixsock->handle, s->handle) < 0) goto fail;
-			if (buflen > 0) if (unixsock->sendAll(buffer, buflen, 0) <= 0) goto fail;
+			if (buflen > 0) if (unixsock->sendAll(buffer, buflen, MSG_DONTWAIT) <= 0) goto fail;
 			//s->release();
 			pendingConnections.insert( { id, cb });
 			return 2;
@@ -501,17 +503,17 @@ namespace socketd
 		CP::Poll p;
 #ifdef SOCKETD_THREADING
 		socketd_execinfo execinfo;
-		printf("this=%p\n",this);
+		printf("this=%p\n", this);
 		execinfo.threads.resize(nthreads);
 		for (int i = 0; i < nthreads; i++) {
 			socketd_thread th;
 			th.This = this;
 			th.execinfo = &execinfo;
-			th.id=i;
+			th.id = i;
 			if (pipe(th.pipe) < 0) {
 				throw runtime_error(strerror(errno));
 			}
-			execinfo.threads[i]=th;
+			execinfo.threads[i] = th;
 			socketd_thread& th1 = execinfo.threads[i];
 			//printf("%p %p\n",&th, &th1);
 			if (pthread_create(&th1.thr, NULL, socketd_processorThread, &th1) != 0) {
@@ -531,23 +533,23 @@ namespace socketd
 
 #ifdef SOCKETD_THREADING
 			l.sock->repeatAcceptHandle([&l,&p,this,&execinfo,&curThread](CP::HANDLE h) {
-						socketd_request req {&l, h};
-						write(execinfo.threads[curThread].pipe[1],&req,sizeof(req));
-						curThread++;
-						if(curThread>=nthreads)curThread=0;
-					});
+				socketd_request req {&l, h};
+				write(execinfo.threads[curThread].pipe[1],&req,sizeof(req));
+				curThread++;
+				if(curThread>=nthreads)curThread=0;
+			});
 #else
 			l.sock->repeatAcceptHandle([&l,&p,this](CP::HANDLE h) {
-				connectionInfo* ci = new connectionInfo();
-				ci->threadID=0;
-				ci->This = this;
-				ci->l = &l;
-				ci->s = new CP::Socket(h, l.sock->addressFamily, l.sock->type,
-						l.sock->protocol);
-				ci->p = &p;
-				//cout << "p=" << &p << endl;
-					ci->process();
-				});
+						connectionInfo* ci = new connectionInfo();
+						ci->threadID=0;
+						ci->This = this;
+						ci->l = &l;
+						ci->s = new CP::Socket(h, l.sock->addressFamily, l.sock->type,
+								l.sock->protocol);
+						ci->p = &p;
+						//cout << "p=" << &p << endl;
+						ci->process();
+					});
 #endif
 
 		}

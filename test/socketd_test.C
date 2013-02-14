@@ -4,6 +4,8 @@
 #include <cpoll/sendfd.H>
 #include <iostream>
 #include <socketd.H>
+#include <signal.h>
+
 using namespace std;
 using namespace socketd;
 using namespace CP;
@@ -30,6 +32,34 @@ public:
 	function<void(Socket*,const function<void()>&)> cb;
 	protocolHeader ph;
 	prot_handleConnection ph1;
+	vector<int> acks;
+	uint8_t* tmp;
+	int tmplen;
+	bool writing;
+	void startWrite() {
+		if(writing || acks.size()<=0)return;
+		int sz=sizeof(protocolHeader)+sizeof(prot_ackConnection);
+		int sz1=sz*acks.size();
+		if(tmplen<sz1) {
+			if(tmp!=NULL)free(tmp);
+			tmplen=sz1;
+			tmp=(uint8_t*)malloc(sz1);
+		}
+		for(int i=0;i<acks.size();i++) {
+			protocolHeader* ph=(protocolHeader*)(tmp+(sz*i));
+			prot_ackConnection* ack=(prot_ackConnection*)(ph+1);
+			ph->type=protocolHeader::ackConnection;
+			ack->id=acks[i];
+			ack->success=true;
+		}
+		acks.resize(0);
+		writing=true;
+		sock->write(tmp,sz1,[this](int r) {
+			writing=false;
+			if(r<=0)return;
+			startWrite();
+		});
+	}
 	void startRead();
 	void readCB(int r) {
 		if(r<=0) {
@@ -55,13 +85,15 @@ public:
 						int64_t id=ph1.id;
 						//printf("aaaaa %lli %i %i %i\n",ph1.id, ph1.d, ph1.t, ph1.p);
 						cb(newsock, [this,id]() {
-							protocolHeader ph;
+							/*protocolHeader ph;
 							ph.type=protocolHeader::ackConnection;
 							prot_ackConnection ack;
 							ack.id=id;
 							ack.success=true;
 							sock->write(&ph,sizeof(ph));
-							sock->write(&ack,sizeof(ack));
+							sock->write(&ack,sizeof(ack));*/
+							acks.push_back(id);
+							startWrite();
 						});
 						newsock->release();
 						startRead();
@@ -90,7 +122,8 @@ public:
 		}
 		startRead();
 	}
-	socketd_client(CP::Poll& p, const function<void(Socket*,const function<void()>&)>& cb, CP::Socket* sock=NULL):p(p),cb(cb) {
+	socketd_client(CP::Poll& p, const function<void(Socket*,const function<void()>&)>& cb, CP::Socket* sock=NULL)
+	:p(p),cb(cb), tmp(NULL),tmplen(0),writing(false) {
 		if(sock==NULL) {
 			sock=RGC::newObj<CP::Socket>(3, AF_UNIX, SOCK_STREAM, 0);
 			p.add(*sock);
@@ -127,7 +160,7 @@ int main() {
 	}*/
 	CP::Poll p;
 	socketd_client cl(p, [&](Socket* s, const function<void()>& ack) {
-		if(s==NULL)exit(0);
+		if(s==NULL)kill(getpid(),9);
 		/*if((++reqs)>500) {
 			//recycle
 			exit(0);
