@@ -32,4 +32,5 @@ a.out
 /test1/*/test1
 .nfs*
 core.*
+/email_extract
 
