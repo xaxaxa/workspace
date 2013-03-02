@@ -12,6 +12,7 @@ a:
 	g++ a.C -o a -O3 -I../include -L../lib -lcplib --std=c++0x
 socketd_test:
 	g++ socketd_test.C -o socketd_test -g3 -I../include -L../lib -lcpoll --std=c++0x
-
+socketd_proxy.so:
+	g++ socketd_proxy.C -o socketd_proxy.so -O3 -I../include -L../lib -lcpoll -ldl -pthread --std=c++0x --shared -fPIC
 
 

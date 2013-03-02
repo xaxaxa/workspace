@@ -10,7 +10,7 @@ server.modules = (
 	"mod_fastcgi"
 )
 fastcgi.server = (
-	"/fcgi_test" =>
+	"/sss/fcgi_test" =>
 	(( "socket" => "$(pwd)/fcgi_test.sock", 
 		  "bin-path" => "$(pwd)/fcgi_test" 
 	)),

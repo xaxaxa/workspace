@@ -57,7 +57,7 @@ File efd(eventfd(0,0));
 FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
 FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
 struct timespec last_refreshed;
-#define EQ_POINTS 1500
+#define EQ_POINTS 10000
 #define SPECTRUM2_POINTS 64
 EQControl* c;
 EQControl* c2;

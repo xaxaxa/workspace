@@ -10,6 +10,8 @@ freqrecord:
 freqplay:
 	g++ -g3 freqplay.C -o freqplay --std=c++0x -lcplib -ljack -lfftw3 $(FLAGS) $(PKG_CONFIG)
 converters: jack_f2i jack_i2f
+transform1:
+	g++ transform1.C -o transform1
 jack_f2i:
 	g++ -Ofast jack_f2i.C -o jack_f2i -ljack $(FLAGS)
 jack_i2f:

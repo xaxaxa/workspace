@@ -43,7 +43,7 @@ all: test1
 test1: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/dd/workspace"/lib -fPIC -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L../../lib -fPIC -p -pg -o "test1" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

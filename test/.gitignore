@@ -1,3 +1,4 @@
+socketd_proxy
 a
 asdf
 branch
@@ -25,4 +26,5 @@ trololo
 fcgi_test
 cpoll_statemachine_test
 socketd_test
+image2text
 

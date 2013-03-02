@@ -8,7 +8,7 @@
 #ifndef SENDFD_H_
 #define SENDFD_H_
 
-int sendfd(int s, int fd);
-int recvfd(int s);
+int sendfd(int s, int fd, int flags=0);
+int recvfd(int s, int flags=0);
 
 #endif /* SENDFD_H_ */

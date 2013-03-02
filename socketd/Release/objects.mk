@@ -4,4 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -lcplib
+LIBS := -lcpoll
+

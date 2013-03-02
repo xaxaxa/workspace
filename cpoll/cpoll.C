@@ -285,11 +285,12 @@ namespace CP
 	int32_t Handle::waitAndDispatch() {
 		EventData evtd;
 		Events e = wait(evtd);
+		if (e == Events::none) return -1;
 		return dispatchMultiple(e, evtd);
 	}
 	void Handle::loop() {
 		try {
-			while (waitAndDispatch() > 0)
+			while (waitAndDispatch() >= 0)
 				;
 		} catch (const AbortException& ex) {
 
@@ -304,15 +305,18 @@ namespace CP
 	}
 
 	//File
-	File::File() {
+	File::File() :
+			dispatching(false) {
 	}
-	File::File(HANDLE handle) {
+	File::File(HANDLE handle) :
+			dispatching(false) {
 		init(handle);
 	}
 	void File::init(HANDLE handle) {
 		Handle::init(handle);
 	}
 	Events File::_getEvents() {
+		if (dispatching) return preDispatchEvents;
 		Events e = Events::none;
 		for (int32_t i = 0; i < numEvents; i++)
 			if (eventData[i].state != EventHandlerData::States::invalid) (event_t&) e |=
@@ -333,7 +337,7 @@ namespace CP
 		Events old_events = _getEvents();
 		eventData[eventToIndex(event)].state =
 				repeat ? (EventHandlerData::States::repeat) : (EventHandlerData::States::once);
-		if (onEventsChange != nullptr) onEventsChange(old_events);
+		if (onEventsChange != nullptr && !dispatching) onEventsChange(old_events);
 	}
 	int32_t File::read(void* buf, int32_t len) {
 		return ::read(handle, buf, len);
@@ -426,16 +430,18 @@ namespace CP
 		//cout << (int32_t)event << " dispatched" << endl;
 		EventHandlerData& ed = eventData[eventToIndex(event)];
 		if (ed.state == EventHandlerData::States::invalid) return;
-		Events old_events = _getEvents();
+		preDispatchEvents = _getEvents();
 		EventHandlerData::States oldstate = ed.state;
 		if ((ed.state == EventHandlerData::States::once) || evtd.hungUp || evtd.error) ed.state =
 				EventHandlerData::States::invalid;
+		dispatching = true;
 
 		try {
 			doOperation(ed, evtd, oldstate);
 		} catch (const CancelException& ex) {
 			ed.state = EventHandlerData::States::invalid;
 		}
+		dispatching = false;
 		//cout << "clear event" << endl;
 
 		//cout << (eventData[eventToIndex(event)].state==EventHandlerData::States::once
@@ -447,7 +453,7 @@ namespace CP
 		///if (!b) ed.state = EventHandlerData::States::invalid;
 		
 		//else cout << (int32_t)eventData[eventToIndex(event)].state << endl;
-		if (onEventsChange != nullptr) onEventsChange(old_events);
+		if (onEventsChange != nullptr) onEventsChange(preDispatchEvents);
 	}
 	void File::fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 			const Callback& cb, Events e, Operations op) {
@@ -859,6 +865,7 @@ namespace CP
 		cur_handle = h->handle;
 		cur_last_events = h->getEvents();
 		ret = h->dispatchMultiple((Events) evt, evtd);
+		if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
 		Events new_events = h->getEvents();
 		//cout << (int32_t)new_events << " " << (int32_t)cur_last_events << endl;
 		if (new_events != cur_last_events) _applyHandle(*h, cur_last_events);
@@ -866,13 +873,17 @@ namespace CP
 		return ret;
 	}
 	int32_t Poll::_doEPoll(int32_t timeout) {
-		if (active <= 0) return 0;
+		if (active <= 0) {
+			//printf("active=%i\n", active);
+			return -1;
+		}
 		int32_t ret = 0;
 		epoll_event evts[MAX_EVENTS];
 		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
 		if (unlikely(n < 0)) {
 			goto retry;
 		}
+		if (n <= 0) ret = -1;
 		for (int32_t i = 0; i < n; i++)
 			ret += _doDispatch(evts[i]);
 		
@@ -911,6 +922,7 @@ namespace CP
 		h.onEventsChange = [this,&h](Events old_events) {this->applyHandle(h,old_events);};
 		_applyHandle(h, Events::none);
 		h.onClose = [this,&h]() {
+
 			del(h);
 		};
 	}
@@ -928,6 +940,7 @@ namespace CP
 			 new_e = h.getEvents();
 			 }
 			 }*/
+			//printf("onClose()\n");
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
 			//h.release();
 			tmp_deleted.insert(&h);

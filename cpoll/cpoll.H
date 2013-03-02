@@ -382,6 +382,8 @@ namespace CP
 	{
 	public:
 		EventHandlerData eventData[numEvents];
+		Events preDispatchEvents;
+		bool dispatching;
 
 		File();
 		File(HANDLE handle);
