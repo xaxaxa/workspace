@@ -63,7 +63,6 @@ struct bufferInfo
 	int len;
 };
 static map<int,bufferInfo> fdbuffers;
-//XXX: race condition if application is multithreaded
 static void loadConfig() {
 	if(configLoaded)return;
 	configLoaded=true;
@@ -330,7 +329,9 @@ int dup2(int oldfd, int newfd) {
 	}
 	{
 		scopeLock l(mutex);
-		if(fds.count(newfd)>0)
+		if(fds.count(oldfd)>0)
+			fds.insert(newfd);
+		else if(fds.count(newfd)>0)
 			fds.erase(newfd);
 	}
 	prev_dup2(oldfd,newfd);
@@ -341,7 +342,9 @@ int dup3(int oldfd, int newfd, int flags) {
 	}
 	{
 		scopeLock l(mutex);
-		if(fds.count(newfd)>0)
+		if(fds.count(oldfd)>0)
+			fds.insert(newfd);
+		else if(fds.count(newfd)>0)
 			fds.erase(newfd);
 	}
 	prev_dup3(oldfd,newfd,flags);

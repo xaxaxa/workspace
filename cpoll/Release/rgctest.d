@@ -1,3 +1,3 @@
-rgctest.d: ../rgctest.C /home/xaxaxa/workspace/include/rgc.H
+rgctest.d: ../rgctest.C ../../include/rgc.H
 
-/home/xaxaxa/workspace/include/rgc.H:
+../../include/rgc.H:

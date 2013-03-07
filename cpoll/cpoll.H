@@ -170,7 +170,7 @@ namespace CP
 		inline IPAddress operator-(const in_addr_t& other) const {
 			return IPAddress( { htonl(ntohl(a.s_addr) - other) });
 		}
-		string tostr() const {
+		string toStr() const {
 			char tmp[INET_ADDRSTRLEN];
 			if (inet_ntop(AF_INET, &a, tmp, INET_ADDRSTRLEN) == NULL) throw CPollException();
 			return string(tmp);
@@ -187,7 +187,7 @@ namespace CP
 		inline IPv6Address(const in6_addr& a) {
 			this->a = a;
 		}
-		string tostr() const {
+		string toStr() const {
 			char tmp[INET_ADDRSTRLEN];
 			if (inet_ntop(AF_INET6, &a, tmp, INET6_ADDRSTRLEN) == NULL) throw CPollException();
 			return string(tmp);
@@ -206,8 +206,7 @@ namespace CP
 		virtual ~EndPoint() {
 		}
 		static vector<RGC::Ref<EndPoint> > lookupHost(const char* hostname, const char* port,
-				int32_t family = AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags =
-						0);
+				int32_t family = AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 		//static EndPoint Resolve(
 	};
 	class IPEndPoint: public EndPoint
@@ -240,7 +239,7 @@ namespace CP
 		virtual void getSockAddr(sockaddr* addr) const;
 		virtual int32_t getSockAddrSize() const;
 		virtual void clone(EndPoint& to) const;
-		virtual string tostr() const;
+		virtual string toStr() const;
 	};
 	class UNIXEndPoint: public EndPoint
 	{
@@ -305,8 +304,8 @@ namespace CP
 	enum class Operations
 		: uint8_t
 		{
-			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect,
-		close, lastItem
+			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect, close,
+		lastItem
 	};
 
 	struct EventHandlerData
@@ -416,8 +415,8 @@ namespace CP
 		inline void repeatRecv(void* buf, int32_t len, int32_t flags, const Callback& cb) {
 			recv(buf, len, flags, cb, true);
 		}
-		void send(const void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat =
-				false);
+		void send(const void* buf, int32_t len, int32_t flags, const Callback& cb,
+				bool repeat = false);
 		inline void repeatSend(const void* buf, int32_t len, int32_t flags, const Callback& cb) {
 			send(buf, len, flags, cb, true);
 		}
@@ -460,6 +459,8 @@ namespace CP
 				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 		void bind(const sockaddr *addr, int32_t addr_size);
 		void bind(const EndPoint &ep);
+		void bind(const char* hostname, const char* port, int32_t family = AF_UNSPEC,
+				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 
 		int32_t shutdown(int32_t how);
 		void shutdown(int32_t how, const Callback& cb);

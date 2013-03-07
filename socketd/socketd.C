@@ -29,14 +29,17 @@
 #include <rgc.H>
 #include <signal.h>
 #include <tuple>
+#include <ctype.h>
 
 //#define SOCKETD_THREADING
 
+#define SOCKETD_READBUFFER 256
 using namespace std;
 //8: debug; 5: info; 3: warn; 2: err; 1: fatal
 #define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<6)printf(__VA_ARGS__)
 namespace socketd
 {
+	static const int nthreads = 2;
 	static int asdf = 0;
 	static const int rBufSize = 4096;
 	static const int rLineBufSize = 512;
@@ -45,17 +48,54 @@ namespace socketd
 		//cout << string(path, pathLen) << endl;
 		if (confLen == pathLen && memcmp(conf, path, confLen) == 0) {
 			/*cout << "matched (exact): " << string(path, pathLen) << " against " << string(conf, confLen)
-					<< endl;*/
+			 << endl;*/
 			return true;
 		}
 		if (pathLen > confLen && memmem(path, pathLen, conf, confLen) == path
-				&& path[confLen] == '/') {
+				&& (confLen == 1 || path[confLen] == '/')) {
 			/*cout << "matched (substring): " << string(path, pathLen) << " against " << string(conf, confLen)
-								<< endl;*/
+			 << endl;*/
 			return true;
 		}
 		//
 		return false;
+	}
+	bool compareHost(const char* conf, int confLen, const char* host, int hostLen) {
+		if (confLen == hostLen && memcmp(conf, host, confLen) == 0) {
+			return true;
+		}
+		if (confLen >= 1 && conf[0] == '*') {
+			if (((const char*) memmem(host, hostLen, conf + 1, confLen - 1)) - host
+					== (hostLen - (confLen - 1))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	SocketDException::SocketDException() :
+			message(strerror(errno)), number(errno) {
+	}
+	SocketDException::SocketDException(int32_t number) :
+			message(strerror(number)), number(number) {
+	}
+	SocketDException::SocketDException(string message, int32_t number) :
+			message(message), number(number) {
+	}
+	SocketDException::~SocketDException() throw () {
+	}
+	const char* SocketDException::what() const throw () {
+		return message.c_str();
+	}
+	char* strupper(char* s, int len) {
+		for (char* p = s; *p; ++p)
+			*p = toupper(*p);
+		return s;
+	}
+
+	char* strlower(char* s, int len) {
+		for (char* p = s; *p; ++p)
+			*p = tolower(*p);
+		return s;
 	}
 	struct connectionInfo
 	{
@@ -71,9 +111,11 @@ namespace socketd
 		int readTo;
 		int pos;
 		int threadID;
+		int processIndex;
 
 		//int lineBufLen;
 		string httpPath;
+		string httpHost;
 		bool firstLine;
 		bool reading;
 		bool cancelread;
@@ -81,7 +123,8 @@ namespace socketd
 		bool streamReaderInit;
 
 		connectionInfo() :
-				tries(0), readTo(0), pos(0), deletionFlag(false), streamReaderInit(false) {
+				tries(0), readTo(0), pos(0), processIndex(-1), deletionFlag(false),
+						streamReaderInit(false) {
 		}
 		void startRead();
 		void checkMatch();
@@ -110,6 +153,15 @@ namespace socketd
 				return;
 			}
 
+			const uint8_t* tmp;
+			tmp = (const uint8_t*) memchr(buf, ':', len);
+			if (tmp == NULL) return;
+			int i;
+			i = tmp - buf;
+			if (i > 1024) goto fail;
+			char fieldname[i + 1];
+			memcpy(fieldname, buf, i);
+
 			return;
 			fail: delete this;
 		}
@@ -130,6 +182,9 @@ namespace socketd
 			cancelread = true;
 			processLine(buf, len);
 		}
+		inline int connIndex(vhost* vh) {
+			return threadID * vh->processes + processIndex;
+		}
 		//transfer socket to application
 		void do_transfer(vhost* vh) {
 			//cout << "do_transfer" << endl;
@@ -139,8 +194,11 @@ namespace socketd
 				else delete this;
 				return;
 			}
-			if (vh->conns[threadID]() == NULL && vh->exepath.length() > 0) {
-				spawnApp(vh, *p, vh->exepath, threadID);
+			if (processIndex < 0) {
+				processIndex = (vh->curProcess[threadID]++) % vh->processes;
+			}
+			if (vh->conns[connIndex(vh)]() == NULL && vh->exepath.length() > 0) {
+				spawnApp(vh, *p, vh->exepath, connIndex(vh));
 			}
 			uint8_t* buf;
 			int bufLen;
@@ -171,9 +229,9 @@ namespace socketd
 					return;
 				} else return;
 			}
-			aaaaa: if (vh->conns[threadID]() != NULL) {
+			aaaaa: if (vh->conns[connIndex(vh)]() != NULL) {
 				//cout << "vh->conn() != NULL" << endl;
-				auto tmpptr = vh->conns[threadID]();
+				auto tmpptr = vh->conns[connIndex(vh)]();
 				SOCKETD_DEBUG(8, "bufLen=%i\n", bufLen);
 				int r = tmpptr->passConnection(s, buf, bufLen, [this,vh,tmpptr](bool b) {
 					if(b) {
@@ -181,9 +239,9 @@ namespace socketd
 						delete this;
 					}
 					else {
-						if(tmpptr==vh->conns[threadID]()) {
-							vh->conns[threadID]->shutDown();
-							vh->conns[threadID]=NULL;
+						if(tmpptr==vh->conns[connIndex(vh)]()) {
+							vh->conns[connIndex(vh)]->shutDown();
+							vh->conns[connIndex(vh)]=NULL;
 						}
 						do_transfer(vh);
 					}
@@ -191,7 +249,7 @@ namespace socketd
 				if (r == 1) {
 					//application possibly dead; respawn
 					tmpptr->shutDown();
-					if (tmpptr == vh->conns[threadID]()) vh->conns[threadID] = NULL;
+					if (tmpptr == vh->conns[connIndex(vh)]()) vh->conns[connIndex(vh)] = NULL;
 					goto retry;
 				} else if (r == 0) {
 					SOCKETD_DEBUG(8, "connection %p pre-succeeded\n", this);
@@ -222,10 +280,11 @@ namespace socketd
 	void connectionInfo::startSocketRead() {
 		if (reading) return;
 		CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
-		auto tmp = sr->beginPutData(4096);
-		SOCKETD_DEBUG(9, "attempting to read %i bytes of data from client socket\n", 4096);
+		auto tmp = sr->beginPutData(SOCKETD_READBUFFER);
+		SOCKETD_DEBUG(9,
+				"attempting to read %i bytes of data from client socket\n", SOCKETD_READBUFFER);
 		reading = true;
-		s->read(tmp, 4096, [this](int r) {
+		s->read(tmp, SOCKETD_READBUFFER, [this](int r) {
 			SOCKETD_DEBUG(9, "got %i bytes of data from client socket\n", r);
 			CP::persistentStreamReader* sr=(CP::persistentStreamReader*)_sr;
 			sr->endPutData(r);
@@ -259,8 +318,7 @@ namespace socketd
 						break;
 					} else {
 						if (comparePath(This->bindings[i]->httpPath.data(),
-								This->bindings[i]->httpPath.length(), httpPath.data(),
-								httpPath.length())) {
+								This->bindings[i]->httpPath.length(), httpPath.data(), httpPath.length())) {
 							goto matched_httpPath;
 						} else continue;
 					}
@@ -270,8 +328,11 @@ namespace socketd
 							readTo = 2;
 							break;
 						} else {
-							//XXX
-							continue;
+							if (comparePath(This->bindings[i]->httpHost.data(),
+									This->bindings[i]->httpHost.length(), httpHost.data(),
+									httpHost.length())) {
+								goto matched_httpHost;
+							} else continue;
 						}
 					} else {
 						matched_httpHost: do_transfer(This->bindings[i]->vh);
@@ -391,8 +452,10 @@ namespace socketd
 			else if (pid == 0) {
 				//child
 				close(socks[0]);
-				dup2(socks[1], 3); //fd 3
-				close(socks[1]);
+				if (socks[1] != 3) {
+					dup2(socks[1], 3); //fd 3
+					close(socks[1]);
+				}
 				setenv("SOCKETD_FD", "3", 1);
 				if (vh->preload) {
 					setenv("LD_PRELOAD", socketd_proxy, 1);
@@ -470,8 +533,8 @@ namespace socketd
 	void appConnection_unix::startRead() {
 		unixsock->read(&buf, sizeof(buf), [this](int r) {this->readCB(r);});
 	}
-	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int threadID) {
-		vh->conns[threadID] = RGC::newObj<appConnection_unix>(vh, p, exepath);
+	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int connIndex) {
+		vh->conns[connIndex] = RGC::newObj<appConnection_unix>(vh, p, exepath);
 	}
 
 	struct socketd_execinfo;
@@ -499,8 +562,8 @@ namespace socketd
 		socketd_request req;
 		printf("%i %i\n", th->id, th->pipe[0]);
 		pipe.repeatRead(&req, sizeof(req), [&p,&pipe,&req,th](int r) {
-				if(r!=sizeof(socketd_request))return;
-				//printf("%i\n",th->id);
+			if(r!=sizeof(socketd_request))return;
+			//printf("%i\n",th->id);
 				connectionInfo* ci = new connectionInfo();
 				ci->threadID=th->id;
 				ci->This = th->This;
@@ -524,7 +587,7 @@ namespace socketd
 		sa.sa_flags = SA_RESTART; /* Restart system calls if
 		 interrupted by handler */
 		sigaction(SIGCHLD, &sa, NULL);
-		static const int nthreads = 2;
+
 		CP::Poll p;
 		this->bindings.clear();
 		for (uint32_t i = 0; i < vhosts.size(); i++) {
@@ -535,10 +598,25 @@ namespace socketd
 			}
 			vhosts[i].hasAttachments = false;
 #ifdef SOCKETD_THREADING
-			vhosts[i].conns.resize(nthreads);
+			vhosts[i].conns.resize(nthreads*vhosts[i].processes);
+			vhosts[i].curProcess.resize(nthreads);
 #else
-			vhosts[i].conns.resize(1);
+			vhosts[i].conns.resize(vhosts[i].processes);
+			vhosts[i].curProcess.resize(1);
 #endif
+			for (uint32_t ii = 0; ii < vhosts[i].curProcess.size(); ii++) {
+				vhosts[i].curProcess[ii] = 0;
+			}
+		}
+		for (uint32_t i = 0; i < extraBindings.size(); i++) {
+			for (uint32_t ii = 0; ii < vhosts.size(); ii++) {
+				if (vhosts[ii].name == extraBindings[i].vhostName) {
+					extraBindings[i].vh = &vhosts[ii];
+					break;
+				}
+			}
+			binding* tmp = &(extraBindings[i]);
+			this->bindings.push_back(tmp);
 		}
 		//start up unix listening socket
 		if (unixAddress.length() > 0) {
@@ -549,7 +627,7 @@ namespace socketd
 
 			});
 		}
-
+		int curThread = 0;
 #ifdef SOCKETD_THREADING
 		socketd_execinfo execinfo;
 		printf("this=%p\n", this);
@@ -567,13 +645,13 @@ namespace socketd
 				throw runtime_error(strerror(errno));
 			}
 		}
-		int curThread = 0;
 #endif
 		for (uint32_t i = 0; i < listens.size(); i++) {
 			auto& l = listens[i];
 			if (l.sock.get() == NULL) {
-				l.sock = RGC::newObj<CP::Socket>(l.ep->addressFamily, SOCK_STREAM);
-				l.sock->bind(*l.ep);
+				//l.sock = RGC::newObj<CP::Socket>(l.ep->addressFamily, SOCK_STREAM);
+				l.sock = RGC::newObj<CP::Socket>();
+				l.sock->bind(l.host.c_str(), l.port.c_str(), AF_UNSPEC, SOCK_STREAM);
 				l.sock->listen(l.backlog);
 			}
 			p.add(*l.sock);
@@ -581,8 +659,9 @@ namespace socketd
 #ifdef SOCKETD_THREADING
 			l.sock->repeatAcceptHandle([&l,&p,this,&execinfo,&curThread](CP::HANDLE h) {
 						socketd_request req {&l, h};
+						//printf("%i\n",curThread);
 						write(execinfo.threads[curThread].pipe[1],&req,sizeof(req));
-						curThread++;
+						//curThread++;
 						if(curThread>=nthreads)curThread=0;
 					});
 #else

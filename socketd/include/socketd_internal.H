@@ -31,19 +31,35 @@ using namespace std;
 
 namespace socketd
 {
+	class SocketDException: public std::exception
+	{
+	public:
+		string message;
+		int32_t number;
+		SocketDException();
+		SocketDException(int32_t number);
+		SocketDException(string message, int32_t number = 0);
+		~SocketDException() throw ();
+		const char* what() const throw ();
+	};
+
 	struct binding;
 	struct vhost;
 	struct listen
 	{
 	public:
 		//user supplied fields
-		RGC::Ref<CP::EndPoint> ep;
+		//RGC::Ref<CP::EndPoint> ep;
+		string host;
+		string port;
 		int id;
 		int backlog;
 		//internal fields
 		RGC::Ref<CP::Socket> sock;
-		listen(CP::EndPoint* ep, int id, int backlog = 32) :
-				ep(ep), id(id), backlog(backlog) {
+		listen(string host, string port, int id, int backlog = 32) :
+				host(host), port(port), id(id), backlog(backlog) {
+		}
+		listen():backlog(32) {
 		}
 	};
 	struct binding
@@ -52,6 +68,7 @@ namespace socketd
 		//user supplied fields
 		string httpPath; //path must not have / at the end!!!!!
 		string httpHost;
+		string vhostName; //only needs to be filled if put in the "extraBindings" array
 		int listenID;
 
 		//bitmap:
@@ -93,6 +110,7 @@ namespace socketd
 		/*int requestsPerProcess;
 		 int maxRequestsPerProcess;
 		 int maxProcesses;*/
+		int processes; //how many processes to spawn (for load balancing)
 
 		//for attaching to a running vhost; arbitrary string; leave blank (length==0) to
 		//disable attachments
@@ -101,24 +119,28 @@ namespace socketd
 		//whether to LD_PRELOAD socketd_proxy.so
 		bool preload;
 		bool useShell;
-		vhost() {
+		vhost():processes(1),preload(false),useShell(true) {
 		}
-		vhost(const vector<binding>& bindings, string name, string exepath, string authCookie, bool preload=false, bool shell=true) :
-				bindings(bindings), name(name), exepath(exepath), authCookie(authCookie),preload(preload),useShell(shell) {
+		vhost(const vector<binding>& bindings, string name, string exepath, string authCookie,
+				bool preload = false, bool shell = true, int processes=1) :
+				bindings(bindings), name(name), exepath(exepath),processes(processes), authCookie(authCookie),
+				preload(preload), useShell(shell) {
 		}
 
 		//internal fields
-		vector<RGC::Ref<appConnection>> conns; //indexed by thread
+		vector<RGC::Ref<appConnection>> conns; //indexed by thread*processes + curProcess
 		RGC::Ref<appConnection> attachmentConn; //readonly by threads
+		vector<int> curProcess;
 		bool hasAttachments;
 	};
-	static const char* socketd_proxy="/home/xaxaxa/workspace/test/socketd_proxy.so";
+	static const char* socketd_proxy = "socketd_proxy.so";
 	class socketd
 	{
 	public:
 		//user supplied fields
 		vector<listen> listens;
 		vector<vhost> vhosts;
+		vector<binding> extraBindings; //vhostName must be filled for these
 		string unixAddress;
 		void run();
 

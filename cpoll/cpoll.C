@@ -146,7 +146,7 @@ namespace CP
 	}
 	string IPEndPoint::toStr() const {
 		stringstream s;
-		s << address.tostr() << ':' << port;
+		s << address.toStr() << ':' << port;
 		return s.str();
 	}
 
@@ -195,9 +195,9 @@ namespace CP
 		tmp.flowInfo = flowInfo;
 		tmp.scopeID = scopeID;
 	}
-	string IPv6EndPoint::tostr() const {
+	string IPv6EndPoint::toStr() const {
 		stringstream s;
-		s << '[' << address.tostr() << "]:" << port;
+		s << '[' << address.toStr() << "]:" << port;
 		return s.str();
 	}
 
@@ -266,7 +266,7 @@ namespace CP
 		return ret;
 	}
 	Events Handle::wait(EventData& evtd) { //since this is single-file, poll() will be used.
-										   //Events events=Events::none;
+		//Events events=Events::none;
 		Events w = getEvents();
 		pollfd pfd;
 		pfd.fd = handle;
@@ -624,6 +624,31 @@ namespace CP
 		ep.getSockAddr((sockaddr*) tmp);
 		bind((sockaddr*) tmp, size);
 	}
+	void Socket::bind(const char* hostname, const char* port, int32_t family, int32_t socktype,
+			int32_t proto, int32_t flags) {
+		//XXX
+		if (handle != -1) throw CPollException(
+				"Socket::bind(string, ...) creates a socket, but the socket is already initialized");
+		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
+		unsigned int i;
+		for (i = 0; i < hosts.size(); i++) {
+			int _f = socket(hosts[i]->addressFamily, socktype|SOCK_CLOEXEC, proto);
+			if (_f < 0) continue;
+			int32_t tmp12345 = 1;
+			setsockopt(_f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
+			int size = hosts[i]->getSockAddrSize();
+			uint8_t tmp[size];
+			hosts[i]->getSockAddr((sockaddr*) tmp);
+			if (::bind(_f, (sockaddr*) tmp, size) == 0) {
+				init(_f, hosts[i]->addressFamily, socktype, proto);
+				return;
+			} else {
+				::close(_f);
+				continue;
+			}
+		}
+		throw CPollException("no bindable hosts were found; last error: " + string(strerror(errno)));
+	}
 	void Socket::listen(int32_t backlog) {
 		checkError(::listen(handle, backlog));
 	}
@@ -658,6 +683,25 @@ namespace CP
 	void Socket::connect(const char* hostname, const char* port, int32_t family, int32_t socktype,
 			int32_t proto, int32_t flags) {
 		//XXX
+		if (handle != -1) throw CPollException(
+				"Socket::connect(string, ...) creates a socket, but the socket is already initialized");
+		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
+		unsigned int i;
+		for (i = 0; i < hosts.size(); i++) {
+			int _f = socket(hosts[i]->addressFamily, socktype, proto);
+			if (_f < 0) continue;
+			int size = hosts[i]->getSockAddrSize();
+			uint8_t tmp[size];
+			hosts[i]->getSockAddr((sockaddr*) tmp);
+			if (::connect(_f, (sockaddr*) tmp, size) == 0) {
+				init(_f, hosts[i]->addressFamily, socktype, proto);
+				break;
+			} else {
+				::close(_f);
+				continue;
+			}
+		}
+		throw CPollException("no reachable hosts were found; last error: " + string(strerror(errno)));
 	}
 	//the caller must release() or free() the returned object;
 	//also this will NOT automatically add the new socket to this Poll instance
