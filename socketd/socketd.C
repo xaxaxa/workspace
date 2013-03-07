@@ -31,7 +31,7 @@
 #include <tuple>
 #include <ctype.h>
 
-//#define SOCKETD_THREADING
+#define SOCKETD_THREADING
 
 #define SOCKETD_READBUFFER 256
 using namespace std;
@@ -627,7 +627,7 @@ namespace socketd
 
 			});
 		}
-		int curThread = 0;
+
 #ifdef SOCKETD_THREADING
 		socketd_execinfo execinfo;
 		printf("this=%p\n", this);
@@ -645,6 +645,7 @@ namespace socketd
 				throw runtime_error(strerror(errno));
 			}
 		}
+		int curThread = 0;
 #endif
 		for (uint32_t i = 0; i < listens.size(); i++) {
 			auto& l = listens[i];
@@ -661,7 +662,7 @@ namespace socketd
 						socketd_request req {&l, h};
 						//printf("%i\n",curThread);
 						write(execinfo.threads[curThread].pipe[1],&req,sizeof(req));
-						//curThread++;
+						curThread++;
 						if(curThread>=nthreads)curThread=0;
 					});
 #else
