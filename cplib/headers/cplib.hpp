@@ -2730,7 +2730,7 @@ namespace xaxaxa
 			free(messages);
 			exit(EXIT_FAILURE);
 		}
-#else
+#elif __i386__
 		// This structure mirrors the one found in /usr/include/asm/ucontext.h
 		typedef struct _sig_ucontext {
 		   unsigned long     uc_flags;
@@ -2765,7 +2765,8 @@ namespace xaxaxa
 			free(messages);
 			exit(EXIT_FAILURE);
 		}
-
+#else
+		static void crit_err_hdlr(int sig_num, siginfo_t * info, void * ucontext) {}
 #endif
 		void SetHandlers()
 		{
