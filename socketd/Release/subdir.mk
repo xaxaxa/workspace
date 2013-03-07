@@ -4,16 +4,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_UPPER_SRCS += \
+../configparser.C \
 ../main.C \
 ../socketd.C \
 ../test.C 
 
 OBJS += \
+./configparser.o \
 ./main.o \
 ./socketd.o \
 ./test.o 
 
 C_UPPER_DEPS += \
+./configparser.d \
 ./main.d \
 ./socketd.d \
 ./test.d 

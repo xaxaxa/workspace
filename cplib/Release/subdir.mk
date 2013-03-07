@@ -8,22 +8,39 @@ CPP_SRCS += \
 ../asyncsock.cpp \
 ../cplib.cpp 
 
+C_UPPER_SRCS += \
+../cplib_func.C \
+../epoll.C 
+
 OBJS += \
 ./asyncfile.o \
 ./asyncsock.o \
-./cplib.o 
+./cplib.o \
+./cplib_func.o \
+./epoll.o 
 
 CPP_DEPS += \
 ./asyncfile.d \
 ./asyncsock.d \
 ./cplib.d 
 
+C_UPPER_DEPS += \
+./cplib_func.d \
+./epoll.d 
+
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ -O3 -Ofast -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -I../../include/ -O3 -g -rdynamic -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+%.o: ../%.C
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ -I../../include/ -O3 -g -rdynamic -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
