@@ -31,8 +31,9 @@
 #include <tuple>
 #include <ctype.h>
 
-#define SOCKETD_THREADING
 
+#define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
+//#define SOCKETD_THREADING
 #define SOCKETD_READBUFFER 256
 using namespace std;
 //8: debug; 5: info; 3: warn; 2: err; 1: fatal
@@ -101,7 +102,7 @@ namespace socketd
 	{
 		socketd* This;
 		listen* l;
-		CP::Socket* s;
+		CP::Socket s;
 		CP::Poll* p;
 		//CP::streamReader* sr;
 		char _sr[sizeof(CP::persistentStreamReader)];
@@ -122,8 +123,8 @@ namespace socketd
 		bool deletionFlag;
 		bool streamReaderInit;
 
-		connectionInfo() :
-				tries(0), readTo(0), pos(0), processIndex(-1), deletionFlag(false),
+		connectionInfo(int fd, int d, int t, int p) :
+				s(fd, d, t, p), tries(0), readTo(0), pos(0), processIndex(-1), deletionFlag(false),
 						streamReaderInit(false) {
 		}
 		void startRead();
@@ -211,7 +212,7 @@ namespace socketd
 			}
 			if (vh->attachmentConn() != NULL) {
 				int r =
-						vh->attachmentConn->passConnection(s, NULL, 0,
+						vh->attachmentConn->passConnection(&s, NULL, 0,
 								[this,vh](bool b) {
 									if(b) {
 										SOCKETD_DEBUG(8,"received acknownedgement for connection %p (with attachment)\n",this);
@@ -233,7 +234,7 @@ namespace socketd
 				//cout << "vh->conn() != NULL" << endl;
 				auto tmpptr = vh->conns[connIndex(vh)]();
 				SOCKETD_DEBUG(8, "bufLen=%i\n", bufLen);
-				int r = tmpptr->passConnection(s, buf, bufLen, [this,vh,tmpptr](bool b) {
+				int r = tmpptr->passConnection(&s, buf, bufLen, [this,vh,tmpptr](bool b) {
 					if(b) {
 						SOCKETD_DEBUG(8,"received acknownedgement for connection %p\n",this);
 						delete this;
@@ -270,7 +271,7 @@ namespace socketd
 
 		~connectionInfo() {
 			SOCKETD_DEBUG(9, "~connectionInfo\n");
-			s->release();
+			//s.release();
 			if (streamReaderInit) {
 				CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
 				sr->~persistentStreamReader();
@@ -284,7 +285,7 @@ namespace socketd
 		SOCKETD_DEBUG(9,
 				"attempting to read %i bytes of data from client socket\n", SOCKETD_READBUFFER);
 		reading = true;
-		s->read(tmp, SOCKETD_READBUFFER, [this](int r) {
+		s.read(tmp, SOCKETD_READBUFFER, [this](int r) {
 			SOCKETD_DEBUG(9, "got %i bytes of data from client socket\n", r);
 			CP::persistentStreamReader* sr=(CP::persistentStreamReader*)_sr;
 			sr->endPutData(r);
@@ -353,7 +354,7 @@ namespace socketd
 				firstLine = true;
 				sr->output = [this](uint8_t* buf, int len) {readCB(buf,len);};
 				reading = false;
-				p->add(*s);
+				p->add(s);
 			}
 			startRead();
 		} else goto fail;
@@ -447,6 +448,15 @@ namespace socketd
 			if (socketpair(AF_UNIX, SOCK_STREAM, 0, socks) < 0) {
 				throw runtime_error(strerror(errno));
 			}
+			if (vh->ipcBufSize > 0) {
+				int n;
+				unsigned int n_size = sizeof(n);
+				n = vh->ipcBufSize;
+				setsockopt(socks[0], SOL_SOCKET, SO_RCVBUF, (void *) &n, n_size);
+				setsockopt(socks[0], SOL_SOCKET, SO_SNDBUF, (void *) &n, n_size);
+				setsockopt(socks[1], SOL_SOCKET, SO_RCVBUF, (void *) &n, n_size);
+				setsockopt(socks[1], SOL_SOCKET, SO_SNDBUF, (void *) &n, n_size);
+			}
 			pid_t pid = fork();
 			if (pid < 0) throw runtime_error(strerror(errno));
 			else if (pid == 0) {
@@ -467,11 +477,7 @@ namespace socketd
 			} else {
 				//parent
 				close(socks[1]);
-				int n;
-				unsigned int n_size = sizeof(n);
-				n = 1024 * 1024 * 128;
-				setsockopt(socks[0], SOL_SOCKET, SO_RCVBUF, (void *) &n, n_size);
-				setsockopt(socks[0], SOL_SOCKET, SO_SNDBUF, (void *) &n, n_size);
+
 				//getsockopt(socks[0], SOL_SOCKET, SO_RCVBUF, (void *) &n, &n_size);
 				//SOCKETD_DEBUG(8, "unix socket receive buffer size: %i\n", n);
 
@@ -564,14 +570,15 @@ namespace socketd
 		pipe.repeatRead(&req, sizeof(req), [&p,&pipe,&req,th](int r) {
 			if(r!=sizeof(socketd_request))return;
 			//printf("%i\n",th->id);
-				connectionInfo* ci = new connectionInfo();
+				connectionInfo* ci = new connectionInfo(req.fd, req.l->sock->addressFamily, req.l->sock->type,
+						req.l->sock->protocol);
 				ci->threadID=th->id;
 				ci->This = th->This;
 				ci->l = req.l;
-				ci->s = new CP::Socket(req.fd, req.l->sock->addressFamily, req.l->sock->type,
-						req.l->sock->protocol);
+				/*ci->s = new CP::Socket(req.fd, req.l->sock->addressFamily, req.l->sock->type,
+				 req.l->sock->protocol);*/
 				ci->p = &p;
-			//cout << "p=" << &p << endl;
+				//cout << "p=" << &p << endl;
 				ci->process();
 			});
 		p.add(pipe);
@@ -580,6 +587,9 @@ namespace socketd
 		return NULL;
 	}
 	void socketd::run() {
+		PRINTSIZE(CP::Socket);
+		PRINTSIZE(CP::persistentStreamReader);
+		PRINTSIZE(connectionInfo);
 //ignore SIGCHLD
 		struct sigaction sa;
 		sa.sa_handler = SIG_IGN;
@@ -589,6 +599,7 @@ namespace socketd
 		sigaction(SIGCHLD, &sa, NULL);
 
 		CP::Poll p;
+		//p.debug=true;
 		this->bindings.clear();
 		for (uint32_t i = 0; i < vhosts.size(); i++) {
 			for (uint32_t ii = 0; ii < vhosts[i].bindings.size(); ii++) {
@@ -596,6 +607,7 @@ namespace socketd
 				this->bindings.push_back(tmp);
 				vhosts[i].bindings[ii].vh = &vhosts[i];
 			}
+			vhosts[i]._ipcBufSize = vhosts[i].ipcBufSize < 0 ? this->ipcBufSize : vhosts[i].ipcBufSize;
 			vhosts[i].hasAttachments = false;
 #ifdef SOCKETD_THREADING
 			vhosts[i].conns.resize(nthreads*vhosts[i].processes);
@@ -667,13 +679,14 @@ namespace socketd
 					});
 #else
 			l.sock->repeatAcceptHandle([&l,&p,this](CP::HANDLE h) {
-				connectionInfo* ci = new connectionInfo();
+				connectionInfo* ci = new connectionInfo(h, l.sock->addressFamily, l.sock->type,
+						l.sock->protocol);
 				ci->threadID=0;
 				ci->This = this;
 				ci->l = &l;
-				ci->s = new CP::Socket(h, l.sock->addressFamily, l.sock->type,
-						l.sock->protocol);
-				ci->p = &p;
+				//ci->s = new CP::Socket(h, l.sock->addressFamily, l.sock->type,
+				//		l.sock->protocol);
+					ci->p = &p;
 				//cout << "p=" << &p << endl;
 					ci->process();
 				});

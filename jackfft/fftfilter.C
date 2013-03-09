@@ -32,6 +32,37 @@ namespace xaxaxa
 		int tmp=a/b;
 		return a-tmp*b;
 	}
+	class FFT
+	{
+	public:
+		int size;
+		int size_c;
+		double* Data;
+		fftw_complex* Data_c;
+		fftw_plan p1, p2;
+		FFT(int size):size(size),size_c(size/2+1)
+		{
+			Data=(double*)fftw_malloc(sizeof(double)*size);
+			Data_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
+			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, 0); //FFTW_UNALIGNED
+			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, 0);
+		}
+		void Forward()
+		{
+			fftw_execute(p1);
+		}
+		void Reverse()
+		{
+			fftw_execute(p2);
+		}
+		~FFT()
+		{
+			fftw_destroy_plan(p1);
+			fftw_destroy_plan(p2);
+			fftw_free(Data);
+			fftw_free(Data_c);
+		}
+	};
 	class WindowedFFT
 	{
 	public:
@@ -78,26 +109,46 @@ namespace xaxaxa
 		fftw_complex* tmpcomplex;
 		//fftw_complex* tmpcomplex2;
 		double* coefficients;
+		double* coefficients2;
 		double freq_scale;
 		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->PeriodSize());}
 		virtual void free_buffer(){fftw_free(this->tmpbuffer);}
 		//struct timespec last_refreshed;
 		WindowedFFT fft;
+#ifdef CEPSTRUM
+		FFT fft2;
+		inline UInt ComplexSize2()
+		{
+			return fft2.size_c;
+		}
+#endif
 		inline UInt ComplexSize()
 		{
 			return fft.size_c;
 		}
+		
 		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding1, Int padding2, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
+#ifdef CEPSTRUM
+		,fft2(ComplexSize())
+#endif
 		{
 			asdf=0;
 			//memset(&last_refreshed,0,sizeof(last_refreshed));
 			Int l=ComplexSize();//((UInt)(this->PeriodSize() / 2) + 1);
 			coefficients = new double[l];
+			
 			for(Int i=0;i<l;i++)
 				coefficients[i] = 1.0;
+				
+#ifdef CEPSTRUM
+			coefficients2 = new double[ComplexSize2()];
+			for(Int i=0;i<ComplexSize2();i++)
+				coefficients2[i] = 1.0;
+#endif
+			tmpcomplex=fft.Data_c;
 			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
 
-			tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
+			//tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
 			/*tmpcomplex2 = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
 
 			//cout << this->PeriodSize() << endl;
@@ -110,9 +161,12 @@ namespace xaxaxa
 			/*fftw_destroy_plan(p1);
 			fftw_destroy_plan(p2);
 			//fftw_free(tmpdouble);*/
-			fftw_free(tmpcomplex);
+			//fftw_free(tmpcomplex);
 			//fftw_free(tmpcomplex2);
 			delete[] coefficients;
+#ifdef CEPSTRUM
+			delete[] coefficients2;
+#endif
 		}
 
 		/*long long get_nsec(const timespec& t)
@@ -130,6 +184,34 @@ namespace xaxaxa
 			//fftw_execute(p1);
 			//cout << this->PeriodSize() << endl;
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
+#ifdef CEPSTRUM
+			for(UInt i=0;i<complexsize;i++) {
+				auto sine=fft.Data_c[i][1];
+				auto cosine=fft.Data_c[i][0];
+				double amplitude=sqrt(sine*sine+cosine*cosine);
+				//double phase=atan2(cosine,sine);
+				if(amplitude<0.00001) //10^-5
+					fft2.Data[i]=-5;
+				else fft2.Data[i]=logf(amplitude)/M_LN10;
+				//fft2.Data[i]=amplitude;
+			}
+			fft2.Forward();
+			for(UInt i=0;i<ComplexSize2();i++)
+			{
+				fft2.Data_c[i][0] = fft2.Data_c[i][0]*coefficients2[i];
+				fft2.Data_c[i][1] = fft2.Data_c[i][1]*coefficients2[i];
+			}
+			fft2.Reverse();
+			for(UInt i=0;i<complexsize;i++) {
+				auto sine=fft.Data_c[i][1];
+				auto cosine=fft.Data_c[i][0];
+				double amplitude=pow(10,fft2.Data[i]/fft2.size);
+				double phase=atan2(cosine,sine);
+				fft.Data_c[i][1] = cos(phase)*amplitude;
+				fft.Data_c[i][0] = sin(phase)*amplitude;
+			}
+#endif
+			
 				//int shift=21;
 				/*for(UInt i=0;i<complexsize;i++)
 				{
@@ -148,7 +230,7 @@ namespace xaxaxa
 				tmpcomplex[i][0]=0;
 				tmpcomplex[i][1]=0;
 			}*/
-			memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(fftw_complex));
+			//memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(fftw_complex));
 			if(freq_scale==1.)
 			{
 				for(UInt i=0;i<complexsize;i++)
@@ -164,11 +246,13 @@ namespace xaxaxa
 			Int skip_samples=this->PeriodSize()/overlapcount;*/
 
 			//for(Int i=complexsize-1;i>=0;i--)
-			for(Int i=0;i<(Int)complexsize;i++)
+			bool rev;
+			rev=freq_scale>1.;
+			for(Int i=rev?Int(complexsize)-1:0;rev?(i>=0):(i<Int(complexsize));rev?i--:i++)
 			{
 				int i2;
 				//if(i>50)
-				double asdf=((double)i)/freq_scale;
+				double asdf=((double)i)/freq_scale; //target frequency
 				i2=(int)asdf;
 				if(i2==0 || i==0)	//prevent division by zero
 					continue;

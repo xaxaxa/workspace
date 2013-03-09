@@ -1,0 +1,33 @@
+#!/bin/bash
+#usage: setup_ro DIR
+cd "$1"
+mkdir -p overlay newroot persist
+cat > mount_overlay <<EOF
+#!/bin/bash
+mount -t tmpfs none /overlay || exec bash
+mount none /newroot -t aufs -o br:/overlay=rw,br:/=ro ||
+mount overlayfs /newroot -t overlayfs -o rw,upperdir=/overlay,lowerdir=/ ||
+exec bash
+
+for P in "proc" "sys" "dev" "run"; do
+   mount --move "/\$P" "/newroot/\$P";
+done;
+mount --bind /persist /newroot/persist
+pivot_root /newroot /newroot/overlay
+echo "overlay mounted."
+
+EOF
+cat > boot_ro <<EOF
+#!/bin/bash
+/mount_overlay
+echo "execing /sbin/init"
+while [ 1 ]; do
+   exec /sbin/init;
+   echo "failed to exec init. entering shell. to retry, press CTRL+D or type exit";
+   bash;
+done;
+EOF
+chmod +x boot_ro mount_overlay
+echo "scripts and directories installed. now you can add \"init=/boot_ro\" to your kernel commandline"
+
+

@@ -59,7 +59,8 @@ namespace socketd
 		listen(string host, string port, int id, int backlog = 32) :
 				host(host), port(port), id(id), backlog(backlog) {
 		}
-		listen():backlog(32) {
+		listen() :
+				backlog(32) {
 		}
 	};
 	struct binding
@@ -111,7 +112,7 @@ namespace socketd
 		 int maxRequestsPerProcess;
 		 int maxProcesses;*/
 		int processes; //how many processes to spawn (for load balancing)
-
+		int ipcBufSize; //set to 0 to use system default, -1 to use global settings
 		//for attaching to a running vhost; arbitrary string; leave blank (length==0) to
 		//disable attachments
 		string authCookie;
@@ -119,18 +120,20 @@ namespace socketd
 		//whether to LD_PRELOAD socketd_proxy.so
 		bool preload;
 		bool useShell;
-		vhost():processes(1),preload(false),useShell(true) {
+		vhost() :
+				processes(1), ipcBufSize(-1), preload(false), useShell(true) {
 		}
 		vhost(const vector<binding>& bindings, string name, string exepath, string authCookie,
-				bool preload = false, bool shell = true, int processes=1) :
-				bindings(bindings), name(name), exepath(exepath),processes(processes), authCookie(authCookie),
-				preload(preload), useShell(shell) {
+				bool preload = false, bool shell = true, int processes = 1) :
+				bindings(bindings), name(name), exepath(exepath), processes(processes),
+						authCookie(authCookie), preload(preload), useShell(shell) {
 		}
 
 		//internal fields
 		vector<RGC::Ref<appConnection>> conns; //indexed by thread*processes + curProcess
 		RGC::Ref<appConnection> attachmentConn; //readonly by threads
 		vector<int> curProcess;
+		int _ipcBufSize;
 		bool hasAttachments;
 	};
 	static const char* socketd_proxy = "socketd_proxy.so";
@@ -142,10 +145,14 @@ namespace socketd
 		vector<vhost> vhosts;
 		vector<binding> extraBindings; //vhostName must be filled for these
 		string unixAddress;
+		int ipcBufSize;//<=0 to use system default
 		void run();
 
 		//internal fields
 		vector<binding*> bindings;
+		socketd() :
+				ipcBufSize(0) {
+		}
 	};
 
 }

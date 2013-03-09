@@ -60,6 +60,7 @@ struct timespec last_refreshed;
 #define EQ_POINTS 10000
 #define SPECTRUM2_POINTS 64
 EQControl* c;
+EQControl* c_eq2;
 EQControl* c2;
 Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
@@ -321,7 +322,11 @@ void on_change(void* user, UInt i1, UInt i2)
 	for(UInt i = 0; i < CHANNELS; i++)
 	{
 		auto f = (FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
+#ifdef CEPSTRUM
+		UInt complexsize = c==c_eq2?f->ComplexSize2():f->ComplexSize();
+#else
 		UInt complexsize = f->ComplexSize();
+#endif
 		//complexsize /= 5;
 		UInt min_index = floor(scale_freq((double)i1 / EQ_POINTS) * (double)complexsize);
 		UInt max_index = ceil(scale_freq((double)i2 / EQ_POINTS) * (double)complexsize);
@@ -335,7 +340,11 @@ void on_change(void* user, UInt i1, UInt i2)
 			//cout << c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS) << endl;
 			tmp = scale_value(tmp);
 			//if(tmp1>4)cout << tmp1 << " " << tmp << endl;
-			f->coefficients[n] = tmp;
+#ifdef CEPSTRUM
+			if(c==c_eq2) f->coefficients2[n] = tmp;
+			else
+#endif
+				f->coefficients[n] = tmp;
 		}
 	}
 }
@@ -613,9 +622,15 @@ int main(int argc, char *argv[])
 	Gtk::Button* bt;
 	b->get_widget("window1", w);
 	c = new EQControl(EQ_POINTS);
+	
 	c->Change += EQControl::ChangeDelegate(&on_change, c);
 	c->MouseMove += EQControl::MouseDelegate(&on_mousemove, c);
-
+	
+#ifdef CEPSTRUM
+	c_eq2 = new EQControl(EQ_POINTS);
+	c_eq2->Change += EQControl::ChangeDelegate(&on_change, c_eq2);
+	c_eq2->MouseMove += EQControl::MouseDelegate(&on_mousemove, c_eq2);
+#endif
 	//UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
 
 
@@ -713,6 +728,13 @@ hhhhh:
 	//c->set_hexpand(true);
 	//c->set_vexpand(true);
 	c->show();
+	
+#ifdef CEPSTRUM
+	b->get_widget("vp_eq2", v);
+	v->add(*c_eq2);
+	c_eq2->show();
+#endif
+	
 
 	b->get_widget("viewport2", v);
 	//if(display_spectrum)

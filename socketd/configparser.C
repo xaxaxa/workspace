@@ -289,7 +289,10 @@ namespace socketd
 												}
 												ind++;
 											});
-								} else throw ParserException_internal(ct,"expected \"listen\" directive, but got \""+string(ct.data,prefLen)+"\"");
+								} else if(mystrcmp(ct.data,prefLen,"ipcbuffersize",13)==0) {
+									if(ct.datalen-prefLen-1<=0) throw ParserException_internal(ct,"missing parameter in \"ipcbuffersize\" directive");
+									sd.ipcBufSize=atoi(string(ct.data+prefLen+1,ct.datalen-prefLen-1).c_str());
+								} else throw ParserException_internal(ct,"expected \"listen\" or \"ipcbuffersize\" directive, but got \""+string(ct.data,prefLen)+"\"");
 								break;
 							}
 							case 'v':
@@ -310,7 +313,10 @@ namespace socketd
 								} else if(mystrcmp(ct.data,prefLen,"processes",9)==0) {
 									if(ct.datalen-prefLen-1<=0) throw ParserException_internal(ct,"missing parameter in \"processes\" directive");
 									vh->processes=atoi(string(ct.data+prefLen+1,ct.datalen-prefLen-1).c_str());
-								} else throw ParserException_internal(ct,"expected \"exec\", \"shell\", \"preload\", \"authcookie\", or \"processes\" directive, but got \""+string(ct.data,prefLen)+"\"");
+								} else if(mystrcmp(ct.data,prefLen,"ipcbuffersize",13)==0) {
+									if(ct.datalen-prefLen-1<=0) throw ParserException_internal(ct,"missing parameter in \"ipcbuffersize\" directive");
+									vh->ipcBufSize=atoi(string(ct.data+prefLen+1,ct.datalen-prefLen-1).c_str());
+								} else throw ParserException_internal(ct,"expected \"exec\", \"shell\", \"preload\", \"authcookie\", \"processes\", or \"ipcbuffersize\" directive, but got \""+string(ct.data,prefLen)+"\"");
 								break;
 							}
 							case 'b':

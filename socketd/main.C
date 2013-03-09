@@ -48,12 +48,14 @@ tuple<const char*, int> mapFile(const char* path) {
 	if (tmp == NULL) throw runtime_error(strerror(errno));
 	return make_tuple((const char*) tmp, st.st_size);
 }
+socketd::socketd sd;
+#define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
+
 int main(int argc, char** argv) {
 	if (argc < 2) {
 		printf("usage: %s socketd.conf\n", argv[0]);
 		return 1;
 	}
-	socketd::socketd sd;
 	{
 		const char* confPath = argv[1];
 		tuple<const char*, int> conf = mapFile(confPath);
@@ -75,6 +77,9 @@ int main(int argc, char** argv) {
 	 sd.vhosts.push_back( { { { 0, "/sss", "", binding::match_httpPath } }, "vhost4",
 	 "lighttpd -D -f /home/xaxaxa/workspace/test/lighttpd.conf", "", true });*/
 //sd.vhosts.push_back({{{1,"","",binding::match_listenID}},"vhost1","/home/xaxaxa/workspace/test/socketd_test",""});
+	PRINTSIZE(socketd::socketd);
+	PRINTSIZE(socketd::vhost);
+	PRINTSIZE(socketd::listen);
 	sd.run();
 }
 void listenthread() {

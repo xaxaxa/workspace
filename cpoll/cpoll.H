@@ -345,7 +345,7 @@ namespace CP
 		bool hungUp, error;
 	};
 	
-	static const int32_t numEvents = 3;
+	static const int32_t numEvents = 2;
 	//============================================================
 	//============================================================
 	//=======================MAIN CLASSES=========================
@@ -356,8 +356,8 @@ namespace CP
 	{
 	public:
 		//void* __private;
-		bool _supportsEPoll;
 		HANDLE handle;
+		bool _supportsEPoll;
 		Handle();
 		Handle(HANDLE handle);
 		function<void(Events old_events)> onEventsChange;
@@ -381,6 +381,7 @@ namespace CP
 	{
 	public:
 		EventHandlerData eventData[numEvents];
+		bool* deletionFlag;
 		Events preDispatchEvents;
 		bool dispatching;
 
@@ -399,7 +400,14 @@ namespace CP
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
 				EventHandlerData::States oldstate);
-		void dispatch(Events event, const EventData& evtd);
+		void dispatch(Events event, const EventData& evtd, bool& deletionFlag);
+		void dispatch(Events event, const EventData& evtd) {
+			bool d = false;
+			deletionFlag = &d;
+			dispatch(event, evtd, d);
+			if (!d) deletionFlag = NULL;
+		}
+		int32_t dispatchMultiple(Events events, const EventData& evtd);
 		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 				const Callback& cb, Events e, Operations op);
 		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
@@ -527,12 +535,15 @@ namespace CP
 	{
 	public:
 		static int32_t MAX_EVENTS;
+		epoll_event* curEvents;
+		int32_t curIndex, curLength;
 		int32_t active;
 		HANDLE cur_handle;
-		Events cur_last_events;
+		//bool debug;
+		//Events cur_last_events;
 		//map<HANDLE, Ref<Handle> > handles;
-		set<Handle*> tmp_deleted;
-		bool has_deleted;
+		//set<Handle*> tmp_deleted;
+		//bool has_deleted;
 		Poll(HANDLE handle);
 		Poll();
 		void _applyHandle(Handle& h, Events old_e);

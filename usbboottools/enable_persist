@@ -1,0 +1,3 @@
+#!/bin/bash
+mount /persist -n -o remount,rw
+
