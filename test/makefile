@@ -15,4 +15,10 @@ socketd_test:
 socketd_proxy.so:
 	g++ socketd_proxy.C -o socketd_proxy.so -O3 -I../include -L../lib -lcpoll -ldl -pthread --std=c++0x --shared -fPIC
 
+anonfunc_test:
+	g++ -Wno-pmf-conversions anonfunc_test.C -o anonfunc_test --std=c++0x -g3 -I../include -L../lib
+delegate_perf.so:
+	g++ -Wno-pmf-conversions delegate_perf.C -o delegate_perf.so --shared --std=c++0x -O3 -I../include -L../lib
+delegate_perftest: delegate_perf.so
+	g++ -Wno-pmf-conversions delegate_perftest.C delegate_perf.so -o delegate_perftest --std=c++0x -O3 -I../include -L../lib
 

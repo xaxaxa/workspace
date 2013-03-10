@@ -337,7 +337,7 @@ namespace CP
 		Events old_events = _getEvents();
 		eventData[eventToIndex(event)].state =
 				repeat ? (EventHandlerData::States::repeat) : (EventHandlerData::States::once);
-		if (onEventsChange != nullptr && !dispatching) onEventsChange(old_events);
+		if (onEventsChange != nullptr && !dispatching) onEventsChange(*this, old_events);
 	}
 	int32_t File::read(void* buf, int32_t len) {
 		return ::read(handle, buf, len);
@@ -384,14 +384,14 @@ namespace CP
 				//cout << "wrote " << r << " bytes on fd " << handle << endl;
 				if (r <= 0) {
 					ed.state = EventHandlerData::States::invalid;
-					ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
 				}
 				ed.misc.bufferIO.len_done += r;
 				//cout << "len_done = " << ed.misc.bufferIO.len_done
 				//		<< " of " << ed.misc.bufferIO.len << endl;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
-					ed.cb(ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done);
 				}
 				return;
 			case Operations::recv:
@@ -405,12 +405,12 @@ namespace CP
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done, ed.misc.bufferIO.flags);
 				if (r <= 0) {
 					ed.state = EventHandlerData::States::invalid;
-					ed.cb(ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
-					ed.cb(ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done);
 				}
 				return;
 			case Operations::close:
@@ -422,9 +422,9 @@ namespace CP
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
 		}
-		asdf: ed.cb(r);
-		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) ed.cb(
-				-1);
+		asdf: if (ed.cb != nullptr) ed.cb(r);
+		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) if (ed.cb
+				!= nullptr) ed.cb(-1);
 	}
 	void File::dispatch(Events event, const EventData& evtd, bool& deletionFlag) {
 		//cout << (int32_t)event << " dispatched" << endl;
@@ -457,7 +457,7 @@ namespace CP
 		///if (!b) ed.state = EventHandlerData::States::invalid;
 		
 		//else cout << (int32_t)eventData[eventToIndex(event)].state << endl;
-		if (!tmp && onEventsChange != nullptr) onEventsChange(preDispatchEvents);
+		if (!tmp && onEventsChange != nullptr) onEventsChange(*this, preDispatchEvents);
 	}
 	int32_t File::dispatchMultiple(Events events, const EventData& evtd) {
 		preDispatchEvents = _getEvents();
@@ -479,7 +479,7 @@ namespace CP
 		dispatching = false;
 		if (onEventsChange != nullptr) {
 			//printf("onEventsChange\n");
-			onEventsChange(preDispatchEvents);
+			onEventsChange(*this, preDispatchEvents);
 		}
 		return ret;
 	}
@@ -558,7 +558,7 @@ namespace CP
 
 	void File::close() {
 		//if(handle<0)throw runtime_error("asdf");
-		if (onClose != nullptr) onClose();
+		if (onClose != nullptr) onClose(*this);
 		::close(handle);
 		handle = -1;
 		deinit();
@@ -770,28 +770,32 @@ namespace CP
 		ed->op = Operations::connect;
 		endAddEvent(e, false);
 	}
+	void Socket_acceptStub(Socket* th, int32_t i) {
+		Socket* s = th->accept();
+		th->_acceptCB(s);
+	}
+	void Socket_acceptHandleStub(Socket* th, int32_t i) {
+		HANDLE h = th->acceptHandle();
+		th->_acceptHandleCB(h);
+	}
 	//user must eventually release() or free() the received object
-	void Socket::accept(const function<void(Socket*)>& cb, bool repeat) {
+	void Socket::accept(const Delegate<void(Socket*)>& cb, bool repeat) {
+		_acceptCB = cb;
 		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
-		ed->cb = [cb,this](int32_t i) {
-			Socket* s=accept();
-			cb(s);
-		};
+		ed->cb = Callback(&Socket_acceptStub, this);
 		ed->op = Operations::accept;
 		endAddEvent(e, repeat);
 	}
-	void Socket::acceptHandle(const function<void(HANDLE)>& cb, bool repeat) {
+	void Socket::acceptHandle(const Delegate<void(HANDLE)>& cb, bool repeat) {
+		_acceptHandleCB = cb;
 		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
-		ed->cb = [cb,this](int32_t i) {
-			HANDLE h=acceptHandle();
-			cb(h);
-		};
+		ed->cb = Callback(&Socket_acceptHandleStub, this);
 		ed->op = Operations::accept;
 		endAddEvent(e, repeat);
 	}
-	
+
 	//SignalFD
 	int32_t SignalFD::MAX_EVENTS(4);
 	SignalFD::SignalFD(HANDLE handle, const sigset_t& mask) :
@@ -813,7 +817,7 @@ namespace CP
 	Events SignalFD::getEvents() {
 		return Events::in;
 	}
-	
+
 	//EventFD
 	EventFD::EventFD(HANDLE handle) :
 			File(handle) {
@@ -841,19 +845,21 @@ namespace CP
 		if (eventfd_read(handle, &tmp) == 0) return tmp;
 		return -1;
 	}
-	void EventFD::getEvent(const function<void(eventfd_t)>& cb, bool repeat) {
+	void EventFD_getEventStub(EventFD* th, int i) {
+		th->cb((i < 0) ? -1 : (th->eventData[eventToIndex(Events::in)].misc.eventfd.evt));
+	}
+	void EventFD::getEvent(const Delegate<void(eventfd_t)>& cb, bool repeat) {
 		Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
-		ed->cb = [cb,ed](int i) {
-			cb((i<0)?-1:(ed->misc.eventfd.evt));
-		};
+		this->cb = cb;
+		ed->cb = Callback(&EventFD_getEventStub, this);
 		ed->op = Operations::read;
 		endAddEvent(e, repeat);
 	}
 	int32_t EventFD::sendEvent(eventfd_t evt) {
 		return eventfd_write(handle, evt);
 	}
-	void EventFD::sendEvent(eventfd_t evt, const function<void(int32_t)>& cb) {
+	void EventFD::sendEvent(eventfd_t evt, const Delegate<void(int32_t)>& cb) {
 		Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		ed->cb = cb;
@@ -878,9 +884,9 @@ namespace CP
 			//if (debug) printf("_applyHandle: h=%i, h._supportsEPoll=false\n", h.handle);
 			return;
 		}
-		//if (unlikely(has_deleted) && tmp_deleted.find(&h) != tmp_deleted.end()) return;
+//if (unlikely(has_deleted) && tmp_deleted.find(&h) != tmp_deleted.end()) return;
 		Events new_e = h.getEvents();
-		//if (debug) printf("_applyHandle: h=%i, old_e=%i, new_e=%i\n", h.handle, old_e, new_e);
+//if (debug) printf("_applyHandle: h=%i, old_e=%i, new_e=%i\n", h.handle, old_e, new_e);
 		if (new_e == old_e) return;
 
 		if (h.handle < 0) {
@@ -935,13 +941,13 @@ namespace CP
 	int32_t Poll::_doDispatch(const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
 		if (unlikely(h==NULL)) return 0;
-		//if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
+//if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
 		int32_t ret = 0;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-		//cerr << "evt=" << (int32_t)evt << endl;
+//cerr << "evt=" << (int32_t)evt << endl;
 
 		/*for(int32_t i=0;i<numEvents;i++) {
 		 Events e=indexToEvent(i);
@@ -949,16 +955,16 @@ namespace CP
 		 if(event.events&ep != 0)
 		 evt |= (event_t)e;
 		 }*/
-		//cout << "handle fd: " << h->handle << endl;
-		//cout << "getevents: " << (int32_t)(h->getEvents()) << endl;
+//cout << "handle fd: " << h->handle << endl;
+//cout << "getevents: " << (int32_t)(h->getEvents()) << endl;
 		cur_handle = h->handle;
-		//cur_last_events = h->getEvents();
+//cur_last_events = h->getEvents();
 		ret = h->dispatchMultiple((Events) evt, evtd);
-		//if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
-		//Events new_events = h->getEvents();
-		//cout << (int32_t)new_events << " " << (int32_t)cur_last_events << endl;
-		//if (new_events != cur_last_events) _applyHandle(*h, cur_last_events);
-		//else cout << "new_events==cur_last_events==" << (int32_t)new_events << endl;
+//if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
+//Events new_events = h->getEvents();
+//cout << (int32_t)new_events << " " << (int32_t)cur_last_events << endl;
+//if (new_events != cur_last_events) _applyHandle(*h, cur_last_events);
+//else cout << "new_events==cur_last_events==" << (int32_t)new_events << endl;
 		return ret;
 	}
 	int32_t Poll::_doEPoll(int32_t timeout) {
@@ -977,7 +983,7 @@ namespace CP
 		curLength = n;
 		for (curIndex = 0; curIndex < n; curIndex++)
 			ret += _doDispatch(evts[curIndex]);
-		
+
 		/*if (likely(!has_deleted)) return ret;
 		 for (auto it = tmp_deleted.begin(); it != tmp_deleted.end(); it++)
 		 (*it)->release();
@@ -987,11 +993,11 @@ namespace CP
 		return ret;
 	}
 	void Poll::dispatch(Events event, const EventData& evtd) {
-		//throw CPollException("Poll::dispatch() not implemented");
+//throw CPollException("Poll::dispatch() not implemented");
 		_doEPoll(0);
 	}
 	Events Poll::getEvents() {
-		//throw CPollException("Poll::getEvents() not implemented");
+//throw CPollException("Poll::getEvents() not implemented");
 		return active ? (Events::all) : (Events::none);
 	}
 	int32_t Poll::waitAndDispatch() {
@@ -1004,23 +1010,22 @@ namespace CP
 	}
 
 	void Poll::applyHandle(Handle& h, Events old_e) {
-		//cout << "applyHandle" << endl;
-		//if (h.handle == cur_handle) return;
+//cout << "applyHandle" << endl;
+//if (h.handle == cur_handle) return;
 		_applyHandle(h, old_e);
 	}
 	void Poll::add(Handle& h) {
-		//h.retain();
-		h.onEventsChange = [this,&h](Events old_events) {this->applyHandle(h,old_events);};
+//h.retain();
+		h.onEventsChange = Delegate<void(Handle&, Events)>(&Poll::applyHandle, this);
+		//h.onEventsChange = [this,&h](Events old_events) {this->applyHandle(h,old_events);};
 		_applyHandle(h, Events::none);
-		h.onClose = [this,&h]() {
-			del(h);
-		};
+		h.onClose = Delegate<void(Handle& h)>(&Poll::del, this);
 	}
 	void Poll::del(Handle& h) {
-		//h.release();
-		//tmp_deleted.push_back(&h);
-		//throw 0;
-		//printf("Poll::del()\n");
+//h.release();
+//tmp_deleted.push_back(&h);
+//throw 0;
+//printf("Poll::del()\n");
 		if (h.getEvents() != Events::none) {
 			/*if (h.handle < 0) {
 			 //throw runtime_error("test");

@@ -11,29 +11,26 @@ C_UPPER_SRCS += \
 ../cpoll.C \
 ../rgctest.C \
 ../sendfd.C \
-../statemachines.C \
-../t1.C 
+../statemachines.C 
 
 OBJS += \
 ./cpoll.o \
 ./rgctest.o \
 ./sendfd.o \
-./statemachines.o \
-./t1.o 
+./statemachines.o 
 
 C_UPPER_DEPS += \
 ./cpoll.d \
 ./rgctest.d \
 ./sendfd.d \
-./statemachines.d \
-./t1.d 
+./statemachines.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.C
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross G++ Compiler'
-	g++ -I../../include -O3 -Wall -c -fmessage-length=0 --std=c++0x -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -I../../include -O3 -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

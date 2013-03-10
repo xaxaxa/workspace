@@ -22,6 +22,7 @@
 *.dll
 *.mdb
 *.pidb
+*.pid
 a.out
 *~
 /sdfs/cplib

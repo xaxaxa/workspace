@@ -48,14 +48,14 @@ namespace RGC
 			/*objs--;
 			 cout << objs << " objects" << endl;*/
 		}
-		inline void retain() {
-			atomic_inc(refCount);
+		inline void retain(int n=1) {
+			atomic_add(n,refCount);
 		}
 		inline void destruct() {
 			delete this;
 		}
-		inline bool release() { //returns whether or not destruction occurred
-			atomic_dec(refCount);
+		inline bool release(int n=1) { //returns whether or not destruction occurred
+			atomic_sub(n,refCount);
 			if (refCount <= 0) {
 				destruct();
 				return true;

@@ -27,6 +27,7 @@
 #include <map>
 #include <vector>
 #include "socketd.H"
+#include <delegate.H>
 using namespace std;
 
 namespace socketd
@@ -92,7 +93,7 @@ namespace socketd
 	struct appConnection: public RGC::Object
 	{
 		//						sock		success
-		typedef function<void(bool)> passConnCB;
+		typedef Delegate<void(bool)> passConnCB;
 		appConnection();
 		virtual void shutDown()=0;
 

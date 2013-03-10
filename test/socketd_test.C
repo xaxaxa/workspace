@@ -10,7 +10,89 @@
 using namespace std;
 using namespace socketd;
 using namespace CP;
-
+const char* resp="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n"
+				"Connection: close\r\nDate: Mon, 11 Feb 2013 22:27:33 GMT\r\n"
+				"Server: asdfghjk/1.2.34\r\n\r\ntrollolololololololololololololololololololol"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo"
+				"lolololololololololololololololololololololololololololololololololololololololo";
 
 
 int main() {
@@ -36,107 +118,42 @@ int main() {
 		}
 	}*/
 	CP::Poll p;
-	socketd_client cl(p, [&](Socket* s, const function<void()>& ack) {
-		if(s==NULL)kill(getpid(),9);
-		/*if((++reqs)>500) {
-			//recycle
-			exit(0);
-		}*/
-		ack();
-		const char* resp="HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n"
-			"Connection: close\r\nDate: Mon, 11 Feb 2013 22:27:33 GMT\r\n"
-			"Server: asdfghjk/1.2.34\r\n\r\ntrollolololololololololololololololololololol"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo"
-			"lolololololololololololololololololololololololololololololololololololololololo";
-		s->retain();
-		s->write(resp,strlen(resp),[s](int r) {s->shutdown(SHUT_WR);});
-		uint8_t* buf=new uint8_t[4096];
-		s->repeatRead(buf, 4096, [buf,s](int r) {
-			if(r<=0) {
-				//printf("connection ended\n");
-				delete buf;
-				s->release();
-			}
-		});
-	});
-	
+	struct {
+		int& reqs;
+		CP::Poll& p;
+		void operator()(socketd_client& cl, Socket* s, int64_t id) {
+			if(s==NULL)kill(getpid(),9);
+			/*if((++reqs)>500) {
+				//recycle
+				exit(0);
+			}*/
+			cl.ack(id);
+			
+			struct handler:public RGC::Object {
+				Socket* s;
+				uint8_t buf[4096];
+				void writeCB(int r) {
+					s->shutdown(SHUT_WR);
+					release();
+				}
+				void readCB(int r) {
+					if(r<=0) {
+						release();
+					}
+				}
+				handler(Socket* s):s(s) {
+					s->retain();
+					this->retain(2);
+					s->write(resp,strlen(resp), CP::Callback(&handler::writeCB,this));
+					s->repeatRead(buf, 4096, CP::Callback(&handler::readCB,this));
+				}
+				~handler() {
+					s->release();
+				}
+			}* hdlr=new handler(s);
+			hdlr->release();
+		}
+	} cb {reqs, p};
+	socketd_client cl(p, &cb);
 	p.loop();
 }

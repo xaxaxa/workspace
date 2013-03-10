@@ -27,6 +27,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdexcept>
+#include <delegate.H>
 
 #ifndef likely
 #define likely(x)       __builtin_expect((x),1)
@@ -65,8 +66,10 @@ namespace CP
 		int pos;
 		int searchPos;
 		int state; //0: none; 1: readUntilString; 2: readUntilChar
-		function<void(uint8_t*, int)> output;
-		string delim1;
+		//function<void(uint8_t*, int)> output;
+		Delegate<void(uint8_t*, int)> output;
+		const char* delim1;
+		int delim1_len;
 		char delim2;
 		inline void clearBuffer() {
 			searchPos = pos = len;
@@ -99,15 +102,15 @@ namespace CP
 					break;
 				case 1:
 				{
-					uint8_t* tmp = (uint8_t*) memmem(buffer + searchPos, len - searchPos,
-							delim1.data(), delim1.length());
+					uint8_t* tmp = (uint8_t*) memmem(buffer + searchPos, len - searchPos, delim1,
+							delim1_len);
 					if (tmp == NULL) {
 						//overlap the search so that delimitors that are cut in half at
 						//the end of the buffer can be caught
-						searchPos = len - delim1.length();
+						searchPos = len - delim1_len;
 					} else {
 						int oldPos = pos;
-						pos = searchPos = (tmp - buffer) + delim1.length();
+						pos = searchPos = (tmp - buffer) + delim1_len;
 						state = 0;
 						output(buffer + oldPos, tmp - buffer - oldPos);
 					}
@@ -128,9 +131,10 @@ namespace CP
 				}
 			}
 		}
-		void readUntilString(string delim) {
+		void readUntilString(const char* delim, int len) {
 			state = 1;
 			delim1 = delim;
+			delim1_len = len;
 			//printf("%i\n",delim.length());
 			process();
 		}

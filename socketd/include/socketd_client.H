@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <cpoll/sendfd.H>
 #include <functional>
+#define CONCAT(X) (((stringstream&)(stringstream()<<X)).str())
 namespace socketd
 {
 	using namespace std;
@@ -60,26 +61,30 @@ namespace socketd
 			if ((r = tryFixRead(buf, len)) == -1) CP::Socket::read(buf, len, cb, repeat);
 			else {
 				cb(r);
-				if (repeat) CP::Socket::read(buf, len, cb, true);
+				if (repeat && r > 0) CP::Socket::read(buf, len, cb, true);
 			}
 		}
 		void recv(void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat = false) {
 			int32_t r;
 			if ((r = tryFixRead(buf, len)) == -1) CP::Socket::recv(buf, len, flags, cb, repeat);
 			else {
-				if (flags & MSG_WAITALL) {
-					if (r < len) {
-						CP::Socket::recv(((uint8_t*) buf) + r, len - r, flags,
-								[cb,r,repeat,buf,len,flags,this](int i)
-								{
-									int r1=r;
-									if(i>0)r1+=i;
-									cb(r1);
-									if(repeat)CP::Socket::recv(buf, len, flags, cb, true);
-								}, false);
-						return;
-					}
-				}
+				//MSG_WAITALL is not supposed to be specified on an asynchoronous CP::Socket::recv() call
+
+				/*
+				 if (flags & MSG_WAITALL) {
+				 if (r < len) {
+				 CP::Socket::recv(((uint8_t*) buf) + r, len - r, flags,
+				 [cb,r,repeat,buf,len,flags,this](int i)
+				 {
+				 int r1=r;
+				 if(i>0)r1+=i;
+				 cb(r1);
+				 if(repeat)CP::Socket::recv(buf, len, flags, cb, true);
+				 }, false);
+				 return;
+				 }
+				 }*/
+				cb(r);
 				if (repeat) CP::Socket::recv(buf, len, flags, cb, true);
 			}
 		}
@@ -92,7 +97,7 @@ namespace socketd
 	public:
 		CP::Poll& p;
 		RGC::Ref<CP::Socket> sock;
-		function<void(Socket*, const function<void()>&)> cb;
+		Delegate<void(socketd_client&, Socket*, int64_t id)> cb;
 		protocolHeader ph;
 		prot_handleConnection ph1;
 		/*vector<int> acks;
@@ -124,66 +129,76 @@ namespace socketd
 		 });
 		 }*/
 		void startRead();
-		void readCB(int r) {
+		void ack(int64_t id) {
+			protocolHeader ph;
+			ph.type = protocolHeader::ackConnection;
+			prot_ackConnection ack;
+			ack.id = id;
+			ack.success = true;
+			if (this->sock->send(&ph, sizeof(ph), MSG_DONTWAIT) != sizeof(ph)) throw runtime_error(
+					"unix socket buffer overflow");
+			if (this->sock->send(&ack, sizeof(ack), MSG_DONTWAIT) != sizeof(ack)) throw runtime_error(
+					"unix socket buffer overflow");
+			//acks.push_back(id);
+			//startWrite();
+		}
+		void handleConnectionCB(int r) {
 			if (r <= 0) {
-				cb(NULL, NULL);
+				cb(*this, (Socket*) NULL, 0);
 				return;
 			}
+			int fd = recvfd(sock->handle);
+			if (fd < 0) {
+				cb(*this, (Socket*) NULL, 0);
+				return;
+			}
+			CP::Socket* newsock;
+			//printf("asdfg %i\n",ph1.bufferLen);
+			if (ph1.bufferLen <= 0) {
+				newsock = new CP::Socket(fd, ph1.d, ph1.t, ph1.p);
+			} else {
+				SocketProxy* tmps;
+				tmps = new SocketProxy(fd, ph1.d, ph1.t, ph1.p, ph1.bufferLen);
+				int r = sock->recv(tmps->buf, ph1.bufferLen, MSG_WAITALL);
+				if (r <= 0) {
+					cb(*this, (Socket*) NULL, 0);
+					return;
+				}
+				newsock = tmps;
+				/*char junk[ph1.bufferLen];
+				 sock->recv(junk, ph1.bufferLen, MSG_WAITALL);
+				 newsock = new CP::Socket(fd, ph1.d, ph1.t, ph1.p);*/
+			}
+			p.add(*newsock);
+			int64_t id = ph1.id;
+			//printf("aaaaa %lli %i %i %i\n",ph1.id, ph1.d, ph1.t, ph1.p);
+			cb(*this, newsock, id);
+			newsock->release();
+			startRead();
+		}
+		void readCB(int r) {
+			//printf("readCB: this=%p\n",(void*)this);
+			if (r <= 0) {
+				cb(*this, (Socket*) NULL, 0);
+				return;
+			}
+			if (r != sizeof(ph)) throw runtime_error(
+					CONCAT("attempting to read protocolHeader resulted in short read: r=" << r) );
 			switch (ph.type) {
 				case protocolHeader::handleConnection:
 				{
-					sock->read(&ph1, sizeof(ph1), [this](int r) {
-						if(r<=0) {
-							cb(NULL,NULL);
-							return;
-						}
-						int fd=recvfd(sock->handle);
-						if(fd<0) {
-							cb(NULL,NULL);
-							return;
-						}
-
-						auto cb1=[this](CP::Socket* newsock) {
-							p.add(*newsock);
-							int64_t id=ph1.id;
-							//printf("aaaaa %lli %i %i %i\n",ph1.id, ph1.d, ph1.t, ph1.p);
-							cb(newsock, [this,id]() {
-										protocolHeader ph;
-										ph.type=protocolHeader::ackConnection;
-										prot_ackConnection ack;
-										ack.id=id;
-										ack.success=true;
-										if(sock->send(&ph,sizeof(ph),MSG_DONTWAIT)!=sizeof(ph)) throw runtime_error("unix socket buffer overflow");
-										if(sock->send(&ack,sizeof(ack),MSG_DONTWAIT)!=sizeof(ack)) throw runtime_error("unix socket buffer overflow");
-										//acks.push_back(id);
-										//startWrite();
-									});
-							newsock->release();
-							startRead();
-						};
-						//printf("asdfg %i\n",ph1.bufferLen);
-						if(ph1.bufferLen<=0) {
-							CP::Socket* newsock;
-							newsock=new CP::Socket(fd, ph1.d, ph1.t, ph1.p);
-							cb1(newsock);
-						} else {
-							SocketProxy* newsock;
-							newsock=new SocketProxy(fd, ph1.d, ph1.t, ph1.p, ph1.bufferLen);
-							int r=sock->recv(newsock->buf, ph1.bufferLen,MSG_WAITALL);
-							if(r<=0) {
-								cb(NULL,NULL);
-								return;
-							}
-							cb1(newsock);
-						}
-
-					});
+					sock->read(&ph1, sizeof(ph1),
+							CP::Callback(&socketd_client::handleConnectionCB, this));
 					return;
+				}
+				default:
+				{
+					throw runtime_error(CONCAT("unrecognized protocolHeader.type " << ph.type) );
 				}
 			}
 			startRead();
 		}
-		socketd_client(CP::Poll& p, const function<void(Socket*, const function<void()>&)>& cb,
+		socketd_client(CP::Poll& p, const Delegate<void(socketd_client&, Socket*, int64_t)>& cb,
 				CP::Socket* sock = NULL) :
 				p(p), cb(cb)/*, tmp(NULL),tmplen(0),writing(false)*/{
 			if (sock == NULL) {
@@ -197,7 +212,9 @@ namespace socketd
 		}
 	};
 	void socketd_client::startRead() {
-		sock->read(&ph, sizeof(ph), [this](int r) {readCB(r);});
+		//memset(&ph, 0, sizeof(ph));
+		//printf("startRead: this=%p\n",(void*)this);
+		sock->recv(&ph, sizeof(ph), 0, CP::Callback(&socketd_client::readCB, this));
 	}
 
 }

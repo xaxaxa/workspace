@@ -48,6 +48,7 @@
 #include <sstream>
 #include <sys/signalfd.h>
 #include <sys/eventfd.h>
+#include <delegate.H>
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -94,7 +95,7 @@ namespace CP
 {
 	using namespace std;
 	typedef int32_t HANDLE; //file descriptor or handle
-	typedef function<void(int32_t)> Callback;
+	typedef Delegate<void(int32_t)> Callback;
 	typedef uint8_t event_t;
 	class CPollException: public std::exception
 	{
@@ -360,8 +361,8 @@ namespace CP
 		bool _supportsEPoll;
 		Handle();
 		Handle(HANDLE handle);
-		function<void(Events old_events)> onEventsChange;
-		function<void()> onClose;
+		Delegate<void(Handle& h, Events old_events)> onEventsChange;
+		Delegate<void(Handle& h)> onClose;
 
 		virtual void init(HANDLE handle);
 		virtual void deinit();
@@ -446,6 +447,11 @@ namespace CP
 	class Socket: public File
 	{
 	public:
+		union{
+			DelegateBase<void(Socket*)> _acceptCB;
+			DelegateBase<void(HANDLE)> _acceptHandleCB;
+		};
+		//Delegate<void(Socket*)> _acceptCB;
 		int32_t addressFamily, type, protocol;
 		//RGC::Ref<EndPoint> peer;
 		Socket();
@@ -483,21 +489,22 @@ namespace CP
 				AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 
 		//callback function must release() or free() the received object
-		void accept(const function<void(Socket*)>& cb, bool repeat = false);
-		void acceptHandle(const function<void(HANDLE)>& cb, bool repeat = false);
-		inline void repeatAccept(const function<void(Socket*)>& cb) {
+		void accept(const Delegate<void(Socket*)>& cb, bool repeat = false);
+		void acceptHandle(const Delegate<void(HANDLE)>& cb, bool repeat = false);
+		inline void repeatAccept(const Delegate<void(Socket*)>& cb) {
 			accept(cb, true);
 		}
-		inline void repeatAcceptHandle(const function<void(HANDLE)>& cb) {
+		inline void repeatAcceptHandle(const Delegate<void(HANDLE)>& cb) {
 			acceptHandle(cb, true);
 		}
 
 	};
 	class SignalFD: public Handle
 	{
+	public:
 		static int32_t MAX_EVENTS;
 		typedef struct signalfd_siginfo Signal;
-		function<void(Signal& sig)> callback;
+		Delegate<void(Signal& sig)> callback;
 		sigset_t mask;
 		SignalFD(HANDLE handle, const sigset_t& mask);
 		SignalFD(const sigset_t& mask, int32_t flags);
@@ -506,17 +513,19 @@ namespace CP
 	};
 	class EventFD: public File
 	{
+	public:
+		Delegate<void(eventfd_t)> cb;
 		EventFD(HANDLE handle);
 		EventFD(uint32_t initval = 0, int32_t flags = 0);
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
 				EventHandlerData::States oldstate);
 		eventfd_t getEvent();
-		void getEvent(const function<void(eventfd_t)>& cb, bool repeat = false);
-		void repeatGetEvent(const function<void(eventfd_t)>& cb) {
+		void getEvent(const Delegate<void(eventfd_t)>& cb, bool repeat = false);
+		void repeatGetEvent(const Delegate<void(eventfd_t)>& cb) {
 			getEvent(cb, true);
 		}
 		int32_t sendEvent(eventfd_t evt = 1);
-		void sendEvent(eventfd_t evt, const function<void(int32_t)>& cb);
+		void sendEvent(eventfd_t evt, const Delegate<void(int32_t)>& cb);
 	};
 	//XXX: AIO support in the linux kernel is incomplete, and
 	//	has many serious limitations such as:
