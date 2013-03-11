@@ -8,7 +8,7 @@
 //using namespace Sockets;
 using namespace CP;
 
-static const int bufSize=4096;
+static const int bufSize=4096*16;
 int main(int argc, char** argv)
 {
 	if(argc<3)
