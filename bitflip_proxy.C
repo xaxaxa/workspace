@@ -4,6 +4,7 @@
 #include <cpoll.H>
 #include <signal.h>
 
+//name is wrong; it does bitshift not bitflip
 
 //using namespace xaxaxa;
 //using namespace Sockets;
@@ -15,7 +16,7 @@ int main(int argc, char** argv)
 {
 	if(argc<5)
 	{
-		cerr << "usage: " << argv[0] << " bind_host bind_port forward_host forward_port" << endl;
+		cerr << "usage: " << argv[0] << " bind_host bind_port forward_host forward_port [r]" << endl;
 		return 1;
 	}
 	{
@@ -32,36 +33,51 @@ int main(int argc, char** argv)
 	p.add(srvsock);
 	srvsock.bind(IPEndPoint(IPAddress(argv[1]),atoi(argv[2])));
 	IPEndPoint ep1(IPAddress(argv[3]),atoi(argv[4]));
-	struct {
+	struct conf {
 		EndPoint& fwd;
+		bool r;
+	} cfg {ep1,argc>5&&argv[5][0]=='r'};
+	struct {
+		conf& cfg;
 		Socket& srvsock;
 		Poll& p;
+		bool rev;
 		void operator()(HANDLE h) {
 			struct handler {
+				conf& cfg;
 				Poll& p;
-				EndPoint& fwd;
 				Socket s;
 				Socket s2;
 				char buf1[bufSize];	//local -> remote
 				char buf2[bufSize]; //remote -> local
-				int closedN;
-				handler(Poll& p, EndPoint& fwd, HANDLE h, int d, int t, int pr)
-					:p(p),fwd(fwd),s(h,d,t,pr),closedN(-1) {}
+				bool rev;
+				handler(conf& cfg,Poll& p, HANDLE h, int d, int t, int pr)
+					:cfg(cfg),p(p),s(h,d,t,pr) {}
 				void stop() { delete this; }
 				void closed(int i) { stop(); }
+				void transform(uint8_t* buf, int len) {
+					if(cfg.r)
+						for(int i=0;i<len;i++)
+							buf[i] = buf[i] >> 1;
+					else
+						for(int i=0;i<len;i++)
+							buf[i] = buf[i] << 1;
+				}
 				void start() {
 					p.add(s);
 					p.add(s2);
-					s2.connect(fwd, Callback(&handler::connectCB,this));
+					s2.connect(cfg.fwd, Callback(&handler::connectCB,this));
 				}
 				void read1() { s.recv(buf1,bufSize,0,Callback(&handler::read1cb,this)); }
 				void read2() { s2.recv(buf2,bufSize,0,Callback(&handler::read2cb,this)); }
 				void read1cb(int r) {
 					if(r<=0) { s2.close(Callback(&handler::closed,this)); return; }
+					transform((uint8_t*)buf1,r);
 					write1(r);
 				}
 				void read2cb(int r) {
 					if(r<=0) { s.close(Callback(&handler::closed,this)); return; }
+					transform((uint8_t*)buf2,r);
 					write2(r);
 				}
 				
@@ -81,10 +97,10 @@ int main(int argc, char** argv)
 					read1();
 					read2();
 				}
-			}* hdlr=new handler(p,fwd,h,srvsock.addressFamily,srvsock.type,srvsock.protocol);
+			}* hdlr=new handler(cfg,p,h,srvsock.addressFamily,srvsock.type,srvsock.protocol);
 			hdlr->start();
 		}
-	} cb {ep1,srvsock,p};
+	} cb {cfg,srvsock,p};
 	srvsock.repeatAcceptHandle(&cb);
 	srvsock.listen();
 	p.loop();
