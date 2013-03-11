@@ -58,10 +58,10 @@ int main(int argc, char** argv)
 				void transform(uint8_t* buf, int len) {
 					if(cfg.r)
 						for(int i=0;i<len;i++)
-							buf[i] = (buf[i] >> 1) | (buf[i] << (8-1));
+							buf[i]--;
 					else
 						for(int i=0;i<len;i++)
-							buf[i] = (buf[i] << 1) | (buf[i] >> (8-1));
+							buf[i]++;
 				}
 				void start() {
 					p.add(s);
