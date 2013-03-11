@@ -37,6 +37,8 @@ namespace cppsp
 	public:
 		virtual const char* getFilePath()=0;
 		Page();
+		void handleRequest(Request& req, Response& resp);
+		void render(CP::Stream& s);
 		virtual ~Page();
 	};
 

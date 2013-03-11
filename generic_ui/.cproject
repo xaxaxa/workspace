@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?>
+
+<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.so.debug.1740919358">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.so.debug.1740919358" moduleId="org.eclipse.cdt.core.settings" name="Debug">
@@ -69,9 +71,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.so.debug.1740919358.677644606" name="ui_server.C" rcbsApplicability="disable" resourcePath="ui_server.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1340814278.466007279">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1340814278.466007279" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1340814278"/>
-					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.so.debug.1740919358.1192135803" name="cout_object.H" rcbsApplicability="disable" resourcePath="cout_object.H" toolsToInvoke=""/>
 					<sourceEntries>
 						<entry excluding="ui_server.C|ui_client.C|test_ui.C|ui2.C|ui1.C|generic_gui_gtk.C|generic_gui.C|preview_gui.C|debug_ui.C|test_deserialize.C|cout_object.H|example_ui.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>

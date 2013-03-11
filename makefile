@@ -23,4 +23,8 @@ tcpfuck:
 	g++ tcpfuck.C -o tcpfuck --std=c++0x -lcpoll $(CFLAGS)
 nc.xaxaxa_install:
 	cp -f nc.xaxaxa /usr/local/bin/
+bitflip_proxy:
+	g++ bitflip_proxy.C -o bitflip_proxy --std=c++0x $(CFLAGS) -lcpoll -Wno-pmf-conversions
+
+
 

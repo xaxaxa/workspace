@@ -8,6 +8,7 @@
 //using namespace Sockets;
 using namespace CP;
 
+static const int bufSize=4096;
 int main(int argc, char** argv)
 {
 	if(argc<3)
@@ -61,10 +62,52 @@ int main(int argc, char** argv)
 	}
 	CP::Poll p;
 	p.add(*s);
-	CP::File* s_in=new CP::File(0);
-	CP::File* s_out=new CP::File(1);
-	p.add(*s_in);
-	p.add(*s_out);
+	StandardStream ss;
+	ss.addToPoll(p);
+	
+	
+	
+	
+	
+	struct handler {
+		Poll& p;
+		Stream* s1;
+		Stream* s2;
+		char buf1[bufSize];
+		char buf2[bufSize];
+		handler(Poll& p, Stream* s1, Stream* s2)
+			:p(p),s1(s1),s2(s2) {}
+		void stop() { exit(0); }
+		void closed(int i) { stop(); }
+		void start() {
+			read1();
+			read2();
+		}
+		void read1() { s1->read(buf1,bufSize,Callback(&handler::read1cb,this)); }
+		void read2() { s2->read(buf2,bufSize,Callback(&handler::read2cb,this)); }
+		void read1cb(int r) {
+			if(r<=0) { s2->close(Callback(&handler::closed,this)); return; }
+			write1(r);
+		}
+		void read2cb(int r) {
+			if(r<=0) { s1->close(Callback(&handler::closed,this)); return; }
+			write2(r);
+		}
+		
+		void write1(int i) { s2->write(buf1,i,Callback(&handler::write1cb,this)); }
+		void write2(int i) { s1->write(buf2,i,Callback(&handler::write2cb,this)); }
+		void write1cb(int r) {
+			if(r<=0) { stop(); return; }
+			read1();
+		}
+		void write2cb(int r) {
+			if(r<=0) { stop(); return; }
+			read2();
+		}
+	}* hdlr=new handler(p,s,&ss);
+	hdlr->start();
+	/*
+	
 	char buf1[4096*16], buf2[4096*16];
 	Callback recvcb1;
 	recvcb1=[&](int32_t r) {
@@ -86,6 +129,6 @@ int main(int argc, char** argv)
 		});
 	};
 	s->recv(buf1,sizeof(buf1),0,recvcb1);
-	s_in->read(buf2,sizeof(buf2),recvcb2);
+	s_in->read(buf2,sizeof(buf2),recvcb2);*/
 	p.loop();
 }

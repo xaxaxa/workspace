@@ -8,6 +8,7 @@
 #ifndef CPPSP_SOCKETD_H_
 #define CPPSP_SOCKETD_H_
 #include "page.H"
+#include <cpoll/cpoll.H>
 
 namespace cppsp
 {
@@ -16,7 +17,7 @@ namespace cppsp
 	{
 	public:
 		virtual void read();
-		SocketDRequest(FCGX_Stream *in, FCGX_ParamArray params);
+		SocketDRequest(CP::Socket& s);
 		virtual ~SocketDRequest();
 	};
 

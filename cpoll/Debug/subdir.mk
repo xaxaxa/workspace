@@ -3,10 +3,6 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
-O_SRCS += \
-../cpoll.o \
-../rgc.o 
-
 C_UPPER_SRCS += \
 ../cpoll.C \
 ../sendfd.C \

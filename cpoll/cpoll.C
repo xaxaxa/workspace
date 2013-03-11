@@ -384,14 +384,15 @@ namespace CP
 				//cout << "wrote " << r << " bytes on fd " << handle << endl;
 				if (r <= 0) {
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
 				}
 				ed.misc.bufferIO.len_done += r;
 				//cout << "len_done = " << ed.misc.bufferIO.len_done
 				//		<< " of " << ed.misc.bufferIO.len << endl;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
 				}
 				return;
 			case Operations::recv:
@@ -405,12 +406,13 @@ namespace CP
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done, ed.misc.bufferIO.flags);
 				if (r <= 0) {
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)ed.cb(ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
 				}
 				return;
 			case Operations::close:
@@ -1054,4 +1056,47 @@ namespace CP
 		h.onClose = nullptr;
 	}
 
+	StandardStream::StandardStream() :
+			in(0), out(1) {
+	}
+
+	int32_t StandardStream::read(void* buf, int32_t len) {
+		return in.read(buf, len);
+	}
+
+	int32_t StandardStream::write(const void* buf, int32_t len) {
+		return out.write(buf, len);
+	}
+
+	int32_t StandardStream::writeAll(const void* buf, int32_t len) {
+		return out.writeAll(buf, len);
+	}
+
+	void StandardStream::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
+		in.read(buf, len, cb, repeat);
+	}
+
+	void StandardStream::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
+		out.write(buf, len, cb, repeat);
+	}
+
+	void StandardStream::writeAll(const void* buf, int32_t len, const Callback& cb) {
+		out.writeAll(buf, len, cb);
+	}
+
+	void StandardStream::close() {
+
+	}
+
+	void StandardStream::flush() {
+		out.flush();
+	}
+
+	void StandardStream::close(const Callback& cb) {
+		cb(0);
+	}
+
+	void StandardStream::flush(const Callback& cb) {
+		out.flush(cb);
+	}
 }

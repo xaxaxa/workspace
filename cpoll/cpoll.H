@@ -285,7 +285,13 @@ namespace CP
 		//async
 		virtual void close(const Callback& cb)=0;
 		virtual void flush(const Callback& cb)=0;
+	};
+	class StreamWriter: public RGC::Object
+	{
+		Stream& s;
 
+		StreamWriter(Stream& s);
+		~StreamWriter();
 	};
 	
 	//===========================================================
@@ -447,7 +453,8 @@ namespace CP
 	class Socket: public File
 	{
 	public:
-		union{
+		union
+		{
 			DelegateBase<void(Socket*)> _acceptCB;
 			DelegateBase<void(HANDLE)> _acceptHandleCB;
 		};
@@ -567,7 +574,38 @@ namespace CP
 		void add(Handle& h);
 		void del(Handle& h);
 	};
+	class StandardStream: public Stream
+	{
+	public:
+		CP::File in, out;
+		StandardStream();
+		template<class P> void addToPoll(P& p) {
+			p.add(in);
+			p.add(out);
+		}
+		template<class P> void delFromPoll(P& p) {
+			p.del(in);
+			p.del(out);
+		}
+		//sync
+		virtual int32_t read(void* buf, int32_t len);
+		virtual int32_t write(const void* buf, int32_t len);
+		virtual int32_t writeAll(const void* buf, int32_t len);
 
+		//async
+		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+
+		//=========misc===========
+		//sync
+		virtual void close(); //may block
+		virtual void flush();
+
+		//async
+		virtual void close(const Callback& cb);
+		virtual void flush(const Callback& cb);
+	};
 }
 
 #endif
