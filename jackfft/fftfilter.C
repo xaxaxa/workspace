@@ -252,7 +252,7 @@ namespace xaxaxa
 			{
 				int i2;
 				//if(i>50)
-				double asdf=((double)i)/freq_scale; //target frequency
+				double asdf=((double)i)/freq_scale; //source frequency
 				i2=(int)asdf;
 				if(i2==0 || i==0)	//prevent division by zero
 					continue;

@@ -91,7 +91,7 @@ namespace CP
 				case 1:
 				{
 					uint8_t* buf = getBuffer();
-					if (bufferLen - bufferPos <= delim1.length() && bufferPos > 0) {
+					if (bufferLen - bufferPos <= (int)delim1.length() && bufferPos > 0) {
 						asdfg: memmove(buf, buf + bufferPos, bufferLen - bufferPos);
 						bufferLen -= bufferPos;
 						bufferPos = 0;

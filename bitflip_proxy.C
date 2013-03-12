@@ -19,6 +19,8 @@ int main(int argc, char** argv)
 		cerr << "usage: " << argv[0] << " bind_host bind_port forward_host forward_port [r]" << endl;
 		return 1;
 	}
+	
+	//save stack space
 	{
 		signal(SIGPIPE, SIG_IGN);
 		struct sigaction sa;
@@ -32,11 +34,10 @@ int main(int argc, char** argv)
 	Socket srvsock;
 	p.add(srvsock);
 	srvsock.bind(IPEndPoint(IPAddress(argv[1]),atoi(argv[2])));
-	IPEndPoint ep1(IPAddress(argv[3]),atoi(argv[4]));
 	struct conf {
-		EndPoint& fwd;
+		IPEndPoint fwd;
 		bool r;
-	} cfg {ep1,argc>5&&argv[5][0]=='r'};
+	} cfg {{IPAddress(argv[3]),(in_port_t)atoi(argv[4])},argc>5&&argv[5][0]=='r'};
 	struct {
 		conf& cfg;
 		Socket& srvsock;
@@ -58,10 +59,10 @@ int main(int argc, char** argv)
 				void transform(uint8_t* buf, int len) {
 					if(cfg.r)
 						for(int i=0;i<len;i++)
-							buf[i]--;
+							buf[i]-=69;
 					else
 						for(int i=0;i<len;i++)
-							buf[i]++;
+							buf[i]+=69;
 				}
 				void start() {
 					p.add(s);

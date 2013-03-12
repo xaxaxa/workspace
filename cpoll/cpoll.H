@@ -286,14 +286,89 @@ namespace CP
 		virtual void close(const Callback& cb)=0;
 		virtual void flush(const Callback& cb)=0;
 	};
+	class BufferedStream: virtual public RGC::Object
+	{
+	public:
+		uint8_t* buffer;
+		int bufferPos;
+		int bufferSize;
+		BufferedStream(uint8_t* buffer, int bufferPos, int bufferSize) :
+				buffer(buffer), bufferPos(bufferPos), bufferSize(bufferSize) {
+		}
+		//flushBuffer() should flush current buffer to stream, reallocate the buffer,
+		//and reset buffer, bufferPos and/or bufferSize accordingly (see below); the function
+		//must reserve at least minBufferAllocation bytes of space in the write buffer
+		virtual void flushBuffer(int minBufferAllocation)=0;
+	};
+	//StreamWriter will directly access the BufferedStream's buffer
+	//(for performance reasons) and increment bufferPos accordingly.
+	//if bufferPos reaches bufferSize, it will call the BufferedStream's flushBuffer() method
 	class StreamWriter: public RGC::Object
 	{
-		Stream& s;
-
-		StreamWriter(Stream& s);
+	public:
+		RGC::Ref<BufferedStream> buffer;
+		void write(const uint8_t* s, int len) {
+			if (buffer->bufferSize - buffer->bufferPos < len) buffer->flushBuffer(len);
+			memcpy(buffer->buffer + buffer->bufferPos, s, len);
+			buffer->bufferPos += len;
+		}
+		void write(const char* s, int len) {
+			write((const uint8_t*) s, len);
+		}
+		void write(const char* s) {
+			write((const uint8_t*) s, strlen(s));
+		}
+		void write(int8_t i) {
+			//snprintf() writes a null byte, so gotta reserve 4 bytes of buffer space
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 4)) buffer->flushBuffer(4);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 4, "%hhi", i);
+		}
+		void write(int16_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 6)) buffer->flushBuffer(6);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 6, "%hi", i);
+		}
+		void write(int32_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 11)) buffer->flushBuffer(11);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 11, "%i", i);
+		}
+		void write(int64_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 21)) buffer->flushBuffer(21);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 21, "%lli", i);
+		}
+		void write(uint8_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 4)) buffer->flushBuffer(4);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 4, "%hhu", i);
+		}
+		void write(uint16_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 6)) buffer->flushBuffer(6);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 6, "%hu", i);
+		}
+		void write(uint32_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 11)) buffer->flushBuffer(11);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 11, "%u", i);
+		}
+		void write(uint64_t i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 21)) buffer->flushBuffer(21);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 21, "%llu", i);
+		}
+		template<class ... P> void writeF(const char* fmt, P&&... p...) {
+			int minSpace = 0;
+			if(minSpace + 1 > buffer->bufferSize - buffer->bufferPos) {
+				redo:
+				buffer->flushBuffer(minSpace+1);
+			}
+			minSpace = snprintf((char*) buffer->buffer + buffer->bufferPos, buffer->bufferSize - buffer->bufferPos, fmt, std::forward<P>(p)...);
+			if(minSpace + 1 > buffer->bufferSize - buffer->bufferPos)
+				goto redo;
+			buffer->bufferPos+=minSpace;
+		}
+		void flush() {
+			buffer->flushBuffer(0);
+		}
+		StreamWriter(BufferedStream& s);
 		~StreamWriter();
 	};
-	
+
 	//===========================================================
 	//======================UTILITY CLASSES======================
 	//===========================================================
@@ -306,7 +381,8 @@ namespace CP
 		: event_t
 		{
 			none = 0, in = 1, out = 2, other = 4, all = 7
-	};
+	}
+	;
 
 	enum class Operations
 		: uint8_t
@@ -605,6 +681,46 @@ namespace CP
 		//async
 		virtual void close(const Callback& cb);
 		virtual void flush(const Callback& cb);
+	};
+
+	class FixedMemoryStream: public Stream, public BufferedStream
+	{
+	public:
+		//uint8_t* data;
+		//int len, pos;
+		int len;
+		FixedMemoryStream();
+		FixedMemoryStream(void* data, int len);
+		//sync
+		virtual int32_t read(void* buf, int32_t len);
+		virtual int32_t write(const void* buf, int32_t len);
+		virtual int32_t writeAll(const void* buf, int32_t len);
+
+		//async
+		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+
+		//=========misc===========
+		//sync
+		virtual void close();
+		virtual void flush();
+
+		//async
+		virtual void close(const Callback& cb);
+		virtual void flush(const Callback& cb);
+
+		virtual void flushBuffer(int minBufferAllocation);
+	};
+	class MemoryStream: public FixedMemoryStream
+	{
+	public:
+		MemoryStream(int capacity = 4096);
+		void ensureCapacity(int c);
+		virtual int32_t write(const void* buf, int32_t len);
+		virtual int32_t writeAll(const void* buf, int32_t len);
+		virtual void close();
+		virtual void flushBuffer(int minBufferAllocation);
 	};
 }
 

@@ -21,4 +21,5 @@ delegate_perf.so:
 	g++ -Wno-pmf-conversions delegate_perf.C -o delegate_perf.so --shared --std=c++0x -O3 -I../include -L../lib
 delegate_perftest: delegate_perf.so
 	g++ -Wno-pmf-conversions delegate_perftest.C delegate_perf.so -o delegate_perftest --std=c++0x -O3 -I../include -L../lib
-
+streamwriter_test:
+	g++ streamwriter_test.C -o streamwriter_test --std=c++0x -O3 -I../include -L../lib -lcpoll

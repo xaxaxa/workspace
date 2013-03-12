@@ -20,8 +20,10 @@ namespace cppsp
 		map<string, string> queryString;
 		map<string, string> headers;
 		map<string, string> form;
+		Delegate<void(Request*)> _readCB;
 
-		virtual void read()=0;
+		//read POST data; headers are always read before creating the Request class
+		virtual void read(const Delegate<void(Request*)>& cb);
 		virtual ~Request();
 	};
 	class Response
@@ -29,12 +31,15 @@ namespace cppsp
 		RGC::Ref<CP::Stream> outputStream;
 		map<string, string> headers;
 		bool headersWritten;
-		virtual void writeHeaders()=0;
-		virtual void write(string s)=0;
+		void writeHeaders();
+
+		void write(string s);
 	};
 	class Page
 	{
 	public:
+		RGC::Ref<Request> request;
+		RGC::Ref<Response> response;
 		virtual const char* getFilePath()=0;
 		Page();
 		void handleRequest(Request& req, Response& resp);

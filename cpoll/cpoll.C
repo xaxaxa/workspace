@@ -237,6 +237,14 @@ namespace CP
 		tmp.name = name;
 	}
 
+	StreamWriter::StreamWriter(BufferedStream& s) :
+			buffer(s) {
+
+	}
+
+	StreamWriter::~StreamWriter() {
+	}
+
 	Handle::Handle() {
 		deinit();
 	}
@@ -1059,44 +1067,128 @@ namespace CP
 	StandardStream::StandardStream() :
 			in(0), out(1) {
 	}
-
 	int32_t StandardStream::read(void* buf, int32_t len) {
 		return in.read(buf, len);
 	}
-
 	int32_t StandardStream::write(const void* buf, int32_t len) {
 		return out.write(buf, len);
 	}
-
 	int32_t StandardStream::writeAll(const void* buf, int32_t len) {
 		return out.writeAll(buf, len);
 	}
-
 	void StandardStream::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
 		in.read(buf, len, cb, repeat);
 	}
-
 	void StandardStream::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
 		out.write(buf, len, cb, repeat);
 	}
-
 	void StandardStream::writeAll(const void* buf, int32_t len, const Callback& cb) {
 		out.writeAll(buf, len, cb);
 	}
-
 	void StandardStream::close() {
 
 	}
-
 	void StandardStream::flush() {
 		out.flush();
 	}
-
 	void StandardStream::close(const Callback& cb) {
 		cb(0);
 	}
-
 	void StandardStream::flush(const Callback& cb) {
 		out.flush(cb);
 	}
+
+	FixedMemoryStream::FixedMemoryStream() :
+			BufferedStream(NULL, 0, 0), len(0) {
+	}
+	FixedMemoryStream::FixedMemoryStream(void* data, int len) :
+			BufferedStream((uint8_t*) data, 0, len), len(0) {
+	}
+	int32_t FixedMemoryStream::read(void* buf, int32_t len) {
+		int l = len < (this->len - this->bufferPos) ? len : (this->len - this->bufferPos);
+		if (l <= 0) return 0;
+		memcpy(buf, this->buffer + this->bufferPos, l);
+		this->bufferPos += l;
+		return l;
+	}
+	int32_t FixedMemoryStream::write(const void* buf, int32_t len) {
+		int l = len < (this->len - this->bufferPos) ? len : (this->len - this->bufferPos);
+		if (l <= 0) return 0;
+		memcpy(this->buffer + this->bufferPos, buf, l);
+		this->bufferPos += l;
+		return l;
+	}
+	int32_t FixedMemoryStream::writeAll(const void* buf, int32_t len) {
+		if (this->bufferPos + len > this->len) return -1;
+		return write(buf, len);
+	}
+	void FixedMemoryStream::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
+		rep: int tmp = read(buf, len);
+		cb(tmp);
+		if (repeat && tmp > 0) goto rep;
+	}
+	void FixedMemoryStream::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
+		rep: int tmp = write(buf, len);
+		cb(tmp);
+		if (repeat && tmp > 0) goto rep;
+	}
+	void FixedMemoryStream::writeAll(const void* buf, int32_t len, const Callback& cb) {
+		int tmp = writeAll(buf, len);
+		cb(tmp);
+	}
+	void FixedMemoryStream::close() {
+	}
+	void FixedMemoryStream::flush() {
+	}
+	void FixedMemoryStream::close(const Callback& cb) {
+		cb(0);
+	}
+	void FixedMemoryStream::flush(const Callback& cb) {
+		cb(0);
+	}
+	void FixedMemoryStream::flushBuffer(int minBufferAllocation) {
+		if (minBufferAllocation > this->len - this->bufferPos) throw runtime_error(
+				"overflowed FixedMemoryStream");
+	}
+
+	MemoryStream::MemoryStream(int capacity) :
+			FixedMemoryStream(malloc(capacity), 0) {
+		if (buffer == NULL) throw runtime_error(strerror(errno));
+		bufferSize = capacity;
+	}
+	void MemoryStream::ensureCapacity(int c) {
+		if (buffer == NULL) throw runtime_error("attempted to write to closed MemoryStream");
+		if (likely(c<=bufferSize)) return;
+		int tmp = bufferSize;
+		while (tmp < c)
+			tmp *= 2;
+		void* v = realloc(buffer, tmp);
+		if (v == NULL) throw runtime_error(strerror(errno));
+		buffer = (uint8_t*) v;
+		bufferSize = tmp;
+	}
+	int32_t MemoryStream::write(const void* buf, int32_t len) {
+		ensureCapacity(this->bufferSize + len);
+		this->bufferPos += len;
+		if (this->bufferPos > this->len) this->len = this->bufferPos;
+		return FixedMemoryStream::write(buf, len);
+	}
+	int32_t MemoryStream::writeAll(const void* buf, int32_t len) {
+		ensureCapacity(this->bufferSize + len);
+		this->bufferPos += len;
+		if (this->bufferPos > this->len) this->len = this->bufferPos;
+		return FixedMemoryStream::writeAll(buf, len);
+	}
+	void MemoryStream::close() {
+		if (buffer == NULL) return;
+		free(buffer);
+		bufferSize = len = 0;
+	}
+	
+	void MemoryStream::flushBuffer(int minBufferAllocation) {
+		ensureCapacity(this->len + minBufferAllocation);
+		if (this->bufferPos > this->len) this->len = this->bufferPos;
+	}
+
 }
+
