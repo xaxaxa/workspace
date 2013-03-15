@@ -262,11 +262,33 @@ namespace CP
 	{
 	public:
 		//sync
-		virtual int32_t read(void* buf, int32_t len)=0;
-		virtual int32_t write(const void* buf, int32_t len)=0;
-		virtual int32_t writeAll(const void* buf, int32_t len)=0;
+		virtual int32_t read(void* buf, int32_t len)=0; //required
+		virtual int32_t write(const void* buf, int32_t len)=0; //required
+		virtual int32_t writeAll(const void* buf, int32_t len) { //optional
+			int off = 0;
+			while (off < len) {
+				int tmp = write((uint8_t*) buf + off, len - off);
+				if (tmp <= 0) return off;
+				off += tmp;
+			}
+			return off;
+		}
 
 		//async
+		//all new subclasses of Stream now should only need to implement the hybrid[Read|Write] functions
+		//to provide async behavior; apps using [read|write](..., cb) will still work through the
+		//compatibility wrappers
+
+		//returns -2 to indicate that the operation is scheduled to be completed asynchronously; otherwise
+		//the request has been completed synchronously
+
+		//UPDATE: hybrid[Read|Write] has been canceled because it is extremely hard for users to design applications
+		// to deal with 2 programming models at once, it is very error-prone
+		/*virtual int32_t hybridRead(void* buf, int32_t len, const Callback& cb, bool repeat = false) { //optional (required for async)
+		 }
+		 virtual int32_t hybridWrite(const void* buf, int32_t len, const Callback& cb, bool repeat =
+		 false) { //optional (required for async)
+		 }*/
 		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
 		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
 			read(buf, len, cb, true);
@@ -285,14 +307,28 @@ namespace CP
 		//async
 		virtual void close(const Callback& cb)=0;
 		virtual void flush(const Callback& cb)=0;
+
+		//only for streams with a read buffer; other streams should just return 0
+		//calling this function should "consume" that buffer, but should not perform
+		//further reading operations; this function should NOT block
+		//returns length of buffer; address of buffer is put in buf
+		//if maxlen==-1, consume entire contiguous buffer
+		virtual int32_t readBuffer(void*& buf, int32_t maxlen) {
+			return 0;
+		}
+		//freeBuffer() must be called following every readBuffer() call;
+		//after calling readBuffer() and before calling freeBuffer(),
+		//all other operations are undefined
+		virtual void freeBuffer(void* buf, int32_t len) {
+		}
 	};
-	class BufferedStream: virtual public RGC::Object
+	class BufferedOutput: virtual public RGC::Object
 	{
 	public:
 		uint8_t* buffer;
 		int bufferPos;
 		int bufferSize;
-		BufferedStream(uint8_t* buffer, int bufferPos, int bufferSize) :
+		BufferedOutput(uint8_t* buffer, int bufferPos, int bufferSize) :
 				buffer(buffer), bufferPos(bufferPos), bufferSize(bufferSize) {
 		}
 		//flushBuffer() should flush current buffer to stream, reallocate the buffer,
@@ -306,7 +342,7 @@ namespace CP
 	class StreamWriter: public RGC::Object
 	{
 	public:
-		RGC::Ref<BufferedStream> buffer;
+		RGC::Ref<BufferedOutput> buffer;
 		void write(const uint8_t* s, int len) {
 			if (buffer->bufferSize - buffer->bufferPos < len) buffer->flushBuffer(len);
 			memcpy(buffer->buffer + buffer->bufferPos, s, len);
@@ -365,9 +401,82 @@ namespace CP
 		void flush() {
 			buffer->flushBuffer(0);
 		}
-		StreamWriter(BufferedStream& s);
+		StreamWriter(BufferedOutput& s);
 		~StreamWriter();
 	};
+	class StreamReader: public Stream
+	{ //writes are simply passed through
+	public:
+		typedef Delegate<void(const string&)> Callback;
+		RGC::Ref<Stream> input;
+		void* sr;
+		bool* deletionFlag;
+		Callback cb;
+		string tmp;
+		string tmp_delim;
+
+		bool shouldRead;
+		bool reading;
+		bool eof;
+		/*void* curBuffer;
+		 int curBufferLen;
+		 int bufferSize;
+		 bool bufferIsBorrowed;*/
+
+		StreamReader(Stream& input, int bufsize = 4096);
+		~StreamReader();
+
+		string readTo(char delim);
+		string readTo(const char* delim, int delimLen);
+		string readTo(string delim);
+		string readLine();
+
+		void readTo(char delim, const Callback& cb);
+		//*delim MUST NOT BE DELETED FOR THE ENTIRE DURATION OF THE READTO REQUEST!!!!!
+		//it does not make a copy of delim!!!!!
+		void readTo(const char* delim, int delimLen, const Callback& cb);
+
+		void readTo(string delim, const Callback& cb);
+		void readLine(const Callback& cb);
+
+		//sync
+		virtual int32_t read(void* buf, int32_t len);
+		virtual int32_t write(const void* buf, int32_t len) {
+			return input->write(buf, len);
+		}
+		virtual int32_t writeAll(const void* buf, int32_t len) {
+			return input->writeAll(buf, len);
+		}
+
+		//async
+		virtual void read(void* buf, int32_t len, const CP::Callback& cb, bool repeat = false);
+		virtual void write(const void* buf, int32_t len, const CP::Callback& cb,
+				bool repeat = false) {
+			return input->write(buf, len, cb, repeat);
+		}
+		virtual void writeAll(const void* buf, int32_t len, const CP::Callback& cb) {
+			return input->writeAll(buf, len, cb);
+		}
+
+		//=========misc===========
+		//sync
+		virtual void close();
+		virtual void flush();
+
+		//async
+		virtual void close(const CP::Callback& cb);
+		virtual void flush(const CP::Callback& cb);
+
+		virtual int32_t readBuffer(void*& buf, int32_t maxlen);
+		virtual void freeBuffer(void* buf, int32_t len);
+
+		//internal
+		void _beginRead();
+		void _doSyncRead();
+		void _readCB(int i);
+		void _CB(uint8_t* data, int len, bool delimReached);
+	}
+	;
 
 	//===========================================================
 	//======================UTILITY CLASSES======================
@@ -683,7 +792,7 @@ namespace CP
 		virtual void flush(const Callback& cb);
 	};
 
-	class FixedMemoryStream: public Stream, public BufferedStream
+	class FixedMemoryStream: public Stream, public BufferedOutput
 	{
 	public:
 		//uint8_t* data;
@@ -710,6 +819,7 @@ namespace CP
 		virtual void close(const Callback& cb);
 		virtual void flush(const Callback& cb);
 
+		virtual int32_t readBuffer(void*& buf, int32_t maxlen);
 		virtual void flushBuffer(int minBufferAllocation);
 	};
 	class MemoryStream: public FixedMemoryStream

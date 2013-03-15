@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
+#include "statemachines.H"
 namespace CP
 {
 	//CPollException
@@ -237,12 +238,195 @@ namespace CP
 		tmp.name = name;
 	}
 
-	StreamWriter::StreamWriter(BufferedStream& s) :
+	StreamWriter::StreamWriter(BufferedOutput& s) :
 			buffer(s) {
 
 	}
-
 	StreamWriter::~StreamWriter() {
+	}
+
+	StreamReader::StreamReader(Stream& input, int bufsize) :
+			input(&input), deletionFlag(NULL), shouldRead(false), reading(false), eof(false) {
+		sr = malloc(streamReader_getSize() + 4096);
+		streamReader_init((streamReader*) sr, 4096);
+		streamReader_setCallback((streamReader*) sr,
+				Delegate<void(uint8_t*, int, bool)>(&StreamReader::_CB, this));
+	}
+	StreamReader::~StreamReader() {
+		streamReader_deinit((streamReader*) sr);
+		free(sr);
+		if (deletionFlag != NULL) *deletionFlag = true;
+	}
+	void StreamReader_checkReading1(StreamReader* This) {
+		if (This->shouldRead) throw CPollException("StreamReader is already reading");
+	}
+	void StreamReader_checkReading(StreamReader* This) {
+		StreamReader_checkReading1(This);
+		This->shouldRead = true;
+	}
+
+	void StreamReader::readTo(char delim, const Callback& cb) {
+		this->cb = cb;
+		StreamReader_checkReading(this);
+		bool delFlag = false;
+		deletionFlag = &delFlag;
+		streamReader_readUntilChar((streamReader*) sr, delim);
+		if (delFlag) return;
+		deletionFlag = NULL;
+		_beginRead();
+	}
+	void StreamReader::readTo(const char* delim, int delimLen, const Callback& cb) {
+		this->cb = cb;
+		StreamReader_checkReading(this);
+		bool delFlag = false;
+		deletionFlag = &delFlag;
+		streamReader_readUntilString((streamReader*) sr, delim, delimLen);
+		if (delFlag) return;
+		deletionFlag = NULL;
+		_beginRead();
+	}
+	void StreamReader::readTo(string delim, const Callback& cb) {
+		tmp_delim = delim;
+		this->cb = cb;
+		StreamReader_checkReading(this);
+		bool delFlag = false;
+		deletionFlag = &delFlag;
+		streamReader_readUntilString((streamReader*) sr, tmp_delim.data(), tmp_delim.length());
+		if (delFlag) return;
+		deletionFlag = NULL;
+		_beginRead();
+	}
+	void StreamReader::readLine(const Callback& cb) {
+		readTo('\n', cb);
+	}
+	string StreamReader::readTo(char delim) {
+		this->cb = nullptr;
+		this->tmp.clear();
+		StreamReader_checkReading(this);
+		streamReader_readUntilChar((streamReader*) sr, delim);
+		_doSyncRead();
+		return this->tmp;
+	}
+	string StreamReader::readTo(const char* delim, int delimLen) {
+		this->cb = nullptr;
+		this->tmp.clear();
+		StreamReader_checkReading(this);
+		streamReader_readUntilString((streamReader*) sr, delim, delimLen);
+		_doSyncRead();
+		return this->tmp;
+	}
+	string StreamReader::readTo(string delim) {
+		this->cb = nullptr;
+		this->tmp.clear();
+		StreamReader_checkReading(this);
+		streamReader_readUntilString((streamReader*) sr, delim.data(), delim.length());
+		_doSyncRead();
+		return this->tmp;
+	}
+	string StreamReader::readLine() {
+		return readTo('\n');
+	}
+	int32_t StreamReader::read(void* buf, int32_t len) {
+		void* tmp;
+		int l = readBuffer(tmp, len);
+		if (l <= 0) {
+			return input->read(buf, len);
+		}
+		memcpy(buf, tmp, l);
+		return l;
+	}
+	void StreamReader::read(void* buf, int32_t len, const CP::Callback& cb, bool repeat) {
+		void* tmp;
+		int l = readBuffer(tmp, len);
+		if (l <= 0) {
+			return input->read(buf, len, cb, repeat);
+		}
+		memcpy(buf, tmp, l);
+		cb(l);
+	}
+	void StreamReader::close() {
+		input->close();
+	}
+	void StreamReader::flush() {
+		input->flush();
+	}
+	void StreamReader::close(const CP::Callback& cb) {
+		input->close(cb);
+	}
+	void StreamReader::flush(const CP::Callback& cb) {
+		input->flush(cb);
+	}
+	int32_t StreamReader::readBuffer(void*& buf, int32_t maxlen) {
+		StreamReader_checkReading1(this);
+		void* b;
+		int l;
+		std::tie(b, l) = streamReader_getBufferData((streamReader*) sr);
+		if (l > maxlen) l = maxlen;
+		if (l <= 0) return 0;
+		buf = b;
+		return l;
+	}
+	void StreamReader::freeBuffer(void* buf, int32_t len) {
+		streamReader_skip((streamReader*) sr, len);
+	}
+	void StreamReader::_beginRead() {
+		if (!shouldRead || reading) return;
+		auto buf = streamReader_beginPutData((streamReader*) sr);
+		if (get < 1 > (buf) <= 0) return;
+		reading = true;
+		input->read(get < 0 > (buf), get < 1 > (buf), CP::Callback(&StreamReader::_readCB, this));
+	}
+	void StreamReader::_doSyncRead() {
+		while (shouldRead) {
+			auto buf = streamReader_beginPutData((streamReader*) sr);
+			//if (get < 1 > (buf) <= 0) return;
+			int r = input->read(get < 0 > (buf), get < 1 > (buf));
+			if (r <= 0) {
+				uint8_t* buf;
+				int len;
+				std::tie(buf, len) = streamReader_getBufferData((streamReader*) sr);
+				this->tmp = string((const char*) buf, len);
+				streamReader_reset((streamReader*) sr);
+				eof = true;
+				return;
+			} else {
+				streamReader_endPutData((streamReader*) sr, r);
+			}
+		}
+	}
+	void StreamReader::_readCB(int i) {
+		reading = false;
+		bool delFlag = false;
+		deletionFlag = &delFlag;
+		if (i <= 0) {
+			shouldRead = false;
+			uint8_t* buf;
+			int len;
+			std::tie(buf, len) = streamReader_getBufferData((streamReader*) sr);
+			string tmps((const char*) buf, len);
+			eof = true;
+			streamReader_reset((streamReader*) sr);
+			cb(tmps);
+			if (delFlag) return;
+			deletionFlag = NULL;
+
+		} else {
+			streamReader_endPutData((streamReader*) sr, i);
+			if (delFlag) return;
+			deletionFlag = NULL;
+			_beginRead();
+		}
+	}
+	void StreamReader::_CB(uint8_t* data, int len, bool delimReached) {
+		tmp.append((const char*) data, len);
+		if (delimReached) {
+			shouldRead = false;
+			bool* delFlag = deletionFlag;
+			if (cb == nullptr) return;
+			cb(tmp);
+			if (*delFlag) return;
+			tmp.clear();
+		}
 	}
 
 	Handle::Handle() {
@@ -312,7 +496,7 @@ namespace CP
 		//::close(handle);
 	}
 
-	//File
+//File
 	File::File() :
 			deletionFlag(NULL), dispatching(false) {
 	}
@@ -329,11 +513,11 @@ namespace CP
 		for (int32_t i = 0; i < numEvents; i++)
 			if (eventData[i].state != EventHandlerData::States::invalid) (event_t&) e |=
 					(event_t) indexToEvent(i);
-		
+
 		//cout << "_getEvents: " << (int32_t)e << endl;
 		return e;
 	}
-	///only accepts one event
+///only accepts one event
 	EventHandlerData* File::beginAddEvent(Events event) {
 		EventHandlerData *ed = &eventData[eventToIndex(event)];
 		if (ed->state != EventHandlerData::States::invalid) throw CPollException(
@@ -465,7 +649,7 @@ namespace CP
 		//if(!b) cout << "doOperation returned false" << endl;
 		//cout << "b=" << b << endl;
 		///if (!b) ed.state = EventHandlerData::States::invalid;
-		
+
 		//else cout << (int32_t)eventData[eventToIndex(event)].state << endl;
 		if (!tmp && onEventsChange != nullptr) onEventsChange(*this, preDispatchEvents);
 	}
@@ -565,7 +749,6 @@ namespace CP
 		if (handle < 0) return;
 		close();
 	}
-
 	void File::close() {
 		//if(handle<0)throw runtime_error("asdf");
 		if (onClose != nullptr) onClose(*this);
@@ -591,8 +774,8 @@ namespace CP
 	void File::flush(const Callback& cb) {
 		cb(0);
 	}
-	
-	//Socket
+
+//Socket
 	Socket::Socket() :
 			addressFamily(AF_UNSPEC), type(0), protocol(0) {
 
@@ -615,7 +798,7 @@ namespace CP
 		type = t;
 		protocol = p;
 	}
-	//the caller must release() or free() the returned object
+//the caller must release() or free() the returned object
 	EndPoint* Socket::getLocalEndPoint() {
 		EndPoint* ep = EndPoint::create(addressFamily);
 		socklen_t l = (socklen_t) (ep->getSockAddrSize());
@@ -624,7 +807,7 @@ namespace CP
 		ep->setSockAddr((struct sockaddr*) addr);
 		return ep;
 	}
-	//the caller must release() or free() the returned object
+//the caller must release() or free() the returned object
 	EndPoint* Socket::getRemoteEndPoint() {
 		EndPoint* ep = EndPoint::create(addressFamily);
 		socklen_t l = (socklen_t) (ep->getSockAddrSize());
@@ -650,7 +833,6 @@ namespace CP
 				File::doOperation(ed, evtd, oldstate);
 		}
 	}
-
 	void Socket::bind(const sockaddr *addr, int32_t addr_size) {
 		if (handle == -1) init(addr->sa_family, SOCK_STREAM, 0);
 		int32_t tmp12345 = 1;
@@ -701,7 +883,6 @@ namespace CP
 		ed->op = Operations::shutdown;
 		endAddEvent(e, false);
 	}
-
 	void __socket_init_if_not_already(Socket* s, int32_t af) {
 		if (s->handle < 0) s->init(af, SOCK_STREAM, 0);
 	}
@@ -742,10 +923,10 @@ namespace CP
 		}
 		throw CPollException("no reachable hosts were found; last error: " + string(strerror(errno)));
 	}
-	//the caller must release() or free() the returned object;
-	//also this will NOT automatically add the new socket to this Poll instance
-	//because the user might want to handle the socket on a different thread
-	//which requires a different Poll instance
+//the caller must release() or free() the returned object;
+//also this will NOT automatically add the new socket to this Poll instance
+//because the user might want to handle the socket on a different thread
+//which requires a different Poll instance
 	Socket* Socket::accept() {
 		Socket* sock = new Socket(acceptHandle(), addressFamily, type, protocol);
 		return sock;
@@ -758,7 +939,6 @@ namespace CP
 		}
 		return h;
 	}
-
 	void Socket::connect(const sockaddr* addr, int32_t addr_size, const Callback& cb) {
 		__socket_init_if_not_already(this, addr->sa_family);
 		checkError(fcntl(handle, F_SETFL, checkError(fcntl(handle, F_GETFL, 0)) | O_NONBLOCK));
@@ -769,7 +949,6 @@ namespace CP
 		ed->op = Operations::connect;
 		endAddEvent(e, false);
 	}
-
 	void Socket::connect(const EndPoint& ep, const Callback& cb) {
 		__socket_init_if_not_already(this, ep.addressFamily);
 		checkError(fcntl(handle, F_SETFL, checkError(fcntl(handle, F_GETFL, 0)) | O_NONBLOCK));
@@ -788,7 +967,7 @@ namespace CP
 		HANDLE h = th->acceptHandle();
 		th->_acceptHandleCB(h);
 	}
-	//user must eventually release() or free() the received object
+//user must eventually release() or free() the received object
 	void Socket::accept(const Delegate<void(Socket*)>& cb, bool repeat) {
 		_acceptCB = cb;
 		static const Events e = Events::in;
@@ -806,7 +985,7 @@ namespace CP
 		endAddEvent(e, repeat);
 	}
 
-	//SignalFD
+//SignalFD
 	int32_t SignalFD::MAX_EVENTS(4);
 	SignalFD::SignalFD(HANDLE handle, const sigset_t& mask) :
 			Handle(handle), mask(mask) {
@@ -828,7 +1007,7 @@ namespace CP
 		return Events::in;
 	}
 
-	//EventFD
+//EventFD
 	EventFD::EventFD(HANDLE handle) :
 			File(handle) {
 	}
@@ -878,7 +1057,7 @@ namespace CP
 		endAddEvent(e, false);
 	}
 
-	//Poll
+//Poll
 	int32_t Poll::MAX_EVENTS(32);
 	Poll::Poll(HANDLE handle) :
 			Handle(handle), curEvents(NULL), active(0), cur_handle(-1) {
@@ -1099,10 +1278,10 @@ namespace CP
 	}
 
 	FixedMemoryStream::FixedMemoryStream() :
-			BufferedStream(NULL, 0, 0), len(0) {
+			BufferedOutput(NULL, 0, 0), len(0) {
 	}
 	FixedMemoryStream::FixedMemoryStream(void* data, int len) :
-			BufferedStream((uint8_t*) data, 0, len), len(0) {
+			BufferedOutput((uint8_t*) data, 0, len), len(0) {
 	}
 	int32_t FixedMemoryStream::read(void* buf, int32_t len) {
 		int l = len < (this->len - this->bufferPos) ? len : (this->len - this->bufferPos);
@@ -1146,6 +1325,15 @@ namespace CP
 	void FixedMemoryStream::flush(const Callback& cb) {
 		cb(0);
 	}
+	int32_t FixedMemoryStream::readBuffer(void*& buf, int32_t maxlen) {
+		int l;
+		l = this->len - this->bufferPos;
+		if (maxlen >= 0 && maxlen < l) l = maxlen;
+		if (l <= 0) return 0;
+		buf = this->buffer + this->bufferPos;
+		this->bufferPos += l;
+		return l;
+	}
 	void FixedMemoryStream::flushBuffer(int minBufferAllocation) {
 		if (minBufferAllocation > this->len - this->bufferPos) throw runtime_error(
 				"overflowed FixedMemoryStream");
@@ -1184,7 +1372,6 @@ namespace CP
 		free(buffer);
 		bufferSize = len = 0;
 	}
-	
 	void MemoryStream::flushBuffer(int minBufferAllocation) {
 		ensureCapacity(this->len + minBufferAllocation);
 		if (this->bufferPos > this->len) this->len = this->bufferPos;

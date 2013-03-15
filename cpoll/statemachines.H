@@ -44,17 +44,21 @@ namespace CP
 	//streamReader_init(sr, 4096);
 	// ...
 	//streamReader_deinit(sr);
+
+	//it is safe to delete a streamReader from within your callback
 	struct streamReader;
 	int streamReader_getSize();
+	void streamReader_init(streamReader* sr, void* buffer, int capacity);
 	void streamReader_init(streamReader* sr, int capacity);
 	void streamReader_deinit(streamReader* sr);
 	tuple<uint8_t*, int> streamReader_beginPutData(streamReader* sr);
 	void streamReader_endPutData(streamReader* sr, int len);
-	void streamReader_readUntilString(streamReader* sr, string delim);
+	void streamReader_readUntilString(streamReader* sr, const char* delim, int delimLen);
 	void streamReader_readUntilChar(streamReader* sr, char delim);
-	void streamReader_setCallback(streamReader* sr, const function<void(uint8_t*, int, bool)>& cb);
+	void streamReader_setCallback(streamReader* sr, const Delegate<void(uint8_t*, int, bool)>& cb);
 	tuple<uint8_t*, int> streamReader_getBufferData(streamReader* sr);
 	void streamReader_reset(streamReader* sr);
+	void streamReader_skip(streamReader* sr, int i);
 
 	//another streamReader implementation that remembers all data that has ever been fed into it;
 	//mainly for socketd

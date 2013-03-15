@@ -46,14 +46,16 @@ namespace CP
 
 		//user specified
 		//				data	len	delimReached
-		function<void(uint8_t*, int, bool)> output;
+		Delegate<void(uint8_t*, int, bool)> output;
+		void* buffer;
 		int bufferCapacity;
 
 		//internal
 		int bufferLen;
 		int bufferPos;
 		int state; //0: none; 1: readUntilString; 2: readUntilChar
-		string delim1;
+		const char* delim1;
+		int delim1len;
 		char delim2;
 		//bool delayProcessing;
 		//bool delayedProcessing;
@@ -63,14 +65,20 @@ namespace CP
 			state = 0;
 			//delayProcessing = false;
 		}
+		streamReader(void* buffer, int capacity) {
+			this->buffer = buffer;
+			bufferCapacity = capacity;
+			reset();
+		}
 		streamReader(int capacity) {
+			this->buffer = (void*) (this + 1);
 			bufferCapacity = capacity;
 			reset();
 		}
 		inline uint8_t* getBuffer() {
-			return (uint8_t*) (this + 1);
+			return (uint8_t*) buffer;
 		}
-		inline void setCallback(const function<void(uint8_t*, int, bool)>& cb) {
+		inline void setCallback(const Delegate<void(uint8_t*, int, bool)>& cb) {
 			output = cb;
 		}
 
@@ -91,7 +99,7 @@ namespace CP
 				case 1:
 				{
 					uint8_t* buf = getBuffer();
-					if (bufferLen - bufferPos <= (int)delim1.length() && bufferPos > 0) {
+					if (bufferLen - bufferPos <= (int) delim1len && bufferPos > 0) {
 						asdfg: memmove(buf, buf + bufferPos, bufferLen - bufferPos);
 						bufferLen -= bufferPos;
 						bufferPos = 0;
@@ -100,18 +108,18 @@ namespace CP
 
 					//printf("%i\n",bufferLen - bufferPos);
 					uint8_t* tmp = (uint8_t*) memmem(buf + bufferPos, bufferLen - bufferPos,
-							delim1.data(), delim1.length());
+							delim1, delim1len);
 					if (tmp == NULL) {
 						//delayProcessing = true;
-						output(buf + bufferPos, bufferLen - bufferPos - delim1.length(), false);
+						output(buf + bufferPos, bufferLen - bufferPos - delim1len, false);
 						//delayProcessing = false;
 						//memmove(buf, buf + bufferLen - delim1.length(), delim1.length());
-						bufferPos = bufferLen - delim1.length();
+						bufferPos = bufferLen - delim1len;
 						goto asdfg;
 					} else {
 						int oldPos = bufferPos;
 						int newPos = tmp - buf;
-						bufferPos = newPos + delim1.length();
+						bufferPos = newPos + delim1len;
 						if (bufferPos >= bufferLen) {
 							bufferLen = bufferPos = 0;
 						}
@@ -123,8 +131,7 @@ namespace CP
 				case 2:
 				{
 					uint8_t* buf = getBuffer();
-					uint8_t* tmp = (uint8_t*) memchr(buf + bufferPos, delim2,
-							bufferLen - bufferPos);
+					uint8_t* tmp = (uint8_t*) memchr(buf + bufferPos, delim2, bufferLen - bufferPos);
 					int oldPos = bufferPos;
 					if (tmp == NULL) {
 						int oldLen = bufferLen;
@@ -144,9 +151,10 @@ namespace CP
 			}
 			//if (delayedProcessing) goto reprocess;
 		}
-		inline void readUntilString(string delim) {
+		inline void readUntilString(const char* delim, int delimLen) {
 			state = 1;
 			delim1 = delim;
+			delim1len = delimLen;
 			//printf("%i\n",delim.length());
 			process();
 		}
@@ -169,13 +177,18 @@ namespace CP
 		inline tuple<uint8_t*, int> getBufferData() {
 			return make_tuple(getBuffer() + bufferPos, bufferLen - bufferPos);
 		}
-
+		inline void skip(int i) {
+			bufferPos += i;
+		}
 	};
 	int streamReader_getSize() {
 		return sizeof(streamReader);
 	}
 	void streamReader_init(streamReader* sr, int capacity) {
 		new (sr) streamReader(capacity);
+	}
+	void streamReader_init(streamReader* sr, void* buffer, int capacity) {
+		new (sr) streamReader(buffer, capacity);
 	}
 	void streamReader_deinit(streamReader* sr) {
 		sr->~streamReader();
@@ -186,13 +199,13 @@ namespace CP
 	void streamReader_endPutData(streamReader* sr, int len) {
 		sr->endPutData(len);
 	}
-	void streamReader_readUntilString(streamReader* sr, string delim) {
-		sr->readUntilString(delim);
+	void streamReader_readUntilString(streamReader* sr, const char* delim, int delimLen) {
+		sr->readUntilString(delim, delimLen);
 	}
 	void streamReader_readUntilChar(streamReader* sr, char delim) {
 		sr->readUntilChar(delim);
 	}
-	void streamReader_setCallback(streamReader* sr, const function<void(uint8_t*, int, bool)>& cb) {
+	void streamReader_setCallback(streamReader* sr, const Delegate<void(uint8_t*, int, bool)>& cb) {
 		sr->setCallback(cb);
 	}
 	tuple<uint8_t*, int> streamReader_getBufferData(streamReader* sr) {
@@ -200,6 +213,9 @@ namespace CP
 	}
 	void streamReader_reset(streamReader* sr) {
 		sr->reset();
+	}
+	void streamReader_skip(streamReader* sr, int i) {
+		sr->skip(i);
 	}
 }
 

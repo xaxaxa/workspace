@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>.e4css</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+	</buildSpec>
+	<natures>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>e4_classic_winxp.css</name>
+			<type>1</type>
+			<location>/persist/eclipse/plugins/org.eclipse.platform_4.2.0.v201206081400/css/e4_classic_winxp.css</location>
+		</link>
+	</linkedResources>
+</projectDescription>
