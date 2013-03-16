@@ -1,0 +1,14 @@
+*.rst
+*.lst
+*.sym
+*.rel
+*.map
+*.ihx
+*.omf
+*.asm
+test1
+test2
+test3
+test4
+test5
+test6
