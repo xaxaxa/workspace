@@ -1,9 +1,11 @@
 workspace
 =========
 
-all the code i've ever written since grade 11; also includes some forward-ported code from grades 8 and 9
+all the code i've ever written since grade 11; also includes some forward-ported code from grades 8 and 9.
 
-the workspace layout is currently quite messy; there are a lot of miscellaneous stuff
+all source code in this repository are licensed under GPLv3 unless otherwise specified.
+
+the workspace layout is currently quite messy; there are a lot of miscellaneous stuff.
 
 the most interesting things in there are:
   * cpoll - epoll based asynchornous socket I/O library
@@ -15,4 +17,4 @@ the most interesting things in there are:
   * jackfft - a JACK audio based FFT filtering application (similar to jamin, but with adjustable FFT size and much lower cpu consumption)
   * nc.xaxaxa.C - my own version of netcat
 
-all of the above projects should be compilable and usable
+all of the above projects should be compilable and usable.
