@@ -35,4 +35,5 @@ a.out
 .nfs*
 core.*
 /email_extract
+/workspace.tags
 

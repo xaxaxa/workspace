@@ -19,17 +19,7 @@ int main(int argc, char** argv)
 		cerr << "usage: " << argv[0] << " bind_host bind_port forward_host forward_port [r]" << endl;
 		return 1;
 	}
-	
-	//"{ ... }" to save stack space
-	{
-		signal(SIGPIPE, SIG_IGN);
-		struct sigaction sa;
-		sa.sa_handler = SIG_IGN;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = SA_RESTART; /* Restart functions if	 interrupted by handler */
-		sigaction(SIGHUP, &sa, NULL);
-		sigaction(SIGPIPE, &sa, NULL);
-	}
+	//no need to disable SIGHUP and SIGPIPE as cpoll does that automatically
 	Poll p;
 	Socket srvsock;
 	p.add(srvsock);
