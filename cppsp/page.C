@@ -18,7 +18,7 @@ namespace cppsp
 	void Page::handleRequest(Request& req, Response& resp) {
 		request = &req;
 		response = &resp;
-		req.read();
+		render(*resp.outputStream);
 	}
 	
 	void Page::render(CP::Stream& s) {

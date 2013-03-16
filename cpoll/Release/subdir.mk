@@ -5,19 +5,16 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_UPPER_SRCS += \
 ../cpoll.C \
-../rgctest.C \
 ../sendfd.C \
 ../statemachines.C 
 
 OBJS += \
 ./cpoll.o \
-./rgctest.o \
 ./sendfd.o \
 ./statemachines.o 
 
 C_UPPER_DEPS += \
 ./cpoll.d \
-./rgctest.d \
 ./sendfd.d \
 ./statemachines.d 
 

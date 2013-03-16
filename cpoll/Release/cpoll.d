@@ -1,5 +1,5 @@
 cpoll.d: ../cpoll.C ../cpoll.H ../../include/rgc.H \
- ../../include/delegate.H ../cpoll_internal.H
+ ../../include/delegate.H ../cpoll_internal.H ../statemachines.H
 
 ../cpoll.H:
 
@@ -8,3 +8,5 @@ cpoll.d: ../cpoll.C ../cpoll.H ../../include/rgc.H \
 ../../include/delegate.H:
 
 ../cpoll_internal.H:
+
+../statemachines.H:

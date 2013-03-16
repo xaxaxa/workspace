@@ -27,3 +27,7 @@ streamreader_test:
 	g++ streamreader_test.C -o streamreader_test --std=c++0x -O3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 vuln:
 	g++ vuln.C -o vuln --std=c++0x -O3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
+image_steg:
+	g++ image_steg.C -o image_steg -lMagick++
+
+

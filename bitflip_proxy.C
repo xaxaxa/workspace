@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	
-	//save stack space
+	//"{ ... }" to save stack space
 	{
 		signal(SIGPIPE, SIG_IGN);
 		struct sigaction sa;
