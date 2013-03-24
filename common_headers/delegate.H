@@ -2,25 +2,33 @@
 #ifndef DELEGATE_H
 #define DELEGATE_H
 #include <functional>
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
+
+struct GenericDelegate
+{
+	void* func;
+	void* data;
+	template<class R, class... P> R operator()(P && ...p) {
+		return ((R (*)(void* data, P...))func)(data,std::forward<P>(p)...);
+	}
+	
+	void* operator=(void* func) {
+		return this->func=func;
+	}
+};
+
 template<class SIGNATURE> struct DelegateBase;
 template<class R, class... P>
-struct DelegateBase<R(P...)>
+struct DelegateBase<R(P...)>:public GenericDelegate
 {
-	R (*func)(void* data, P...);
-	void* data;
+	/*R (*func)(void* data, P...);
+	void* data;*/
 	template<class... P2>
 	R operator() (P2 && ...p) const {
-		return func(data,std::forward<P2>(p)...);
+		return ((R (*)(void* data, P...))func)(data,std::forward<P2>(p)...);
 	}
-	DelegateBase() {}
-	DelegateBase(R (*func)(void* data, P... p...), void* data): func(func),data(data) {}
-	template<class X>DelegateBase(R (*func)(X*,P...), X* th)
-		:func((R(*)(void*,P...))func),data(th) {}
-	template<class X>DelegateBase(R (X::*func)(P...), X* th)
-		:func((R(*)(void*,P...))func),data(th) {}
-	template<class X>DelegateBase(X* th)
-		:func((R(*)(void*,P...))&X::operator()),data(th) {}
-	DelegateBase(std::nullptr_t n): func(NULL){};
 	
 	R (*operator=(R (*func)(void* data, P...)))(void* data, P...) {
 		return this->func=func;
@@ -47,15 +55,28 @@ struct Delegate<R(P...)>:public DelegateBase<R(P...)>
 		this->func=NULL;
 	}
 	Delegate(R (*func)(void* data, P... p...), void* data): DelegateBase<R(P...)>(func,data) {}
-	template<class X>Delegate(R (*func)(X*,P...), X* th)
-		:DelegateBase<R(P...)>(func,th) {}
-	template<class X>Delegate(R (X::*func)(P...), X* th)
-		:DelegateBase<R(P...)>(func,th) {}
-	template<class X>Delegate(X* th)
-		:DelegateBase<R(P...)>(th) {}
-	Delegate(std::nullptr_t n): DelegateBase<R(P...)>(n){};
+	template<class X>Delegate(R (*func)(X*,P...), X* th) {
+		this->func=(void*)(R(*)(void*,P...))func;
+		this->data=th;
+	}
+	template<class X>Delegate(R (X::*func)(P...), X* th) {
+		this->func=(void*)(R(*)(void*,P...))func;
+		this->data=th;
+	}
+	Delegate(R (*func)(void*, P...)) {
+		this->func=func;
+		this->data=NULL;
+	}
+	template<class X>Delegate(X* th) {
+		this->func=(void*)(R(*)(void*,P...))&X::operator();
+		this->data=th;
+	}
+	Delegate(std::nullptr_t n) {
+		this->func=NULL;
+	};
 	R (*operator=(R (*func)(void* data, P...)))(void* data, P...) {
-		return this->func=func;
+		this->func=(void*)func;
+		return func;
 	}
 };
 
