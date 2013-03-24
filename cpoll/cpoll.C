@@ -944,6 +944,7 @@ namespace CP
 				break;
 			default:
 				File::doOperation(ed, evtd, oldstate);
+				return;
 		}
 		if (r <= 0) {
 			ed.state = EventHandlerData::States::invalid;
