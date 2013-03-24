@@ -7,6 +7,21 @@ using namespace std;
 using namespace CP;
 int main() {
 	StandardStream ss;
+	/*char buf[10];
+	struct {
+		StandardStream& ss;
+		char* buf;
+		void operator()(int r) {
+			ss.write(buf,10);
+		}
+	} cb2 {ss,buf};
+	ss.readAll(buf,10,&cb2);
+	
+	Poll p;
+	ss.addToPoll(p);
+	p.loop();
+	return 0;*/
+	
 	StreamReader sr(ss);
 	
 	//*
@@ -28,7 +43,6 @@ int main() {
 		cout << s << endl;
 	}
 	//*/
-	
 	Poll p;
 	ss.addToPoll(p);
 	p.loop();
