@@ -93,14 +93,38 @@ namespace CP
 				return NULL;
 		}
 	}
-	EndPoint* EndPoint::create(int32_t AddressFamily) {
-		switch (AddressFamily) {
+	EndPoint* EndPoint::create(int32_t addressFamily) {
+		switch (addressFamily) {
 			case AF_INET:
 				return new IPEndPoint();
 			case AF_INET6:
 				return new IPv6EndPoint();
 			case AF_UNIX:
 				return new UNIXEndPoint();
+			default:
+				return NULL;
+		}
+	}
+	int EndPoint::getSize(int32_t addressFamily) {
+		switch (addressFamily) {
+			case AF_INET:
+				return sizeof(IPEndPoint);
+			case AF_INET6:
+				return sizeof(IPv6EndPoint);
+			case AF_UNIX:
+				return sizeof(UNIXEndPoint);
+			default:
+				return 0;
+		}
+	}
+	EndPoint* EndPoint::construct(void* mem, int32_t addressFamily) {
+		switch (addressFamily) {
+			case AF_INET:
+				return new (mem) IPEndPoint;
+			case AF_INET6:
+				return new (mem) IPv6EndPoint;
+			case AF_UNIX:
+				return new (mem) UNIXEndPoint;
 			default:
 				return NULL;
 		}
@@ -237,6 +261,10 @@ namespace CP
 		UNIXEndPoint& tmp((UNIXEndPoint&) to);
 		tmp.name = name;
 	}
+	string UNIXEndPoint::toStr() const {
+		return name;
+		//XXX
+	}
 
 	StreamWriter::StreamWriter(BufferedOutput& s) :
 			buffer(s) {
@@ -330,19 +358,34 @@ namespace CP
 		void* tmp;
 		int l = readBuffer(tmp, len);
 		if (l <= 0) {
+			freeBuffer(tmp, l);
 			return input->read(buf, len);
 		}
 		memcpy(buf, tmp, l);
+		freeBuffer(tmp, l);
 		return l;
 	}
 	void StreamReader::read(void* buf, int32_t len, const CP::Callback& cb, bool repeat) {
 		void* tmp;
 		int l = readBuffer(tmp, len);
 		if (l <= 0) {
+			freeBuffer(tmp, l);
 			return input->read(buf, len, cb, repeat);
 		}
 		memcpy(buf, tmp, l);
 		cb(l);
+		freeBuffer(tmp, l);
+	}
+	void StreamReader::readAll(void* buf, int32_t len, const CP::Callback& cb) {
+		void* tmp;
+		int l = readBuffer(tmp, len);
+		if (l < len) {
+			freeBuffer(tmp, l);
+			return input->readAll(((uint8_t*) buf) + l, len - l, cb);
+		}
+		memcpy(buf, tmp, l);
+		cb(l);
+		freeBuffer(tmp, l);
 	}
 	void StreamReader::close() {
 		input->close();
@@ -427,6 +470,12 @@ namespace CP
 			if (*delFlag) return;
 			tmp.clear();
 		}
+	}
+	void StreamReader::cancelRead() {
+		input->cancelRead();
+	}
+	void StreamReader::cancelWrite() {
+		input->cancelWrite();
 	}
 
 	Handle::Handle() {
@@ -531,18 +580,23 @@ namespace CP
 				repeat ? (EventHandlerData::States::repeat) : (EventHandlerData::States::once);
 		if (onEventsChange != nullptr && !dispatching) onEventsChange(*this, old_events);
 	}
+	void File::cancel(Events event) {
+		Events old_events = _getEvents();
+		eventData[eventToIndex(event)].state = EventHandlerData::States::invalid;
+		if (onEventsChange != nullptr && !dispatching) onEventsChange(*this, old_events);
+	}
 	int32_t File::read(void* buf, int32_t len) {
 		return ::read(handle, buf, len);
 	}
 	int32_t File::write(const void* buf, int32_t len) {
 		return ::write(handle, buf, len);
 	}
-	int32_t File::writeAll(const void* buf, int32_t len) {
-		int32_t bw = 0, bw1 = 0;
-		while (bw < len && (bw1 = write(((char*) buf) + bw, len - bw)) > 0)
-			bw += bw1;
-		return (bw1 < 0 && bw <= 0) ? -1 : bw;
-	}
+	/*int32_t File::writeAll(const void* buf, int32_t len) {
+	 int32_t bw = 0, bw1 = 0;
+	 while (bw < len && (bw1 = write(((char*) buf) + bw, len - bw)) > 0)
+	 bw += bw1;
+	 return (bw1 < 0 && bw <= 0) ? -1 : bw;
+	 }*/
 	int32_t File::send(const void* buf, int32_t len, int32_t flags) {
 		return ::send(handle, buf, len, flags);
 	}
@@ -554,6 +608,12 @@ namespace CP
 	}
 	int32_t File::recv(void* buf, int32_t len, int32_t flags) {
 		return ::recv(handle, buf, len, flags);
+	}
+	int32_t File::recvAll(void* buf, int32_t len, int32_t flags) {
+		int32_t bw = 0, bw1 = 0;
+		while (bw < len && (bw1 = recv(((char*) buf) + bw, len - bw, flags)) > 0)
+			bw += bw1;
+		return (bw1 < 0 && bw <= 0) ? -1 : bw;
 	}
 	void File::doOperation(EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate) {
@@ -567,6 +627,20 @@ namespace CP
 			case Operations::read:
 				r = read(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
 				break;
+			case Operations::readAll:
+				r = read(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
+						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done);
+				if (r <= 0) {
+					ed.state = EventHandlerData::States::invalid;
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+				}
+				ed.misc.bufferIO.len_done += r;
+				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
+					ed.state = EventHandlerData::States::invalid;
+					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
+				}
+				return;
 			case Operations::write:
 				r = write(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
 				break;
@@ -696,6 +770,18 @@ namespace CP
 		fillIOEventHandlerData(ed, buf, len, cb, e, Operations::read);
 		endAddEvent(e, repeat);
 	}
+	void File::readAll(void* buf, int32_t len, const Callback& cb) {
+		if (!_supportsEPoll) {
+			int32_t r = Stream::readAll(buf, len);
+			cb(r);
+			return;
+		}
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::readAll);
+		ed->misc.bufferIO.len_done = 0;
+		endAddEvent(e, true);
+	}
 	void File::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
 		if (!_supportsEPoll) {
 			asdfg: int32_t r = write(buf, len);
@@ -728,6 +814,18 @@ namespace CP
 		fillIOEventHandlerData(ed, buf, len, cb, e, Operations::recv);
 		ed->misc.bufferIO.flags = flags;
 		endAddEvent(e, repeat);
+	}
+	void File::recvAll(void* buf, int32_t len, int32_t flags, const Callback& cb) {
+		if (!_supportsEPoll) {
+			int32_t r = recvAll(buf, len);
+			cb(r);
+			return;
+		}
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::recvAll);
+		ed->misc.bufferIO.len_done = 0;
+		endAddEvent(e, true);
 	}
 	void File::send(const void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat) {
 		static const Events e = Events::out;
@@ -774,6 +872,12 @@ namespace CP
 	void File::flush(const Callback& cb) {
 		cb(0);
 	}
+	void File::cancelRead() {
+		cancel(Events::in);
+	}
+	void File::cancelWrite() {
+		cancel(Events::out);
+	}
 
 //Socket
 	Socket::Socket() :
@@ -819,19 +923,32 @@ namespace CP
 	void Socket::doOperation(EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate) {
 		Operations op = ed.op;
+		int r;
 		switch (op) {
 			case Operations::accept:
 				ed.cb((evtd.hungUp | evtd.error) ? -1 : 0);
-				break;
+				return;
 			case Operations::shutdown:
 				ed.cb(shutdown(ed.misc.shutdown.how));
-				break;
+				return;
 			case Operations::connect:
 				ed.cb((evtd.error || evtd.hungUp) ? -1 : 0);
+				return;
+			case Operations::sendTo:
+				r = sendTo(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags,
+						*ed.misc.bufferIO.const_ep);
+				break;
+			case Operations::recvFrom:
+				r = recvFrom(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags,
+						*ed.misc.bufferIO.ep);
 				break;
 			default:
 				File::doOperation(ed, evtd, oldstate);
 		}
+		if (r <= 0) {
+			ed.state = EventHandlerData::States::invalid;
+		}
+		if (ed.cb != nullptr) ed.cb(r);
 	}
 	void Socket::bind(const sockaddr *addr, int32_t addr_size) {
 		if (handle == -1) init(addr->sa_family, SOCK_STREAM, 0);
@@ -982,6 +1099,40 @@ namespace CP
 		EventHandlerData* ed = beginAddEvent(e);
 		ed->cb = Callback(&Socket_acceptHandleStub, this);
 		ed->op = Operations::accept;
+		endAddEvent(e, repeat);
+	}
+	int32_t Socket::recvFrom(void* buf, int32_t len, int32_t flags, EndPoint& ep) {
+		socklen_t size = ep.getSockAddrSize();
+		uint8_t addr[size];
+		//ep->GetSockAddr((sockaddr*)tmp);
+		int tmp = recvfrom(handle, buf, len, flags, (sockaddr*) addr, &size);
+		checkError(tmp);
+		ep.setSockAddr((sockaddr*) addr);
+		return tmp;
+	}
+	int32_t Socket::sendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep) {
+		socklen_t size = ep.getSockAddrSize();
+		uint8_t addr[size];
+		ep.getSockAddr((sockaddr*) addr);
+		int tmp = sendto(handle, buf, len, flags, (sockaddr*) addr, size);
+		return checkError(tmp);
+	}
+	void Socket::recvFrom(void* buf, int32_t len, int32_t flags, EndPoint& ep, const Callback& cb,
+			bool repeat) {
+		static const Events e = Events::in;
+		EventHandlerData* ed = beginAddEvent(e);
+		fillIOEventHandlerData(ed, buf, len, cb, e, Operations::recvFrom);
+		ed->misc.bufferIO.flags = flags;
+		ed->misc.bufferIO.ep = &ep;
+		endAddEvent(e, repeat);
+	}
+	void Socket::sendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep,
+			const Callback& cb, bool repeat) {
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::sendTo);
+		ed->misc.bufferIO.flags = flags;
+		ed->misc.bufferIO.const_ep = &ep;
 		endAddEvent(e, repeat);
 	}
 
@@ -1249,6 +1400,9 @@ namespace CP
 	int32_t StandardStream::read(void* buf, int32_t len) {
 		return in.read(buf, len);
 	}
+	int32_t StandardStream::readAll(void* buf, int32_t len) {
+		return in.readAll(buf, len);
+	}
 	int32_t StandardStream::write(const void* buf, int32_t len) {
 		return out.write(buf, len);
 	}
@@ -1258,11 +1412,20 @@ namespace CP
 	void StandardStream::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
 		in.read(buf, len, cb, repeat);
 	}
+	void StandardStream::readAll(void* buf, int32_t len, const Callback& cb) {
+		in.readAll(buf, len, cb);
+	}
 	void StandardStream::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
 		out.write(buf, len, cb, repeat);
 	}
 	void StandardStream::writeAll(const void* buf, int32_t len, const Callback& cb) {
 		out.writeAll(buf, len, cb);
+	}
+	void StandardStream::cancelRead() {
+		in.cancelRead();
+	}
+	void StandardStream::cancelWrite() {
+		out.cancelWrite();
 	}
 	void StandardStream::close() {
 
@@ -1290,6 +1453,9 @@ namespace CP
 		this->bufferPos += l;
 		return l;
 	}
+	int32_t FixedMemoryStream::readAll(void* buf, int32_t len) {
+		return read(buf, len);
+	}
 	int32_t FixedMemoryStream::write(const void* buf, int32_t len) {
 		int l = len < (this->len - this->bufferPos) ? len : (this->len - this->bufferPos);
 		if (l <= 0) return 0;
@@ -1306,6 +1472,10 @@ namespace CP
 		cb(tmp);
 		if (repeat && tmp > 0) goto rep;
 	}
+	void FixedMemoryStream::readAll(void* buf, int32_t len, const Callback& cb) {
+		int tmp = readAll(buf, len);
+		cb(tmp);
+	}
 	void FixedMemoryStream::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
 		rep: int tmp = write(buf, len);
 		cb(tmp);
@@ -1314,6 +1484,10 @@ namespace CP
 	void FixedMemoryStream::writeAll(const void* buf, int32_t len, const Callback& cb) {
 		int tmp = writeAll(buf, len);
 		cb(tmp);
+	}
+	void FixedMemoryStream::cancelRead() {
+	}
+	void FixedMemoryStream::cancelWrite() {
 	}
 	void FixedMemoryStream::close() {
 	}
@@ -1344,6 +1518,9 @@ namespace CP
 		if (buffer == NULL) throw runtime_error(strerror(errno));
 		bufferSize = capacity;
 	}
+	MemoryStream::~MemoryStream() {
+		if (buffer != NULL) free(buffer);
+	}
 	void MemoryStream::ensureCapacity(int c) {
 		if (buffer == NULL) throw runtime_error("attempted to write to closed MemoryStream");
 		if (likely(c<=bufferSize)) return;
@@ -1362,20 +1539,27 @@ namespace CP
 		return FixedMemoryStream::write(buf, len);
 	}
 	int32_t MemoryStream::writeAll(const void* buf, int32_t len) {
-		ensureCapacity(this->bufferSize + len);
-		this->bufferPos += len;
-		if (this->bufferPos > this->len) this->len = this->bufferPos;
-		return FixedMemoryStream::writeAll(buf, len);
+		/*ensureCapacity(this->bufferSize + len);
+		 this->bufferPos += len;
+		 if (this->bufferPos > this->len) this->len = this->bufferPos;
+		 return FixedMemoryStream::writeAll(buf, len);*/
+		return write(buf, len);
 	}
 	void MemoryStream::close() {
 		if (buffer == NULL) return;
 		free(buffer);
 		bufferSize = len = 0;
 	}
+	void MemoryStream::clear() {
+		len = 0;
+		bufferPos = 0;
+	}
 	void MemoryStream::flushBuffer(int minBufferAllocation) {
 		ensureCapacity(this->len + minBufferAllocation);
 		if (this->bufferPos > this->len) this->len = this->bufferPos;
 	}
-
+	void MemoryStream::keepBuffer() {
+		buffer = NULL;
+	}
 }
 

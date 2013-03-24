@@ -158,18 +158,18 @@ namespace CP
 			return a.s_addr == other.a.s_addr;
 		}
 		inline IPAddress operator+(const IPAddress& other) const {
-			return IPAddress( { htonl(ntohl(a.s_addr) + other.a.s_addr) });
+			return IPAddress( { htonl(ntohl(a.s_addr) + ntohl(other.a.s_addr)) });
 		}
 		inline IPAddress operator-(const IPAddress& other) const {
-			return IPAddress( { htonl(ntohl(a.s_addr) - other.a.s_addr) });
+			return IPAddress( { htonl(ntohl(a.s_addr) - ntohl(other.a.s_addr)) });
 		}
-		inline IPAddress operator+(const in_addr_t& other) const {
+		inline IPAddress operator+(int i) const {
 			//WARN(1,a.s_addr << " " <<ntohl(a.s_addr));
 			//cout << "a" << endl;
-			return IPAddress( { htonl(ntohl(a.s_addr) + other) });
+			return IPAddress( { htonl(ntohl(a.s_addr) + i) });
 		}
-		inline IPAddress operator-(const in_addr_t& other) const {
-			return IPAddress( { htonl(ntohl(a.s_addr) - other) });
+		inline IPAddress operator-(int i) const {
+			return IPAddress( { htonl(ntohl(a.s_addr) - i) });
 		}
 		string toStr() const {
 			char tmp[INET_ADDRSTRLEN];
@@ -203,12 +203,15 @@ namespace CP
 		virtual int32_t getSockAddrSize() const=0;
 		static EndPoint* fromSockAddr(const sockaddr* addr);
 		static EndPoint* create(int32_t addressFamily);
+		static int getSize(int32_t addressFamily);
+		static EndPoint* construct(void* mem, int32_t addressFamily);
 		virtual void clone(EndPoint& to) const=0;
 		virtual ~EndPoint() {
 		}
 		static vector<RGC::Ref<EndPoint> > lookupHost(const char* hostname, const char* port,
 				int32_t family = AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 		//static EndPoint Resolve(
+		virtual string toStr() const=0;
 	};
 	class IPEndPoint: public EndPoint
 	{
@@ -254,6 +257,7 @@ namespace CP
 		virtual void getSockAddr(sockaddr* addr) const;
 		virtual int32_t getSockAddrSize() const;
 		virtual void clone(EndPoint& to) const;
+		virtual string toStr() const;
 	};
 	//===========================================================
 	//======================ABSTRACT CLASSES=====================
@@ -263,6 +267,15 @@ namespace CP
 	public:
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0; //required
+		virtual int32_t readAll(void* buf, int32_t len) { //optional
+			int off = 0;
+			while (off < len) {
+				int tmp = read((uint8_t*) buf + off, len - off);
+				if (tmp <= 0) return off;
+				off += tmp;
+			}
+			return off;
+		}
 		virtual int32_t write(const void* buf, int32_t len)=0; //required
 		virtual int32_t writeAll(const void* buf, int32_t len) { //optional
 			int off = 0;
@@ -283,7 +296,7 @@ namespace CP
 		//the request has been completed synchronously
 
 		//UPDATE: hybrid[Read|Write] has been canceled because it is extremely hard for users to design applications
-		// to deal with 2 programming models at once, it is very error-prone
+		// to deal with 2 programming models at once and it is very error-prone
 		/*virtual int32_t hybridRead(void* buf, int32_t len, const Callback& cb, bool repeat = false) { //optional (required for async)
 		 }
 		 virtual int32_t hybridWrite(const void* buf, int32_t len, const Callback& cb, bool repeat =
@@ -293,11 +306,16 @@ namespace CP
 		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
 			read(buf, len, cb, true);
 		}
+		virtual void readAll(void* buf, int32_t len, const Callback& cb)=0;
+
 		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
 		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
 			write(buf, len, cb, true);
 		}
 		virtual void writeAll(const void* buf, int32_t len, const Callback& cb)=0;
+		//only for async read/write operations
+		virtual void cancelRead()=0;
+		virtual void cancelWrite()=0;
 
 		//=========misc===========
 		//sync
@@ -343,16 +361,18 @@ namespace CP
 	{
 	public:
 		RGC::Ref<BufferedOutput> buffer;
-		void write(const uint8_t* s, int len) {
+		void write(const void* s, int len) {
 			if (buffer->bufferSize - buffer->bufferPos < len) buffer->flushBuffer(len);
 			memcpy(buffer->buffer + buffer->bufferPos, s, len);
 			buffer->bufferPos += len;
 		}
-		void write(const char* s, int len) {
-			write((const uint8_t*) s, len);
-		}
 		void write(const char* s) {
 			write((const uint8_t*) s, strlen(s));
+		}
+		void write(char c) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 1)) buffer->flushBuffer(1);
+			buffer->buffer[buffer->bufferPos] = c;
+			buffer->bufferPos++;
 		}
 		void write(int8_t i) {
 			//snprintf() writes a null byte, so gotta reserve 4 bytes of buffer space
@@ -450,6 +470,7 @@ namespace CP
 
 		//async
 		virtual void read(void* buf, int32_t len, const CP::Callback& cb, bool repeat = false);
+		virtual void readAll(void* buf, int32_t len, const CP::Callback& cb);
 		virtual void write(const void* buf, int32_t len, const CP::Callback& cb,
 				bool repeat = false) {
 			return input->write(buf, len, cb, repeat);
@@ -457,6 +478,9 @@ namespace CP
 		virtual void writeAll(const void* buf, int32_t len, const CP::Callback& cb) {
 			return input->writeAll(buf, len, cb);
 		}
+		//does NOT cancel readTo() or readLine() operations
+		virtual void cancelRead();
+		virtual void cancelWrite();
 
 		//=========misc===========
 		//sync
@@ -496,8 +520,8 @@ namespace CP
 	enum class Operations
 		: uint8_t
 		{
-			none = 0, read = 1, write, send, recv, accept, writeAll, sendAll, shutdown, connect, close,
-		lastItem
+			none = 0, read = 1, write, send, recv, sendTo, recvFrom, accept, readAll, writeAll,
+		sendAll, recvAll, shutdown, connect, close, lastItem
 	};
 
 	struct EventHandlerData
@@ -509,6 +533,11 @@ namespace CP
 			struct
 			{
 				void* buf;
+				union
+				{
+					EndPoint* ep; //recvFrom
+					const EndPoint* const_ep; //sendTo
+				};
 				int32_t len;
 				int32_t flags;
 				int32_t len_done;
@@ -584,12 +613,19 @@ namespace CP
 		///only accepts one event
 		EventHandlerData* beginAddEvent(Events event);
 		void endAddEvent(Events event, bool repeat = false);
+		void cancel(Events event);
 		int32_t read(void* buf, int32_t len);
+		int32_t readAll(void* buf, int32_t len) {
+			return Stream::readAll(buf, len);
+		}
 		int32_t write(const void* buf, int32_t len);
-		int32_t writeAll(const void* buf, int32_t len);
+		int32_t writeAll(const void* buf, int32_t len) {
+			return Stream::writeAll(buf, len);
+		}
 		int32_t send(const void* buf, int32_t len, int32_t flags = 0);
 		int32_t sendAll(const void* buf, int32_t len, int32_t flags = 0);
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
+		int32_t recvAll(void* buf, int32_t len, int32_t flags = 0);
 		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
 				EventHandlerData::States oldstate);
 		void dispatch(Events event, const EventData& evtd, bool& deletionFlag);
@@ -606,15 +642,20 @@ namespace CP
 		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
 			read(buf, len, cb, true);
 		}
+		void readAll(void* buf, int32_t len, const Callback& cb);
+
 		void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
 		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
 			write(buf, len, cb, true);
 		}
 		void writeAll(const void* buf, int32_t len, const Callback& cb);
+
 		void recv(void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat = false);
 		inline void repeatRecv(void* buf, int32_t len, int32_t flags, const Callback& cb) {
 			recv(buf, len, flags, cb, true);
 		}
+		void recvAll(void* buf, int32_t len, int32_t flags, const Callback& cb);
+
 		void send(const void* buf, int32_t len, int32_t flags, const Callback& cb,
 				bool repeat = false);
 		inline void repeatSend(const void* buf, int32_t len, int32_t flags, const Callback& cb) {
@@ -634,6 +675,16 @@ namespace CP
 		//async
 		virtual void close(const Callback& cb);
 		virtual void flush(const Callback& cb);
+
+		//misc
+		void cancelRead();
+		void cancelWrite();
+		void cancelSend() {
+			cancelWrite();
+		}
+		void cancelRecv() {
+			cancelRead();
+		}
 	};
 	class Socket: public File
 	{
@@ -690,6 +741,21 @@ namespace CP
 			acceptHandle(cb, true);
 		}
 
+		int32_t recvFrom(void* buf, int32_t len, int32_t flags, EndPoint& ep);
+		int32_t sendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep);
+		//ep has to remain valid for the entire duration of the request
+		void recvFrom(void* buf, int32_t len, int32_t flags, EndPoint& ep, const Callback& cb,
+				bool repeat = false);
+		inline void repeatRecvFrom(void* buf, int32_t len, int32_t flags, EndPoint& ep,
+				const Callback& cb) {
+			recvFrom(buf, len, flags, ep, cb, true);
+		}
+		void sendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep,
+				const Callback& cb, bool repeat = false);
+		inline void repeatSendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep,
+				const Callback& cb) {
+			sendTo(buf, len, flags, ep, cb, true);
+		}
 	};
 	class SignalFD: public Handle
 	{
@@ -774,13 +840,17 @@ namespace CP
 		}
 		//sync
 		virtual int32_t read(void* buf, int32_t len);
+		virtual int32_t readAll(void* buf, int32_t len);
 		virtual int32_t write(const void* buf, int32_t len);
 		virtual int32_t writeAll(const void* buf, int32_t len);
 
 		//async
 		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void readAll(void* buf, int32_t len, const Callback& cb);
 		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
 		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+		virtual void cancelRead();
+		virtual void cancelWrite();
 
 		//=========misc===========
 		//sync
@@ -802,13 +872,17 @@ namespace CP
 		FixedMemoryStream(void* data, int len);
 		//sync
 		virtual int32_t read(void* buf, int32_t len);
+		virtual int32_t readAll(void* buf, int32_t len);
 		virtual int32_t write(const void* buf, int32_t len);
 		virtual int32_t writeAll(const void* buf, int32_t len);
 
 		//async
 		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void readAll(void* buf, int32_t len, const Callback& cb);
 		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
 		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+		virtual void cancelRead();
+		virtual void cancelWrite();
 
 		//=========misc===========
 		//sync
@@ -826,11 +900,15 @@ namespace CP
 	{
 	public:
 		MemoryStream(int capacity = 4096);
+		~MemoryStream();
 		void ensureCapacity(int c);
 		virtual int32_t write(const void* buf, int32_t len);
 		virtual int32_t writeAll(const void* buf, int32_t len);
 		virtual void close();
+		void clear();
 		virtual void flushBuffer(int minBufferAllocation);
+		//user must delete the MemoryStream instance after this call
+		void keepBuffer();
 	};
 }
 
