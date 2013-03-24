@@ -776,7 +776,7 @@ namespace CP
 			cb(r);
 			return;
 		}
-		static const Events e = Events::out;
+		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::readAll);
 		ed->misc.bufferIO.len_done = 0;
@@ -821,7 +821,7 @@ namespace CP
 			cb(r);
 			return;
 		}
-		static const Events e = Events::out;
+		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, (void*) buf, len, cb, e, Operations::recvAll);
 		ed->misc.bufferIO.len_done = 0;
