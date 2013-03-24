@@ -22,7 +22,7 @@ namespace cppsp
 		map<string, string> form;
 		Delegate<void(Request*)> _readCB;
 
-		//read POST data; headers are always read before creating the Request class
+		//read POST data; headers are always read before creating the Request object
 		virtual void read(const Delegate<void(Request*)>& cb);
 		virtual ~Request();
 	};
