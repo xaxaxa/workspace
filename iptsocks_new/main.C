@@ -153,8 +153,9 @@ struct iptsocks_connection: public virtual RGC::Object
 	Socket s1, s2;
 	IPEndPoint ep;
 	JoinStream j;
+	bool incremented;
 	iptsocks_connection(Poll& p, HANDLE h1) :
-			p(p), s1(h1, AF_INET, SOCK_STREAM, 0), s2(AF_INET, SOCK_STREAM, 0) {
+			p(p), s1(h1, AF_INET, SOCK_STREAM, 0), s2(AF_INET, SOCK_STREAM, 0), incremented(false) {
 		try {
 			j.from1to2= {&iptsocks_connection::from1to2,this};
 			j.from2to1= {&iptsocks_connection::from2to1,this};
@@ -173,6 +174,10 @@ struct iptsocks_connection: public virtual RGC::Object
 		} catch (exception& ex) {
 
 		}
+	}
+	~iptsocks_connection() {
+		if(incremented)
+		decrement_host(ep.address);
 	}
 	void from1to2(JoinStream& j, uint8_t* data, int& len) {
 		if (len <= 0) {
@@ -207,6 +212,7 @@ struct iptsocks_connection: public virtual RGC::Object
 		retain();
 		j.read2();
 		increment_host(ep.address);
+		incremented=true;
 	}
 	void socks_cb1(Stream& s, exception* ex) {
 		if (ex != NULL) {
@@ -352,7 +358,41 @@ int main(int argc, char **argv) {
 	srv1 = new DNSServer(p, IPEndPoint(IPAddress("0.0.0.0"), iptsocks_params.dns_port),
 			&answer_request);
 	srv1->start();
-	WARN(6, "started.");
+	WARN(2,
+			"started. accepting commands on stdin: ls - list all allocated IPs; lsu - list unreferenced IPs in cache");
+
+	StandardStream ss;
+	StreamBuffer sbuf(ss);
+	StreamWriter sw(sbuf);
+	ss.addToPoll(p);
+	StreamReader sr(ss);
+	struct
+	{
+		StreamReader& sr;
+		StreamWriter& sw;
+		void operator()(string l) {
+			if (l.length() <= 0) goto sss;
+			if (l.compare("ls") == 0) {
+				for (auto it = hosts.begin(); it != hosts.end(); it++) {
+					sw.writeF("%s: %s\n", (*it).first.toStr().c_str(), (*it).second.host.c_str());
+				}
+			} else if (l.compare("lsu") == 0) {
+				for (auto it = unused_hosts.begin(); it != unused_hosts.end(); it++) {
+					sw.writeF("%s: %s\n", (*it).second.toStr().c_str(),
+							hosts[(*it).second].host.c_str());
+				}
+			} else {
+				sw.write("unknown command\n");
+			}
+			sw.flush();
+			sss: if (!sr.eof) begin();
+		}
+		void begin() {
+			sr.readLine(this);
+		}
+	} cmdcb { sr, sw };
+	cmdcb.begin();
+
 	p.loop();
 	return 0;
 }
