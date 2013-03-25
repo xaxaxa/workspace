@@ -36,4 +36,5 @@ a.out
 core.*
 /email_extract
 /workspace.tags
+*.d
 
