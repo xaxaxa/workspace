@@ -273,9 +273,25 @@ namespace CP
 	StreamWriter::~StreamWriter() {
 	}
 
+	StreamBuffer::StreamBuffer(Stream& s, int bufsize) :
+			BufferedOutput((uint8_t*)malloc(bufsize), 0, bufsize), output(s) {
+		if (this->buffer == NULL) throw bad_alloc();
+	}
+	void StreamBuffer::flushBuffer(int minBufferAllocation) {
+		if (bufferPos <= 0) return;
+		if (minBufferAllocation > bufferSize) throw overflow_error(
+				"write operation would overflow StreamBuffer. try increasing the buffer size of your StreamBuffer instance.");
+		output->write(buffer, bufferPos);
+		bufferPos = 0;
+	}
+	StreamBuffer::~StreamBuffer() {
+		free(this->buffer);
+	}
+
 	StreamReader::StreamReader(Stream& input, int bufsize) :
 			input(&input), deletionFlag(NULL), shouldRead(false), reading(false), eof(false) {
 		sr = malloc(streamReader_getSize() + 4096);
+		if (sr == NULL) throw bad_alloc();
 		streamReader_init((streamReader*) sr, 4096);
 		streamReader_setCallback((streamReader*) sr,
 				Delegate<void(uint8_t*, int, bool)>(&StreamReader::_CB, this));
@@ -1534,7 +1550,7 @@ namespace CP
 
 	MemoryStream::MemoryStream(int capacity) :
 			FixedMemoryStream(malloc(capacity), 0) {
-		if (buffer == NULL) throw runtime_error(strerror(errno));
+		if (buffer == NULL) throw bad_alloc();
 		bufferSize = capacity;
 	}
 	MemoryStream::~MemoryStream() {
@@ -1547,7 +1563,7 @@ namespace CP
 		while (tmp < c)
 			tmp *= 2;
 		void* v = realloc(buffer, tmp);
-		if (v == NULL) throw runtime_error(strerror(errno));
+		if (v == NULL) throw bad_alloc();
 		buffer = (uint8_t*) v;
 		bufferSize = tmp;
 	}
@@ -1567,6 +1583,7 @@ namespace CP
 	void MemoryStream::close() {
 		if (buffer == NULL) return;
 		free(buffer);
+		buffer = NULL;
 		bufferSize = len = 0;
 	}
 	void MemoryStream::clear() {

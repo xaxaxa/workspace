@@ -424,6 +424,15 @@ namespace CP
 		StreamWriter(BufferedOutput& s);
 		~StreamWriter();
 	};
+	class StreamBuffer: public BufferedOutput
+	{
+	public:
+		RGC::Ref<Stream> output;
+		StreamBuffer(Stream& s, int bufsize = 4096);
+		virtual void flushBuffer(int minBufferAllocation);
+		~StreamBuffer();
+	}
+	;
 	class StreamReader: public Stream
 	{ //writes are simply passed through
 	public:
