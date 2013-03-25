@@ -634,6 +634,7 @@ namespace CP
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					return;
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
@@ -652,6 +653,7 @@ namespace CP
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					return;
 				}
 				ed.misc.bufferIO.len_done += r;
 				//cout << "len_done = " << ed.misc.bufferIO.len_done
@@ -664,6 +666,21 @@ namespace CP
 			case Operations::recv:
 				r = recv(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags);
 				break;
+			case Operations::recvAll:
+				r = recv(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
+						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done, ed.misc.bufferIO.flags);
+				if (r <= 0) {
+					ed.state = EventHandlerData::States::invalid;
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					return;
+				}
+				ed.misc.bufferIO.len_done += r;
+				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
+					ed.state = EventHandlerData::States::invalid;
+					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
+				}
+				return;
 			case Operations::send:
 				r = send(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags);
 				break;
@@ -674,6 +691,7 @@ namespace CP
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
+					return;
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
@@ -1556,8 +1574,8 @@ namespace CP
 		bufferPos = 0;
 	}
 	void MemoryStream::flushBuffer(int minBufferAllocation) {
-		ensureCapacity(this->len + minBufferAllocation);
 		if (this->bufferPos > this->len) this->len = this->bufferPos;
+		ensureCapacity(this->len + minBufferAllocation);
 	}
 	void MemoryStream::keepBuffer() {
 		buffer = NULL;
