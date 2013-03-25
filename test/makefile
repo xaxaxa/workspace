@@ -23,6 +23,8 @@ delegate_perftest: delegate_perf.so
 	g++ -Wno-pmf-conversions delegate_perftest.C delegate_perf.so -o delegate_perftest --std=c++0x -O3 -I../include -L../lib
 streamwriter_test:
 	g++ streamwriter_test.C -o streamwriter_test --std=c++0x -O3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
+streambuffer_test:
+	g++ streambuffer_test.C -o streambuffer_test --std=c++0x -O3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 streamreader_test:
 	g++ streamreader_test.C -o streamreader_test --std=c++0x -O3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 vuln:
