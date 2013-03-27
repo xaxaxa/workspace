@@ -182,7 +182,7 @@ struct iptsocks_connection: public virtual RGC::Object
 	void from1to2(JoinStream& j, uint8_t* data, int& len) {
 		if (len <= 0) {
 			//WARN(1,"from1to2(): release(): before-ref-count: " << refCount);
-			//delete this; return;
+			delete this; return;
 			struct {
 				void operator()() {}
 			}tmpcb;
@@ -194,7 +194,7 @@ struct iptsocks_connection: public virtual RGC::Object
 	void from2to1(JoinStream& j, uint8_t* data, int& len) {
 		if (len <= 0) {
 			//WARN(1,"from2to1(): release(): before-ref-count: " << refCount);
-			//delete this; return;
+			delete this; return;
 			struct {
 				void operator()() {}
 			}tmpcb;
