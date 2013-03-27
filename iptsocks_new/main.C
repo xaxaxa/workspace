@@ -186,7 +186,7 @@ struct iptsocks_connection: public virtual RGC::Object
 			struct {
 				void operator()() {}
 			}tmpcb;
-			s2.shutdown(SHUT_WR,&tmpcb);
+			s2.shutdown(SHUT_RDWR,&tmpcb);
 			//s2.close(&tmpcb);
 			release();
 		}
@@ -199,7 +199,7 @@ struct iptsocks_connection: public virtual RGC::Object
 				void operator()() {}
 			}tmpcb;
 			//s1.close(&tmpcb);
-			s1.shutdown(SHUT_WR,&tmpcb);
+			s1.shutdown(SHUT_RDWR,&tmpcb);
 			release();
 		}
 	}
