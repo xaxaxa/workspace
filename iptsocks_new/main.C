@@ -182,24 +182,24 @@ struct iptsocks_connection: public virtual RGC::Object
 	void from1to2(JoinStream& j, uint8_t* data, int& len) {
 		if (len <= 0) {
 			//WARN(1,"from1to2(): release(): before-ref-count: " << refCount);
-			delete this; return;
+			//delete this; return;
 			struct {
 				void operator()() {}
 			}tmpcb;
-			//s2.shutdown(SHUT_WR,&tmpcb);
-			s2.close(&tmpcb);
+			s2.shutdown(SHUT_WR,&tmpcb);
+			//s2.close(&tmpcb);
 			release();
 		}
 	}
 	void from2to1(JoinStream& j, uint8_t* data, int& len) {
 		if (len <= 0) {
 			//WARN(1,"from2to1(): release(): before-ref-count: " << refCount);
-			delete this; return;
+			//delete this; return;
 			struct {
 				void operator()() {}
 			}tmpcb;
-			s1.close(&tmpcb);
-			//s1.shutdown(SHUT_WR,&tmpcb);
+			//s1.close(&tmpcb);
+			s1.shutdown(SHUT_WR,&tmpcb);
 			release();
 		}
 	}
@@ -341,6 +341,8 @@ int main(int argc, char **argv) {
 			DNSServer::dnsreq resp(req.create_answer());
 			IPAddress ip1[resp.queries.size()];
 			for (int i = 0; i < (int) resp.queries.size(); i++) {
+				//only support A record lookups
+				if (resp.queries[i].type != 1) continue;
 				ip1[i] = map_host(resp.queries[i].q);
 				DNSServer::answer a { i, resp.queries[i].type, resp.queries[i].cls, 100000000, string {
 						(const char*) &ip1[i].a, sizeof(ip1[i].a) } };
