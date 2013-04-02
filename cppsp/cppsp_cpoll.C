@@ -22,7 +22,7 @@ namespace cppsp
 		sr.readTo("\r\n", 2, CP::StreamReader::Callback(&CPollRequest::_readCB, this));
 	}
 	
-	void CPollRequest::_readCB(string line) {
+	void CPollRequest::_readCB(const string& line) {
 		if(line.length()==0) {
 			_endRead();
 			return;

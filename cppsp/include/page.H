@@ -14,8 +14,9 @@
 using namespace std;
 namespace cppsp
 {
-	class Request
+	class Request: public RGC::Object
 	{
+	public:
 		RGC::Ref<CP::Stream> inputStream;
 		map<string, string> queryString;
 		map<string, string> headers;
@@ -26,8 +27,9 @@ namespace cppsp
 		virtual void read(const Delegate<void(Request*)>& cb);
 		virtual ~Request();
 	};
-	class Response
+	class Response: public RGC::Object
 	{
+	public:
 		RGC::Ref<CP::Stream> outputStream;
 		map<string, string> headers;
 		bool headersWritten;
@@ -35,7 +37,7 @@ namespace cppsp
 
 		void write(string s);
 	};
-	class Page
+	class Page: public RGC::Object
 	{
 	public:
 		RGC::Ref<Request> request;

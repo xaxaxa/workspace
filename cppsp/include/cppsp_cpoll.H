@@ -24,7 +24,7 @@ namespace cppsp
 		CPollRequest(CP::Socket& s);
 		void readHeaders(const Delegate<void()>& cb);
 		void _beginRead();
-		void _readCB(string line);
+		void _readCB(const string& line);
 		void _endRead();
 		virtual ~CPollRequest();
 	};
