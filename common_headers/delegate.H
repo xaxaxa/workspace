@@ -31,7 +31,8 @@ struct DelegateBase<R(P...)>:public GenericDelegate
 	}
 	
 	R (*operator=(R (*func)(void* data, P...)))(void* data, P...) {
-		return this->func=func;
+		this->func=(void*)func;
+		return func;
 	}
 	bool operator==(void* other) {
 		return (void*)func == other;
