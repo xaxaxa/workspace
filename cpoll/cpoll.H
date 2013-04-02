@@ -437,12 +437,21 @@ namespace CP
 	{ //writes are simply passed through
 	public:
 		typedef Delegate<void(const string&)> Callback;
+		typedef Delegate<void(int)> StreamCallback;
 		RGC::Ref<Stream> input;
 		void* sr;
 		bool* deletionFlag;
-		Callback cb;
+		Stream* out_s;
+		union
+		{
+			DelegateBase<void(const string&)> cb;
+			DelegateBase<void(int)> cb_s;
+		};
+		//BufferedOutput* tmp_out;
 		string tmp;
 		string tmp_delim;
+
+		int tmp_i;
 
 		bool shouldRead;
 		bool reading;
@@ -459,14 +468,21 @@ namespace CP
 		string readTo(const char* delim, int delimLen);
 		string readTo(string delim);
 		string readLine();
+		int readTo(char delim, Stream& s);
+		int readTo(const char* delim, int delimLen, Stream& s);
+		int readTo(string delim, Stream& s);
+		int readLine(Stream& s);
 
 		void readTo(char delim, const Callback& cb);
 		//*delim MUST NOT BE DELETED FOR THE ENTIRE DURATION OF THE READTO REQUEST!!!!!
 		//it does not make a copy of delim!!!!!
 		void readTo(const char* delim, int delimLen, const Callback& cb);
-
 		void readTo(string delim, const Callback& cb);
 		void readLine(const Callback& cb);
+		void readTo(char delim, Stream& s, const StreamCallback& cb);
+		void readTo(const char* delim, int delimLen, Stream& s, const StreamCallback& cb);
+		void readTo(string delim, Stream& s, const StreamCallback& cb);
+		void readLine(Stream& s, const StreamCallback& cb);
 
 		//sync
 		virtual int32_t read(void* buf, int32_t len);

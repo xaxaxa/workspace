@@ -24,7 +24,7 @@ int main() {
 	
 	StreamReader sr(ss);
 	
-	//*
+	/*
 	struct {
 		StreamReader& sr;
 		void operator()(string s) {
@@ -43,6 +43,18 @@ int main() {
 		cout << s << endl;
 	}
 	//*/
+	
+	
+	struct {
+		StreamReader& sr;
+		Stream& ss;
+		void operator()(int i) {
+			cerr << "got string (length=" << i<< ")" << endl;
+			sr.readLine(ss,this);
+		}
+	} cb {sr,ss};
+	sr.readLine(ss,&cb);
+	
 	Poll p;
 	ss.addToPoll(p);
 	p.loop();
