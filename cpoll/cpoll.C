@@ -1668,8 +1668,7 @@ namespace CP
 	}
 	int32_t MemoryStream::write(const void* buf, int32_t len) {
 		ensureCapacity(this->bufferSize + len);
-		this->bufferPos += len;
-		if (this->bufferPos > this->len) this->len = this->bufferPos;
+		if (this->bufferPos + len > this->len) this->len = this->bufferPos + len;
 		return FixedMemoryStream::write(buf, len);
 	}
 	int32_t MemoryStream::writeAll(const void* buf, int32_t len) {
