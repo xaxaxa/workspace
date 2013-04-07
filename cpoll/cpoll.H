@@ -339,6 +339,10 @@ namespace CP
 		//all other operations are undefined
 		virtual void freeBuffer(void* buf, int32_t len) {
 		}
+
+		//returns NULL if it doesn't provide a buffer; in that case you need to create
+		//a StreamBuffer yourself
+		virtual BufferedOutput* getBufferedOutput();
 	};
 	class BufferedOutput: virtual public RGC::Object
 	{
@@ -920,6 +924,8 @@ namespace CP
 
 		virtual int32_t readBuffer(void*& buf, int32_t maxlen);
 		virtual void flushBuffer(int minBufferAllocation);
+
+		virtual BufferedOutput* getBufferedOutput() override;
 	};
 	class MemoryStream: public FixedMemoryStream
 	{

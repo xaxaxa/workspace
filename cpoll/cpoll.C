@@ -266,13 +266,28 @@ namespace CP
 		//XXX
 	}
 
-	StreamWriter::StreamWriter(BufferedOutput& s) :
-			buffer(s) {
+	BufferedOutput* Stream::getBufferedOutput() {
+		return NULL;
+	}
 
+	StreamWriter::StreamWriter(BufferedOutput& s) :
+			outp(&s), buffer(&s) {
+
+	}
+	StreamWriter::StreamWriter(Stream& s) :
+			outp(&s), buffer(s.getBufferedOutput()),
+					sb(buffer == NULL ? StreamBuffer(s) : StreamBuffer()) {
+		if (buffer == NULL) buffer = &sb;
+	}
+	StreamWriter::StreamWriter(MemoryStream& s) :
+			outp(&s), buffer(&s) {
 	}
 	StreamWriter::~StreamWriter() {
 	}
 
+	StreamBuffer::StreamBuffer() {
+		this->buffer = NULL;
+	}
 	StreamBuffer::StreamBuffer(Stream& s, int bufsize) :
 			BufferedOutput((uint8_t*) malloc(bufsize), 0, bufsize), output(s) {
 		if (this->buffer == NULL) throw bad_alloc();
@@ -285,7 +300,7 @@ namespace CP
 		bufferPos = 0;
 	}
 	StreamBuffer::~StreamBuffer() {
-		free(this->buffer);
+		if (this->buffer != NULL) free(this->buffer);
 	}
 
 	StreamReader::StreamReader(Stream& input, int bufsize) :
@@ -1626,6 +1641,9 @@ namespace CP
 	void FixedMemoryStream::flushBuffer(int minBufferAllocation) {
 		if (minBufferAllocation > this->len - this->bufferPos) throw runtime_error(
 				"overflowed FixedMemoryStream");
+	}
+	BufferedOutput* FixedMemoryStream::getBufferedOutput() {
+		return this;
 	}
 
 	MemoryStream::MemoryStream(int capacity) :
