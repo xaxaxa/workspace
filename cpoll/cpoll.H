@@ -262,6 +262,26 @@ namespace CP
 	//===========================================================
 	//======================ABSTRACT CLASSES=====================
 	//===========================================================
+	class BufferedOutput: virtual public RGC::Object
+	{
+	public:
+		uint8_t* buffer;
+		int bufferPos;
+		int bufferSize;
+		BufferedOutput() {
+		}
+		BufferedOutput(uint8_t* buffer, int bufferPos, int bufferSize) :
+				buffer(buffer), bufferPos(bufferPos), bufferSize(bufferSize) {
+		}
+		//flushBuffer() should flush current buffer to stream, reallocate the buffer,
+		//and reset buffer, bufferPos and/or bufferSize accordingly (see below); the function
+		//must reserve at least minBufferAllocation bytes of space in the write buffer
+		virtual void flushBuffer(int minBufferAllocation)=0;
+		void flush() {
+			flushBuffer(0);
+		}
+	};
+
 	class Stream: virtual public RGC::Object
 	{
 	public:
@@ -344,27 +364,29 @@ namespace CP
 		//a StreamBuffer yourself
 		virtual BufferedOutput* getBufferedOutput();
 	};
-	class BufferedOutput: virtual public RGC::Object
+
+	class StreamBuffer: public BufferedOutput
 	{
 	public:
-		uint8_t* buffer;
-		int bufferPos;
-		int bufferSize;
-		BufferedOutput(uint8_t* buffer, int bufferPos, int bufferSize) :
-				buffer(buffer), bufferPos(bufferPos), bufferSize(bufferSize) {
-		}
-		//flushBuffer() should flush current buffer to stream, reallocate the buffer,
-		//and reset buffer, bufferPos and/or bufferSize accordingly (see below); the function
-		//must reserve at least minBufferAllocation bytes of space in the write buffer
-		virtual void flushBuffer(int minBufferAllocation)=0;
-	};
-	//StreamWriter will directly access the BufferedStream's buffer
+		RGC::Ref<Stream> output;
+		StreamBuffer();
+		StreamBuffer(Stream& s, int bufsize = 4096);
+		virtual void flushBuffer(int minBufferAllocation);
+		~StreamBuffer();
+	}
+	;
+	class FixedMemoryStream;
+	class MemoryStream;
+
+	//StreamWriter will directly access the BufferedOutput's buffer
 	//(for performance reasons) and increment bufferPos accordingly.
-	//if bufferPos reaches bufferSize, it will call the BufferedStream's flushBuffer() method
+	//if bufferPos reaches bufferSize, it will call the BufferedOutput's flushBuffer() method
 	class StreamWriter: public RGC::Object
 	{
 	public:
-		RGC::Ref<BufferedOutput> buffer;
+		RGC::Ref<Object> outp;
+		BufferedOutput* buffer;
+		StreamBuffer sb;
 		void write(const void* s, int len) {
 			if (buffer->bufferSize - buffer->bufferPos < len) buffer->flushBuffer(len);
 			memcpy(buffer->buffer + buffer->bufferPos, s, len);
@@ -411,7 +433,7 @@ namespace CP
 			if (unlikely(buffer->bufferSize - buffer->bufferPos < 21)) buffer->flushBuffer(21);
 			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 21, "%llu", i);
 		}
-		template<class ... P> void writeF(const char* fmt, P&&... p...) {
+		template<class ... P> void writeF(const char* fmt, P&&... p) {
 			int minSpace = 0;
 			if(minSpace + 1 > buffer->bufferSize - buffer->bufferPos) {
 				redo:
@@ -426,17 +448,11 @@ namespace CP
 			buffer->flushBuffer(0);
 		}
 		StreamWriter(BufferedOutput& s);
+		StreamWriter(Stream& s);
+		StreamWriter(MemoryStream& s);
 		~StreamWriter();
 	};
-	class StreamBuffer: public BufferedOutput
-	{
-	public:
-		RGC::Ref<Stream> output;
-		StreamBuffer(Stream& s, int bufsize = 4096);
-		virtual void flushBuffer(int minBufferAllocation);
-		~StreamBuffer();
-	}
-	;
+
 	class StreamReader: public Stream
 	{ //writes are simply passed through
 	public:
