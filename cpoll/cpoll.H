@@ -956,6 +956,13 @@ namespace CP
 		virtual void flushBuffer(int minBufferAllocation);
 
 		virtual BufferedOutput* getBufferedOutput() override;
+
+		inline uint8_t* data() {
+			return buffer;
+		}
+		inline int length() {
+			return len;
+		}
 	};
 	class MemoryStream: public FixedMemoryStream
 	{
