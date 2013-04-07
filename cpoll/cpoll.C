@@ -597,8 +597,7 @@ namespace CP
 		init(handle);
 	}
 	void Handle::init(HANDLE handle) {
-		this->handle = handle;
-		checkError(handle);
+		this->handle = checkError(handle);
 	}
 	void Handle::deinit() {
 		_supportsEPoll = true;
