@@ -973,6 +973,9 @@ namespace CP
 		virtual int32_t write(const void* buf, int32_t len);
 		virtual int32_t writeAll(const void* buf, int32_t len);
 		virtual void close();
+		virtual void flush() {
+			this->flushBuffer(0);
+		}
 		void clear();
 		virtual void flushBuffer(int minBufferAllocation);
 		//user must delete the MemoryStream instance after this call
