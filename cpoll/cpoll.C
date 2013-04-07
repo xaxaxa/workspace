@@ -305,10 +305,11 @@ namespace CP
 	}
 
 	StreamReader::StreamReader(Stream& input, int bufsize) :
-			input(&input), deletionFlag(NULL), shouldRead(false), reading(false), eof(false) {
-		sr = malloc(streamReader_getSize() + 4096);
+			input(&input), deletionFlag(NULL), bufSize(bufsize), shouldRead(false), reading(false),
+					eof(false) {
+		sr = malloc(streamReader_getSize() + bufsize);
 		if (sr == NULL) throw bad_alloc();
-		streamReader_init((streamReader*) sr, 4096);
+		streamReader_init((streamReader*) sr, bufsize);
 		streamReader_setCallback((streamReader*) sr,
 				Delegate<void(uint8_t*, int, bool)>(&StreamReader::_CB, this));
 	}

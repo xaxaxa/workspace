@@ -472,6 +472,7 @@ namespace CP
 		string tmp_delim;
 
 		int tmp_i;
+		int bufSize;
 
 		bool shouldRead;
 		bool reading;
@@ -499,6 +500,7 @@ namespace CP
 		void readTo(const char* delim, int delimLen, const Callback& cb);
 		void readTo(string delim, const Callback& cb);
 		void readLine(const Callback& cb);
+
 		void readTo(char delim, Stream& s, const StreamCallback& cb);
 		void readTo(const char* delim, int delimLen, Stream& s, const StreamCallback& cb);
 		void readTo(string delim, Stream& s, const StreamCallback& cb);
