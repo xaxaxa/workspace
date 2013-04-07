@@ -13,8 +13,8 @@ namespace cppsp
 	void FCGIRequest::read() {
 	}
 	
-	FCGIRequest::FCGIRequest(FCGX_Stream* in, FCGX_ParamArray params) {
-	}
+	//FCGIRequest::FCGIRequest(FCGX_Stream* in, FCGX_ParamArray params) {
+	//}
 
 	FCGIRequest::~FCGIRequest() {
 		// TODO Auto-generated destructor stub

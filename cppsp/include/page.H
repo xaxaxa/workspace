@@ -17,35 +17,48 @@ namespace cppsp
 	class Request: public RGC::Object
 	{
 	public:
+		Request(CP::Stream& inp);
+		virtual ~Request();
 		RGC::Ref<CP::Stream> inputStream;
 		map<string, string> queryString;
 		map<string, string> headers;
 		map<string, string> form;
+		string method;
+		string path;
+		//string httpVersion;
 		Delegate<void(Request*)> _readCB;
 
 		//read POST data; headers are always read before creating the Request object
-		virtual void read(const Delegate<void(Request*)>& cb);
-		virtual ~Request();
+		//virtual void read(const Delegate<void(Request*)>& cb);
 	};
 	class Response: public RGC::Object
 	{
 	public:
+		Response(CP::Stream& out);
 		RGC::Ref<CP::Stream> outputStream;
+		CP::StreamWriter output;
 		map<string, string> headers;
 		bool headersWritten;
-		void writeHeaders();
+		virtual void writeHeaders();
 
-		void write(string s);
+		template<class ... T>
+		void write(T&&... a) {
+			output.write(std::forward<T>(a)...);
+		}
 	};
 	class Page: public RGC::Object
 	{
 	public:
+		Page();
+		Page(Request& req, Response& resp);
 		RGC::Ref<Request> request;
 		RGC::Ref<Response> response;
-		virtual const char* getFilePath()=0;
-		Page();
-		void handleRequest(Request& req, Response& resp);
-		void render(CP::Stream& s);
+		string filePath;
+		//pointer to mmap()ed address of original cppsp file
+		const uint8_t* __stringTable;
+		void __writeStringTable(int i, int len);
+		virtual void handleRequest();
+		virtual void render(CP::StreamWriter& out);
 		virtual ~Page();
 	};
 

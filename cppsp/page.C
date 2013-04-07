@@ -11,23 +11,41 @@ namespace cppsp
 {
 	
 	Page::Page() {
-		// TODO Auto-generated constructor stub
 		
 	}
-	
-	void Page::handleRequest(Request& req, Response& resp) {
-		request = &req;
-		response = &resp;
-		render(*resp.outputStream);
+	Page::Page(Request& req, Response& resp) :
+			request(&req), response(&resp) {
 	}
 	
-	void Page::render(CP::Stream& s) {
+	void Page::__writeStringTable(int i, int len) {
+		response->output.write(__stringTable + i, len);
 	}
-
+	
 	Page::~Page() {
-
+	}
+	void Page::handleRequest() {
+		render(response->output);
+	}
+	void Page::render(CP::StreamWriter& out) {
+		out.write("This is the default page of the cppsp C++ "
+				"web application framework. If you see this, it means "
+				"you haven't overridden the render() method derived from cppsp::Page.");
+	}
+	Request::Request(CP::Stream& inp) :
+			inputStream(&inp) {
 	}
 	Request::~Request() {
+	}
+	Response::Response(CP::Stream& out) :
+			outputStream(&out), output(out) {
+	}
+	
+	void Response::writeHeaders() {
+		if (headersWritten) return;
+		headersWritten = true;
+		for (auto it = headers.begin(); it != headers.end(); it++) {
+			output.writeF("%s: %s\r\n", (*it).first.c_str(), (*it).second.c_str());
+		}
 	}
 } /* namespace cppsp */
 

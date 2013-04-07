@@ -19,12 +19,14 @@ namespace cppsp
 	public:
 		RGC::Ref<CP::Socket> s;
 		CP::StreamReader sr;
+		CP::MemoryStream ms;
 		Delegate<void()> tmp_cb;
+		bool firstLine;
 
 		CPollRequest(CP::Socket& s);
 		void readHeaders(const Delegate<void()>& cb);
 		void _beginRead();
-		void _readCB(const string& line);
+		void _readCB(int i);
 		void _endRead();
 		virtual ~CPollRequest();
 	};
