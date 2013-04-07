@@ -283,6 +283,7 @@ namespace CP
 			outp(&s), buffer(&s) {
 	}
 	StreamWriter::~StreamWriter() {
+		flush();
 	}
 
 	StreamBuffer::StreamBuffer() {
