@@ -99,7 +99,7 @@ namespace CP
 				case 1:
 				{
 					uint8_t* buf = getBuffer();
-					if (bufferLen - bufferPos <= (int) delim1len && bufferPos > 0) {
+					if (bufferLen - bufferPos < (int) delim1len && bufferPos > 0) {
 						asdfg: memmove(buf, buf + bufferPos, bufferLen - bufferPos);
 						bufferLen -= bufferPos;
 						bufferPos = 0;
@@ -107,14 +107,15 @@ namespace CP
 					}
 
 					//printf("%i\n",bufferLen - bufferPos);
-					uint8_t* tmp = (uint8_t*) memmem(buf + bufferPos, bufferLen - bufferPos,
-							delim1, delim1len);
+					uint8_t* tmp = (uint8_t*) memmem(buf + bufferPos, bufferLen - bufferPos, delim1,
+							delim1len);
 					if (tmp == NULL) {
 						//delayProcessing = true;
-						output(buf + bufferPos, bufferLen - bufferPos - delim1len, false);
+						//if (bufferLen - bufferPos - delim1len + 1 <= 0) break;
+						output(buf + bufferPos, bufferLen - bufferPos - delim1len + 1, false);
 						//delayProcessing = false;
 						//memmove(buf, buf + bufferLen - delim1.length(), delim1.length());
-						bufferPos = bufferLen - delim1len;
+						bufferPos = bufferLen - delim1len + 1;
 						goto asdfg;
 					} else {
 						int oldPos = bufferPos;
