@@ -38,4 +38,11 @@ cpoll_statemachine_test
 socketd_test
 image2text
 socketd_proxy.so
+*.cppsp.*
+*.htm.C
+*.htm.so
+*.htm.txt
+*.html.C
+*.html.so
+*.html.txt
 
