@@ -131,8 +131,10 @@ namespace socketd
 		void startRead();
 		void ack(int64_t id) {
 			protocolHeader ph;
+			memset(&ph, 0, sizeof(ph));
 			ph.type = protocolHeader::ackConnection;
 			prot_ackConnection ack;
+			memset(&ack, 0, sizeof(ack));
 			ack.id = id;
 			ack.success = true;
 			if (this->sock->send(&ph, sizeof(ph), MSG_DONTWAIT) != sizeof(ph)) throw runtime_error(
