@@ -1,7 +1,7 @@
 #include <iostream>
 #include <dlfcn.h>
 
-void asdf(int a);
+//void asdf(int a);
 void (*asdf1)(int a);
 void (*asdf2)(int a);
 
@@ -19,6 +19,6 @@ int main()
 	cout << (asdf2=(void(*)(int))dlsym(v2,"_Z4asdfi")) << endl;*/
 	//cout << "a" << endl;
 	
-	asdf(5);
+	//asdf(5);
 }
 

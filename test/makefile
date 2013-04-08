@@ -31,5 +31,14 @@ vuln:
 	g++ vuln.C -o vuln --std=c++0x -O3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 image_steg:
 	g++ image_steg.C -o image_steg -lMagick++
+cppsp_test: cppsp_test.C
+	g++ cppsp_test.C -o cppsp_test --std=c++0x -g3 -I../include -L../lib -lcpoll -lcppsp -ldl -Wno-pmf-conversions
+socketd_cppsp: socketd_cppsp.C
+	g++ socketd_cppsp.C -o socketd_cppsp --std=c++0x -g3 -I../include -L../lib -lcpoll -lcppsp -ldl -Wno-pmf-conversions
+ldtest1:
+	g++ ldtest1.C -o ldtest1.so --shared -g3 -I../include -L../lib
+ldtest:
+	g++ ldtest.C -o ldtest -g3 -I../include -L../lib -ldl
+
 
 

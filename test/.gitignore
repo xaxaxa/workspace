@@ -1,8 +1,10 @@
+socketd_cppsp
 image_steg
 vuln
 streamreader_test
 streamwriter_test
 streambuffer_test
+cppsp_test
 delegate_perf.so
 delegate_perftest
 anonfunc_test
