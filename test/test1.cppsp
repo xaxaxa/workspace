@@ -1,0 +1,32 @@
+<%@
+#include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+
+int aaaaa=0;
+%>
+<%#
+string asdf() {
+	return "zzz";
+}
+
+%>
+gshdfjkghfsdg
+<%=getuid()%>
+<%=getgid()%>
+<%="ddd"%>
+
+s
+gsjdhkh
+test1
+
+
+<%
+for(int i=0;i<10;i++) {
+	%>
+	gfdsgsfdgdsf<br />
+	<%
+}
+%>
+
+<%=(++aaaaa)%>
