@@ -404,6 +404,9 @@ namespace CP
 			memcpy(buffer->buffer + buffer->bufferPos, s, len);
 			buffer->bufferPos += len;
 		}
+		void write(string s) {
+			write(s.data(), s.length());
+		}
 		void write(const char* s) {
 			write((const uint8_t*) s, strlen(s));
 		}
