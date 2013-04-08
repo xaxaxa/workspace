@@ -5,6 +5,9 @@
  *      Author: xaxaxa
  */
 #include "include/cppsp_cpoll.H"
+#include <stdio.h>
+#include <unistd.h>
+
 namespace cppsp
 {
 	//static int CPollRequest::bufSize=4096;
@@ -20,10 +23,12 @@ namespace cppsp
 	}
 	void CPollRequest::_beginRead() {
 		ms.clear();
+		//printf("\n_beginRead()\n");
 		sr.readTo("\r\n", 2, ms, CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
 	}
 	void CPollRequest::_readCB(int i) {
 		if (i <= 0) goto fail;
+		//write(2, ms.data(), ms.length());
 		if (firstLine) {
 			firstLine = false;
 			uint8_t* lineBuf = ms.data();

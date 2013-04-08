@@ -105,6 +105,40 @@ namespace cppsp
 		if (i < 0) i = 0;
 		return i;
 	}
+	//p1 is the "root" directory
+	int combinePathChroot(const char* p1, const char* p2, char* buf) {
+		int l2 = strlen(p2);
+		int l1 = strlen(p1);
+		int i = l1;
+		memcpy(buf, p1, i);
+		if (l2 > 0) {
+			bool first(true);
+			split(p2, l2, '/', [&](const char* s, int l) {
+				if(first) {
+					first=false;
+					if(l==0) return;
+				}
+				if(l==2 && memcmp(s,"..",2)==0) {
+					i--;
+					while(i>=0 && buf[i]!='/')i--;
+					if(i<l1) i=l1;
+				} else if(l==1 && *s=='.') {
+					buf[i]='/';
+					i++;
+				}
+				else {
+					//while(i>=0 && buf[i]!='/')i--;
+					buf[i]='/';
+					i++;
+					memcpy(buf+i,s,l);
+					i+=l;
+				}
+			});
+			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
+		}
+		if (i < l1) i = l1;
+		return i;
+	}
 	//parses a cppsp page and generates code (to out) and string table (to st_out)
 	void doParse(const char* name, const char* in, int inLen, Stream& out, Stream& st_out,
 			vector<string>& c_opts) {
@@ -120,7 +154,6 @@ namespace cppsp
 		StreamWriter sw3(ms3);
 		sw1.write("#include <cppsp/page.H>\n#include <cpoll/cpoll.H>\n");
 		sw1.write("using namespace cppsp;\nusing namespace CP;\n");
-
 
 		while (true) {
 			if (s >= end) break;
@@ -178,8 +211,9 @@ namespace cppsp
 		sw1.write("virtual void render(StreamWriter& output) override {\n");
 		sw1.write(ms3.data(), ms3.length());
 		sw1.write("}\n};\n");
-		sw1.writeF("extern \"C\" int getObjectSize() {return sizeof(%s);}\n",name);
-		sw1.writeF("extern \"C\" Page* createObject(void* mem) {return new (mem) %s();}\n",name);
+		sw1.writeF("extern \"C\" int getObjectSize() {return sizeof(%s);}\n", name);
+		sw1.writeF("extern \"C\" Page* createObject(void* mem) {"
+				"if(mem==NULL) return new %s(); else return new (mem) %s();}\n", name, name);
 		sw1.flush();
 		//out.write(ms1.data(), ms1.length());
 	}
@@ -191,11 +225,13 @@ namespace cppsp
 		if (p == NULL) throw runtime_error(strerror(errno));
 		return p;
 	}
-	CP::File* compilePage(string path) {
-		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", basename(
-				(char*) (path + ".so").c_str()), basename((char*) (path + ".C").c_str()) };
+	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts) {
+		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", path + ".so", path
+				+ ".C" };
+		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
 		{
 			File inp(open(path.c_str(), O_RDONLY));
+			unlink((path + ".C").c_str());
 			File out_c(open((path + ".C").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
 			File out_s(open((path + ".txt").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
 			MemoryStream ms;
@@ -214,6 +250,7 @@ namespace cppsp
 
 		int p[2];
 		checkError(pipe(p));
+		unlink((path + ".so").c_str());
 		pid_t tmp = fork();
 		if (tmp > 0) {
 			close(p[1]);
@@ -223,7 +260,7 @@ namespace cppsp
 			dup2(p[1], 1);
 			dup2(p[1], 2);
 			close(p[1]);
-			chdir(dirname((char*) path.c_str()));
+			chdir(wd.c_str());
 			execvp(cmds[0], (char**) (cmds + 1));
 			_exit(1);
 		} else {
@@ -231,8 +268,33 @@ namespace cppsp
 		}
 		return NULL;
 	}
+	int tsCompare(struct timespec time1, struct timespec time2) {
+		if (time1.tv_sec < time2.tv_sec) return (-1); /* Less than. */
+		else if (time1.tv_sec > time2.tv_sec) return (1); /* Greater than. */
+		else if (time1.tv_nsec < time2.tv_nsec) return (-1); /* Less than. */
+		else if (time1.tv_nsec > time2.tv_nsec) return (1); /* Greater than. */
+		else return (0); /* Equal. */
+	}
+	bool shouldCompile(string page) {
+		struct stat st;
+		checkError(stat(page.c_str(), &st));
+		timespec modif_cppsp = st.st_mtim;
+		if (stat((page + ".txt").c_str(), &st) < 0) {
+			if (errno == ENOENT) return true;
+			else checkError(-1);
+		}
+		timespec modif_txt = st.st_mtim;
+		if (stat((page + ".so").c_str(), &st) < 0) {
+			if (errno == ENOENT) return true;
+			else checkError(-1);
+		}
+		timespec modif_so = st.st_mtim;
+		return (tsCompare(modif_cppsp, modif_txt) == 1 || tsCompare(modif_cppsp, modif_so) == 1);
+	}
 	class loadedPage
 	{
+	public:
+		loadedPage& operator=(const loadedPage& other)=delete;
 		void* dlHandle;
 		const uint8_t* stringTable;
 		int stringTableLen;
@@ -240,11 +302,56 @@ namespace cppsp
 		typedef Page* (*createObject_t)(void* mem);
 		int (*getObjectSize)();
 		Page* (*createObject)(void* mem);
-
+		RGC::Ref<CP::File> compile_fd;
+		MemoryStream ms;
+		//Delegate<void(loadedPage&)> compileCB;
+		vector<Delegate<void(Page*, exception* ex)> > loadCB;
+		string page;
 		int stringTableFD;
-		void doLoad(string page) {
+		bool loaded;
+		bool compiling;
+		void readCB(int r) {
+			if (r <= 0) {
+				compiling = false;
+				try {
+					doUnload();
+					doLoad();
+					for (int i = 0; i < (int) loadCB.size(); i++)
+					loadCB[i](doCreate(), nullptr);
+				} catch (exception& ex) {
+					string msg(ex.what());
+					msg.append("\n\n\ncompiler output:\n");
+					msg.append((const char*)ms.data(),ms.length());
+					logic_error le(msg);
+					for (int i = 0; i < (int) loadCB.size(); i++)
+					loadCB[i](nullptr, &le);
+				}
+				loadCB.clear();
+				compile_fd=nullptr;
+				//if (compileCB != nullptr) compileCB(*this);
+				return;
+			}
+			ms.bufferPos += r;
+			ms.flush();
+			beginRead();
+		}
+		void beginRead() {
+			if (ms.bufferSize - ms.bufferPos < 4096) ms.flushBuffer(4096);
+			compile_fd->read(ms.buffer + ms.bufferPos, ms.bufferSize - ms.bufferPos,
+					CP::Callback(&loadedPage::readCB, this));
+		}
+		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
+			compiling = true;
+			ms.clear();
+			CP::File* f = (CP::File*) checkError(compilePage(wd,page,cxxopts));
+			p.add(*f);
+			compile_fd = f;
+			f->release();
+			beginRead();
+		}
+		void doLoad() {
 			struct stat st;
-			checkError(stat(page.c_str(), &st) < 0);
+			checkError(stat(page.c_str(), &st));
 			stringTableLen = st.st_size;
 			stringTableFD = checkError(open((page + ".txt").c_str(), O_RDONLY));
 			stringTable = (const uint8_t*) checkError(
@@ -252,24 +359,99 @@ namespace cppsp
 			dlHandle = checkError(dlopen((page + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY));
 			getObjectSize = (getObjectSize_t) checkError(dlsym(dlHandle, "getObjectSize"));
 			createObject = (createObject_t) checkError(dlsym(dlHandle, "createObject"));
+			loaded = true;
+			//printf("loaded: dlHandle=%p; createObject=%p\n",dlHandle,(void*)createObject);
 		}
 		void doUnload() {
+			loaded = false;
 			if (stringTable != NULL) munmap((void*) stringTable, stringTableLen);
 			if (stringTableFD != -1) close(stringTableFD);
-			if (dlHandle != NULL) dlclose(dlHandle);
+			if (dlHandle != NULL) {
+				checkError(dlclose(dlHandle));
+				void* tmp=dlopen((page + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
+				if(tmp!=NULL) throw runtime_error("unable to unload library");
+			}
 			dlHandle = NULL;
 			stringTable = NULL;
 			stringTableFD = -1;
+			//printf("unloaded\n");
 		}
-		loadedPage() {
+		Page* doCreate() {
+			Page* tmp = createObject(NULL);
+			checkError(tmp);
+			tmp->__stringTable = stringTable;
+			return tmp;
+		}
+		loadedPage():dlHandle(NULL),stringTable(NULL),stringTableFD(-1) {
+			//printf("loadedPage()\n");
+			compiling = false;
 			doUnload();
 		}
 		~loadedPage() {
+			//printf("~loadedPage()\n");
 			doUnload();
 		}
 	};
 	class cppspManager
 	{
+	public:
+		map<string, loadedPage*> cache;
+		vector<string> cxxopts;
+		/*void compileCB(loadedPage& lp) {
 
+		 }*/
+		void loadPage(Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb) {
+			loadedPage* lp1;
+			auto it = cache.find(path);
+			if (it == cache.end()) {
+				lp1 = new loadedPage();
+				lp1->page = path;
+				cache.insert( { path, lp1 });
+			} else lp1 = (*it).second;
+			loadedPage& lp(*lp1);
+
+			bool c = false;
+			if (lp.compiling) goto asdf;
+			try {
+				c = shouldCompile(path);
+			} catch (exception& ex) {
+				cb(nullptr, &ex);
+				return;
+			}
+			if (c) {
+				lp.loadCB.push_back(cb);
+				try {
+					lp.doCompile(p, wd, cxxopts);
+				} catch (exception& ex) {
+					lp.loadCB.resize(lp.loadCB.size() - 1);
+					cb(nullptr, &ex);
+				}
+				return;
+			}
+			if (lp.loaded) {
+				try {
+					cb(lp.doCreate(), nullptr);
+				} catch (exception& ex) {
+					cb(nullptr, &ex);
+				}
+				return;
+			} else if (lp.compiling) {
+				asdf: lp.loadCB.push_back(cb);
+			} else {
+				try {
+					lp.doLoad();
+					cb(lp.doCreate(), nullptr);
+				} catch (exception& ex) {
+					cb(nullptr, &ex);
+				}
+			}
+		}
 	};
+	cppspManager mgr;
+	void loadPage(Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb) {
+		mgr.loadPage(p, wd, path, cb);
+	}
+	vector<string>& CXXOpts() {
+		return mgr.cxxopts;
+	}
 }

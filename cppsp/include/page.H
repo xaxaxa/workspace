@@ -38,11 +38,15 @@ namespace cppsp
 		RGC::Ref<CP::Stream> outputStream;
 		CP::StreamWriter output;
 		map<string, string> headers;
+		const char* statusName;
+		int statusCode;
+
 		bool headersWritten;
 		virtual void writeHeaders();
 
 		template<class ... T>
 		void write(T&&... a) {
+			if(!headersWritten)writeHeaders();
 			output.write(std::forward<T>(a)...);
 		}
 	};
