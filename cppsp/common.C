@@ -16,23 +16,14 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <libgen.h>
+#include <sys/wait.h>
+#include "include/common.H"
 #include "include/page.H"
 
 using namespace CP;
 using namespace std;
 namespace cppsp
 {
-	class ParserException: public std::exception
-	{
-	public:
-		string message;
-		int32_t number;
-		ParserException();
-		ParserException(int32_t number);
-		ParserException(string message, int32_t number = 0);
-		~ParserException() throw ();
-		const char* what() const throw ();
-	};
 	ParserException::ParserException() :
 			message(strerror(errno)), number(errno) {
 	}
@@ -45,6 +36,17 @@ namespace cppsp
 	ParserException::~ParserException() throw () {
 	}
 	const char* ParserException::what() const throw () {
+		return message.c_str();
+	}
+	CompileException::CompileException() :
+			message("Compilation error") {
+	}
+	CompileException::CompileException(string message) :
+			message(message) {
+	}
+	CompileException::~CompileException() throw () {
+	}
+	const char* CompileException::what() const throw () {
 		return message.c_str();
 	}
 
@@ -144,6 +146,8 @@ namespace cppsp
 			vector<string>& c_opts) {
 		const char* s = in;
 		const char* end = s + inLen;
+		string inherits = "Page";
+		string classname = (name == NULL ? "__cppsp_unnamed_page" : name);
 		int st_pos = 0;
 		//int out_initlen=out.length();
 		Stream& ms1(out); //declarations outside of the class
@@ -181,11 +185,37 @@ namespace cppsp
 					break;
 				}
 				case '@':
+				{ //cppsp options
+					int nextopt = 0;
+					split(s + 1, s1 - s - 1, ' ', [&](const char* s1, int l1) {
+						switch(nextopt) {
+							case 0:
+							{
+								if(l1==8 && memcmp(s1,"inherits",8)==0) nextopt=1;
+								else if(l1==5 && memcmp(s1,"class",5)==0) nextopt=2;
+								return;
+							}
+							case 1:
+							{
+								inherits=string(s1,l1);
+								break;
+							}
+							case 2:
+							{
+								if(name==NULL) classname=string(s1,l1);
+								break;
+							}
+						}
+						nextopt=0;
+					});
+					break;
+				}
+				case '#':
 				{ //declarations outside of the class
 					sw1.write(s + 1, s1 - s - 1);
 					break;
 				}
-				case '#':
+				case '$':
 				{ //declarations outside of the render() function
 					sw2.write(s + 1, s1 - s - 1);
 					break;
@@ -206,14 +236,15 @@ namespace cppsp
 		}
 		sw2.flush();
 		sw3.flush();
-		sw1.writeF("class %s: public Page {\n", name);
+		sw1.writeF("class %s: public %s {\npublic:\n", classname.c_str(), inherits.c_str());
 		sw1.write(ms2.data(), ms2.length());
 		sw1.write("virtual void render(StreamWriter& output) override {\n");
 		sw1.write(ms3.data(), ms3.length());
 		sw1.write("}\n};\n");
-		sw1.writeF("extern \"C\" int getObjectSize() {return sizeof(%s);}\n", name);
+		sw1.writeF("extern \"C\" int getObjectSize() {return sizeof(%s);}\n", classname.c_str());
 		sw1.writeF("extern \"C\" Page* createObject(void* mem) {"
-				"if(mem==NULL) return new %s(); else return new (mem) %s();}\n", name, name);
+				"if(mem==NULL) return new %s(); else return new (mem) %s();}\n", classname.c_str(),
+				classname.c_str());
 		sw1.flush();
 		//out.write(ms1.data(), ms1.length());
 	}
@@ -225,7 +256,7 @@ namespace cppsp
 		if (p == NULL) throw runtime_error(strerror(errno));
 		return p;
 	}
-	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts) {
+	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid) {
 		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", path + ".so", path
 				+ ".C" };
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
@@ -238,8 +269,7 @@ namespace cppsp
 			inp.readToEnd(ms);
 			ms.flush();
 
-			cppsp::doParse("__cppsp_unnamed_page", (const char*) ms.data(), ms.length(), out_c, out_s,
-					c_opts);
+			cppsp::doParse(NULL, (const char*) ms.data(), ms.length(), out_c, out_s, c_opts);
 		}
 
 		const char* cmds[c_opts.size() + 1];
@@ -254,6 +284,7 @@ namespace cppsp
 		pid_t tmp = fork();
 		if (tmp > 0) {
 			close(p[1]);
+			pid = tmp;
 			return new CP::File(p[0]);
 		} else if (tmp == 0) {
 			close(p[0]);
@@ -308,24 +339,35 @@ namespace cppsp
 		vector<Delegate<void(Page*, exception* ex)> > loadCB;
 		string page;
 		int stringTableFD;
+		pid_t compilerPID;
 		bool loaded;
 		bool compiling;
 		void readCB(int r) {
 			if (r <= 0) {
 				compiling = false;
+				int status=-1;
+				waitpid(compilerPID,&status,WNOHANG);
+				if(status!=0) {
+					CompileException exc;
+					exc.compilerOutput=string((const char*)ms.data(),ms.length());
+					for (int i = 0; i < (int) loadCB.size(); i++)
+					loadCB[i](nullptr, &exc);
+					goto aaa;
+				}
 				try {
 					doUnload();
 					doLoad();
 					for (int i = 0; i < (int) loadCB.size(); i++)
 					loadCB[i](doCreate(), nullptr);
 				} catch (exception& ex) {
-					string msg(ex.what());
-					msg.append("\n\n\ncompiler output:\n");
-					msg.append((const char*)ms.data(),ms.length());
-					logic_error le(msg);
+					/*string msg(ex.what());
+					 msg.append("\n\n\ncompiler output:\n");
+					 msg.append((const char*)ms.data(),ms.length());
+					 logic_error le(msg);*/
 					for (int i = 0; i < (int) loadCB.size(); i++)
-					loadCB[i](nullptr, &le);
+					loadCB[i](nullptr, &ex);
 				}
+				aaa:
 				loadCB.clear();
 				compile_fd=nullptr;
 				//if (compileCB != nullptr) compileCB(*this);
@@ -343,7 +385,7 @@ namespace cppsp
 		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
 			compiling = true;
 			ms.clear();
-			CP::File* f = (CP::File*) checkError(compilePage(wd,page,cxxopts));
+			CP::File* f = (CP::File*) checkError(compilePage(wd,page,cxxopts,compilerPID));
 			p.add(*f);
 			compile_fd = f;
 			f->release();
@@ -356,7 +398,8 @@ namespace cppsp
 			stringTableFD = checkError(open((page + ".txt").c_str(), O_RDONLY));
 			stringTable = (const uint8_t*) checkError(
 					mmap(NULL, stringTableLen, PROT_READ, MAP_SHARED, stringTableFD, 0));
-			dlHandle = checkError(dlopen((page + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY));
+			dlHandle = dlopen((page + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY);
+			if(dlHandle==NULL) throw runtime_error(dlerror());
 			getObjectSize = (getObjectSize_t) checkError(dlsym(dlHandle, "getObjectSize"));
 			createObject = (createObject_t) checkError(dlsym(dlHandle, "createObject"));
 			loaded = true;
@@ -453,5 +496,23 @@ namespace cppsp
 	}
 	vector<string>& CXXOpts() {
 		return mgr.cxxopts;
+	}
+
+	void handleError(exception* ex, cppsp::Response& resp, string path) {
+		resp.clear();
+		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
+		resp.writeHeaders();
+		string title = "Server error in " + path;
+		resp.output.writeF("<html><head><title>%s</title>"
+				"<style></style></head>", title.c_str());
+		resp.output.writeF("<body><h1 style=\"color: #aa1111\">%s</h1><hr />"
+				"<h2 style=\"color: #444\">%s</h2>", title.c_str(), ex->what());
+		cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
+		if (ce != NULL) {
+			resp.output.write("<pre style=\"color: #000; background: #ffc; padding: 8px;\">");
+			resp.output.write(ce->compilerOutput);
+			resp.output.write("</pre>");
+		}
+		resp.output.writeF("</body></html>");
 	}
 }
