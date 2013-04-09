@@ -15,6 +15,12 @@ using namespace socketd;
 using namespace CP;
 using namespace cppsp;
 string rootDir;
+class socketd_Server: public cppsp::Server {
+	virtual const char* rootDir() {
+		return ::rootDir.c_str();
+	}
+};
+socketd_Server _server;
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
 	function<char*()> func = [&]()->char*
@@ -69,9 +75,12 @@ int main(int argc, char** argv) {
 				CP::Poll& p;
 				RGC::Ref<Socket> s;
 				cppsp::CPollRequest req;
-				MemoryStream ms;
+				cppsp::Response resp;
+				//Page* p;
+				//MemoryStream ms;
 				uint8_t buf[4096];
-				handler(CP::Poll& p,Socket* s):p(p),s(s),req(*s) {
+				string path;
+				handler(CP::Poll& p,Socket* s):p(p),s(s),req(*s),resp(*s) {
 					//printf("handler()\n");
 					this->retain(2);
 					req.readHeaders({&handler::readCB,this});
@@ -80,31 +89,39 @@ int main(int argc, char** argv) {
 					//printf("readCB()\n");
 					char tmp[req.path.length()+rootDir.length()];
 					int l=cppsp::combinePathChroot(rootDir.c_str(),req.path.c_str(),tmp);
-					cppsp::loadPage(p,rootDir,string(tmp,l),{&handler::loadCB,this});
+					path=string(tmp,l);
+					cppsp::loadPage(p,rootDir,path,{&handler::loadCB,this});
 				}
+				
 				void loadCB(Page* p, exception* ex) {
 					//printf("loadCB()\n");
-					cppsp::Response resp(ms);
 					if(ex!=NULL) {
-						resp.headers["Content-Type"]="text/plain";
-						resp.writeHeaders();
-						resp.write(ex->what());
-						goto doFlush;
+						cppsp::handleError(ex,resp,path);
+						resp.flush( { &handler::flushCB, this });
+						goto doFinish;
 					}
 					{
+						//this->p=p;
+						p->filePath=path;
 						p->request=&req;
 						p->response=&resp;
-						p->handleRequest();
+						p->poll=&this->p;
+						p->server=&_server;
+						p->handleRequest({&handler::handleRequestCB,this});
 					}
-				doFlush:
-					resp.output.flush();
-					s->write(ms.data(),ms.length(),{&handler::writeCB,this});
+				doFinish:
+					//s->write(ms.data(),ms.length(),{&handler::writeCB,this});
 					s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 				}
 				void sockReadCB(int r) {
 					if(r<=0) release();
 				}
-				void writeCB(int r) {
+				void flushCB(Response& resp) {
+					s->shutdown(SHUT_WR);
+					release();
+				}
+				void handleRequestCB(Page& p) {
+					p.release();
 					s->shutdown(SHUT_WR);
 					release();
 				}

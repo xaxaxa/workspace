@@ -1,32 +1,73 @@
-<%@
+<%#
 #include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
-
+#include <stdexcept>
+#include <cppsp/common.H>
+#include <delegate.H>
+#include "1_cppsp.H"
 int aaaaa=0;
 %>
-<%#
+<%@ class p %>
+<%$
+
 string asdf() {
 	return "zzz";
 }
-
-%>
-gshdfjkghfsdg
-<%=getuid()%>
-<%=getgid()%>
-<%="ddd"%>
-
-s
-gsjdhkh
-test1
+void init() {
+	initCB();
+	//throw runtime_error("aaaaaa");
+	//server->loadPage(*poll, "1.cppsp", {&p::sss,this});
+}
 
 
-<%
-for(int i=0;i<10;i++) {
-	%>
-	gfdsgsfdgdsf<br />
-	<%
+void sss(Page* p, exception* ex) {
+	if(ex!=NULL) {
+		cancelLoad(ex);
+		return;
+	}
+	response->writeHeaders();
+	p->request=request;
+	p->response=response;
+	p->poll=poll;
+	p->server=server;
+	p->render(response->output);
+	((_1_cppsp*)p)->test();
+	initCB();
 }
 %>
-
-<%=(++aaaaa)%>
+<html>
+	<head>
+		<title>fgdhjf</title>
+	</head>
+	<body>
+		<table border="1">
+			<tr>
+				<td>UID: </td>
+				<td><%=getuid()%></td>
+			</tr>
+			<tr>
+				<td>GID: </td>
+				<td><%=getgid()%></td>
+			</tr>
+		</table>
+		<form method="post" action="1.cppsp">
+			<input type="text" name="input1" />
+			<input type="submit" value="click here" />
+		</form>
+		
+		<%="ddd"%>
+		s
+		gsjdhkh
+		test1
+		<%
+		for(int i=0;i<10;i++) {
+			%>
+			gfdsgsfdgdsf<br />
+			<%
+		}
+		//throw runtime_error("aaaaa");
+		%>
+		<%=(++aaaaa)%>
+	</body>
+</html>
