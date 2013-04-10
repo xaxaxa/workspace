@@ -51,7 +51,7 @@ void sss(Page* p, exception* ex) {
 				<td><%=getgid()%></td>
 			</tr>
 		</table>
-		<form method="post" action="1.cppsp">
+		<form method="get" action="1.cppsp">
 			<input type="text" name="input1" />
 			<input type="submit" value="click here" />
 		</form>

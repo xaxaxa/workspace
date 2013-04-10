@@ -46,3 +46,5 @@ socketd_proxy.so
 *.html.so
 *.html.txt
 ldtest1.so
+urlparser_test
+

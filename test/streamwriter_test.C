@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 	write(1,ms.buffer,ms.len);*/
 	StandardStream ss;
 	
-	MemoryStream ms;
+	StringStream ms;
 	{
 		StreamWriter sw((Stream&)ms);
 		sw.write("aaaaa\n");

@@ -39,6 +39,7 @@ ldtest1:
 	g++ ldtest1.C -o ldtest1.so --shared -g3 -I../include -L../lib
 ldtest:
 	g++ ldtest.C -o ldtest -g3 -I../include -L../lib -ldl
-
+urlparser_test: urlparser_test.C
+	g++ urlparser_test.C -o urlparser_test -g3 -I../include -L../lib --std=c++0x -lcpoll -lcppsp -ldl
 
 
