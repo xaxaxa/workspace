@@ -49,6 +49,7 @@
 #include <sys/signalfd.h>
 #include <sys/eventfd.h>
 #include <delegate.H>
+#include <stdio.h>
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -124,6 +125,13 @@ namespace CP
 		const char* what() const throw ();
 	};
 	
+	class MemoryBuffer: virtual public RGC::Object
+	{
+	public:
+		virtual uint8_t* data() const=0;
+		virtual int length() const=0;
+	};
+
 	//==============================================================
 	//==============================================================
 	//=================NETWORK UTILITY CLASSES======================
@@ -389,6 +397,7 @@ namespace CP
 	;
 	class FixedMemoryStream;
 	class MemoryStream;
+	class StringStream;
 
 	//StreamWriter will directly access the BufferedOutput's buffer
 	//(for performance reasons) and increment bufferPos accordingly.
@@ -403,6 +412,9 @@ namespace CP
 			if (buffer->bufferSize - buffer->bufferPos < len) buffer->flushBuffer(len);
 			memcpy(buffer->buffer + buffer->bufferPos, s, len);
 			buffer->bufferPos += len;
+		}
+		void write(const MemoryBuffer& buf) {
+			write(buf.data(), buf.length());
 		}
 		void write(string s) {
 			write(s.data(), s.length());
@@ -465,6 +477,7 @@ namespace CP
 		StreamWriter(BufferedOutput& s);
 		StreamWriter(Stream& s);
 		StreamWriter(MemoryStream& s);
+		StreamWriter(StringStream& s);
 		~StreamWriter();
 	};
 
@@ -924,7 +937,7 @@ namespace CP
 		virtual void flush(const Callback& cb);
 	};
 
-	class FixedMemoryStream: public Stream, public BufferedOutput
+	class FixedMemoryStream: public Stream, public BufferedOutput, public MemoryBuffer
 	{
 	public:
 		//uint8_t* data;
@@ -960,10 +973,10 @@ namespace CP
 
 		virtual BufferedOutput* getBufferedOutput() override;
 
-		inline uint8_t* data() {
+		inline virtual uint8_t* data() const final {
 			return buffer;
 		}
-		inline int length() {
+		inline virtual int length() const final {
 			return len;
 		}
 	};
@@ -983,6 +996,52 @@ namespace CP
 		virtual void flushBuffer(int minBufferAllocation);
 		//user must delete the MemoryStream instance after this call
 		void keepBuffer();
+	};
+	class StringStream: public Stream, public BufferedOutput, public MemoryBuffer
+	{
+	public:
+		//uint8_t* data;
+		//int len, pos;
+		string _str;
+		int len;
+		StringStream();
+		//sync
+		virtual int32_t read(void* buf, int32_t len);
+		virtual int32_t readAll(void* buf, int32_t len);
+		virtual int32_t write(const void* buf, int32_t len);
+		virtual int32_t writeAll(const void* buf, int32_t len);
+
+		//async
+		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void readAll(void* buf, int32_t len, const Callback& cb);
+		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
+		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
+		virtual void cancelRead();
+		virtual void cancelWrite();
+
+		//=========misc===========
+		//sync
+		virtual void close();
+		virtual void flush();
+
+		//async
+		virtual void close(const Callback& cb);
+		virtual void flush(const Callback& cb);
+
+		virtual int32_t readBuffer(void*& buf, int32_t maxlen);
+		virtual void flushBuffer(int minBufferAllocation);
+
+		virtual BufferedOutput* getBufferedOutput() override;
+		void clear();
+		inline string str() const {
+			return _str.substr(0, len);
+		}
+		inline virtual uint8_t* data() const final {
+			return buffer;
+		}
+		inline virtual int length() const final {
+			return len;
+		}
 	};
 }
 

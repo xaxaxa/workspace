@@ -282,6 +282,9 @@ namespace CP
 	StreamWriter::StreamWriter(MemoryStream& s) :
 			outp(&s), buffer(&s) {
 	}
+	StreamWriter::StreamWriter(StringStream& s) :
+			outp(&s), buffer(&s) {
+	}
 	StreamWriter::~StreamWriter() {
 		flush();
 	}
@@ -1695,5 +1698,88 @@ namespace CP
 	void MemoryStream::keepBuffer() {
 		buffer = NULL;
 	}
-}
 
+	StringStream::StringStream() :
+			BufferedOutput(NULL, 0, 0), len(0) {
+
+	}
+	int32_t StringStream::read(void* buf, int32_t len) {
+		int l = len < (this->len - this->bufferPos) ? len : (this->len - this->bufferPos);
+		if (l <= 0) return 0;
+		memcpy(buf, buffer + this->bufferPos, l);
+		this->bufferPos += l;
+		return l;
+	}
+	int32_t StringStream::readAll(void* buf, int32_t len) {
+		return read(buf, len);
+	}
+	int32_t StringStream::write(const void* buf, int32_t len) {
+		if (bufferPos + len > this->len) {
+			_str.reserve(bufferPos + len);
+			_str.resize(_str.capacity());
+			this->len = bufferPos + len;
+			this->buffer = (uint8_t*) _str.data();
+		}
+		memcpy(buffer + this->bufferPos, buf, len);
+		this->bufferPos += len;
+		return len;
+	}
+	int32_t StringStream::writeAll(const void* buf, int32_t len) {
+		return write(buf, len);
+	}
+	void StringStream::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
+		rep: int tmp = read(buf, len);
+		cb(tmp);
+		if (repeat && tmp > 0) goto rep;
+	}
+	void StringStream::readAll(void* buf, int32_t len, const Callback& cb) {
+		int tmp = readAll(buf, len);
+		cb(tmp);
+	}
+	void StringStream::write(const void* buf, int32_t len, const Callback& cb, bool repeat) {
+		rep: int tmp = write(buf, len);
+		cb(tmp);
+		if (repeat && tmp > 0) goto rep;
+	}
+	void StringStream::writeAll(const void* buf, int32_t len, const Callback& cb) {
+		int tmp = writeAll(buf, len);
+		cb(tmp);
+	}
+	void StringStream::cancelRead() {
+	}
+	void StringStream::cancelWrite() {
+	}
+	void StringStream::close() {
+	}
+	void StringStream::flush() {
+	}
+	void StringStream::close(const Callback& cb) {
+		cb(0);
+	}
+	void StringStream::flush(const Callback& cb) {
+		cb(0);
+	}
+	int32_t StringStream::readBuffer(void*& buf, int32_t maxlen) {
+		int l;
+		l = this->len - this->bufferPos;
+		if (maxlen >= 0 && maxlen < l) l = maxlen;
+		if (l <= 0) return 0;
+		buf = this->buffer + this->bufferPos;
+		this->bufferPos += l;
+		return l;
+	}
+	void StringStream::flushBuffer(int minBufferAllocation) {
+		if (this->bufferPos > this->len) this->len = this->bufferPos;
+		_str.reserve(_str.length() + minBufferAllocation);
+		_str.resize(_str.capacity());
+		this->bufferSize = _str.length();
+		buffer = (uint8_t*) _str.data();
+	}
+	BufferedOutput* StringStream::getBufferedOutput() {
+		return this;
+	}
+	void StringStream::clear() {
+		_str.clear();
+	}
+
+}
