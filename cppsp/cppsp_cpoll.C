@@ -7,7 +7,7 @@
 #include "include/cppsp_cpoll.H"
 #include <stdio.h>
 #include <unistd.h>
-
+#include "include/stringutils.H"
 namespace cppsp
 {
 	//static int CPollRequest::bufSize=4096;
@@ -43,7 +43,30 @@ namespace cppsp
 			const char* path = (const char*) tmp;
 			int pathLen = tmp1 - tmp;
 			if (pathLen <= 0) goto fail;
-			this->path = string(path, pathLen);
+
+			const char* q = (const char*) memchr(path, '?', pathLen);
+			if (q == NULL) this->path = string(path, pathLen);
+			else {
+				struct
+				{
+					CPollRequest* This;
+					void operator()(const char* name, int nameLen, const char* value, int valueLen) {
+						CP::StringStream n;
+						CP::StringStream v;
+						{
+							CP::StreamWriter sw((CP::BufferedOutput&)n);
+							cppsp::urlDecode(name, nameLen, sw);
+						}
+						if (value != NULL) {
+							CP::StreamWriter sw((CP::BufferedOutput&)v);
+							cppsp::urlDecode(value, valueLen, sw);
+						}
+						This->queryString[n.str()] = v.str();
+					}
+				} cb { this };
+				cppsp::parseQueryString(q + 1, path + pathLen - q - 1, &cb, false);
+				this->path = string(path, q - path);
+			}
 		} else {
 			uint8_t* lineBuf = ms.data();
 			int lineBufLen = ms.length();

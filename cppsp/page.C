@@ -59,24 +59,24 @@ namespace cppsp
 		} else handleError(ex, *response, this->filePath);
 		response->flush( { &Page::_flushCB, this });
 	}
-	
 	void Page::_flushCB(Response& r) {
 		if (this->cb != nullptr) cb(*this);
 	}
+
 	Request::Request(CP::Stream& inp) :
 			inputStream(&inp) {
 	}
 	Request::~Request() {
 	}
+
 	Response::Response(CP::Stream& out) :
-			outputStream(&out), output(buffer) {
+			outputStream(&out), output((CP::BufferedOutput&)buffer) {
 		statusCode = 200;
 		statusName = "OK";
 		headers.insert( { "Connection", "close" });
 		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
 		headersWritten = false;
 	}
-	
 	void Response::doWriteHeaders() {
 		output.writeF("HTTP/1.1 %i %s\r\n", statusCode, statusName);
 		for (auto it = headers.begin(); it != headers.end(); it++) {

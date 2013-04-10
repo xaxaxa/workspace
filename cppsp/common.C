@@ -157,6 +157,7 @@ namespace cppsp
 		StreamWriter sw2(ms2);
 		StreamWriter sw3(ms3);
 		sw1.write("#include <cppsp/page.H>\n#include <cpoll/cpoll.H>\n");
+		sw1.write("#include <cppsp/common.H>\n#include <cppsp/stringutils.H>\n");
 		sw1.write("using namespace cppsp;\nusing namespace CP;\n");
 
 		while (true) {
