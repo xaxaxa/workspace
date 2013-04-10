@@ -1,0 +1,36 @@
+<%#
+#include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdexcept>
+#include <cppsp/common.H>
+#include <delegate.H>
+#include "1_cppsp.H"
+#include <iostream>
+int aaaaa=0;
+%>
+<%@ inherits _1_cppsp %>
+<%$
+void test() {
+	cout << aaaaa << endl;
+}
+
+%>
+
+<table border="1">
+<%
+for(auto it=request->queryString.begin();it!=request->queryString.end();it++) {
+	%>
+	<tr>
+		<td><%=htmlEscape((*it).first)%></td>
+		<td><%=htmlEscape((*it).second)%></td>
+	</tr>
+	<%
+}
+%>
+</table>
+<%
+++aaaaa;
+%>
+
+
