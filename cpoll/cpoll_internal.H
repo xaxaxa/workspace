@@ -21,6 +21,7 @@
 #ifndef CPOLL_INTERNAL_H_
 #define CPOLL_INTERNAL_H_
 #include <signal.h>
+
 namespace CP
 {
 	static inline int eventToIndex(Events event) {

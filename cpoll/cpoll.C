@@ -514,31 +514,37 @@ namespace CP
 		return readTo('\n', s);
 	}
 	void StreamReader::readTo(char delim, Stream& s, const StreamCallback& cb) {
-		StreamReader_prepareAsyncReadStream(this, s, cb);
-		bool delFlag = false;
-		deletionFlag = &delFlag;
-		streamReader_readUntilChar((streamReader*) sr, delim);
-		if (delFlag) return;
-		deletionFlag = NULL;
+		{
+			StreamReader_prepareAsyncReadStream(this, s, cb);
+			bool delFlag = false;
+			deletionFlag = &delFlag;
+			streamReader_readUntilChar((streamReader*) sr, delim);
+			if (delFlag) return;
+			deletionFlag = NULL;
+		}
 		_beginRead();
 	}
 	void StreamReader::readTo(const char* delim, int delimLen, Stream& s, const StreamCallback& cb) {
-		StreamReader_prepareAsyncReadStream(this, s, cb);
-		bool delFlag = false;
-		deletionFlag = &delFlag;
-		streamReader_readUntilString((streamReader*) sr, delim, delimLen);
-		if (delFlag) return;
-		deletionFlag = NULL;
+		{
+			StreamReader_prepareAsyncReadStream(this, s, cb);
+			bool delFlag = false;
+			deletionFlag = &delFlag;
+			streamReader_readUntilString((streamReader*) sr, delim, delimLen);
+			if (delFlag) return;
+			deletionFlag = NULL;
+		}
 		_beginRead();
 	}
 	void StreamReader::readTo(string delim, Stream& s, const StreamCallback& cb) {
-		StreamReader_prepareAsyncReadStream(this, s, cb);
-		tmp_delim = delim;
-		bool delFlag = false;
-		deletionFlag = &delFlag;
-		streamReader_readUntilString((streamReader*) sr, tmp_delim.data(), tmp_delim.length());
-		if (delFlag) return;
-		deletionFlag = NULL;
+		{
+			StreamReader_prepareAsyncReadStream(this, s, cb);
+			tmp_delim = delim;
+			bool delFlag = false;
+			deletionFlag = &delFlag;
+			streamReader_readUntilString((streamReader*) sr, tmp_delim.data(), tmp_delim.length());
+			if (delFlag) return;
+			deletionFlag = NULL;
+		}
 		_beginRead();
 	}
 	void StreamReader::readLine(Stream& s, const StreamCallback& cb) {
@@ -563,6 +569,7 @@ namespace CP
 			return input->read(buf, len, cb, repeat);
 		}
 		memcpy(buf, tmp, l);
+		//TODO: BUG: if callback calls read() again, results in infinite loop/recursion
 		cb(l);
 		freeBuffer(tmp, l);
 	}
