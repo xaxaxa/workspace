@@ -56,7 +56,7 @@ namespace cppsp
 		const char* s1 = s;
 		const char* end = s + len;
 		while (true) {
-			s = strchr(s, delim);
+			s = (const char*) memchr(s, delim, end - s);
 			if (s == NULL) break;
 			cb(s1, s - s1);
 			s1 = ++s;
@@ -120,18 +120,23 @@ namespace cppsp
 					first=false;
 					if(l==0) return;
 				}
+
 				if(l==2 && memcmp(s,"..",2)==0) {
 					i--;
 					while(i>=0 && buf[i]!='/')i--;
 					if(i<l1) i=l1;
 				} else if(l==1 && *s=='.') {
-					buf[i]='/';
-					i++;
+					if(!(i>0 && buf[i-1]=='/')) {
+						buf[i]='/';
+						i++;
+					}
 				}
 				else {
 					//while(i>=0 && buf[i]!='/')i--;
-					buf[i]='/';
-					i++;
+					if(!(i>0 && buf[i-1]=='/')) {
+						buf[i]='/';
+						i++;
+					}
 					memcpy(buf+i,s,l);
 					i+=l;
 				}
@@ -140,6 +145,17 @@ namespace cppsp
 		}
 		if (i < l1) i = l1;
 		return i;
+	}
+
+	string combinePath(const char* p1, const char* p2) {
+		char tmp[strlen(p1) + strlen(p2)];
+		int l = combinePath(p1, p2, tmp);
+		return string(tmp, l);
+	}
+	string combinePathChroot(const char* p1, const char* p2) {
+		char tmp[strlen(p1) + strlen(p2)];
+		int l = combinePathChroot(p1, p2, tmp);
+		return string(tmp, l);
 	}
 	//parses a cppsp page and generates code (to out) and string table (to st_out)
 	void doParse(const char* name, const char* in, int inLen, Stream& out, Stream& st_out,

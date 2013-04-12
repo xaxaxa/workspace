@@ -5,22 +5,44 @@
 #include <stdexcept>
 #include <cppsp/common.H>
 #include <delegate.H>
+#include <dirent.h>
+
 #include "1_cppsp.H"
 int aaaaa=0;
 %>
 <%@ class p %>
+<%#
+void listDir(string dir,const function<void(dirent&)>& cb)
+{
+	//cout << "scanning " << dir << endl;
+	DIR* d=opendir(dir.c_str());
+	if(d==NULL) {
+		throw runtime_error(strerror(errno));
+		return;
+	}
+	int len = offsetof(dirent, d_name) + pathconf(dir.c_str(), _PC_NAME_MAX) + 1;
+	char ent[len];
+	dirent* ent1=(dirent*)ent;
+	while(readdir_r(d, (dirent*)ent, &ent1)==0 && ent1!=NULL) {
+		if(strcmp(ent1->d_name, ".")==0 || strcmp(ent1->d_name, "..")==0)
+			continue;
+		cb(*ent1);
+	}
+	closedir(d);
+}
+%>
 <%$
 
 string asdf() {
 	return "zzz";
 }
-void init() {
+void doInit() {
 	initCB();
 	//throw runtime_error("aaaaaa");
 	//server->loadPage(*poll, "1.cppsp", {&p::sss,this});
 }
 
-
+Page* p=NULL;
 void sss(Page* p, exception* ex) {
 	if(ex!=NULL) {
 		cancelLoad(ex);
@@ -31,8 +53,9 @@ void sss(Page* p, exception* ex) {
 	p->response=response;
 	p->poll=poll;
 	p->server=server;
-	p->render(response->output);
+	//p->render(response->output);
 	((_1_cppsp*)p)->test();
+	this->p=p;
 	initCB();
 }
 %>
@@ -51,8 +74,9 @@ void sss(Page* p, exception* ex) {
 				<td><%=getgid()%></td>
 			</tr>
 		</table>
-		<form method="get" action="1.cppsp">
-			<input type="text" name="input1" />
+		<form method="post" action="1.cppsp?a=1111111&b=222222">
+			<input type="text" name="input1" /><br />
+			<input type="text" name="input2" />
 			<input type="submit" value="click here" />
 		</form>
 		
@@ -68,6 +92,19 @@ void sss(Page* p, exception* ex) {
 		}
 		//throw runtime_error("aaaaa");
 		%>
-		<%=(++aaaaa)%>
+		<%=(++aaaaa)%><br />
+		<%=server->mapPath("./fdshjk/")%>
+		<br />=============================<br />
+		<table border="1">
+		<%
+		listDir(server->mapPath("/"), [&](dirent& d) {
+			%>
+			<tr>
+				<td><%=htmlEscape(d.d_name)%></td>
+			</tr>
+			<%
+		});
+		%>
+		</table>
 	</body>
 </html>

@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
 						p->poll=&this->p;
 						p->server=&_server;
 						p->handleRequest({&handler::handleRequestCB,this});
+						return;
 					}
 				doFinish:
 					//s->write(ms.data(),ms.length(),{&handler::writeCB,this});
@@ -124,6 +125,7 @@ int main(int argc, char** argv) {
 					p.release();
 					s->shutdown(SHUT_WR);
 					release();
+					s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 				}
 				~handler() {
 					//printf("~handler()\n");

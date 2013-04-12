@@ -12,8 +12,7 @@ namespace cppsp
 {
 	//static int CPollRequest::bufSize=4096;
 	CPollRequest::CPollRequest(CP::Socket& s) :
-			Request(s), s(s), sr(s) {
-
+			Request(s), s(s) {
 	}
 	
 	void CPollRequest::readHeaders(const Delegate<void()>& cb) {
@@ -24,7 +23,7 @@ namespace cppsp
 	void CPollRequest::_beginRead() {
 		ms.clear();
 		//printf("\n_beginRead()\n");
-		sr.readTo("\r\n", 2, ms, CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
+		input.readTo("\r\n", 2, ms, CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
 	}
 	void CPollRequest::_readCB(int i) {
 		if (i <= 0) goto fail;
@@ -54,11 +53,11 @@ namespace cppsp
 						CP::StringStream n;
 						CP::StringStream v;
 						{
-							CP::StreamWriter sw((CP::BufferedOutput&)n);
+							CP::StreamWriter sw((CP::BufferedOutput&) n);
 							cppsp::urlDecode(name, nameLen, sw);
 						}
 						if (value != NULL) {
-							CP::StreamWriter sw((CP::BufferedOutput&)v);
+							CP::StreamWriter sw((CP::BufferedOutput&) v);
 							cppsp::urlDecode(value, valueLen, sw);
 						}
 						This->queryString[n.str()] = v.str();
@@ -84,7 +83,7 @@ namespace cppsp
 
 			headers.insert(make_pair(name, value));
 		}
-		if (sr.eof) {
+		if (input.eof) {
 			fail: _endRead();
 			return;
 		}

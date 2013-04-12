@@ -35,11 +35,14 @@ namespace cppsp
 		~CompileException() throw ();
 		const char* what() const throw ();
 	};
+
 	void doParse(const char* name, const char* in, int inLen, CP::Stream& out, CP::Stream& st_out,
 			vector<string>& c_opts);
 	CP::File* compilePage(string path);
 	int combinePath(const char* p1, const char* p2, char* buf);
 	int combinePathChroot(const char* p1, const char* p2, char* buf);
+	string combinePath(const char* p1, const char* p2);
+	string combinePathChroot(const char* p1, const char* p2);
 	void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
 	vector<string>& CXXOpts();
 	void handleError(exception* ex, cppsp::Response& resp, string path);

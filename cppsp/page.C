@@ -8,6 +8,8 @@
 #include "include/page.H"
 #include "include/common.H"
 #include <stdexcept>
+#include <stdlib.h>
+
 namespace cppsp
 {
 	
@@ -36,7 +38,7 @@ namespace cppsp
 		}
 	}
 	void Page::processRequest() {
-		init();
+		doInit();
 	}
 	void Page::render(CP::StreamWriter& out) {
 		out.write("This is the default page of the cppsp C++ "
@@ -44,7 +46,14 @@ namespace cppsp
 				"you haven't overridden the render() method derived from cppsp::Page.");
 	}
 	void Page::init() {
-		initCB();
+
+	}
+	void Page::doInit() {
+		doReadPost = false;
+		init();
+		if (doReadPost && request->method.compare("POST") == 0) request->readPost( {
+				&Page::_readPOSTCB, this });
+		else initCB();
 	}
 	void Page::initCB() {
 		load();
@@ -59,18 +68,54 @@ namespace cppsp
 		} else handleError(ex, *response, this->filePath);
 		response->flush( { &Page::_flushCB, this });
 	}
+	void Page::_readPOSTCB(Request& r) {
+		initCB();
+	}
 	void Page::_flushCB(Response& r) {
 		if (this->cb != nullptr) cb(*this);
 	}
 
 	Request::Request(CP::Stream& inp) :
-			inputStream(&inp) {
+			inputStream(&inp), input(inp) {
 	}
 	Request::~Request() {
 	}
+	
+	void Request::readPost(Delegate<void(Request&)> cb) {
+		_readPOST.cb = cb;
+		_readPOST.tmp_i = tmpbuffer.length();
+		auto it = headers.find("Content-Length");
+		if (it == headers.end()) {
+			input.readToEnd(tmpbuffer, { &Request::_readCB, this });
+		} else {
+			input.readChunked(tmpbuffer, atoi((*it).second.c_str()), { &Request::_readCB, this });
+		}
+	}
+	void Request::_readCB(int i) {
+		tmpbuffer.flush();
+		struct
+		{
+			Request* This;
+			void operator()(const char* name, int nameLen, const char* value, int valueLen) {
+				CP::StringStream n;
+				CP::StringStream v;
+				{
+					CP::StreamWriter sw((CP::BufferedOutput&) n);
+					cppsp::urlDecode(name, nameLen, sw);
+				}
+				if (value != NULL) {
+					CP::StreamWriter sw((CP::BufferedOutput&) v);
+					cppsp::urlDecode(value, valueLen, sw);
+				}
+				This->form[n.str()] = v.str();
+			}
+		} cb { this };
+		cppsp::parseQueryString((const char*) tmpbuffer.data() + _readPOST.tmp_i, i, &cb, false);
+		_readPOST.cb(*this);
+	}
 
 	Response::Response(CP::Stream& out) :
-			outputStream(&out), output((CP::BufferedOutput&)buffer) {
+			outputStream(&out), output((CP::BufferedOutput&) buffer) {
 		statusCode = 200;
 		statusName = "OK";
 		headers.insert( { "Connection", "close" });
@@ -102,8 +147,10 @@ namespace cppsp
 } /* namespace cppsp */
 
 void cppsp::Server::loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb) {
+	cppsp::loadPage(p, rootDir(), mapPath(path), cb);
+}
+string cppsp::Server::mapPath(string path) {
 	char tmp[path.length() + strlen(rootDir())];
 	int l = cppsp::combinePathChroot(rootDir(), path.c_str(), tmp);
-	string path1(tmp, l);
-	cppsp::loadPage(p, rootDir(), path1, cb);
+	return string(tmp, l);
 }

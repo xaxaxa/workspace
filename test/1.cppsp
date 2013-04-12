@@ -11,12 +11,28 @@ int aaaaa=0;
 %>
 <%@ inherits _1_cppsp %>
 <%$
+void init() {
+	doReadPost=true;
+}
 void test() {
 	cout << aaaaa << endl;
 }
 
 %>
-
+form:
+<table border="1">
+<%
+for(auto it=request->form.begin();it!=request->form.end();it++) {
+	%>
+	<tr>
+		<td><%=htmlEscape((*it).first)%></td>
+		<td><%=htmlEscape((*it).second)%></td>
+	</tr>
+	<%
+}
+%>
+</table>
+querystring:
 <table border="1">
 <%
 for(auto it=request->queryString.begin();it!=request->queryString.end();it++) {
@@ -29,8 +45,6 @@ for(auto it=request->queryString.begin();it!=request->queryString.end();it++) {
 }
 %>
 </table>
-<%
-++aaaaa;
-%>
+
 
 

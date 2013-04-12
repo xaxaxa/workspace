@@ -18,7 +18,6 @@ namespace cppsp
 	{
 	public:
 		RGC::Ref<CP::Socket> s;
-		CP::StreamReader sr;
 		CP::MemoryStream ms;
 		Delegate<void()> tmp_cb;
 		bool firstLine;

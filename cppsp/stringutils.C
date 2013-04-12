@@ -15,7 +15,7 @@ namespace cppsp
 		const char* s1 = s;
 		const char* end = s + len;
 		while (true) {
-			s = strchr(s, delim);
+			s = (const char*) memchr(s, delim, end - s);
 			if (s == NULL) break;
 			cb(s1, s - s1);
 			s1 = ++s;

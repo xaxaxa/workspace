@@ -11,6 +11,7 @@
 #include <string>
 #include <map>
 #include <cpoll.H>
+#include "stringutils.H"
 using namespace std;
 namespace cppsp
 {
@@ -20,16 +21,28 @@ namespace cppsp
 		Request(CP::Stream& inp);
 		virtual ~Request();
 		RGC::Ref<CP::Stream> inputStream;
-		map<string, string> queryString;
-		map<string, string> headers;
-		map<string, string> form;
+		CP::StreamReader input;
+		map<string, string, ci_less> queryString;
+		map<string, string, ci_less> headers;
+		map<string, string, ci_less> form;
+		CP::MemoryStream tmpbuffer; //may be used to store headers, querystrings, and POST data
 		string method;
 		string path;
 		//string httpVersion;
-		Delegate<void(Request*)> _readCB;
+		union
+		{
+			struct
+			{
+				DelegateBase<void(Request&)> cb;
+				int tmp_i;
+			} _readPOST;
+		};
 
 		//read POST data; headers are always read before creating the Request object
-		//virtual void read(const Delegate<void(Request*)>& cb);
+		virtual void readPost(Delegate<void(Request&)> cb);
+
+		void _readCB(int i);
+
 	};
 	class Response: public RGC::Object
 	{
@@ -40,7 +53,7 @@ namespace cppsp
 		CP::MemoryStream buffer;
 		CP::StreamWriter output;
 		Callback _cb;
-		map<string, string> headers;
+		map<string, string, ci_less> headers;
 		const char* statusName;
 		int statusCode;
 
@@ -69,6 +82,8 @@ namespace cppsp
 		virtual const char* rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb);
+		//path is relative to rootDir
+		virtual string mapPath(string path);
 	};
 	class Page: public RGC::Object
 	{
@@ -83,6 +98,7 @@ namespace cppsp
 		Callback cb;
 		string filePath;
 		bool doRender;
+		bool doReadPost;
 		inline void cancelRender() {
 			doRender = false;
 		}
@@ -93,12 +109,14 @@ namespace cppsp
 		virtual void processRequest();
 		virtual void init(); //to be overridden by base class; called before load() is called, and
 									//must call initCB() or cancelLoad() after it's done
+		virtual void doInit();
 		virtual void initCB();
-		virtual void cancelLoad(exception* ex=NULL);
+		virtual void cancelLoad(exception* ex = NULL);
 		virtual void load(); //to be overridden by base class; called before headers are written
 		virtual void render(CP::StreamWriter& out);
 		virtual ~Page();
 
+		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
 	};
 
