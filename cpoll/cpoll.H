@@ -1044,6 +1044,7 @@ namespace CP
 			return len;
 		}
 	};
+	void listDirectory(const char* path, Delegate<void(const char*)> cb);
 }
 
 #endif
