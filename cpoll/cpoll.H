@@ -28,28 +28,18 @@
  * 
  * 
  * */
-#include <iostream>
-#include <functional>
 #include <string>
 #include <exception>
 #include <poll.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/epoll.h>
-#include <string.h>
-#include <errno.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/un.h>
-#include <netdb.h>
 #include <rgc.H>
-#include <set>
 #include <vector>
-#include <sstream>
 #include <sys/signalfd.h>
 #include <sys/eventfd.h>
 #include <delegate.H>
-#include <stdio.h>
+#include <sys/epoll.h>
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H

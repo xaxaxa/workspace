@@ -24,6 +24,12 @@
 #include <fcntl.h>
 #include <stdexcept>
 #include "statemachines.H"
+#include <dirent.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <sstream>
+
+
 namespace CP
 {
 	//CPollException
