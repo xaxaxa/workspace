@@ -151,7 +151,8 @@ static int fixAccept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 	prot_handleConnection ph1;
 	int r;
 	r=recv(sockfd,&ph,sizeof(ph),0);
-	if(r<=0) return -1;
+	if(r<0) return -1;
+	if(r==0) exit(0);
 	if(r!=sizeof(ph)) {
 		fprintf(stderr,"failed to read struct protocolHeader (%i bytes) from fd %i: got %i bytes\n"
 				,sizeof(protocolHeader),r,sockfd);
