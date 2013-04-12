@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=1;" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<title></title>
+	<script src="prototype.js"></script>
+	<script src="app.js"></script>
+	<script src="prototype.js"></script>
+	<script src="app.js"></script>
+	<link rel="stylesheet" type="text/css" href="common.css" media="screen" />
+	<script>
+	var fn_click=function()
+	{
+		window.location.href="viewphotos.htm?p="+encodeURIComponent(path)
+		+"&l="+encodeURIComponent(this.__id.toString()+".photos");
+	};
+	function displayItem(obj)
+	{
+		var e=document.getElementById("template").clone(true);
+		e.style.display="";
+		e.onclick=fn_click;
+		e.__id=obj.id;
+		//alert(e.getElementsByTagName("img").length);
+		//e.getElementsByTagName("img")[0].src="";
+		
+		e.getElementsByTagName("div")[0].textContent=obj.name;
+		new Ajax.Request(path+obj.cover_photo, {
+			onComplete: function(response) {
+				var o=JSON.parse(response.responseText);
+				//var pic=getLargestPicture(o);
+				//if(pic)
+				e.getElementsByTagName("img")[0].src=o.picture;//path+o.id+"."+pic[0];
+			},
+			method: "get"
+		});
+		return e;
+	}
+	</script>
+</head>
+<body>
+	<div style="display:none; min-height: 30px; position: relative;" id="template" class="dirent">
+		<img name="img" style="width:60px; " align="top" />
+		<div name="txt" style="position: absolute; top: 5px; left: 70px; right: 6px; bottom: 5px; padding:0px;margin:0px;"></div>
+	</div>
+	<div id="content" style="margin: 8px 6px; cursor: default;"></div>
+	<div id="paging" style="margin: 10px 5px; cursor: default; "></div>
+	<script>
+	var path=qs("p");
+	if(!path)path="./";
+	else if(path.substring(path.length-1)!="/")path+="/";
+	var l=qs("l");
+	if(l && l.substring(l.length-1)!="/")
+		l+="/";
+	var u=path;
+	if(l)u+=l;
+	
+	var pagesize=10;
+	var paging=[];
+	function show_paging()
+	{
+		var p=document.getElementById("paging");
+		p.innerHTML="";
+		var pages=Math.ceil(window.a.length/pagesize);
+		var tmpf1=function() {
+			show_page(this.__i*pagesize);
+		};
+		paging=[];
+		for(var i=0;i<pages;i++) {
+			var b=document.createElement("span");
+			b.setAttribute("class","btn");
+			b.textContent=(i+1).toString();
+			b.onclick=tmpf1;
+			b.__i=i;
+			paging[i]=b;
+			//if(i==start/pagesize) b.setAttribute("class","btn btn_hover");
+			p.appendChild(b);
+		}
+	}
+	var last_page=null;
+	function set_page(page)
+	{
+		if(last_page!=null)
+			paging[last_page].setAttribute("class","btn");
+		last_page=page;
+		paging[page].setAttribute("class","btn btn_hover");
+	}
+	var cur_items={};
+	function show_page(start)
+	{
+		cur_items={};
+		var d=document.getElementById("content");
+		d.innerHTML="";
+		var e=start+pagesize;
+		if(window.a.length<e)e=window.a.length;
+		for(var i=start;i<e;i++) {
+			new Ajax.Request(u+a[i], {
+				onComplete: function(response) {
+					var obj=JSON.parse(response.responseText);
+					try {
+						var e=displayItem(obj);
+						for(x in cur_items)
+							if(x>i) {
+								d.insertBefore(e,cur_items[x]);
+								cur_items[i]=e;
+								return;
+							}
+						d.appendChild(displayItem(obj));
+						cur_items[i]=e;
+					} catch(e){alert(e.toString());}
+				},
+				method: "get"
+			});
+		}
+		
+		set_page(start/pagesize);
+	}
+	
+	new Ajax.Request("cpp/ls.cppsp?p="+encodeURIComponent(u), {
+		onComplete: function(response) {
+			window.a=response.responseText.split("\n");
+			//for(var i=0;i<window.a.length;i++)
+			//	window.a[i]=parseInt(window.a[i]);
+			window.a.sort(function(a,b){return parseInt(b)-parseInt(a)});
+			show_paging();
+			show_page(0);
+		},
+		method: "get"
+	});
+	</script>
+</body>
+</html>

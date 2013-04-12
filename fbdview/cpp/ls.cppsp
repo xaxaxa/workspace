@@ -1,0 +1,40 @@
+<%#
+#include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdexcept>
+#include <cppsp/common.H>
+#include <delegate.H>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+using namespace CP;
+%><%
+	struct {
+		StreamWriter& output;
+		bool dirOnly;
+		string root;
+		void operator()(const char* name) {
+			if(dirOnly) {
+				string tmp=combinePath(root.c_str(),name);
+				struct stat st;
+				if(stat(tmp.c_str(),&st)<0) return;
+				if(!S_ISDIR(st.st_mode)) return;
+			}
+			%><%=htmlEscape(name)%><%
+			output.write('\n');
+		}
+	} cb {output,request->queryString["t"]=="d"};
+	cb.root=server->mapPath(request->queryString["p"]+"/");
+	struct stat st;
+	if(stat((cb.root+"index.txt").c_str(),&st)>=0) {
+		try {
+			File f(open((cb.root+"index.txt").c_str(),O_RDONLY));
+			f.readToEnd(*output.buffer);
+			return;
+		} catch(exception& ex) {}
+	}
+	listDirectory(cb.root.c_str(), &cb);
+	return;
+%>

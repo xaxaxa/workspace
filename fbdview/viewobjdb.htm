@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=1;" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<title></title>
+	<script src="prototype.js"></script>
+	<script src="app.js"></script>
+	<link rel="stylesheet" type="text/css" href="common.css" media="screen" />
+
+</head>
+<body>
+	<div id="content" style="margin: 8px 6px; cursor: default;"></div>
+	<script>
+	var path=qs("p");
+	if(!path)path="d/default/";
+	else if(path.substring(path.length-1)!="/")path+="/";
+	var fn_click=function()
+	{
+		var fn=window.a[this.__i];
+		if(fn.indexOf(".")>-1) {
+			var ln=fn.substring(fn.lastIndexOf(".")+1);
+			if(ln in linktypes) {
+				window.location.href=linktypes[ln]+"?p="+encodeURIComponent(path)+"&l="+encodeURIComponent(fn);
+			}
+		}
+		
+	};
+	var linktypes={"photos":"viewphotos.htm","feed":"viewposts.htm","albums":"viewalbums.htm","tagged":"viewphotos.htm"};
+	new Ajax.Request("cpp/ls.cppsp?t=d&p="+encodeURIComponent(path), {
+		onComplete: function(response) {
+			var d=document.getElementById("content");
+			window.a=response.responseText.split("\n");
+			window.a.sort();
+			for(var i=0;i<window.a.length;i++){
+				var fn=window.a[i].trim();
+				if(fn.length>0 && fn.indexOf(".")>-1) {
+					//alert(fn);
+					var ln=fn.substring(fn.lastIndexOf(".")+1);
+					if(ln in linktypes) {
+						var sp=document.createElement("span");
+						sp.setAttribute("class","dirent");
+						sp.textContent=fn;
+						sp.onclick=fn_click;
+						sp.__i=i;
+						d.appendChild(sp);
+					}
+				}
+			}
+		},
+		method: "get"
+	});
+	</script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=1;" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<title></title>
+	<script src="prototype.js"></script>
+	<script src="app.js"></script>
+	<script>
+	
+	function get_msg(obj)
+	{
+		return obj.message?obj.message:obj.name;
+	}
+
+	function displayPost(obj)
+	{
+			var tmp=obj;
+			var msg_header=document.createElement("div");
+			var pic=document.createElement("img");
+			var msg_innerheader=document.createElement("div");
+			var name=document.createElement("a");
+			var space=document.createTextNode(" ");
+			var msg_body=document.createElement("span");
+			var time=document.createElement("span");
+			msg_header.setAttribute("class","msg_header");
+			pic.setAttribute("class","pic");
+			msg_innerheader.setAttribute("class","msg_innerheader");
+			name.setAttribute("class","name");
+			msg_body.setAttribute("class","msg_body");
+			time.setAttribute("class","time");
+			
+			if(tmp.from && tmp.from.id) pic.src="http://graph.facebook.com/"+tmp.from.id+"/picture";
+			else pic.src="http://static.ak.fbcdn.net/rsrc.php/z5HB7/hash/ecyu2wwn.gif";
+			name.target="_blank";
+			if(tmp.from && tmp.from.id) name.href="http://www.facebook.com/profile.php?id="+tmp.from.id;
+			if(tmp.from && tmp.from.name) name.textContent=tmp.from.name;
+			else name.textContent="Facebook User";
+			if(tmp.subject && tmp.subject.length>0)
+			{
+				var subject=document.createElement("b");
+				subject.style.display="block";
+				subject.textContent=tmp.subject;
+				msg_body.appendChild(subject);
+				var msgtxt=get_msg(tmp);
+				if(msgtxt)
+				{
+					var msg=document.createElement("div");
+					msg.textContent=msgtxt;
+					msg_body.appendChild(msg);
+				}
+			}
+			else
+			{
+				var msgtxt=get_msg(tmp);
+				if(msgtxt) msg_body.textContent=msgtxt;
+			}
+			time.textContent="updated: "+tmp.updated_time;
+			
+			msg_header.appendChild(pic);
+			msg_header.appendChild(msg_innerheader);
+			msg_innerheader.appendChild(name);
+			
+			var t;
+			var l2;
+			if((t=tmp.to) && (t=t.data) && (l2=t.length)>0)
+			{
+				var arrow=document.createElement("span");
+				arrow.setAttribute("class","arrow");
+				msg_innerheader.appendChild(arrow);
+				for(i2=0;i2<l2;i2++)
+				{
+					if(t[i2]==null || t[i2].id==null || tmp.from==null || tmp.from.id==null || l2==1 || (t[i2].id!=tmp.from.id))
+					{
+						if(i2!=0)
+						{
+							var comma=document.createTextNode(", ");
+							msg_innerheader.appendChild(comma);
+						}
+						name=document.createElement("a");
+						name.setAttribute("class","name");
+					       
+						name.target="_blank";
+						if(t[i2] && t[i2].id) name.href="http://www.facebook.com/profile.php?id="+t[i2].id;
+						if(t[i2] && t[i2].name) name.textContent=t[i2].name;
+						else name.textContent="Facebook User";
+					       
+						msg_innerheader.appendChild(name);
+					}
+				}
+			}
+			
+			msg_innerheader.appendChild(space);
+			msg_innerheader.appendChild(msg_body);
+			
+			//picture(if any)
+			var pic=getLargestPicture(tmp);
+			if(pic) {
+				var img=document.createElement("img");
+				img.setAttribute("class","fbpic");
+				var img_a=document.createElement("a");
+				img_a.target="_blank";
+				img_a.href=img.src=path+tmp.id+"."+pic[0];
+				img_a.appendChild(img);
+				msg_innerheader.appendChild(img_a);
+			}
+			
+			msg_innerheader.appendChild(time);
+			
+			var c;
+			if((c=tmp.comments) && (c=c.data) && (l2=c.length)>0)
+			{
+				var comment0_id=tmp.id+"_0";
+				var comments=document.createElement("div");
+				comments.setAttribute("class","comments");
+				if(c[l2-1].id!=comment0_id && tmp.comments.paging)
+				{
+					var comment=document.createElement("div");
+					var a=document.createElement("a");
+					comment.setAttribute("class","comment");
+					a.setAttribute("class","name");
+					
+					a.href=tmp.comments.paging.next;
+					a.textContent="View previous messages("+c[l2-1].id.substring(c[l2-1].id.indexOf("_")+1)+" left)";
+					comment.appendChild(a);
+					comments.appendChild(comment);
+				}
+				for(i2=l2-1;i2>-1;i2--)
+				{
+					var tmp2=c[i2];
+					if(tmp2.id==comment0_id)
+					{
+						time.textContent=tmp2.created_time;
+					}
+					else
+					{
+						var comment=document.createElement("div");
+						var comment_header=document.createElement("div");
+						var comment_pic=document.createElement("img");
+						var comment_innerheader=document.createElement("div");
+						var comment_name=document.createElement("a");
+						var comment_space=document.createTextNode(" ");
+						var comment_body=document.createElement("span");
+						var comment_time=document.createElement("span");
+						comment.setAttribute("class","comment");
+						comment_header.setAttribute("class","comment_header");
+						comment_pic.setAttribute("class","comment_pic");
+						comment_innerheader.setAttribute("class","comment_innerheader");
+						comment_name.setAttribute("class","name");
+						comment_body.setAttribute("class","comment_body");
+						comment_time.setAttribute("class","time");
+					       
+						if(tmp2.from && tmp2.from.id) comment_pic.src="http://graph.facebook.com/"+tmp2.from.id+"/picture";
+						else comment_pic.src="http://static.ak.fbcdn.net/rsrc.php/z5HB7/hash/ecyu2wwn.gif";
+						comment_name.target="_blank";
+						if(tmp2.from && tmp2.from.id) comment_name.href="http://www.facebook.com/profile.php?id="+tmp2.from.id;
+						if(tmp2.from && tmp2.from.name) comment_name.textContent=tmp2.from.name;
+						else comment_name.textContent="Facebook User";
+						comment_body.textContent=tmp2.message;
+						comment_time.textContent=tmp2.created_time;
+					       
+						comment_header.appendChild(comment_pic);
+						comment_header.appendChild(comment_innerheader);
+						comment_innerheader.appendChild(comment_name);
+						comment_innerheader.appendChild(comment_space);
+						comment_innerheader.appendChild(comment_body);
+						comment_innerheader.appendChild(comment_time);
+						comment.appendChild(comment_header);
+						comments.appendChild(comment);
+					}
+				}
+				msg_innerheader.appendChild(comments);
+			}
+			return msg_header;
+	}
+	
+	</script>
+	<link rel="stylesheet" type="text/css" href="common.css" media="screen" />
+	<style>
+	.msg_header
+		{
+	border-top-color: #EEE;
+	border-top-style: solid;
+	border-top-width: 1px;
+	color: #333;
+	display: block;
+	font-size: 13px;
+	font-weight: bold;
+	margin-bottom: 0px;
+	margin-left: 54px;
+	margin-right: 0px;
+	margin-top: 2px;
+	padding-bottom: 1px;
+	padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 5px;
+	min-height:50px;
+		}
+		.comment_header
+		{
+	color: #333;
+	display: block;
+	font-size: 13px;
+	font-weight: bold;
+	margin-left: 40px;
+	min-height:35px;
+		}
+		.msg_innerheader
+		{
+			margin-top:-54px;
+		}
+		.comment_innerheader
+		{
+			margin-top:-38px;
+		}
+		.pic
+		{
+	border: none;
+	display: block;
+	margin-left: -56px;
+	height: 50px;
+	width: 50px;
+		}
+		.comment_pic
+		{
+	border: none;
+	display: block;
+	margin-left: -40px;
+	height: 35px;
+	width: 35px;
+		}
+		.time
+		{
+	color: gray;
+	display: block;
+	font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+	font-size: 11px;
+	font-weight: normal;
+	margin-top:4px;
+		}
+		.msg_body
+		{
+			display:block;
+			color: black;
+			font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+			font-size: 13px;
+			line-height: 14px;
+			font-weight:normal;
+			margin-bottom: 2px;
+		}
+		.comment_body
+		{
+			color: black;
+			font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+			font-size: 13px;
+			line-height: 14px;
+			font-weight:normal;
+		}
+		.comments
+		{
+			padding-top:5px;
+		}
+		.comment
+		{
+		background-color: #ECEFF5;
+	border-bottom-color: #E5EAF1;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	clear: left;
+	display: block;
+	float: none;
+	margin-bottom: 2px;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	padding-bottom: 4px;
+	padding-left: 5px;
+	padding-right: 0px;
+	padding-top: 5px;
+		}
+		a.name
+		{
+		color: #3B5998;
+		text-decoration: none;
+		}
+		a.name:hover
+		{
+		color: #3B5998;
+		text-decoration: underline;
+		}
+		a.name:visited
+		{
+		color: #3B5998;
+		text-decoration: none;
+		}
+		.arrow
+		{
+			background-image: url(http://static.ak.fbcdn.net/rsrc.php/zE47R/hash/bfk0r44i.png);
+			display: inline-block;
+			font-style: italic;
+			height: 9px;
+			margin-left: 5px;
+			margin-right: 5px;
+			width: 11px;
+			background-position: 0px -197px;
+		}
+		body
+		{
+		font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+		padding: 0px 2px;
+		margin: 0px;
+		}
+		
+	</style>
+</head>
+<body>
+	<div id="content"></div>
+	<div id="paging" style="margin: 10px 5px; cursor: default; "></div>
+<script>
+	var path=qs("p");
+	if(!path)path="./";
+	else if(path.substring(path.length-1)!="/")path+="/";
+	var l=qs("l");
+	if(l && l.substring(l.length-1)!="/")
+		l+="/";
+	function show_page(start)
+	{
+		var pagesize=20;
+		var d=document.getElementById("content");
+		d.innerHTML="";
+		var e=start+pagesize;
+		if(window.a.length<e)e=window.a.length;
+		for(var i=start;i<e;i++) {
+			new Ajax.Request(u+a[i], {
+				onComplete: function(response) {
+					var obj=JSON.parse(response.responseText);
+					try {
+						d.appendChild(displayPost(obj));
+					} catch(e){alert(e.toString());}
+				},
+				method: "get"
+			});
+		}
+		
+		//show paging
+		var p=document.getElementById("paging");
+		p.innerHTML="";
+		var pages=Math.ceil(window.a.length/pagesize);
+		var tmpf1=function() {
+			show_page(this.__i*pagesize);
+		};
+		for(var i=0;i<pages;i++) {
+			var b=document.createElement("span");
+			b.setAttribute("class","btn");
+			b.textContent=(i+1).toString();
+			b.onclick=tmpf1;
+			b.__i=i;
+			if(i==start/pagesize) b.setAttribute("class","btn btn_hover");
+			p.appendChild(b);
+		}
+	}
+	var u=path;
+	if(l)u+=l;
+	new Ajax.Request("cpp/ls.cppsp?p="+encodeURIComponent(u), {
+		onComplete: function(response) {
+			window.a=response.responseText.split("\n");
+			show_page(0);
+		},
+		method: "get"
+	});
+</script>
+</body>
+</html>

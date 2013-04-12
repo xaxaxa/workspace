@@ -1,0 +1,48 @@
+	body
+	{
+		font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+		padding: 0px;
+		margin: 0px;
+	}
+	.dirent
+	{
+		display: block;
+		background: #fff;
+		border: solid 1px #BCBCBC;
+		padding: 5px 6px;
+		margin: 5px 2px;
+		min-width: 32px;
+		text-align: left;
+	}
+	.dirent:hover, .dirent_hover
+	{
+		border: solid 1px #3333ff;
+	}
+	.dirent:active
+	{
+		background: #dfdfdf;
+	}
+	
+	.btn
+		{
+			display: inline-block;
+			background: #fff;
+			border: solid 1px #BCBCBC;
+			padding: 5px 6px;
+			margin: 5px 2px;
+			min-width: 32px;
+			text-align: center;
+		}
+		.btn:hover, .btn_hover
+		{
+			border: solid 1px #3333ff;
+		}
+		.btn:active
+		{
+			background: #dfdfdf;
+		}
+		.fbpic
+		{
+			max-width: 250px;
+			border: none;
+		}
