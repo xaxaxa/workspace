@@ -283,6 +283,17 @@ namespace CP
 	class Stream: virtual public RGC::Object
 	{
 	public:
+		union
+		{
+			struct
+			{
+				DelegateBase<void(int)> cb;
+				BufferedOutput* out;
+				int len;
+				int bufSize;
+				int br;
+			} _readChunked;
+		};
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0; //required
 		virtual int32_t readAll(void* buf, int32_t len) { //optional
@@ -304,6 +315,7 @@ namespace CP
 				r += i;
 			}
 		}
+		virtual int readChunked(BufferedOutput& out, int32_t len, int32_t bufSize = 4096);
 		virtual int32_t write(const void* buf, int32_t len)=0; //required
 		virtual int32_t writeAll(const void* buf, int32_t len) { //optional
 			int off = 0;
@@ -337,6 +349,8 @@ namespace CP
 		virtual void readAll(void* buf, int32_t len, const Callback& cb)=0;
 		//TODO:
 		//virtual void readToEnd(BufferedOutput& out, const Callback& cb)=0;
+		virtual void readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int bufSize =
+				4096);
 
 		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
 		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {

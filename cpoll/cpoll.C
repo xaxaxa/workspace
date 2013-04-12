@@ -272,6 +272,49 @@ namespace CP
 		//XXX
 	}
 
+
+	static void Stream_readCB1(Stream* This, int i);
+	static void Stream_beginRead1(Stream* This) {
+		auto& tmp = This->_readChunked;
+		auto* out = tmp.out;
+		int x = (tmp.len - tmp.br) > tmp.bufSize ? tmp.bufSize : (tmp.len - tmp.br);
+		if (x <= 0) {
+			tmp.cb(tmp.br);
+			return;
+		}
+		if (out->bufferSize - out->bufferPos < x) out->flushBuffer(x);
+		This->read(out->buffer + out->bufferPos, x, { &Stream_readCB1, This });
+	}
+	static void Stream_readCB1(Stream* This, int i) {
+		auto& tmp = This->_readChunked;
+		if (i <= 0) {
+			tmp.cb(tmp.br);
+			return;
+		}
+		tmp.out->bufferPos += i;
+		tmp.br += i;
+		Stream_beginRead1(This);
+	}
+	int Stream::readChunked(BufferedOutput& out, int32_t len, int32_t bufSize) {
+		int r = 0;
+		while (true) {
+			int x = (len - r) > bufSize ? bufSize : (len - r);
+			if (x <= 0) return r;
+			if (out.bufferSize - out.bufferPos < x) out.flushBuffer(x);
+			int i = read(out.buffer + out.bufferPos, x);
+			if (i <= 0) return r;
+			out.bufferPos += i;
+			r += i;
+		}
+	}
+	void Stream::readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int32_t bufSize) {
+		_readChunked.cb = cb;
+		_readChunked.bufSize = bufSize;
+		_readChunked.out = &out;
+		_readChunked.len = len;
+		_readChunked.br = 0;
+		Stream_beginRead1(this);
+	}
 	BufferedOutput* Stream::getBufferedOutput() {
 		return NULL;
 	}
