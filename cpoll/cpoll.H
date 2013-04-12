@@ -289,6 +289,13 @@ namespace CP
 			{
 				DelegateBase<void(int)> cb;
 				BufferedOutput* out;
+				int bufSize;
+				int br;
+			} _readToEnd;
+			struct
+			{
+				DelegateBase<void(int)> cb;
+				BufferedOutput* out;
 				int len;
 				int bufSize;
 				int br;
@@ -305,16 +312,7 @@ namespace CP
 			}
 			return off;
 		}
-		virtual int readToEnd(BufferedOutput& out, int bufSize = 4096) {
-			int r = 0;
-			while (true) {
-				if (out.bufferSize - out.bufferPos < bufSize) out.flushBuffer(bufSize);
-				int i = read(out.buffer + out.bufferPos, out.bufferSize - out.bufferPos);
-				if (i <= 0) return r;
-				out.bufferPos += i;
-				r += i;
-			}
-		}
+		virtual int readToEnd(BufferedOutput& out, int32_t bufSize = 4096);
 		virtual int readChunked(BufferedOutput& out, int32_t len, int32_t bufSize = 4096);
 		virtual int32_t write(const void* buf, int32_t len)=0; //required
 		virtual int32_t writeAll(const void* buf, int32_t len) { //optional
@@ -347,8 +345,7 @@ namespace CP
 			read(buf, len, cb, true);
 		}
 		virtual void readAll(void* buf, int32_t len, const Callback& cb)=0;
-		//TODO:
-		//virtual void readToEnd(BufferedOutput& out, const Callback& cb)=0;
+		virtual void readToEnd(BufferedOutput& out, const Callback& cb, int bufSize = 4096);
 		virtual void readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int bufSize =
 				4096);
 

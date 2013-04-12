@@ -272,6 +272,24 @@ namespace CP
 		//XXX
 	}
 
+	static void Stream_readCB(Stream* This, int i);
+	static void Stream_beginRead(Stream* This) {
+		auto& tmp = This->_readToEnd;
+		auto* out = tmp.out;
+		if (out->bufferSize - out->bufferPos < tmp.bufSize) out->flushBuffer(tmp.bufSize);
+		This->read(out->buffer + out->bufferPos, out->bufferSize - out->bufferPos, { &Stream_readCB,
+				This });
+	}
+	static void Stream_readCB(Stream* This, int i) {
+		auto& tmp = This->_readToEnd;
+		if (i <= 0) {
+			tmp.cb(tmp.br);
+			return;
+		}
+		tmp.out->bufferPos += i;
+		tmp.br += i;
+		Stream_beginRead(This);
+	}
 
 	static void Stream_readCB1(Stream* This, int i);
 	static void Stream_beginRead1(Stream* This) {
@@ -295,6 +313,17 @@ namespace CP
 		tmp.br += i;
 		Stream_beginRead1(This);
 	}
+
+	int Stream::readToEnd(BufferedOutput& out, int32_t bufSize) {
+		int r = 0;
+		while (true) {
+			if (out.bufferSize - out.bufferPos < bufSize) out.flushBuffer(bufSize);
+			int i = read(out.buffer + out.bufferPos, out.bufferSize - out.bufferPos);
+			if (i <= 0) return r;
+			out.bufferPos += i;
+			r += i;
+		}
+	}
 	int Stream::readChunked(BufferedOutput& out, int32_t len, int32_t bufSize) {
 		int r = 0;
 		while (true) {
@@ -306,6 +335,14 @@ namespace CP
 			out.bufferPos += i;
 			r += i;
 		}
+	}
+
+	void Stream::readToEnd(BufferedOutput& out, const Callback& cb, int32_t bufSize) {
+		_readToEnd.cb = cb;
+		_readToEnd.bufSize = bufSize;
+		_readToEnd.out = &out;
+		_readToEnd.br = 0;
+		Stream_beginRead(this);
 	}
 	void Stream::readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int32_t bufSize) {
 		_readChunked.cb = cb;
