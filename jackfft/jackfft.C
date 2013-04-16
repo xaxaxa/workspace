@@ -501,7 +501,7 @@ void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
 	{
 		b->get_widget("t_pitch", e);
 		asdf = strtod(e->get_text().c_str(), NULL);
-		asdf=pow(2,asdf/8.d);
+		asdf=pow(2,asdf/7.d);
 		//b->get_widget("t_pitch2", e);
 		//asdf /= strtod(e->get_text().c_str(), NULL);
 	}
