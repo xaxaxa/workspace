@@ -29,7 +29,6 @@
 #include <netdb.h>
 #include <sstream>
 
-
 namespace CP
 {
 	//CPollException
@@ -569,9 +568,8 @@ namespace CP
 			return input->read(buf, len, cb, repeat);
 		}
 		memcpy(buf, tmp, l);
-		//TODO: BUG: if callback calls read() again, results in infinite loop/recursion
-		cb(l);
 		freeBuffer(tmp, l);
+		cb(l);
 	}
 	void StreamReader::readAll(void* buf, int32_t len, const CP::Callback& cb) {
 		void* tmp;
