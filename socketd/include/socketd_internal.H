@@ -131,10 +131,11 @@ namespace socketd
 		}
 
 		//internal fields
-		vector<RGC::Ref<appConnection>> conns; //indexed by thread*processes + curProcess
+		//vector<int> conns_i; //indexed by thread*processes + curProcess
 		RGC::Ref<appConnection> attachmentConn; //readonly by threads
-		vector<int> curProcess;
+		//vector<int> curProcess_i;
 		int _ipcBufSize;
+		vector<uint8_t*> perCPUData;
 		bool hasAttachments;
 	};
 	static const char* socketd_proxy = "socketd_proxy.so";
@@ -146,6 +147,13 @@ namespace socketd
 		vector<vhost> vhosts;
 		vector<binding> extraBindings; //vhostName must be filled for these
 		string unixAddress;
+		uint8_t** perCPUData;
+		//format of per-cpu data structures:
+		//struct {
+		//		appConnection* conns[processes];
+		//		int curProcess;
+		//		int padding;
+		//} vhostInfo[vhosts];
 		int ipcBufSize;//<=0 to use system default
 		void run();
 

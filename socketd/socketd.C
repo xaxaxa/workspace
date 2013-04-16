@@ -20,6 +20,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
+#define _ISOC11_SOURCE
 #include "include/socketd_internal.H"
 #include <cpoll/sendfd.H>
 #include <cpoll/statemachines.H>
@@ -31,21 +32,27 @@
 #include <tuple>
 #include <ctype.h>
 #include <delegate.H>
+#include <set>
+#include <stdlib.h>
 
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
 //#define SOCKETD_THREADING
+#define SOCKETD_THREADS 4
 #define SOCKETD_READBUFFER 256
 using namespace std;
 //8: debug; 5: info; 3: warn; 2: err; 1: fatal
-#define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<6)printf(__VA_ARGS__)
+//#define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<=10)printf(__VA_ARGS__)
+#define SOCKETD_DEBUG(...) /* __VA_ARGS__ */
 namespace socketd
 {
-	static const int nthreads = 2;
+	static const int nthreads = SOCKETD_THREADS;
 	static int asdf = 0;
 	static const int rBufSize = 4096;
 	static const int rLineBufSize = 512;
-	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int threadID);
+	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int threadID, int i);
 	bool comparePath(const char* conf, int confLen, const char* path, int pathLen) {
+		SOCKETD_DEBUG(10,
+				"comparePath: conf=%s; path=%s\n", string(conf,confLen).c_str(), string(path,pathLen).c_str());
 		//cout << string(path, pathLen) << endl;
 		if (confLen == pathLen && memcmp(conf, path, confLen) == 0) {
 			/*cout << "matched (exact): " << string(path, pathLen) << " against " << string(conf, confLen)
@@ -98,6 +105,25 @@ namespace socketd
 			*p = tolower(*p);
 		return s;
 	}
+
+	int& getCurProcess(vhost* vh, socketd* This, int threadID) {
+		uint8_t* data = vh->perCPUData[threadID];
+		uint8_t* tmp = data + sizeof(appConnection*) * vh->processes;
+		return *(int*) tmp;
+	}
+	appConnection* getConn(vhost* vh, int threadID, int i) {
+		uint8_t* data = vh->perCPUData[threadID];
+		uint8_t* tmp = data + sizeof(appConnection*) * i;
+		return *(appConnection**) tmp;
+	}
+	void setConn(vhost* vh, int threadID, int i, appConnection* c) {
+		uint8_t* data = vh->perCPUData[threadID];
+		uint8_t* tmp = data + sizeof(appConnection*) * i;
+		appConnection*& conn = *(appConnection**) tmp;
+		if (conn != NULL) conn->release();
+		conn = c;
+		if (conn != NULL) conn->retain();
+	}
 	struct connectionInfo
 	{
 		socketd* This;
@@ -128,6 +154,22 @@ namespace socketd
 		bool deletionFlag;
 		bool streamReaderInit;
 
+		int& getCurProcess(vhost* vh) {
+			return ::socketd::getCurProcess(vh, This, threadID);
+		}
+		appConnection* getConn(vhost* vh, int i) {
+			uint8_t* data = vh->perCPUData[threadID];
+			uint8_t* tmp = data + sizeof(appConnection*) * i;
+			return *(appConnection**) tmp;
+		}
+		void setConn(vhost* vh, int i, appConnection* c) {
+			uint8_t* data = vh->perCPUData[threadID];
+			uint8_t* tmp = data + sizeof(appConnection*) * i;
+			appConnection*& conn = *(appConnection**) tmp;
+			if (conn != NULL) conn->release();
+			conn = c;
+			if (conn != NULL) conn->retain();
+		}
 		connectionInfo(int fd, int d, int t, int p) :
 				s(fd, d, t, p), tries(0), readTo(0), pos(0), processIndex(-1), deletionFlag(false),
 						streamReaderInit(false) {
@@ -162,6 +204,7 @@ namespace socketd
 			//printf("got line: ");
 			//write(1, lineBuf, lineBufLen);
 			//printf("\n");
+
 			if (firstLine) {
 				firstLine = false;
 				uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
@@ -176,6 +219,7 @@ namespace socketd
 				pos = 1;
 				httpPath = path;
 				httpPathLength = pathLen;
+				SOCKETD_DEBUG(10, "got httpPath: %s\n", string(httpPath,httpPathLength).c_str());
 				checkMatch();
 				return;
 			}
@@ -227,16 +271,17 @@ namespace socketd
 				SOCKETD_DEBUG(8, "received acknownedgement for connection %p\n", this);
 				delete this;
 			} else {
-				if (tmpptr == tmp_vh->conns[connIndex(tmp_vh)]()) {
-					tmp_vh->conns[connIndex(tmp_vh)]->shutDown();
-					tmp_vh->conns[connIndex(tmp_vh)] = NULL;
+				if (tmpptr == getConn(tmp_vh, processIndex)) {
+					getConn(tmp_vh, processIndex)->shutDown();
+					setConn(tmp_vh, processIndex, NULL);
 				}
-				do_transfer (tmp_vh);
+				do_transfer(tmp_vh);
 			}
 		}
 		//transfer socket to application
 		void do_transfer(vhost* vh) {
 			//cout << "do_transfer" << endl;
+			SOCKETD_DEBUG(8, "do_transfer\n");
 			retry: if ((++tries) > 3) {
 				SOCKETD_DEBUG(3, "exceeded 3 tries for connection %p\n", this);
 				if (reading) deletionFlag = true;
@@ -244,10 +289,10 @@ namespace socketd
 				return;
 			}
 			if (processIndex < 0) {
-				processIndex = (vh->curProcess[threadID]++) % vh->processes;
+				processIndex = (getCurProcess(vh)++) % vh->processes;
 			}
-			if (vh->conns[connIndex(vh)]() == NULL && vh->exepath.length() > 0) {
-				spawnApp(vh, *p, vh->exepath, connIndex(vh));
+			if (getConn(vh, processIndex) == NULL && vh->exepath.length() > 0) {
+				spawnApp(vh, *p, vh->exepath, threadID, processIndex);
 			}
 			uint8_t* buf;
 			int bufLen;
@@ -270,9 +315,9 @@ namespace socketd
 					return;
 				} else return;
 			}
-			aaaaa: if (vh->conns[connIndex(vh)]() != NULL) {
+			aaaaa: if (getConn(vh, processIndex) != NULL) {
 				//cout << "vh->conn() != NULL" << endl;
-				appConnection* tmpptr = vh->conns[connIndex(vh)]();
+				appConnection* tmpptr = getConn(vh, processIndex);
 				this->tmp_vh = vh;
 				this->tmpptr = tmpptr;
 				SOCKETD_DEBUG(8, "bufLen=%i\n", bufLen);
@@ -281,7 +326,7 @@ namespace socketd
 				if (r == 1) {
 					//application possibly dead; respawn
 					tmpptr->shutDown();
-					if (tmpptr == vh->conns[connIndex(vh)]()) vh->conns[connIndex(vh)] = NULL;
+					if (tmpptr == getConn(vh, processIndex)) setConn(vh, processIndex, NULL);
 					goto retry;
 				} else if (r == 0) {
 					SOCKETD_DEBUG(8, "connection %p pre-succeeded\n", this);
@@ -324,7 +369,10 @@ namespace socketd
 		//0: none; 1: reqLine; 2: headers
 		//int readTo = 0;
 		if (pos < readTo) return;
+		SOCKETD_DEBUG(9, "bindings.size() = %i\n", This->bindings.size());
+
 		for (uint32_t i = 0; i < This->bindings.size(); i++) {
+			SOCKETD_DEBUG(9, "This->bindings[i]->listenID = %i\n", This->bindings[i]->listenID);
 			if (!(This->bindings[i]->matchLevel & This->bindings[i]->match_listenID)
 					|| This->bindings[i]->listenID == l->id) {
 				if (This->bindings[i]->matchLevel & binding::match_httpPath) {
@@ -556,8 +604,8 @@ namespace socketd
 	void appConnection_unix::startRead() {
 		unixsock->read(&buf, sizeof(buf), CP::Callback(&appConnection_unix::readCB, this));
 	}
-	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int connIndex) {
-		vh->conns[connIndex] = RGC::newObj<appConnection_unix>(vh, p, exepath);
+	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int threadID, int i) {
+		setConn(vh, threadID, i, RGC::newObj<appConnection_unix>(vh, p, exepath));
 	}
 
 	struct socketd_execinfo;
@@ -598,6 +646,7 @@ namespace socketd
 				ci->threadID = th->id;
 				ci->This = th->This;
 				ci->l = req.l;
+				SOCKETD_DEBUG(9, "req.l.id = %i\n", req.l->id);
 				/*ci->s = new CP::Socket(req.fd, req.l->sock->addressFamily, req.l->sock->type,
 				 req.l->sock->protocol);*/
 				ci->p = &p;
@@ -626,6 +675,25 @@ namespace socketd
 		CP::Poll p;
 		//p.debug=true;
 		this->bindings.clear();
+		perCPUData = new uint8_t*[nthreads];
+		for (int i = 0; i < nthreads; i++) {
+			int s = 0;
+			for (int ii = 0; ii < (int) vhosts.size(); ii++) {
+				s += sizeof(appConnection*) * vhosts[ii].processes;
+				s += sizeof(int) * 2;
+			}
+			int align = 64;
+			if (s % align != 0) s = ((s / align) + 1) * align;
+			uint8_t* tmp; // = aligned_alloc(64, s);
+			if (posix_memalign((void**) &tmp, align, s) != 0) throw bad_alloc();
+			memset(tmp, 0, s);
+			s = 0;
+			for (int ii = 0; ii < (int) vhosts.size(); ii++) {
+				vhosts[ii].perCPUData.push_back(tmp + s);
+				s += sizeof(appConnection*) * vhosts[ii].processes;
+				s += sizeof(int) * 2;
+			}
+		}
 		for (uint32_t i = 0; i < vhosts.size(); i++) {
 			for (uint32_t ii = 0; ii < vhosts[i].bindings.size(); ii++) {
 				binding* tmp = &(vhosts[i].bindings[ii]);
@@ -635,15 +703,17 @@ namespace socketd
 			vhosts[i]._ipcBufSize = vhosts[i].ipcBufSize < 0 ? this->ipcBufSize : vhosts[i].ipcBufSize;
 			vhosts[i].hasAttachments = false;
 #ifdef SOCKETD_THREADING
-			vhosts[i].conns.resize(nthreads*vhosts[i].processes);
-			vhosts[i].curProcess.resize(nthreads);
+			//vhosts[i].conns.resize(nthreads * vhosts[i].processes);
+			//vhosts[i].curProcess.resize(nthreads);
+			vhosts[i].perCPUData.resize(nthreads);
 #else
-			vhosts[i].conns.resize(vhosts[i].processes);
-			vhosts[i].curProcess.resize(1);
+			//vhosts[i].conns.resize(vhosts[i].processes);
+			//vhosts[i].curProcess.resize(1);
+			vhosts[i].perCPUData.resize(1);
 #endif
-			for (uint32_t ii = 0; ii < vhosts[i].curProcess.size(); ii++) {
-				vhosts[i].curProcess[ii] = 0;
-			}
+			/*for (uint32_t ii = 0; ii < vhosts[i].curProcess.size(); ii++) {
+			 vhosts[i].curProcess[ii] = 0;
+			 }*/
 		}
 		for (uint32_t i = 0; i < extraBindings.size(); i++) {
 			for (uint32_t ii = 0; ii < vhosts.size(); ii++) {
@@ -670,7 +740,7 @@ namespace socketd
 		printf("this=%p\n", this);
 		execinfo.threads.resize(nthreads);
 		for (int i = 0; i < nthreads; i++) {
-			socketd_thread& th=execinfo.threads[i];
+			socketd_thread& th = execinfo.threads[i];
 			th.This = this;
 			th.execinfo = &execinfo;
 			th.id = i;
@@ -684,6 +754,7 @@ namespace socketd
 		}
 		int curThread = 0;
 #endif
+		SOCKETD_DEBUG(9, "bindings.size() = %i\n", bindings.size());
 		for (uint32_t i = 0; i < listens.size(); i++) {
 			auto& l = listens[i];
 			if (l.sock.get() == NULL) {
@@ -695,13 +766,22 @@ namespace socketd
 			p.add(*l.sock);
 
 #ifdef SOCKETD_THREADING
-			l.sock->repeatAcceptHandle([&l,&p,this,&execinfo,&curThread](CP::HANDLE h) {
-						socketd_request req {&l, h};
-						//printf("%i\n",curThread);
-						write(execinfo.threads[curThread].pipe[1],&req,sizeof(req));
-						curThread++;
-						if(curThread>=nthreads)curThread=0;
-					});
+			struct cb1
+			{
+				listen* l;
+				CP::Poll& p;
+				socketd* th;
+				socketd_execinfo& execinfo;
+				int& curThread;
+				void operator()(CP::HANDLE h) {
+					socketd_request req { l, h };
+					//printf("%i\n",curThread);
+					write(execinfo.threads[curThread].pipe[1], &req, sizeof(req));
+					curThread++;
+					if (curThread >= nthreads) curThread = 0;
+				}
+			}*cb = new cb1 { &l, p, this, execinfo, curThread };
+			l.sock->repeatAcceptHandle(cb);
 #else
 			struct cb1
 			{
@@ -720,7 +800,7 @@ namespace socketd
 					//cout << "p=" << &p << endl;
 					ci->process();
 				}
-			}*cb = new cb1 { l, p, this };
+			}*cb = new cb1 {l, p, this};
 			l.sock->repeatAcceptHandle(cb);
 #endif
 
