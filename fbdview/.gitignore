@@ -1,3 +1,6 @@
 d/*
 gen_index
+gen_dirindex
+lighttpd.conf
+socketd.conf
 

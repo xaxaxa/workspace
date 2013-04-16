@@ -17,11 +17,11 @@
 		//alert(e.getElementsByTagName("img").length);
 		//e.getElementsByTagName("img")[0].src="";
 		//alert(JSON.stringify(obj));
-		var pic=getPicture(obj,72,72);
+		var pic=getLargestPicture(obj);
 		if(pic) {
 			//alert(pic);
-			e.getElementsByTagName("img")[0].src=path+obj.id+"."+pic[0];
-			e.href=path+obj.id+"."+pic[0];
+			e.getElementsByTagName("img")[0].src=path+obj.id+"."+pic[0]+".th";
+			e.href="cpp/p.cppsp?i=../"+encodeURIComponent(path+obj.id+"."+pic[0]);
 		}
 		return e;
 	}

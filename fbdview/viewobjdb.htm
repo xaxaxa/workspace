@@ -18,7 +18,7 @@
 	else if(path.substring(path.length-1)!="/")path+="/";
 	var fn_click=function()
 	{
-		var fn=window.a[this.__i];
+		var fn=this.textContent;
 		if(fn.indexOf(".")>-1) {
 			var ln=fn.substring(fn.lastIndexOf(".")+1);
 			if(ln in linktypes) {
@@ -27,7 +27,7 @@
 		}
 		
 	};
-	var linktypes={"photos":"viewphotos.htm","feed":"viewposts.htm","albums":"viewalbums.htm","tagged":"viewphotos.htm"};
+	var linktypes={"photos":"viewphotos.htm","feed":"viewposts.htm","albums":"viewalbums.htm","tagged":"viewposts.htm"};
 	new Ajax.Request("cpp/ls.cppsp?t=d&p="+encodeURIComponent(path), {
 		onComplete: function(response) {
 			var d=document.getElementById("content");
@@ -44,6 +44,7 @@
 						sp.textContent=fn;
 						sp.onclick=fn_click;
 						sp.__i=i;
+						sp.__fn=fn;
 						d.appendChild(sp);
 					}
 				}

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=1;" />
+    <meta name="viewport" content="width=600, initial-scale=0.5, user-scalable=1;" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<title></title>
 	<script src="prototype.js"></script>
@@ -56,7 +56,7 @@
 				var msgtxt=get_msg(tmp);
 				if(msgtxt) msg_body.textContent=msgtxt;
 			}
-			time.textContent="updated: "+tmp.updated_time;
+			time.innerHTML="<nobr>("+tmp.id+")</nobr> <nobr>"+tmp.updated_time+"</nobr>";
 			
 			msg_header.appendChild(pic);
 			msg_header.appendChild(msg_innerheader);
@@ -126,7 +126,7 @@
 					comment.appendChild(a);
 					comments.appendChild(comment);
 				}
-				for(i2=l2-1;i2>-1;i2--)
+				for(i2=0;i2<l2;i2++)
 				{
 					var tmp2=c[i2];
 					if(tmp2.id==comment0_id)
@@ -295,13 +295,13 @@
 		}
 		.arrow
 		{
-			background-image: url(http://static.ak.fbcdn.net/rsrc.php/zE47R/hash/bfk0r44i.png);
+			background-image: url(arrow.png);
 			display: inline-block;
 			font-style: italic;
 			height: 9px;
 			margin-left: 5px;
 			margin-right: 5px;
-			width: 11px;
+			width: 9px;
 			background-position: 0px -197px;
 		}
 		body

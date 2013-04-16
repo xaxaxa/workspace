@@ -19,7 +19,7 @@
 	else if(path.substring(path.length-1)!="/")path+="/";
 	var fn_click=function()
 	{
-		window.location.href="viewobjdb.htm?p="+encodeURIComponent(path+window.a[this.__i]);
+		window.location.href="viewobjdb.htm?p="+encodeURIComponent(path+this.textContent);
 	};
 	new Ajax.Request("cpp/ls.cppsp?t=d&p="+encodeURIComponent(path), {
 		onComplete: function(response) {

@@ -1,6 +1,6 @@
 #!/bin/bash
 cat <<EOF
-listen *:13000;
+listen 0.0.0.0:13000;
 vhost cppsp {
 	bindings {
 		{httppath /cpp;}
