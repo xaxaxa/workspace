@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <cpoll/sendfd.H>
 #include <functional>
+#include <sstream>
 #define CONCAT(X) (((stringstream&)(stringstream()<<X)).str())
 namespace socketd
 {
