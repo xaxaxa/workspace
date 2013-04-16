@@ -82,6 +82,7 @@ namespace cppsp
 		virtual const char* rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb);
+		virtual void loadPageFromFile(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb);
 		//path is relative to rootDir
 		virtual string mapPath(string path);
 	};
@@ -112,7 +113,7 @@ namespace cppsp
 		virtual void doInit();
 		virtual void initCB();
 		virtual void cancelLoad(exception* ex = NULL);
-		virtual void load(); //to be overridden by base class; called before headers are written
+		virtual void load(); //to be overridden by derived class; called before headers are written
 		virtual void render(CP::StreamWriter& out);
 		virtual ~Page();
 

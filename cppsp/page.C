@@ -149,6 +149,12 @@ namespace cppsp
 void cppsp::Server::loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb) {
 	cppsp::loadPage(p, rootDir(), mapPath(path), cb);
 }
+
+void cppsp::Server::loadPageFromFile(CP::Poll& p, string path,
+		Delegate<void(Page*, exception* ex)> cb) {
+	cppsp::loadPage(p, rootDir(), path, cb);
+}
+
 string cppsp::Server::mapPath(string path) {
 	char tmp[path.length() + strlen(rootDir())];
 	int l = cppsp::combinePathChroot(rootDir(), path.c_str(), tmp);
