@@ -907,10 +907,14 @@ namespace CP
 				return;
 			case Operations::close:
 				close();
+				break;
+			case Operations::none:
+				if (evtd.error || evtd.hungUp) r = -1;
+				break;
 			default:
 				break;
 		}
-		if (r <= 0) {
+		if (r <= 0 && op != Operations::none) {
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
 		}
@@ -1101,6 +1105,12 @@ namespace CP
 	}
 	void File::cancelWrite() {
 		cancel(Events::out);
+	}
+	void File::waitForEvent(Events event, const Callback& cb, bool repeat) {
+		EventHandlerData* ed = beginAddEvent(event);
+		ed->cb = cb;
+		ed->op = Operations::none;
+		endAddEvent(event, repeat);
 	}
 
 //Socket

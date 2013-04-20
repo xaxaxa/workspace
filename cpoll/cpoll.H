@@ -761,6 +761,7 @@ namespace CP
 		void cancelRecv() {
 			cancelRead();
 		}
+		void waitForEvent(Events event, const Callback& cb, bool repeat = false);
 	};
 	class Socket: public File
 	{
