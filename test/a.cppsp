@@ -1,0 +1,11 @@
+<%#
+#include <time.h>
+%>
+<html>
+<body>
+<%
+time_t now = time(NULL);
+%>
+Witaj dzisiaj jest <b><%= ctime(&now) %></b>
+</body>
+</html>

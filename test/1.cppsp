@@ -9,7 +9,7 @@
 #include <iostream>
 int aaaaa=0;
 %>
-<%@ inherits _1_cppsp %>
+<%@ class sss inherits _1_cppsp %>
 <%$
 void init() {
 	doReadPost=true;
@@ -17,7 +17,14 @@ void init() {
 void test() {
 	cout << aaaaa << endl;
 }
-
+/*
+void finalize() {
+	const char* tmp="fsck";
+	response->outputStream->write(tmp,4,{&sss::_cb1,this});
+}
+void _cb1(int i) {
+	finalizeCB();
+}*/
 %>
 form:
 <table border="1">

@@ -37,27 +37,38 @@ string asdf() {
 	return "zzz";
 }
 void doInit() {
-	initCB();
+	//initCB();
 	//throw runtime_error("aaaaaa");
-	//server->loadPage(*poll, "1.cppsp", {&p::sss,this});
+	loadNestedPage("1.cppsp", {&p::cb1,this});
 }
 
 Page* p=NULL;
-void sss(Page* p, exception* ex) {
+
+void cb1(Page* p, exception* ex) {
 	if(ex!=NULL) {
 		cancelLoad(ex);
 		return;
 	}
-	response->writeHeaders();
-	p->request=request;
-	p->response=response;
-	p->poll=poll;
-	p->server=server;
-	//p->render(response->output);
-	((_1_cppsp*)p)->test();
 	this->p=p;
 	initCB();
 }
+/*
+CP::Timer t;
+bool added=false;
+void finalize() {
+	if(!added)poll->add(t);
+	added=true;
+	t.setInterval(500);
+	printf("setInterval: handle=%i\n",t.handle);
+	t.setCallback({&p::timercb,this});
+}
+void timercb(int count) {
+	printf("timercb\n");
+	t.setInterval(0);
+	render(response->output);
+	flush();
+	//finalizeCB();
+}*/
 %>
 <html>
 	<head>
@@ -93,18 +104,23 @@ void sss(Page* p, exception* ex) {
 		//throw runtime_error("aaaaa");
 		%>
 		<%=(++aaaaa)%><br />
-		<%=server->mapPath("./fdshjk/")%>
+		<%=mapPath("fdshjk/")%>
 		<br />=============================<br />
 		<table border="1">
 		<%
-		listDir(server->mapPath("/"), [&](dirent& d) {
+		/*listDir(server->mapPath("/"), [&](dirent& d) {
 			%>
 			<tr>
 				<td><%=htmlEscape(d.d_name)%></td>
 			</tr>
 			<%
-		});
+		});*/
 		%>
 		</table>
+		
+		<%
+		p->render(output);
+		p->release();
+		%>
 	</body>
 </html>

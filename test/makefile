@@ -41,5 +41,8 @@ ldtest:
 	g++ ldtest.C -o ldtest -g3 -I../include -L../lib -ldl
 urlparser_test: urlparser_test.C
 	g++ urlparser_test.C -o urlparser_test -g3 -I../include -L../lib --std=c++0x -lcpoll -lcppsp -ldl
+httptest: httptest.C
+	g++ httptest.C -o httptest -g3 -I../include -L../lib --std=c++0x -lcpoll -ldl -lcurl
+
 
 

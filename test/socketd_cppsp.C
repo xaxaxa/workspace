@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 					}
 					{
 						//this->p=p;
-						p->filePath=path;
+						//p->filePath=path;
 						p->request=&req;
 						p->response=&resp;
 						p->poll=&this->p;
@@ -118,12 +118,12 @@ int main(int argc, char** argv) {
 					if(r<=0) release();
 				}
 				void flushCB(Response& resp) {
-					s->shutdown(SHUT_WR);
+					//s->shutdown(SHUT_WR);
 					release();
 				}
 				void handleRequestCB(Page& p) {
 					p.release();
-					s->shutdown(SHUT_WR);
+					//s->shutdown(SHUT_WR);
 					release();
 					s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 				}
