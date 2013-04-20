@@ -39,16 +39,20 @@
 //#define SOCKETD_THREADING
 #define SOCKETD_THREADS 4
 #define SOCKETD_READBUFFER 256
+
+//maximum length of user-controlled data on the stack (for example, http header names)
+//in order to prevent stack overflow attacks
+#define SOCKETD_STACKBUFFER 256
 using namespace std;
 //8: debug; 5: info; 3: warn; 2: err; 1: fatal
-//#define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<=10)printf(__VA_ARGS__)
-#define SOCKETD_DEBUG(...) /* __VA_ARGS__ */
+#define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<=5)printf(__VA_ARGS__)
+//#define SOCKETD_DEBUG(...) /* __VA_ARGS__ */
 namespace socketd
 {
 	static const int nthreads = SOCKETD_THREADS;
 	static int asdf = 0;
-	static const int rBufSize = 4096;
-	static const int rLineBufSize = 512;
+	//static const int rBufSize = 4096;
+	//static const int rLineBufSize = 512;
 	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int threadID, int i);
 	bool comparePath(const char* conf, int confLen, const char* path, int pathLen) {
 		SOCKETD_DEBUG(10,
@@ -99,11 +103,21 @@ namespace socketd
 			*p = toupper(*p);
 		return s;
 	}
-
 	char* strlower(char* s, int len) {
 		for (char* p = s; *p; ++p)
 			*p = tolower(*p);
 		return s;
+	}
+	bool compareStringCI(const char* s1, const char* s2, int l) {
+		for (int i = 0; i < l; i++) {
+			if (tolower(s1[i]) != tolower(s2[i])) return false;
+		}
+		return true;
+	}
+	bool compareStringCI(const char* s1, int l1, const char* s2) {
+		int l2 = strlen(s2);
+		if (l1 != l2) return false;
+		return compareStringCI(s1, s2, l1);
 	}
 
 	int& getCurProcess(vhost* vh, socketd* This, int threadID) {
@@ -204,6 +218,7 @@ namespace socketd
 			//printf("got line: ");
 			//write(1, lineBuf, lineBufLen);
 			//printf("\n");
+			if (len <= 0) goto fail;
 
 			if (firstLine) {
 				firstLine = false;
@@ -225,14 +240,26 @@ namespace socketd
 			}
 
 			const uint8_t* tmp;
+			const uint8_t* end;
+			end = buf + len;
 			tmp = (const uint8_t*) memchr(buf, ':', len);
-			if (tmp == NULL) return;
+			if (tmp == NULL) goto cont;
 			int i;
 			i = tmp - buf;
-			if (i > 1024) goto fail;
-			char fieldname[i + 1];
-			memcpy(fieldname, buf, i);
-
+			if (i > SOCKETD_STACKBUFFER) goto fail;
+			if (compareStringCI((const char*) buf, i, "host")) {
+				tmp++;
+				while (tmp < end && *tmp == ' ')
+					tmp++;
+				if (tmp >= end) goto fail;
+				httpHost = (const char*) tmp;
+				httpHostLength = end - tmp;
+				SOCKETD_DEBUG(10, "got httpHost: %s\n", string(httpHost,httpHostLength).c_str());
+				pos = 2;
+				checkMatch();
+				return;
+			}
+			cont: startRead();
 			return;
 			fail: delete this;
 		}
