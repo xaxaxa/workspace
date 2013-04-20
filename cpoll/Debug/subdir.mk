@@ -5,16 +5,19 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_UPPER_SRCS += \
 ../cpoll.C \
+../http.C \
 ../sendfd.C \
 ../statemachines.C 
 
 OBJS += \
 ./cpoll.o \
+./http.o \
 ./sendfd.o \
 ./statemachines.o 
 
 C_UPPER_DEPS += \
 ./cpoll.d \
+./http.d \
 ./sendfd.d \
 ./statemachines.d 
 
