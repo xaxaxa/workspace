@@ -52,6 +52,7 @@ namespace cppsp
 		RGC::Ref<CP::Stream> outputStream;
 		CP::MemoryStream buffer;
 		CP::StreamWriter output;
+		CP::MemoryStream tmpbuffer;
 		Callback _cb;
 		map<string, string, ci_less> headers;
 		const char* statusName;
@@ -59,18 +60,18 @@ namespace cppsp
 
 		bool headersWritten;
 		bool closed;
-		virtual void doWriteHeaders();
+		bool sendChunked;
+		/*virtual void doWriteHeaders();
 		void writeHeaders() {
 			if (!headersWritten) {
 				doWriteHeaders();
 				headersWritten = true;
 			}
-		}
+		}*/
 		virtual void flush(Callback cb);
 		virtual void clear();
 		template<class ... T>
 		void write(T&&... a) {
-			writeHeaders();
 			output.write(std::forward<T>(a)...);
 		}
 
@@ -96,6 +97,7 @@ namespace cppsp
 		Page(Request& req, Response& resp);
 		RGC::Ref<Request> request;
 		RGC::Ref<Response> response;
+		Delegate<void(Page*, exception* ex)> pageCB;
 		CP::Poll* poll;
 		Server* server;
 		Callback cb;
@@ -108,6 +110,12 @@ namespace cppsp
 		//pointer to mmap()ed address of original cppsp file
 		const uint8_t* __stringTable;
 		void __writeStringTable(int i, int len);
+		string mapPath(string path);
+		string mapRelativePath(string path);
+		//path is relative to current page
+		void loadNestedPage(string path, Delegate<void(Page*, exception* ex)> cb);
+		//path is absolute
+		void loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb);
 		virtual void handleRequest(Callback cb = nullptr);
 		virtual void processRequest();
 		//each page goes through these operations (in order): init, [readPost], load, render, flush, finalize
@@ -127,6 +135,7 @@ namespace cppsp
 
 		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
+		void _pageCB(Page* p, exception* ex);
 	};
 
 } /* namespace cppsp */

@@ -55,6 +55,15 @@ namespace cppsp
 	static inline std::string htmlEscape(std::string in) {
 		return htmlEscape(in.data(), in.length());
 	}
+
+	void htmlAttributeEscape(const char* in, int inLen, CP::StreamWriter& sw);
+	std::string htmlAttributeEscape(const char* in, int inLen);
+	static inline std::string htmlAttributeEscape(const char* in) {
+		return htmlAttributeEscape(in, strlen(in));
+	}
+	static inline std::string htmlAttributeEscape(std::string in) {
+		return htmlAttributeEscape(in.data(), in.length());
+	}
 }
 
 #endif /* URLPARSER_H_ */

@@ -73,15 +73,15 @@ namespace cppsp
 	// "/asdf/"	+ "/zzz"		=> "/zzz"
 	//the size of buf should be at least strlen(p1)+strlen(p2)
 	//returns the length of the string written to buf; does NOT write null byte
-	int combinePath(const char* p1, const char* p2, char* buf) {
-		int l2 = strlen(p2);
+	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf) {
 		if (l2 > 0 && p2[0] == '/') {
 			memcpy(buf, p2, l2);
 			return l2;
 		}
-		int i = strlen(p1);
+		int i = l1;
 		memcpy(buf, p1, i);
 		if (l2 > 0) {
+			i--;
 			while (i >= 0 && buf[i] != '/')
 				i--;
 			if (i < 0) i = 0;
@@ -107,10 +107,12 @@ namespace cppsp
 		if (i < 0) i = 0;
 		return i;
 	}
+	int combinePath(const char* p1, const char* p2, char* buf) {
+		return combinePath(p1, strlen(p1), p2, strlen(p2), buf);
+	}
 	//p1 is the "root" directory
-	int combinePathChroot(const char* p1, const char* p2, char* buf) {
-		int l2 = strlen(p2);
-		int l1 = strlen(p1);
+	//guarantees that the resulting path won't be outside of p1
+	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf) {
 		int i = l1;
 		memcpy(buf, p1, i);
 		if (l2 > 0) {
@@ -120,7 +122,6 @@ namespace cppsp
 					first=false;
 					if(l==0) return;
 				}
-
 				if(l==2 && memcmp(s,"..",2)==0) {
 					i--;
 					while(i>=0 && buf[i]!='/')i--;
@@ -145,6 +146,9 @@ namespace cppsp
 		}
 		if (i < l1) i = l1;
 		return i;
+	}
+	int combinePathChroot(const char* p1, const char* p2, char* buf) {
+		return combinePathChroot(p1, strlen(p1), p2, strlen(p2), buf);
 	}
 
 	string combinePath(const char* p1, const char* p2) {
@@ -255,6 +259,8 @@ namespace cppsp
 		sw3.flush();
 		sw1.writeF("class %s: public %s {\npublic:\n", classname.c_str(), inherits.c_str());
 		sw1.write(ms2.data(), ms2.length());
+		//the name of the StreamWriter parameter should always be "output" -- this is part of
+		//the cppsp API and should not ever be changed; users can rely on its name being "output".
 		sw1.write("virtual void render(StreamWriter& output) override {\n");
 		sw1.write(ms3.data(), ms3.length());
 		sw1.write("}\n};\n");
@@ -354,7 +360,7 @@ namespace cppsp
 		MemoryStream ms;
 		//Delegate<void(loadedPage&)> compileCB;
 		vector<Delegate<void(Page*, exception* ex)> > loadCB;
-		string page;
+		string path;
 		int stringTableFD;
 		pid_t compilerPID;
 		bool loaded;
@@ -402,7 +408,7 @@ namespace cppsp
 		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
 			compiling = true;
 			ms.clear();
-			CP::File* f = (CP::File*) checkError(compilePage(wd,page,cxxopts,compilerPID));
+			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cxxopts,compilerPID));
 			p.add(*f);
 			compile_fd = f;
 			f->release();
@@ -410,12 +416,12 @@ namespace cppsp
 		}
 		void doLoad() {
 			struct stat st;
-			checkError(stat(page.c_str(), &st));
+			checkError(stat(path.c_str(), &st));
 			stringTableLen = st.st_size;
-			stringTableFD = checkError(open((page + ".txt").c_str(), O_RDONLY));
+			stringTableFD = checkError(open((path + ".txt").c_str(), O_RDONLY));
 			stringTable = (const uint8_t*) checkError(
 					mmap(NULL, stringTableLen, PROT_READ, MAP_SHARED, stringTableFD, 0));
-			dlHandle = dlopen((page + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY);
+			dlHandle = dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY);
 			if(dlHandle==NULL) throw runtime_error(dlerror());
 			getObjectSize = (getObjectSize_t) checkError(dlsym(dlHandle, "getObjectSize"));
 			createObject = (createObject_t) checkError(dlsym(dlHandle, "createObject"));
@@ -428,7 +434,7 @@ namespace cppsp
 			if (stringTableFD != -1) close(stringTableFD);
 			if (dlHandle != NULL) {
 				checkError(dlclose(dlHandle));
-				void* tmp=dlopen((page + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
+				void* tmp=dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
 				if(tmp!=NULL) throw runtime_error("unable to unload library");
 			}
 			dlHandle = NULL;
@@ -440,6 +446,7 @@ namespace cppsp
 			Page* tmp = createObject(NULL);
 			checkError(tmp);
 			tmp->__stringTable = stringTable;
+			tmp->filePath = path;
 			return tmp;
 		}
 		loadedPage():dlHandle(NULL),stringTable(NULL),stringTableFD(-1) {
@@ -465,7 +472,7 @@ namespace cppsp
 			auto it = cache.find(path);
 			if (it == cache.end()) {
 				lp1 = new loadedPage();
-				lp1->page = path;
+				lp1->path = path;
 				cache.insert( { path, lp1 });
 			} else lp1 = (*it).second;
 			loadedPage& lp(*lp1);
@@ -518,7 +525,7 @@ namespace cppsp
 	void handleError(exception* ex, cppsp::Response& resp, string path) {
 		resp.clear();
 		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
-		resp.writeHeaders();
+		//resp.writeHeaders();
 		string title = "Server error in " + path;
 		resp.output.writeF("<html><head><title>%s</title>"
 				"<style></style></head>", title.c_str());

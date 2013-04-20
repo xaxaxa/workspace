@@ -39,7 +39,9 @@ namespace cppsp
 	void doParse(const char* name, const char* in, int inLen, CP::Stream& out, CP::Stream& st_out,
 			vector<string>& c_opts);
 	CP::File* compilePage(string path);
+	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf);
 	int combinePath(const char* p1, const char* p2, char* buf);
+	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf);
 	int combinePathChroot(const char* p1, const char* p2, char* buf);
 	string combinePath(const char* p1, const char* p2);
 	string combinePathChroot(const char* p1, const char* p2);

@@ -93,6 +93,14 @@ namespace cppsp
 		}
 		return ss.str();
 	}
+	std::string htmlAttributeEscape(const char* in, int inLen) {
+		StringStream ss;
+		{
+			StreamWriter sw(ss);
+			htmlAttributeEscape(in, inLen, sw);
+		}
+		return ss.str();
+	}
 	void parseQueryString(const char* in, int inLen, queryStringCallback cb, bool decode) {
 		if (decode) {
 			MemoryStream ms;
@@ -138,6 +146,35 @@ namespace cppsp
 					break;
 				case '>':
 					tmp = "&gt;";
+					break;
+				default:
+					continue;
+			}
+			if (i > last_i) sw.write(in + last_i, i - last_i);
+			last_i = i + 1;
+			sw.write(tmp);
+		}
+		if (inLen > last_i) sw.write(in + last_i, inLen - last_i);
+	}
+	void htmlAttributeEscape(const char* in, int inLen, CP::StreamWriter& sw) {
+		int last_i = 0;
+		const char* tmp;
+		for (int i = 0; i < inLen; i++) {
+			switch (in[i]) {
+				case '&':
+					tmp = "&amp;";
+					break;
+				case '<':
+					tmp = "&lt;";
+					break;
+				case '>':
+					tmp = "&gt;";
+					break;
+				case '"':
+					tmp = "&quot;";
+					break;
+				case '\'':
+					tmp = "&apos;";
 					break;
 				default:
 					continue;

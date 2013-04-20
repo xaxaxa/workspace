@@ -58,7 +58,7 @@ namespace cppsp
 	void Page::initCB() {
 		try {
 			load();
-			response->writeHeaders();
+			//response->writeHeaders();
 			if (doRender) render(response->output);
 			flush();
 		} catch (exception& ex) {
@@ -79,6 +79,33 @@ namespace cppsp
 	void Page::flush() {
 		if (response->closed) finalizeCB();
 		else response->flush( { &Page::_flushCB, this });
+	}
+	string Page::mapPath(string path) {
+		return server->mapPath(mapRelativePath(path));
+	}
+	string Page::mapRelativePath(string path) {
+		char tmp[request->path.length() + path.length()];
+		int l = combinePath(request->path.data(), request->path.length(), path.data(), path.length(),
+				tmp);
+		return string(tmp, l);
+	}
+	void Page::loadNestedPage(string path, Delegate<void(Page*, exception* ex)> cb) {
+		this->pageCB = cb;
+		server->loadPage(*poll, mapRelativePath(path), { &Page::_pageCB, this });
+	}
+	void Page::loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb) {
+		this->pageCB = cb;
+		server->loadPageFromFile(*poll, path, { &Page::_pageCB, this });
+	}
+	
+	void Page::_pageCB(Page* p, exception* ex) {
+		if (p != NULL) {
+			p->request = request;
+			p->response = response;
+			p->poll = poll;
+			p->server = server;
+		}
+		pageCB(p, ex);
 	}
 	void Page::_flushCB(Response& r) {
 		flushCB();
@@ -133,29 +160,46 @@ namespace cppsp
 	}
 
 	Response::Response(CP::Stream& out) :
-			outputStream(&out), output((CP::BufferedOutput&) buffer), closed(false) {
+			outputStream(&out), output((CP::BufferedOutput&) buffer), tmpbuffer(0),
+					headersWritten(false), closed(false), sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
 		headers.insert( { "Connection", "close" });
 		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
-		headersWritten = false;
 	}
-	void Response::doWriteHeaders() {
-		output.writeF("HTTP/1.1 %i %s\r\n", statusCode, statusName);
-		for (auto it = headers.begin(); it != headers.end(); it++) {
-			output.writeF("%s: %s\r\n", (*it).first.c_str(), (*it).second.c_str());
+	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
+		sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
+		for (auto it = This->headers.begin(); it != This->headers.end(); it++) {
+			sw.writeF("%s: %s\r\n", (*it).first.c_str(), (*it).second.c_str());
 		}
-		output.write("\r\n");
+		sw.write("\r\n");
 	}
 	void Response::flush(Callback cb) {
 		if (closed) throw runtime_error("connection has already been closed by the client");
 		output.flush();
-		if (buffer.length() <= 0) {
-			cb(*this);
-			return;
-		}
 		this->_cb = cb;
-		outputStream->write(buffer.data(), buffer.length(), { &Response::_writeCB, this });
+		if (!headersWritten) {
+			headersWritten = true;
+			{
+				CP::StreamWriter sw(tmpbuffer);
+				auto it = this->headers.find("Content-Length");
+				if (it == this->headers.end()) {
+					char tmps[32];
+					snprintf(tmps, 32, "%i", buffer.length());
+					this->headers.insert(make_pair("Content-Length", tmps));
+				}
+				Response_doWriteHeaders(this, sw);
+			}
+			tmpbuffer.write(this->buffer.data(), this->buffer.length());
+			outputStream->write(tmpbuffer.data(), tmpbuffer.length(), { &Response::_writeCB, this });
+			return;
+		} else {
+			if (buffer.length() <= 0) {
+				cb(*this);
+				return;
+			}
+			outputStream->write(buffer.data(), buffer.length(), { &Response::_writeCB, this });
+		}
 	}
 	void Response::clear() {
 		output.flush();
@@ -165,6 +209,7 @@ namespace cppsp
 	void Response::_writeCB(int r) {
 		if (r <= 0) closed = true;
 		buffer.clear();
+		tmpbuffer.clear();
 		_cb(*this);
 	}
 
