@@ -1614,7 +1614,9 @@ namespace CP
 			active++;
 		} else if (new_e == Events::none) {
 			//cout << "deleted " << h.handle << endl;
-			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, NULL));
+			//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, NULL));
+			//XXX: removed error checking to work around cURL bug
+			epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, NULL);
 			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
 				if (curEvents[i].data.ptr == (void*) &h) curEvents[i].data.ptr = NULL;
 			}
@@ -1739,7 +1741,10 @@ namespace CP
 			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
 				if (curEvents[i].data.ptr == (void*) &h) curEvents[i].data.ptr = NULL;
 			}
-			checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
+			//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
+			//XXX: see previous comment about EPOLL_CTL_DEL
+			epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
+
 			h.release();
 			//tmp_deleted.insert(&h);
 			//has_deleted = true;
