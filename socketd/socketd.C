@@ -146,6 +146,7 @@ namespace socketd
 		CP::Poll* p;
 		vhost* tmp_vh;
 		appConnection* tmpptr;
+		bool* deletionFlag;
 		//CP::streamReader* sr;
 		char _sr[sizeof(CP::persistentStreamReader)];
 
@@ -165,7 +166,7 @@ namespace socketd
 		bool firstLine;
 		bool reading;
 		bool cancelread;
-		bool deletionFlag;
+		bool shouldDelete;
 		bool streamReaderInit;
 
 		int& getCurProcess(vhost* vh) {
@@ -185,8 +186,8 @@ namespace socketd
 			if (conn != NULL) conn->retain();
 		}
 		connectionInfo(int fd, int d, int t, int p) :
-				s(fd, d, t, p), tries(0), readTo(0), pos(0), processIndex(-1), deletionFlag(false),
-						streamReaderInit(false) {
+				s(fd, d, t, p), deletionFlag(NULL), tries(0), readTo(0), pos(0), processIndex(-1),
+						shouldDelete(false), streamReaderInit(false) {
 		}
 		void startRead();
 		void checkMatch();
@@ -194,9 +195,14 @@ namespace socketd
 		void socketReadCB(int r) {
 			SOCKETD_DEBUG(9, "got %i bytes of data from client socket\n", r);
 			CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
+			bool d(false);
+			deletionFlag = &d;
 			sr->endPutData(r);
+			if (d) return;
+			deletionFlag = NULL;
+
 			reading = false;
-			if (deletionFlag) {
+			if (shouldDelete) {
 				delete this;
 				return;
 			}
@@ -216,6 +222,7 @@ namespace socketd
 			uint8_t* lineBuf = buf;
 			int lineBufLen = len;
 			//printf("got line: ");
+			//fflush(stdout);
 			//write(1, lineBuf, lineBufLen);
 			//printf("\n");
 			if (len <= 0) goto fail;
@@ -311,7 +318,7 @@ namespace socketd
 			SOCKETD_DEBUG(8, "do_transfer\n");
 			retry: if ((++tries) > 3) {
 				SOCKETD_DEBUG(3, "exceeded 3 tries for connection %p\n", this);
-				if (reading) deletionFlag = true;
+				if (reading) shouldDelete = true;
 				else delete this;
 				return;
 			}
@@ -379,6 +386,7 @@ namespace socketd
 				CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
 				sr->~persistentStreamReader();
 			}
+			if (deletionFlag != NULL) *deletionFlag = true;
 		}
 	};
 	void connectionInfo::startSocketRead() {
@@ -448,7 +456,7 @@ namespace socketd
 			startRead();
 		} else goto fail;
 		return;
-		fail: if (reading) deletionFlag = true;
+		fail: if (reading) shouldDelete = true;
 		else delete this;
 	}
 	void connectionInfo::startRead() {
