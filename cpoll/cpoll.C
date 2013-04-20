@@ -1888,6 +1888,7 @@ namespace CP
 		if (buffer == NULL) throw runtime_error("attempted to write to closed MemoryStream");
 		if (likely(c<=bufferSize)) return;
 		int tmp = bufferSize;
+		if (tmp <= 0) tmp = 4096;
 		while (tmp < c)
 			tmp *= 2;
 		void* v = realloc(buffer, tmp);
