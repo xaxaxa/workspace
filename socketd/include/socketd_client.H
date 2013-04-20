@@ -101,6 +101,7 @@ namespace socketd
 		Delegate<void(socketd_client&, Socket*, int64_t id)> cb;
 		protocolHeader ph;
 		prot_handleConnection ph1;
+		bool raw;
 		/*vector<int> acks;
 		 uint8_t* tmp;
 		 int tmplen;
@@ -131,6 +132,7 @@ namespace socketd
 		 }*/
 		void startRead();
 		void ack(int64_t id) {
+			if (raw) return;
 			protocolHeader ph;
 			memset(&ph, 0, sizeof(ph));
 			ph.type = protocolHeader::ackConnection;
@@ -203,9 +205,36 @@ namespace socketd
 		}
 		socketd_client(CP::Poll& p, const Delegate<void(socketd_client&, Socket*, int64_t)>& cb,
 				CP::Socket* sock = NULL) :
-				p(p), cb(cb)/*, tmp(NULL),tmplen(0),writing(false)*/{
+				p(p), cb(cb), raw(false)/*, tmp(NULL),tmplen(0),writing(false)*/{
 			if (sock == NULL) {
-				char* tmp = getenv("SOCKETD_FD");
+				char* listen = getenv("SOCKETD_LISTEN");
+				if (listen != NULL) {
+					const char* aaa = (const char*) memchr(listen, ':', strlen(listen));
+					if (aaa == NULL) throw runtime_error("expected \":\" in SOCKETD_LISTEN");
+					int i = aaa - listen;
+					sock = RGC::newObj<CP::Socket>();
+					sock->bind(string(listen, i).c_str(),
+							string(listen + i + 1, strlen(listen) - i - 1).c_str(), AF_UNSPEC,
+							SOCK_STREAM);
+					p.add(*sock);
+					struct CB1
+					{
+						socketd_client* This;
+						Delegate<void(socketd_client&, Socket*, int64_t)> cb;
+						int64_t id;
+						void operator()(Socket* s) {
+							This->p.add(*s);
+							cb(*This, s, (++id));
+							s->release();
+						}
+					}*cb1 = new CB1 { this, cb, 0 };
+					sock->listen();
+					raw = true;
+					sock->repeatAccept(cb1);
+					return;
+				}
+				char* tmp;
+				tmp = getenv("SOCKETD_FD");
 				if (tmp == NULL) throw logic_error("environment \"SOCKETD_FD\" not set");
 				sock = RGC::newObj<CP::Socket>(atoi(tmp), AF_UNIX, SOCK_STREAM, 0);
 				p.add(*sock);
