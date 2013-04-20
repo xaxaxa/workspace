@@ -483,6 +483,7 @@ namespace socketd
 		CP::Poll& p;
 		socketd* sd;
 		set<vhost*> bound_vhosts;
+		pid_t pid;
 //char sbuf[sizeof(protocolHeader)+sizeof(prot_handleConnection)];
 		bool dead;
 		bool down;
@@ -491,6 +492,7 @@ namespace socketd
 			if (!down) {
 				down = true;
 				unixsock->close(nullptr);
+				kill(pid, 15);
 			}
 		}
 		void die(int64_t ignoreID) {
@@ -542,15 +544,15 @@ namespace socketd
 			}
 		}
 		appConnection_unix(vhost* vh, CP::Poll& p, string exepath) :
-				maxID(0), p(p), dead(false), down(false) {
+				maxID(0), p(p), pid(0), dead(false), down(false) {
 			int socks[2];
 			if (socketpair(AF_UNIX, SOCK_STREAM, 0, socks) < 0) {
 				throw runtime_error(strerror(errno));
 			}
-			if (vh->ipcBufSize > 0) {
+			if (vh->_ipcBufSize > 0) {
 				int n;
 				unsigned int n_size = sizeof(n);
-				n = vh->ipcBufSize;
+				n = vh->_ipcBufSize;
 				setsockopt(socks[0], SOL_SOCKET, SO_RCVBUF, (void *) &n, n_size);
 				setsockopt(socks[0], SOL_SOCKET, SO_SNDBUF, (void *) &n, n_size);
 				setsockopt(socks[1], SOL_SOCKET, SO_RCVBUF, (void *) &n, n_size);
@@ -576,7 +578,7 @@ namespace socketd
 			} else {
 				//parent
 				close(socks[1]);
-
+				this->pid = pid;
 				//getsockopt(socks[0], SOL_SOCKET, SO_RCVBUF, (void *) &n, &n_size);
 				//SOCKETD_DEBUG(8, "unix socket receive buffer size: %i\n", n);
 
@@ -809,13 +811,13 @@ namespace socketd
 				socketd_execinfo& execinfo;
 				int& curThread;
 				void operator()(CP::HANDLE h) {
-					socketd_request req { l, h };
+					socketd_request req {l, h};
 					//printf("%i\n",curThread);
 					write(execinfo.threads[curThread].pipe[1], &req, sizeof(req));
 					curThread++;
 					if (curThread >= nthreads) curThread = 0;
 				}
-			}*cb = new cb1 { &l, p, this, execinfo, curThread };
+			}*cb = new cb1 {&l, p, this, execinfo, curThread};
 			l.sock->repeatAcceptHandle(cb);
 #else
 			struct cb1
@@ -835,7 +837,7 @@ namespace socketd
 					//cout << "p=" << &p << endl;
 					ci->process();
 				}
-			}*cb = new cb1 {l, p, this};
+			}*cb = new cb1 { l, p, this };
 			l.sock->repeatAcceptHandle(cb);
 #endif
 
