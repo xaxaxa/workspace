@@ -846,6 +846,35 @@ namespace CP
 		virtual void dispatch(Events event, const EventData& evtd);
 		virtual Events getEvents();
 	};
+	class Timer: public Handle
+	{
+	public:
+		static int32_t MAX_EVENTS;
+		Callback cb;
+		struct timespec interval;
+		bool* deletionFlag;
+		bool dispatching;
+		//if interval is 0, timer is disabled; timer is always recurring (unless disabled)
+		void setInterval(struct timespec interval);
+		void setInterval(uint64_t interval_ms);
+		void init(HANDLE handle);
+		void init(HANDLE handle, struct timespec interval);
+		void init(HANDLE handle, uint64_t interval_ms);
+		void init(struct timespec interval);
+		void init(uint64_t interval_ms = 0);
+		void close();
+		Timer(HANDLE handle);
+		Timer(HANDLE handle, uint64_t interval_ms);
+		Timer(HANDLE handle, struct timespec interval);
+		Timer(uint64_t interval_ms = 0);
+		Timer(struct timespec interval);
+		~Timer();
+		struct timespec getInterval();
+		bool running();
+		void setCallback(const Callback& cb);
+		virtual void dispatch(Events event, const EventData& evtd);
+		virtual Events getEvents();
+	};
 	class EventFD: public File
 	{
 	public:

@@ -28,6 +28,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <sstream>
+#include <sys/timerfd.h>
 
 namespace CP
 {
@@ -1391,6 +1392,125 @@ namespace CP
 	}
 	Events SignalFD::getEvents() {
 		return Events::in;
+	}
+
+//Timer
+	static void Timer_doinit(Timer* This) {
+		This->dispatching = false;
+		This->deletionFlag = NULL;
+	}
+	static void Timer_doSetInterval(Timer* This, struct timespec interval) {
+		This->interval = interval;
+		struct itimerspec tmp1;
+		tmp1.it_interval = interval;
+		tmp1.it_value = interval;
+		timerfd_settime(This->handle, 0, &tmp1, NULL);
+	}
+	static void Timer_doSetInterval(Timer* This, uint64_t interval_ms) {
+		This->interval.tv_sec = interval_ms / 1000;
+		This->interval.tv_nsec = (interval_ms % 1000) * 1000000;
+		struct itimerspec tmp1;
+		tmp1.it_interval = This->interval;
+		tmp1.it_value = This->interval;
+		timerfd_settime(This->handle, 0, &tmp1, NULL);
+	}
+	void Timer::setInterval(struct timespec interval) {
+		bool r;
+		if (!dispatching) r = running();
+		Timer_doSetInterval(this, interval);
+		if (!dispatching && running() != r) {
+			if (onEventsChange != nullptr) onEventsChange(*this, r ? Events::in : Events::none);
+		}
+	}
+	void Timer::setInterval(uint64_t interval_ms) {
+		bool r;
+		if (!dispatching) r = running();
+		Timer_doSetInterval(this, interval_ms);
+		if (!dispatching && running() != r) {
+			if (onEventsChange != nullptr) onEventsChange(*this, r ? Events::in : Events::none);
+		}
+	}
+	void Timer::init(HANDLE handle, struct timespec interval) {
+		Handle::init(handle);
+		Timer_doinit(this);
+		setInterval(interval);
+	}
+	void Timer::init(HANDLE handle, uint64_t interval_ms) {
+		Handle::init(handle);
+		Timer_doinit(this);
+		setInterval(interval_ms);
+	}
+	void Timer::init(struct timespec interval) {
+		Handle::init(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC));
+		Timer_doinit(this);
+		setInterval(interval);
+	}
+	void Timer::init(uint64_t interval_ms) {
+		Handle::init(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC));
+		Timer_doinit(this);
+		setInterval(interval_ms);
+	}
+	Timer::Timer(HANDLE handle, uint64_t interval_ms) {
+		this->interval= {0,0};
+		init(handle, interval_ms);
+	}
+	Timer::Timer(HANDLE handle, struct timespec interval) {
+		this->interval= {0,0};
+		init(handle, interval);
+	}
+	Timer::Timer(uint64_t interval_ms) {
+		this->interval= {0,0};
+		init(interval_ms);
+	}
+	Timer::Timer(struct timespec interval) {
+		this->interval= {0,0};
+		init(interval);
+	}
+	struct timespec Timer::getInterval() {
+		return interval;
+	}
+	bool Timer::running() {
+		return !(interval.tv_nsec == 0 && interval.tv_sec == 0);
+	}
+	void Timer::setCallback(const Callback& cb) {
+		this->cb = cb;
+	}
+	void Timer::dispatch(Events event, const EventData& evtd) {
+		if (event == Events::in) {
+			dispatching = true;
+			bool r = running();
+			uint64_t tmp;
+			bool d(false);
+			this->deletionFlag = &d;
+			if (read(handle, &tmp, sizeof(tmp)) >= sizeof(tmp)) cb((int) tmp);
+			if (d) return;
+			dispatching = false;
+			if (r != running()) onEventsChange(*this, r ? Events::in : Events::none);
+		}
+	}
+	void Timer::init(HANDLE handle) {
+		Handle::init(handle);
+		struct itimerspec tmp;
+		timerfd_gettime(handle, &tmp);
+		interval = tmp.it_interval;
+		if (running() && onEventsChange != nullptr) onEventsChange(*this, Events::none);
+	}
+	Timer::Timer(HANDLE handle) {
+		init(handle);
+	}
+	void Timer::close() {
+		if (onClose != nullptr) onClose(*this);
+		::close(handle);
+		handle = -1;
+		deinit();
+	}
+	Timer::~Timer() {
+		if (deletionFlag != NULL) *deletionFlag = true;
+		if (handle < 0) return;
+		close();
+	}
+	Events Timer::getEvents() {
+		return running() ? Events::in : Events::none;
 	}
 
 //EventFD
