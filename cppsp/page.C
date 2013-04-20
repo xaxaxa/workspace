@@ -34,7 +34,7 @@ namespace cppsp
 			processRequest();
 		} catch (exception& ex) {
 			handleError(&ex, *response, this->filePath);
-			response->flush( { &Page::_flushCB, this });
+			flush();
 		}
 	}
 	void Page::processRequest() {
@@ -56,10 +56,15 @@ namespace cppsp
 		else initCB();
 	}
 	void Page::initCB() {
-		load();
-		response->writeHeaders();
-		if (doRender) render(response->output);
-		response->flush( { &Page::_flushCB, this });
+		try {
+			load();
+			response->writeHeaders();
+			if (doRender) render(response->output);
+			flush();
+		} catch (exception& ex) {
+			handleError(&ex, *response, this->filePath);
+			flush();
+		}
 	}
 	void Page::cancelLoad(exception* ex) {
 		if (ex == NULL) {
@@ -71,7 +76,20 @@ namespace cppsp
 	void Page::_readPOSTCB(Request& r) {
 		initCB();
 	}
+	void Page::flush() {
+		if (response->closed) finalizeCB();
+		else response->flush( { &Page::_flushCB, this });
+	}
 	void Page::_flushCB(Response& r) {
+		flushCB();
+	}
+	void Page::flushCB() {
+		finalize();
+	}
+	void Page::finalize() {
+		finalizeCB();
+	}
+	void Page::finalizeCB() {
 		if (this->cb != nullptr) cb(*this);
 	}
 
@@ -115,7 +133,7 @@ namespace cppsp
 	}
 
 	Response::Response(CP::Stream& out) :
-			outputStream(&out), output((CP::BufferedOutput&) buffer) {
+			outputStream(&out), output((CP::BufferedOutput&) buffer), closed(false) {
 		statusCode = 200;
 		statusName = "OK";
 		headers.insert( { "Connection", "close" });
@@ -130,8 +148,13 @@ namespace cppsp
 		output.write("\r\n");
 	}
 	void Response::flush(Callback cb) {
-		this->_cb = cb;
+		if (closed) throw runtime_error("connection has already been closed by the client");
 		output.flush();
+		if (buffer.length() <= 0) {
+			cb(*this);
+			return;
+		}
+		this->_cb = cb;
 		outputStream->write(buffer.data(), buffer.length(), { &Response::_writeCB, this });
 	}
 	void Response::clear() {
@@ -140,6 +163,7 @@ namespace cppsp
 		headersWritten = false;
 	}
 	void Response::_writeCB(int r) {
+		if (r <= 0) closed = true;
 		buffer.clear();
 		_cb(*this);
 	}

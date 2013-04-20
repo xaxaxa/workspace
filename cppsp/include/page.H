@@ -58,6 +58,7 @@ namespace cppsp
 		int statusCode;
 
 		bool headersWritten;
+		bool closed;
 		virtual void doWriteHeaders();
 		void writeHeaders() {
 			if (!headersWritten) {
@@ -82,7 +83,8 @@ namespace cppsp
 		virtual const char* rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb);
-		virtual void loadPageFromFile(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb);
+		virtual void loadPageFromFile(CP::Poll& p, string path,
+				Delegate<void(Page*, exception* ex)> cb);
 		//path is relative to rootDir
 		virtual string mapPath(string path);
 	};
@@ -108,6 +110,8 @@ namespace cppsp
 		void __writeStringTable(int i, int len);
 		virtual void handleRequest(Callback cb = nullptr);
 		virtual void processRequest();
+		//each page goes through these operations (in order): init, [readPost], load, render, flush, finalize
+
 		virtual void init(); //to be overridden by base class; called before load() is called, and
 									//must call initCB() or cancelLoad() after it's done
 		virtual void doInit();
@@ -115,6 +119,10 @@ namespace cppsp
 		virtual void cancelLoad(exception* ex = NULL);
 		virtual void load(); //to be overridden by derived class; called before headers are written
 		virtual void render(CP::StreamWriter& out);
+		virtual void flush();
+		virtual void flushCB();
+		virtual void finalize();
+		virtual void finalizeCB();
 		virtual ~Page();
 
 		void _readPOSTCB(Request& r);
