@@ -1714,17 +1714,15 @@ namespace CP
 			//printf("active=%i\n", active);
 			return -1;
 		}
-		int32_t ret = 0;
 		epoll_event evts[MAX_EVENTS];
 		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
 		if (unlikely(n < 0)) {
 			goto retry;
 		}
-		if (n <= 0) ret = -1;
 		curEvents = evts;
 		curLength = n;
 		for (curIndex = 0; curIndex < n; curIndex++)
-			ret += _doDispatch(evts[curIndex]);
+			_doDispatch(evts[curIndex]);
 
 		/*if (likely(!has_deleted)) return ret;
 		 for (auto it = tmp_deleted.begin(); it != tmp_deleted.end(); it++)
@@ -1732,7 +1730,7 @@ namespace CP
 		 tmp_deleted.clear();
 		 has_deleted = false;*/
 
-		return ret;
+		return n;
 	}
 	bool Poll::dispatch(Events event, const EventData& evtd, bool confident) {
 		return _doEPoll(0) > 0;
