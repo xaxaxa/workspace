@@ -30,15 +30,15 @@ namespace cppsp
 		string message;
 		string compilerOutput;
 		CompileException();
-		CompileException(int32_t number);
 		CompileException(string message);
 		~CompileException() throw ();
 		const char* what() const throw ();
 	};
+	class cppspManager;
 
 	void doParse(const char* name, const char* in, int inLen, CP::Stream& out, CP::Stream& st_out,
 			vector<string>& c_opts);
-	CP::File* compilePage(string path);
+	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid);
 	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf);
 	int combinePath(const char* p1, const char* p2, char* buf);
 	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf);
@@ -46,6 +46,10 @@ namespace cppsp
 	string combinePath(const char* p1, const char* p2);
 	string combinePathChroot(const char* p1, const char* p2);
 	void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
+	cppspManager* cppspManager_new();
+	void cppspManager_delete(cppspManager* mgr);
+	void loadPage(cppspManager* mgr, CP::Poll& p, string wd, string path,
+			Delegate<void(Page*, exception* ex)> cb);
 	vector<string>& CXXOpts();
 	void handleError(exception* ex, cppsp::Response& resp, string path);
 }

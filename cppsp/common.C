@@ -459,67 +459,79 @@ namespace cppsp
 			doUnload();
 		}
 	};
+
 	class cppspManager
 	{
 	public:
 		map<string, loadedPage*> cache;
 		vector<string> cxxopts;
-		/*void compileCB(loadedPage& lp) {
+		void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
+	};
 
-		 }*/
-		void loadPage(Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb) {
-			loadedPage* lp1;
-			auto it = cache.find(path);
-			if (it == cache.end()) {
-				lp1 = new loadedPage();
-				lp1->path = path;
-				cache.insert( { path, lp1 });
-			} else lp1 = (*it).second;
-			loadedPage& lp(*lp1);
+	void cppspManager::loadPage(Poll& p, string wd, string path,
+			Delegate<void(Page*, exception* ex)> cb) {
+		loadedPage* lp1;
+		auto it = cache.find(path);
+		if (it == cache.end()) {
+			lp1 = new loadedPage();
+			lp1->path = path;
+			cache.insert( { path, lp1 });
+		} else lp1 = (*it).second;
+		loadedPage& lp(*lp1);
 
-			bool c = false;
-			if (lp.compiling) goto asdf;
+		bool c = false;
+		if (lp.compiling) goto asdf;
+		try {
+			c = shouldCompile(path);
+		} catch (exception& ex) {
+			cb(nullptr, &ex);
+			return;
+		}
+		if (c) {
+			lp.loadCB.push_back(cb);
 			try {
-				c = shouldCompile(path);
+				lp.doCompile(p, wd, cxxopts);
+			} catch (exception& ex) {
+				lp.loadCB.resize(lp.loadCB.size() - 1);
+				cb(nullptr, &ex);
+			}
+			return;
+		}
+		if (lp.loaded) {
+			try {
+				cb(lp.doCreate(), nullptr);
 			} catch (exception& ex) {
 				cb(nullptr, &ex);
-				return;
 			}
-			if (c) {
-				lp.loadCB.push_back(cb);
-				try {
-					lp.doCompile(p, wd, cxxopts);
-				} catch (exception& ex) {
-					lp.loadCB.resize(lp.loadCB.size() - 1);
-					cb(nullptr, &ex);
-				}
-				return;
-			}
-			if (lp.loaded) {
-				try {
-					cb(lp.doCreate(), nullptr);
-				} catch (exception& ex) {
-					cb(nullptr, &ex);
-				}
-				return;
-			} else if (lp.compiling) {
-				asdf: lp.loadCB.push_back(cb);
-			} else {
-				try {
-					lp.doLoad();
-					cb(lp.doCreate(), nullptr);
-				} catch (exception& ex) {
-					cb(nullptr, &ex);
-				}
+			return;
+		} else if (lp.compiling) {
+			asdf: lp.loadCB.push_back(cb);
+		} else {
+			try {
+				lp.doLoad();
+				cb(lp.doCreate(), nullptr);
+			} catch (exception& ex) {
+				cb(nullptr, &ex);
 			}
 		}
-	};
+	}
+
 	cppspManager mgr;
 	void loadPage(Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb) {
 		mgr.loadPage(p, wd, path, cb);
 	}
 	vector<string>& CXXOpts() {
 		return mgr.cxxopts;
+	}
+	cppspManager* cppspManager_new() {
+		return new cppspManager();
+	}
+	void loadPage(cppspManager* mgr, CP::Poll& p, string wd, string path,
+			Delegate<void(Page*, exception* ex)> cb) {
+		return mgr->loadPage(p, wd, path, cb);
+	}
+	void cppspManager_delete(cppspManager* mgr) {
+		delete mgr;
 	}
 
 	void handleError(exception* ex, cppsp::Response& resp, string path) {
