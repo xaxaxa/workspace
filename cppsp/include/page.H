@@ -42,7 +42,7 @@ namespace cppsp
 		virtual void readPost(Delegate<void(Request&)> cb);
 
 		void _readCB(int i);
-
+		virtual void reset();
 	};
 	class Response: public RGC::Object
 	{
@@ -74,8 +74,8 @@ namespace cppsp
 		void write(T&&... a) {
 			output.write(std::forward<T>(a)...);
 		}
-
 		void _writeCB(int r);
+		virtual void reset();
 	};
 	class Page;
 	class Server: public RGC::Object

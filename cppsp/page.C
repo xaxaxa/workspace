@@ -164,7 +164,6 @@ namespace cppsp
 					headersWritten(false), closed(false), sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
-		headers.insert( { "Connection", "close" });
 		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
 	}
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
@@ -212,6 +211,24 @@ namespace cppsp
 		buffer.clear();
 		tmpbuffer.clear();
 		_cb(*this);
+	}
+	
+	void Request::reset() {
+		headers.clear();
+		queryString.clear();
+		form.clear();
+		tmpbuffer.clear();
+		method.clear();
+		path.clear();
+	}
+	void Response::reset() {
+		headers.clear();
+		output.flush();
+		buffer.clear();
+		tmpbuffer.clear();
+		headersWritten = false;
+		closed = false;
+		sendChunked = false;
 	}
 
 } /* namespace cppsp */
