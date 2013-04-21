@@ -1943,7 +1943,7 @@ namespace CP
 		bufferSize = tmp;
 	}
 	int32_t MemoryStream::write(const void* buf, int32_t len) {
-		ensureCapacity(this->bufferSize + len);
+		ensureCapacity(this->bufferPos + len);
 		if (this->bufferPos + len > this->len) this->len = this->bufferPos + len;
 		return FixedMemoryStream::write(buf, len);
 	}
