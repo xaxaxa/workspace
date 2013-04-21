@@ -87,11 +87,13 @@ public:
 struct serverThread
 {
 	cppspManager* mgr;
-	EventFD efd;
+	//EventFD efd;
 	pthread_t thr;
-	char padding[256-sizeof(cppspManager*)-sizeof(EventFD)-sizeof(pthread_t)];
-	RingBuffer<cppsp_request> req_queue;
-	serverThread():mgr(cppspManager_new()),efd(0,EFD_SEMAPHORE),req_queue(32) {
+	Socket* listensock;
+	//char padding[256-sizeof(cppspManager*)-sizeof(EventFD)-sizeof(pthread_t)];
+	//RingBuffer<cppsp_request> req_queue;
+	serverThread():mgr(cppspManager_new())
+		/*,efd(0,EFD_SEMAPHORE),req_queue(32)*/{
 		//printf("%i\n",sizeof(cppspManager*)+sizeof(EventFD)+sizeof(pthread_t));
 	}
 	~serverThread() {
@@ -102,10 +104,9 @@ struct serverThread
 CP::Socket listensock;
 void* thread1(void* v) {
 	serverThread* thr=(serverThread*)v;
-	Poll p;
-	//printf("efd: %p\n",&thr->efd);
-	EventData evtd;
-	//thr->efd.dispatchMultiple((Events)0,evtd);
+	Poll p(true);	//enable edge triggered mode
+	
+	/*
 	p.add(thr->efd);
 	struct {
 		Poll& p;
@@ -123,8 +124,22 @@ void* thread1(void* v) {
 			}
 		}
 	} cb {p, thr};
-	thr->efd.repeatGetEvent(&cb);
+	thr->efd.repeatGetEvent(&cb);*/
+	
+	struct {
+		Poll& p;
+		serverThread* thr;
+		void operator()(Socket* sock) {
+			cppsp_request* req;
+			p.add(*sock);
+			processRequest(*thr,p,*sock);
+			sock->release();
+		}
+	} cb {p, thr};
+	thr->listensock->repeatAccept(&cb);
+	p.add(*thr->listensock);
 	p.loop();
+	
 }
 int main(int argc, char** argv) {
 	cout << "started child #" << getpid() << endl;
@@ -149,22 +164,26 @@ int main(int argc, char** argv) {
 				}
 			});
 	int reqs=0;
-	CP::Poll p;
+	//CP::Poll p;
 	
 	int i=(int)listen.find(':');
 	if(i<0) throw runtime_error("expected \":\" in listen");;
 	listensock.bind(listen.substr(0,i).c_str(),
 		listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM);
-	listensock.listen();
-	p.add(listensock);
+	listensock.listen(512);
+	//p.add(listensock);
 	printf("starting %i threads\n",threads);
 	serverThread* th=new serverThread[threads];
 	for(int i=0;i<threads;i++) {
+		CXXOpts(th[i].mgr)=CXXOpts();
+		Socket* tmps=new Socket(dup(listensock.handle), listensock.addressFamily,
+			listensock.type, listensock.protocol);
+		th[i].listensock=tmps;
 		if (pthread_create(&th[i].thr, NULL, thread1, &th[i]) != 0) {
 			throw runtime_error(strerror(errno));
 		}
 	}
-	struct
+	/*struct
 	{
 		serverThread* th;
 		int threads;
@@ -185,7 +204,8 @@ int main(int argc, char** argv) {
 		}
 	} cb {th,threads,0};
 	listensock.repeatAcceptHandle(&cb);
-	p.loop();
+	p.loop();*/
+	while(1)sleep(3600);
 }
 void processRequest(serverThread& thr,Poll& p,Socket& s) {
 	struct handler:public RGC::Object {
