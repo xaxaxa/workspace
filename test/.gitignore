@@ -47,4 +47,5 @@ socketd_proxy.so
 *.html.txt
 ldtest1.so
 urlparser_test
-
+cppsp_standalone
+httptest
