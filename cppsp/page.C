@@ -175,6 +175,7 @@ namespace cppsp
 		sw.write("\r\n");
 	}
 	void Response::flush(Callback cb) {
+		//printf("flush\n");
 		if (closed) throw runtime_error("connection has already been closed by the client");
 		output.flush();
 		this->_cb = cb;

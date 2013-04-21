@@ -175,6 +175,7 @@ int main(int argc, char** argv) {
 	printf("starting %i threads\n",threads);
 	serverThread* th=new serverThread[threads];
 	for(int i=0;i<threads;i++) {
+		CXXOpts(th[i].mgr)=CXXOpts();
 		Socket* tmps=new Socket(dup(listensock.handle), listensock.addressFamily,
 			listensock.type, listensock.protocol);
 		th[i].listensock=tmps;
