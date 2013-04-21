@@ -523,6 +523,9 @@ namespace cppsp
 	vector<string>& CXXOpts() {
 		return mgr.cxxopts;
 	}
+	vector<string>& CXXOpts(cppspManager* mgr) {
+		return mgr->cxxopts;
+	}
 	cppspManager* cppspManager_new() {
 		return new cppspManager();
 	}

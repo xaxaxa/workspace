@@ -51,6 +51,7 @@ namespace cppsp
 	void loadPage(cppspManager* mgr, CP::Poll& p, string wd, string path,
 			Delegate<void(Page*, exception* ex)> cb);
 	vector<string>& CXXOpts();
+	vector<string>& CXXOpts(cppspManager* mgr);
 	void handleError(exception* ex, cppsp::Response& resp, string path);
 }
 #endif /* COMMON_H_ */
