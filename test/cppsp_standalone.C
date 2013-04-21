@@ -87,9 +87,10 @@ public:
 struct serverThread
 {
 	cppspManager* mgr;
+	Socket* listensock;
 	//EventFD efd;
 	pthread_t thr;
-	Socket* listensock;
+	int threadid;
 	//char padding[256-sizeof(cppspManager*)-sizeof(EventFD)-sizeof(pthread_t)];
 	//RingBuffer<cppsp_request> req_queue;
 	serverThread():mgr(cppspManager_new())
@@ -104,7 +105,7 @@ struct serverThread
 CP::Socket listensock;
 void* thread1(void* v) {
 	serverThread* thr=(serverThread*)v;
-	Poll p;	//enable edge triggered mode
+	Poll p;
 	
 	/*
 	p.add(thr->efd);
@@ -130,6 +131,7 @@ void* thread1(void* v) {
 		Poll& p;
 		serverThread* thr;
 		void operator()(Socket* sock) {
+			//printf("thread %i: accepted socket: %p (%i)\n",thr->threadid,sock,sock->handle);
 			cppsp_request* req;
 			p.add(*sock);
 			processRequest(*thr,p,*sock);
@@ -179,6 +181,7 @@ int main(int argc, char** argv) {
 		Socket* tmps=new Socket(dup(listensock.handle), listensock.addressFamily,
 			listensock.type, listensock.protocol);
 		th[i].listensock=tmps;
+		th[i].threadid=i+1;
 		if (pthread_create(&th[i].thr, NULL, thread1, &th[i]) != 0) {
 			throw runtime_error(strerror(errno));
 		}
@@ -218,12 +221,21 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 		//MemoryStream ms;
 		uint8_t buf[4096];
 		string path;
+		bool keepAlive;
 		handler(serverThread& thr,CP::Poll& p,Socket* s):thr(thr),p(p),s(s),req(*s),resp(*s) {
 			//printf("handler()\n");
-			this->retain(2);
+			this->retain();
 			req.readHeaders({&handler::readCB,this});
 		}
-		void readCB() {
+		void readCB(bool success) {
+			if(!success) {
+				delete this;
+				return;
+			}
+			auto it=req.headers.find("connection");
+			if(it!=req.headers.end() && (*it).second=="close")keepAlive=false;
+			else keepAlive=true;
+			resp.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
 			//printf("readCB()\n");
 			char tmp[req.path.length()+rootDir.length()];
 			int l=cppsp::combinePathChroot(rootDir.c_str(),req.path.c_str(),tmp);
@@ -250,20 +262,30 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 			}
 		doFinish:
 			//s->write(ms.data(),ms.length(),{&handler::writeCB,this});
-			s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			finalize();
 		}
 		void sockReadCB(int r) {
-			if(r<=0) release();
+			if(r<=0) delete this;
 		}
 		void flushCB(Response& resp) {
 			//s->shutdown(SHUT_WR);
-			release();
+			//release();
+			//finalize();
 		}
 		void handleRequestCB(Page& p) {
 			p.release();
-			s->shutdown(SHUT_WR);
-			release();
-			s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			//s->shutdown(SHUT_WR);
+			//release();
+			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			finalize();
+		}
+		void finalize() {
+			if(keepAlive) {
+				req.reset();
+				resp.reset();
+				req.readHeaders({&handler::readCB,this});
+			} else s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 		}
 		~handler() {
 			//printf("~handler()\n");
