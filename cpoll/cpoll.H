@@ -592,6 +592,24 @@ namespace CP
 			none = 0, in = 1, out = 2, other = 4, all = 7
 	}
 	;
+	static inline Events operator&(Events e1, Events e2) {
+		return (Events) (((event_t) e1) & ((event_t) e2));
+	}
+	static inline Events operator|(Events e1, Events e2) {
+		return (Events) (((event_t) e1) | ((event_t) e2));
+	}
+	static inline Events operator^(Events e1, Events e2) {
+		return (Events) (((event_t) e1) ^ ((event_t) e2));
+	}
+	static inline const Events& operator&=(Events& e1, Events e2) {
+		return (Events&) (((event_t&) e1) &= ((event_t) e2));
+	}
+	static inline const Events& operator|=(Events& e1, Events e2) {
+		return (Events&) (((event_t&) e1) |= ((event_t) e2));
+	}
+	static inline const Events& operator^=(Events& e1, Events e2) {
+		return (Events&) (((event_t&) e1) ^= ((event_t) e2));
+	}
 
 	enum class Operations
 		: uint8_t
@@ -664,12 +682,12 @@ namespace CP
 		virtual void deinit();
 		///calls the callback associated with the event
 		///only accepts one event
-		virtual void dispatch(Events event, const EventData& evtd)=0;
+		virtual bool dispatch(Events event, const EventData& evtd, bool confident)=0;
 		virtual Events getEvents()=0;
-		virtual int32_t dispatchMultiple(Events events, const EventData& evtd);
+		virtual Events dispatchMultiple(Events events, Events confident, const EventData& evtd);
 		///get some events from the queue.
 		virtual Events wait(EventData& evtd);
-		virtual int32_t waitAndDispatch();
+		virtual Events waitAndDispatch();
 		virtual void loop();
 		//void close();
 		~Handle();
@@ -702,16 +720,18 @@ namespace CP
 		int32_t sendAll(const void* buf, int32_t len, int32_t flags = 0);
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0);
 		int32_t recvAll(void* buf, int32_t len, int32_t flags = 0);
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
-				EventHandlerData::States oldstate);
-		void dispatch(Events event, const EventData& evtd, bool& deletionFlag);
-		void dispatch(Events event, const EventData& evtd) {
+		Events checkEvents(Events events);
+		virtual bool doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
+				EventHandlerData::States oldstate, bool confident);
+		bool dispatch(Events event, const EventData& evtd, bool confident, bool& deletionFlag);
+		bool dispatch(Events event, const EventData& evtd, bool confident) override {
 			bool d = false;
 			deletionFlag = &d;
-			dispatch(event, evtd, d);
+			bool r = dispatch(event, evtd, d);
 			if (!d) deletionFlag = NULL;
+			return r;
 		}
-		int32_t dispatchMultiple(Events events, const EventData& evtd);
+		Events dispatchMultiple(Events events, Events confident, const EventData& evtd) override;
 		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 				const Callback& cb, Events e, Operations op);
 		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
@@ -784,8 +804,8 @@ namespace CP
 		EndPoint* getLocalEndPoint();
 		//the caller must release() or free() the returned object
 		EndPoint* getRemoteEndPoint();
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
-				EventHandlerData::States oldstate);
+		virtual bool doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
+				EventHandlerData::States oldstate, bool confident) override;
 
 		void connect(const sockaddr *addr, int32_t addr_size);
 		void connect(const EndPoint &ep);
@@ -843,7 +863,7 @@ namespace CP
 		sigset_t mask;
 		SignalFD(HANDLE handle, const sigset_t& mask);
 		SignalFD(const sigset_t& mask, int32_t flags);
-		virtual void dispatch(Events event, const EventData& evtd);
+		virtual bool dispatch(Events event, const EventData& evtd, bool confident) override;
 		virtual Events getEvents();
 	};
 	class Timer: public Handle
@@ -872,7 +892,7 @@ namespace CP
 		struct timespec getInterval();
 		bool running();
 		void setCallback(const Callback& cb);
-		virtual void dispatch(Events event, const EventData& evtd);
+		virtual bool dispatch(Events event, const EventData& evtd, bool confident) override;
 		virtual Events getEvents();
 	};
 	class EventFD: public File
@@ -881,8 +901,8 @@ namespace CP
 		Delegate<void(eventfd_t)> cb;
 		EventFD(HANDLE handle);
 		EventFD(uint32_t initval = 0, int32_t flags = 0);
-		virtual void doOperation(EventHandlerData& ed, const EventData& evtd,
-				EventHandlerData::States oldstate);
+		virtual bool doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
+				EventHandlerData::States oldstate, bool confident) override;
 		eventfd_t getEvent();
 		void getEvent(const Delegate<void(eventfd_t)>& cb, bool repeat = false);
 		void repeatGetEvent(const Delegate<void(eventfd_t)>& cb) {
@@ -922,9 +942,11 @@ namespace CP
 		void _applyHandle(Handle& h, Events old_e);
 		int32_t _doDispatch(const epoll_event& event);
 		int32_t _doEPoll(int32_t timeout);
-		virtual void dispatch(Events event, const EventData& evtd);
-		virtual Events getEvents();
-		virtual int32_t waitAndDispatch();
+		virtual bool dispatch(Events event, const EventData& evtd, bool confident) override;
+		virtual Events dispatchMultiple(Events event, Events confident, const EventData& evtd)
+				override;
+		virtual Events getEvents() override;
+		virtual Events waitAndDispatch() override;
 		void fillEPollEvents(Handle& h, epoll_event& evt, Events e);
 
 		inline void applyHandle(Handle& h, Events old_e);

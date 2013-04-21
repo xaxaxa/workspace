@@ -699,15 +699,14 @@ namespace CP
 		_supportsEPoll = true;
 		handle = -1;
 	}
-	int32_t Handle::dispatchMultiple(Events events, const EventData& evtd) {
+	Events Handle::dispatchMultiple(Events events, Events confident, const EventData& evtd) {
 		//cout << (int32_t)events << endl;
-		int32_t ret = 0;
+		Events ret = Events::none;
 		for (int32_t i = 0; i < numEvents; i++) {
 			Events e = indexToEvent(i);
 			//cout << (int32_t)e << " " << (((event_t)e)&((event_t)events)) << endl;
 			if ((((event_t) e) & ((event_t) events)) == (event_t) e) {
-				dispatch(e, evtd);
-				ret++;
+				if (dispatch(e, evtd, (confident & e) == e)) ret |= e;
 			}
 		}
 		//cout << ret << endl;
@@ -730,15 +729,15 @@ namespace CP
 		 }*/
 		return pollToEvents(pfd.revents);
 	}
-	int32_t Handle::waitAndDispatch() {
+	Events Handle::waitAndDispatch() {
 		EventData evtd;
 		Events e = wait(evtd);
-		if (e == Events::none) return -1;
-		return dispatchMultiple(e, evtd);
+		if (e == Events::none) return e;
+		return dispatchMultiple(e, e, evtd);
 	}
 	void Handle::loop() {
 		try {
-			while (waitAndDispatch() >= 0)
+			while (waitAndDispatch() != Events::none)
 				;
 		} catch (const AbortException& ex) {
 
@@ -752,6 +751,9 @@ namespace CP
 		//::close(handle);
 	}
 
+	static inline bool isWouldBlock() {
+		return errno == EWOULDBLOCK || errno == EAGAIN;
+	}
 //File
 	File::File() :
 			deletionFlag(NULL), dispatching(false) {
@@ -822,8 +824,15 @@ namespace CP
 			bw += bw1;
 		return (bw1 < 0 && bw <= 0) ? -1 : bw;
 	}
-	void File::doOperation(EventHandlerData& ed, const EventData& evtd,
-			EventHandlerData::States oldstate) {
+	Events File::checkEvents(Events events) {
+		pollfd pfd;
+		pfd.fd = handle;
+		pfd.events = eventsToPoll(events);
+		poll(&pfd, 1, 0);
+		return pollToEvents(pfd.revents);
+	}
+	bool File::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
+			EventHandlerData::States oldstate, bool confident) {
 		Operations op = ed.op;
 		int32_t r = 0;
 		if (unlikely(handle<0)) {
@@ -838,17 +847,18 @@ namespace CP
 				r = read(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done);
 				if (r <= 0) {
+					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
-					return;
+					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
 				}
-				return;
+				return true;
 			case Operations::write:
 				r = write(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
 				break;
@@ -857,10 +867,11 @@ namespace CP
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done);
 				//cout << "wrote " << r << " bytes on fd " << handle << endl;
 				if (r <= 0) {
+					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
-					return;
+					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
 				//cout << "len_done = " << ed.misc.bufferIO.len_done
@@ -869,7 +880,7 @@ namespace CP
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
 				}
-				return;
+				return true;
 			case Operations::recv:
 				r = recv(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags);
 				break;
@@ -877,17 +888,18 @@ namespace CP
 				r = recv(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done, ed.misc.bufferIO.flags);
 				if (r <= 0) {
+					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
-					return;
+					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
 				}
-				return;
+				return true;
 			case Operations::send:
 				r = send(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags);
 				break;
@@ -895,26 +907,30 @@ namespace CP
 				r = send(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done, ed.misc.bufferIO.flags);
 				if (r <= 0) {
+					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(
 							ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
-					return;
+					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
 				if (ed.misc.bufferIO.len_done >= ed.misc.bufferIO.len) {
 					ed.state = EventHandlerData::States::invalid;
 					if (ed.cb != nullptr) ed.cb(ed.misc.bufferIO.len_done);
 				}
-				return;
+				return true;
 			case Operations::close:
+				if (!confident && (checkEvents(event) & event) != event) return false;
 				close();
 				break;
 			case Operations::none:
+				if (!confident && (checkEvents(event) & event) != event) return false;
 				if (evtd.error || evtd.hungUp) r = -1;
 				break;
 			default:
 				break;
 		}
+		if (r < 0 && isWouldBlock()) return false;
 		if (r <= 0 && op != Operations::none) {
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
@@ -922,11 +938,12 @@ namespace CP
 		asdf: if (ed.cb != nullptr) ed.cb(r);
 		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) if (ed.cb
 				!= nullptr) ed.cb(-1);
+		return true;
 	}
-	void File::dispatch(Events event, const EventData& evtd, bool& deletionFlag) {
+	bool File::dispatch(Events event, const EventData& evtd, bool confident, bool& deletionFlag) {
 		//cout << (int32_t)event << " dispatched" << endl;
 		EventHandlerData& ed = eventData[eventToIndex(event)];
-		if (ed.state == EventHandlerData::States::invalid) return;
+		if (ed.state == EventHandlerData::States::invalid) return true;
 		bool tmp;
 		if (!(tmp = dispatching)) preDispatchEvents = _getEvents();
 		EventHandlerData::States oldstate = ed.state;
@@ -936,11 +953,15 @@ namespace CP
 
 		//this->deletionFlag = &deletionFlag;
 		try {
-			doOperation(ed, evtd, oldstate);
+			if (!doOperation(event, ed, evtd, oldstate, confident)) {
+				dispatching = false;
+				ed.state = oldstate;
+				return false;
+			}
 		} catch (const CancelException& ex) {
 			ed.state = EventHandlerData::States::invalid;
 		}
-		if (deletionFlag) return;
+		if (deletionFlag) return true;
 		//this->deletionFlag = NULL;
 		dispatching = tmp;
 		//cout << "clear event" << endl;
@@ -955,19 +976,19 @@ namespace CP
 
 		//else cout << (int32_t)eventData[eventToIndex(event)].state << endl;
 		if (!tmp && onEventsChange != nullptr) onEventsChange(*this, preDispatchEvents);
+		return true;
 	}
-	int32_t File::dispatchMultiple(Events events, const EventData& evtd) {
+	Events File::dispatchMultiple(Events events, Events confident, const EventData& evtd) {
 		preDispatchEvents = _getEvents();
 		dispatching = true;
-		int32_t ret = 0;
+		Events ret = Events::none;
 		bool d = false;
 		this->deletionFlag = &d;
 		for (int32_t i = 0; i < numEvents; i++) {
 			Events e = indexToEvent(i);
 			//cout << (int32_t)e << " " << (((event_t)e)&((event_t)events)) << endl;
 			if ((((event_t) e) & ((event_t) events)) == (event_t) e) {
-				dispatch(e, evtd, d);
-				ret++;
+				if (dispatch(e, evtd, (confident & e) == e, d)) ret |= e;
 				if (d) break;
 			}
 		}
@@ -1155,20 +1176,34 @@ namespace CP
 		ep->setSockAddr((struct sockaddr*) addr);
 		return ep;
 	}
-	void Socket::doOperation(EventHandlerData& ed, const EventData& evtd,
-			EventHandlerData::States oldstate) {
+	bool Socket::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
+			EventHandlerData::States oldstate, bool confident) {
 		Operations op = ed.op;
 		int r;
 		switch (op) {
 			case Operations::accept:
-				ed.cb((evtd.hungUp | evtd.error) ? -1 : 0);
-				return;
+			{
+				HANDLE h = acceptHandle();
+				if (h < 0) {
+					if (isWouldBlock()) return false;
+					ed.state = EventHandlerData::States::invalid;
+				}
+				ed.cb(h);
+				return true;
+			}
 			case Operations::shutdown:
+				if (!confident && (checkEvents(event) & event) != event) return false;
 				ed.cb(shutdown(ed.misc.shutdown.how));
-				return;
+				return true;
 			case Operations::connect:
-				ed.cb((evtd.error || evtd.hungUp) ? -1 : 0);
-				return;
+				if (evtd.error || evtd.hungUp) {
+					ed.state = EventHandlerData::States::invalid;
+					ed.cb(-1);
+					return true;
+				}
+				if (!confident && (checkEvents(event) & event) != event) return false;
+				ed.cb(0);
+				return true;
 			case Operations::sendTo:
 				r = sendTo(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags,
 						*ed.misc.bufferIO.const_ep);
@@ -1178,13 +1213,14 @@ namespace CP
 						*ed.misc.bufferIO.ep);
 				break;
 			default:
-				File::doOperation(ed, evtd, oldstate);
-				return;
+				return File::doOperation(event, ed, evtd, oldstate, confident);
 		}
+		if (r < 0 && isWouldBlock()) return false;
 		if (r <= 0) {
 			ed.state = EventHandlerData::States::invalid;
 		}
 		if (ed.cb != nullptr) ed.cb(r);
+		return true;
 	}
 	void Socket::bind(const sockaddr *addr, int32_t addr_size) {
 		if (handle == -1) init(addr->sa_family, SOCK_STREAM, 0);
@@ -1313,11 +1349,11 @@ namespace CP
 		endAddEvent(e, false);
 	}
 	void Socket_acceptStub(Socket* th, int32_t i) {
-		Socket* s = th->accept();
+		Socket* s = new Socket((HANDLE) i, th->addressFamily, th->type, th->protocol);
 		th->_acceptCB(s);
 	}
 	void Socket_acceptHandleStub(Socket* th, int32_t i) {
-		HANDLE h = th->acceptHandle();
+		HANDLE h = i;
 		th->_acceptHandleCB(h);
 	}
 //user must eventually release() or free() the received object
@@ -1380,15 +1416,17 @@ namespace CP
 	SignalFD::SignalFD(const sigset_t& mask, int32_t flags) :
 			Handle(signalfd(-1, &mask, flags | SFD_CLOEXEC)), mask(mask) {
 	}
-	void SignalFD::dispatch(Events event, const EventData& evtd) {
+	bool SignalFD::dispatch(Events event, const EventData& evtd, bool confident) {
 		Signal sig[MAX_EVENTS];
 		int32_t br = ::read(handle, sig, sizeof(sig));
+		if (br < 0 && isWouldBlock()) return false;
 		if (callback != nullptr) {
 			br /= sizeof(Signal);
 			for (int32_t i = 0; i < br; i++) {
 				callback(sig[i]);
 			}
 		}
+		return true;
 	}
 	Events SignalFD::getEvents() {
 		return Events::in;
@@ -1475,18 +1513,27 @@ namespace CP
 	void Timer::setCallback(const Callback& cb) {
 		this->cb = cb;
 	}
-	void Timer::dispatch(Events event, const EventData& evtd) {
+	bool Timer::dispatch(Events event, const EventData& evtd, bool confident) {
 		if (event == Events::in) {
 			dispatching = true;
 			bool r = running();
 			uint64_t tmp;
 			bool d(false);
 			this->deletionFlag = &d;
-			if (read(handle, &tmp, sizeof(tmp)) >= sizeof(tmp)) cb((int) tmp);
-			if (d) return;
+			int i;
+			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp)) cb((int) tmp);
+			else if (i < 0 && isWouldBlock()) {
+				this->deletionFlag = NULL;
+				dispatching = false;
+				return false;
+			}
+			if (d) return true;
 			dispatching = false;
+			deletionFlag = NULL;
 			if (r != running()) onEventsChange(*this, r ? Events::in : Events::none);
+			return true;
 		}
+		return true;
 	}
 	void Timer::init(HANDLE handle) {
 		Handle::init(handle);
@@ -1520,8 +1567,8 @@ namespace CP
 	EventFD::EventFD(uint32_t initval, int32_t flags) :
 			File(eventfd(initval, flags | EFD_CLOEXEC)) {
 	}
-	void EventFD::doOperation(EventHandlerData& ed, const EventData& evtd,
-			EventHandlerData::States oldstate) {
+	bool EventFD::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
+			EventHandlerData::States oldstate, bool confident) {
 		int32_t r = 0;
 		switch (ed.op) {
 			case Operations::read:
@@ -1533,7 +1580,9 @@ namespace CP
 			default:
 				break;
 		}
+		if (r < 0 && isWouldBlock()) return false;
 		ed.cb(r);
+		return true;
 	}
 	eventfd_t EventFD::getEvent() {
 		eventfd_t tmp;
@@ -1589,7 +1638,7 @@ namespace CP
 			EventData evtd;
 			evtd.hungUp = evtd.error = true;
 			while (new_e != Events::none) {
-				h.dispatchMultiple(new_e, evtd);
+				h.dispatchMultiple(new_e, new_e, evtd);
 				new_e = h.getEvents();
 			}
 			return;
@@ -1604,7 +1653,7 @@ namespace CP
 				EventData evtd;
 				evtd.hungUp = evtd.error = false;
 				while (new_e != Events::none) {
-					h.dispatchMultiple(new_e, evtd);
+					h.dispatchMultiple(new_e, new_e, evtd);
 					new_e = h.getEvents();
 				}
 				return;
@@ -1656,7 +1705,7 @@ namespace CP
 //cout << "getevents: " << (int32_t)(h->getEvents()) << endl;
 		cur_handle = h->handle;
 //cur_last_events = h->getEvents();
-		ret = h->dispatchMultiple((Events) evt, evtd);
+		if (h->dispatchMultiple((Events) evt, (Events) evt, evtd) != Events::none) ret = 1;
 //if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
 //Events new_events = h->getEvents();
 //cout << (int32_t)new_events << " " << (int32_t)cur_last_events << endl;
@@ -1689,16 +1738,19 @@ namespace CP
 
 		return ret;
 	}
-	void Poll::dispatch(Events event, const EventData& evtd) {
+	bool Poll::dispatch(Events event, const EventData& evtd, bool confident) {
+		return _doEPoll(0) > 0;
+	}
+	Events Poll::dispatchMultiple(Events event, Events confident, const EventData& evtd) {
 //throw CPollException("Poll::dispatch() not implemented");
-		_doEPoll(0);
+		return _doEPoll(0) <= 0 ? Events::none : Events::all;
 	}
 	Events Poll::getEvents() {
 //throw CPollException("Poll::getEvents() not implemented");
 		return active ? (Events::all) : (Events::none);
 	}
-	int32_t Poll::waitAndDispatch() {
-		return _doEPoll(-1);
+	Events Poll::waitAndDispatch() {
+		return _doEPoll(-1) <= 0 ? Events::none : Events::all;
 	}
 	void Poll::fillEPollEvents(Handle& h, epoll_event& evt, Events e) {
 		evt.events = eventsToEPoll(e);
@@ -2026,3 +2078,4 @@ namespace CP
 	}
 
 }
+
