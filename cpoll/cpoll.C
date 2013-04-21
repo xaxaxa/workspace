@@ -1153,7 +1153,7 @@ namespace CP
 		protocol = p;
 	}
 	void Socket::init(int32_t d, int32_t t, int32_t p) {
-		File::init(socket(d, t | SOCK_CLOEXEC, p));
+		File::init(socket(d, t | SOCK_CLOEXEC | SOCK_NONBLOCK, p));
 		addressFamily = d;
 		type = t;
 		protocol = p;
@@ -1242,7 +1242,7 @@ namespace CP
 		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
 		unsigned int i;
 		for (i = 0; i < hosts.size(); i++) {
-			int _f = socket(hosts[i]->addressFamily, socktype | SOCK_CLOEXEC, proto);
+			int _f = socket(hosts[i]->addressFamily, socktype | SOCK_CLOEXEC | SOCK_NONBLOCK, proto);
 			if (_f < 0) continue;
 			int32_t tmp12345 = 1;
 			setsockopt(_f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
@@ -1297,7 +1297,7 @@ namespace CP
 		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
 		unsigned int i;
 		for (i = 0; i < hosts.size(); i++) {
-			int _f = socket(hosts[i]->addressFamily, socktype, proto);
+			int _f = socket(hosts[i]->addressFamily, socktype | SOCK_CLOEXEC | SOCK_NONBLOCK, proto);
 			if (_f < 0) continue;
 			int size = hosts[i]->getSockAddrSize();
 			uint8_t tmp[size];
@@ -1321,11 +1321,7 @@ namespace CP
 		return sock;
 	}
 	HANDLE Socket::acceptHandle() {
-		HANDLE h = ::accept4(handle, NULL, NULL, SOCK_CLOEXEC);
-		if (h < 0) {
-			int32_t e = errno;
-			onError(e);
-		}
+		HANDLE h = ::accept4(handle, NULL, NULL, SOCK_CLOEXEC | SOCK_NONBLOCK);
 		return h;
 	}
 	void Socket::connect(const sockaddr* addr, int32_t addr_size, const Callback& cb) {
@@ -1414,7 +1410,7 @@ namespace CP
 			Handle(handle), mask(mask) {
 	}
 	SignalFD::SignalFD(const sigset_t& mask, int32_t flags) :
-			Handle(signalfd(-1, &mask, flags | SFD_CLOEXEC)), mask(mask) {
+			Handle(signalfd(-1, &mask, flags | SFD_CLOEXEC | SFD_NONBLOCK)), mask(mask) {
 	}
 	bool SignalFD::dispatch(Events event, const EventData& evtd, bool confident) {
 		Signal sig[MAX_EVENTS];
@@ -1479,12 +1475,12 @@ namespace CP
 		setInterval(interval_ms);
 	}
 	void Timer::init(struct timespec interval) {
-		Handle::init(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC));
+		Handle::init(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK));
 		Timer_doinit(this);
 		setInterval(interval);
 	}
 	void Timer::init(uint64_t interval_ms) {
-		Handle::init(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC));
+		Handle::init(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK));
 		Timer_doinit(this);
 		setInterval(interval_ms);
 	}
@@ -1565,7 +1561,7 @@ namespace CP
 			File(handle) {
 	}
 	EventFD::EventFD(uint32_t initval, int32_t flags) :
-			File(eventfd(initval, flags | EFD_CLOEXEC)) {
+			File(eventfd(initval, flags | EFD_CLOEXEC | EFD_NONBLOCK)) {
 	}
 	bool EventFD::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate, bool confident) {

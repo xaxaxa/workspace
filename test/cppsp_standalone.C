@@ -104,7 +104,7 @@ struct serverThread
 CP::Socket listensock;
 void* thread1(void* v) {
 	serverThread* thr=(serverThread*)v;
-	Poll p(true);	//enable edge triggered mode
+	Poll p;	//enable edge triggered mode
 	
 	/*
 	p.add(thr->efd);
