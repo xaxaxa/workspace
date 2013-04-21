@@ -48,7 +48,7 @@
 								<option id="gnu.cpp.link.option.paths.1343058210" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="../../lib/"/>
 								</option>
-								<option id="gnu.cpp.link.option.libs.1289669082" superClass="gnu.cpp.link.option.libs" valueType="libs">
+								<option id="gnu.cpp.link.option.libs.1289669082" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="curl"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1863145494" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -100,13 +100,13 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1619156733" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../include"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.308236905" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.308236905" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -march=native" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.other.pic.1491174781" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1689339885" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.2109293881" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.419932455" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
-								<option id="gnu.cpp.link.option.flags.198589648" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-fPIC" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.198589648" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-fPIC -march=native" valueType="string"/>
 								<option id="gnu.cpp.link.option.shared.1004219451" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.1028458235" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="../../lib/"/>
