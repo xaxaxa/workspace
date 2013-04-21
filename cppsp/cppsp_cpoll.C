@@ -15,7 +15,7 @@ namespace cppsp
 			Request(s), s(s) {
 	}
 	
-	void CPollRequest::readHeaders(const Delegate<void()>& cb) {
+	void CPollRequest::readHeaders(const Delegate<void(bool)>& cb) {
 		this->tmp_cb = cb;
 		this->firstLine = true;
 		_beginRead();
@@ -26,7 +26,7 @@ namespace cppsp
 		input.readTo("\r\n", 2, ms, CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
 	}
 	void CPollRequest::_readCB(int i) {
-		if (i <= 0) goto fail;
+		if (i <= 0) goto end;
 		//write(2, ms.data(), ms.length());
 		if (firstLine) {
 			firstLine = false;
@@ -84,13 +84,15 @@ namespace cppsp
 			headers.insert(make_pair(name, value));
 		}
 		if (input.eof) {
-			fail: _endRead();
+			end: _endRead(!firstLine);
 			return;
 		}
 		_beginRead();
+		return;
+		fail: _endRead(false);
 	}
-	void CPollRequest::_endRead() {
-		tmp_cb();
+	void CPollRequest::_endRead(bool success) {
+		tmp_cb(success);
 	}
 	CPollRequest::~CPollRequest() {
 	}
