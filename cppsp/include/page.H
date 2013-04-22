@@ -56,6 +56,7 @@ namespace cppsp
 		Callback _cb;
 		map<string, string, ci_less> headers;
 		const char* statusName;
+		iovec iov[2];
 		int statusCode;
 
 		bool headersWritten;

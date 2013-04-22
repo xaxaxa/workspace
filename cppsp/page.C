@@ -190,8 +190,9 @@ namespace cppsp
 				}
 				Response_doWriteHeaders(this, sw);
 			}
-			tmpbuffer.write(this->buffer.data(), this->buffer.length());
-			outputStream->write(tmpbuffer.data(), tmpbuffer.length(), { &Response::_writeCB, this });
+			iov[0]= {tmpbuffer.data(), (size_t)tmpbuffer.length()};
+			iov[1]= {buffer.data(), (size_t)buffer.length()};
+			outputStream->writevAll(iov, 2, { &Response::_writeCB, this });
 			return;
 		} else {
 			if (buffer.length() <= 0) {
