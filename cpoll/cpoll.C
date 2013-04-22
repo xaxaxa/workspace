@@ -314,6 +314,58 @@ namespace CP
 		Stream_beginRead1(This);
 	}
 
+	void Stream::_readvCB(int r) {
+		if (r <= 0) {
+			_readvAll.cb(_readvAll.br);
+			return;
+		}
+		_readvAll.br += r;
+		while (r > 0 && _readvAll.i < _readvAll.iovcnt) {
+			if ((int) _readvAll.iov[_readvAll.i].iov_len > r) {
+				_readvAll.iov[_readvAll.i].iov_base = ((uint8_t*) _readvAll.iov[_readvAll.i].iov_base)
+						+ r;
+				_readvAll.iov[_readvAll.i].iov_len -= r;
+				break;
+			} else {
+				r -= _readvAll.iov[_readvAll.i].iov_len;
+				_readvAll.i++;
+			}
+		}
+		_beginReadv();
+	}
+	void Stream::_beginReadv() {
+		if (_readvAll.i < _readvAll.iovcnt) readv(_readvAll.iov + _readvAll.i,
+				_readvAll.iovcnt - _readvAll.i, { &Stream::_readvCB, this });
+		else {
+			_readvAll.cb(_readvAll.br);
+		}
+	}
+	void Stream::_writevCB(int r) {
+		if (r <= 0) {
+			_writevAll.cb(_writevAll.br);
+			return;
+		}
+		_writevAll.br += r;
+		while (r > 0 && _writevAll.i < _writevAll.iovcnt) {
+			if ((int) _writevAll.iov[_writevAll.i].iov_len > r) {
+				_writevAll.iov[_writevAll.i].iov_base =
+						((uint8_t*) _writevAll.iov[_writevAll.i].iov_base) + r;
+				_writevAll.iov[_writevAll.i].iov_len -= r;
+				break;
+			} else {
+				r -= _writevAll.iov[_writevAll.i].iov_len;
+				_writevAll.i++;
+			}
+		}
+		_beginWritev();
+	}
+	void Stream::_beginWritev() {
+		if (_writevAll.i < _writevAll.iovcnt) writev(_writevAll.iov + _writevAll.i,
+				_writevAll.iovcnt - _writevAll.i, { &Stream::_writevCB, this });
+		else {
+			_writevAll.cb(_writevAll.br);
+		}
+	}
 	int Stream::readToEnd(BufferedOutput& out, int32_t bufSize) {
 		int r = 0;
 		while (true) {
@@ -843,6 +895,9 @@ namespace CP
 			case Operations::read:
 				r = read(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
 				break;
+			case Operations::readv:
+				r = readv(ed.misc.bufferIOv.iov, ed.misc.bufferIOv.iovcnt);
+				break;
 			case Operations::readAll:
 				r = read(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
 						ed.misc.bufferIO.len - ed.misc.bufferIO.len_done);
@@ -861,6 +916,9 @@ namespace CP
 				return true;
 			case Operations::write:
 				r = write(ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
+				break;
+			case Operations::writev:
+				r = writev(ed.misc.bufferIOv.iov, ed.misc.bufferIOv.iovcnt);
 				break;
 			case Operations::writeAll:
 				r = write(((char*) ed.misc.bufferIO.buf) + ed.misc.bufferIO.len_done,
@@ -1008,6 +1066,13 @@ namespace CP
 		ed->misc.bufferIO.len = len;
 		ed->op = op;
 	}
+	void File::fillIOEventHandlerData(EventHandlerData* ed, iovec* iov, int iovcnt,
+			const Callback& cb, Events e, Operations op) {
+		ed->cb = cb;
+		ed->misc.bufferIOv.iov = iov;
+		ed->misc.bufferIOv.iovcnt = iovcnt;
+		ed->op = op;
+	}
 	void File::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
 		if (!_supportsEPoll) {
 			asdfg: int32_t r = read(buf, len);
@@ -1133,6 +1198,36 @@ namespace CP
 		ed->cb = cb;
 		ed->op = Operations::none;
 		endAddEvent(event, repeat);
+	}
+	int32_t File::readv(iovec* iov, int iovcnt) {
+		return ::readv(handle, iov, iovcnt);
+	}
+	int32_t File::writev(iovec* iov, int iovcnt) {
+		return ::writev(handle, iov, iovcnt);
+	}
+	void File::readv(iovec* iov, int iovcnt, const Callback& cb, bool repeat) {
+		if (!_supportsEPoll) {
+			asdfg: int32_t r = readv(iov, iovcnt);
+			cb(r);
+			if (repeat && r > 0) goto asdfg;
+			return;
+		}
+		static const Events e = Events::in;
+		EventHandlerData* ed = beginAddEvent(e);
+		fillIOEventHandlerData(ed, iov, iovcnt, cb, e, Operations::readv);
+		endAddEvent(e, repeat);
+	}
+	void File::writev(iovec* iov, int iovcnt, const Callback& cb, bool repeat) {
+		if (!_supportsEPoll) {
+			asdfg: int32_t r = writev(iov, iovcnt);
+			cb(r);
+			if (repeat && r > 0) goto asdfg;
+			return;
+		}
+		static const Events e = Events::out;
+		EventHandlerData* ed = beginAddEvent(e);
+		fillIOEventHandlerData(ed, iov, iovcnt, cb, e, Operations::writev);
+		endAddEvent(e, repeat);
 	}
 
 //Socket

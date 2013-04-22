@@ -300,9 +300,35 @@ namespace CP
 				int bufSize;
 				int br;
 			} _readChunked;
+			struct
+			{
+				DelegateBase<void(int)> cb;
+				iovec* iov;
+				int iovcnt;
+				int i, br;
+			} _readvAll;
 		};
+		union
+		{
+			struct
+			{
+				DelegateBase<void(int)> cb;
+				iovec* iov;
+				int iovcnt;
+				int i, br;
+			} _writevAll;
+		};
+		void _readvCB(int r);
+		void _beginReadv();
+		void _writevCB(int r);
+		void _beginWritev();
+
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0; //required
+		virtual int32_t readv(iovec* iov, int iovcnt) { //optional
+			if (iovcnt <= 0) return 0;
+			return read(iov[0].iov_base, iov[0].iov_len);
+		}
 		virtual int32_t readAll(void* buf, int32_t len) { //optional
 			int off = 0;
 			while (off < len) {
@@ -312,9 +338,34 @@ namespace CP
 			}
 			return off;
 		}
+		//note: may destroy the iov array
+		virtual int32_t readvAll(iovec* iov, int iovcnt) { //optional
+			int i = 0;
+			int br = 0;
+			while (i < iovcnt) {
+				int r = readv(iov + i, iovcnt - i);
+				if (r <= 0) break;
+				br += r;
+				while (r > 0 && i < iovcnt) {
+					if ((int) iov[i].iov_len > r) {
+						iov[i].iov_base = ((uint8_t*) iov[i].iov_base) + r;
+						iov[i].iov_len -= r;
+						break;
+					} else {
+						r -= iov[i].iov_len;
+						i++;
+					}
+				}
+			}
+			return br;
+		}
 		virtual int readToEnd(BufferedOutput& out, int32_t bufSize = 4096);
 		virtual int readChunked(BufferedOutput& out, int32_t len, int32_t bufSize = 4096);
 		virtual int32_t write(const void* buf, int32_t len)=0; //required
+		virtual int32_t writev(iovec* iov, int iovcnt) { //optional
+			if (iovcnt <= 0) return 0;
+			return write(iov[0].iov_base, iov[0].iov_len);
+		}
 		virtual int32_t writeAll(const void* buf, int32_t len) { //optional
 			int off = 0;
 			while (off < len) {
@@ -323,6 +374,26 @@ namespace CP
 				off += tmp;
 			}
 			return off;
+		}
+		virtual int32_t writevAll(iovec* iov, int iovcnt) { //optional
+			int i = 0;
+			int br = 0;
+			while (i < iovcnt) {
+				int r = writev(iov + i, iovcnt - i);
+				if (r <= 0) break;
+				br += r;
+				while (r > 0 && i < iovcnt) {
+					if ((int) iov[i].iov_len > r) {
+						iov[i].iov_base = ((uint8_t*) iov[i].iov_base) + r;
+						iov[i].iov_len -= r;
+						break;
+					} else {
+						r -= iov[i].iov_len;
+						i++;
+					}
+				}
+			}
+			return br;
 		}
 
 		//async
@@ -341,26 +412,54 @@ namespace CP
 		 false) { //optional (required for async)
 		 }*/
 		virtual void read(void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
+		virtual void readv(iovec* iov, int iovcnt, const Callback& cb, bool repeat = false) {
+			if (iovcnt <= 0) {
+				cb(0);
+				return;
+			}
+			return read(iov[0].iov_base, iov[0].iov_len, cb, repeat);
+		}
 		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
 			read(buf, len, cb, true);
 		}
+		inline void repeatReadv(iovec* iov, int iovcnt, const Callback& cb) {
+			readv(iov, iovcnt, cb, true);
+		}
 		virtual void readAll(void* buf, int32_t len, const Callback& cb)=0;
+		virtual void readvAll(iovec* iov, int iovcnt, const Callback& cb) {
+			_readvAll= {cb,iov,iovcnt,0,0};
+			_beginReadv();
+		}
 		virtual void readToEnd(BufferedOutput& out, const Callback& cb, int bufSize = 4096);
 		virtual void readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int bufSize =
 				4096);
 
 		virtual void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false)=0;
+		virtual void writev(iovec* iov, int iovcnt, const Callback& cb, bool repeat = false) {
+			if (iovcnt <= 0) {
+				cb(0);
+				return;
+			}
+			return write(iov[0].iov_base, iov[0].iov_len, cb, repeat);
+		}
 		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
 			write(buf, len, cb, true);
 		}
+		inline void repeatWritev(iovec* iov, int iovcnt, const Callback& cb) {
+			writev(iov, iovcnt, cb, true);
+		}
 		virtual void writeAll(const void* buf, int32_t len, const Callback& cb)=0;
+		virtual void writevAll(iovec* iov, int iovcnt, const Callback& cb) {
+			_writevAll= {cb,iov,iovcnt,0,0};
+			_beginWritev();
+		}
 		//only for async read/write operations
 		virtual void cancelRead()=0;
 		virtual void cancelWrite()=0;
 
 		//=========misc===========
 		//sync
-		virtual void close()=0; //may block
+		virtual void close()=0;//may block
 		virtual void flush()=0;
 
 		//async
@@ -615,7 +714,7 @@ namespace CP
 		: uint8_t
 		{
 			none = 0, read = 1, write, send, recv, sendTo, recvFrom, accept, readAll, writeAll,
-		sendAll, recvAll, shutdown, connect, close, lastItem
+		sendAll, recvAll, shutdown, connect, close, readv, writev, lastItem
 	};
 
 	struct EventHandlerData
@@ -636,6 +735,11 @@ namespace CP
 				int32_t flags;
 				int32_t len_done;
 			} bufferIO;
+			struct
+			{
+				iovec* iov;
+				int iovcnt;
+			} bufferIOv;
 			struct
 			{
 				int32_t how;
@@ -708,11 +812,13 @@ namespace CP
 		EventHandlerData* beginAddEvent(Events event);
 		void endAddEvent(Events event, bool repeat = false);
 		void cancel(Events event);
-		int32_t read(void* buf, int32_t len);
+		int32_t read(void* buf, int32_t len) override;
+		int32_t readv(iovec* iov, int iovcnt) override;
 		int32_t readAll(void* buf, int32_t len) {
 			return Stream::readAll(buf, len);
 		}
-		int32_t write(const void* buf, int32_t len);
+		int32_t write(const void* buf, int32_t len) override;
+		int32_t writev(iovec* iov, int iovcnt) override;
 		int32_t writeAll(const void* buf, int32_t len) {
 			return Stream::writeAll(buf, len);
 		}
@@ -734,17 +840,15 @@ namespace CP
 		Events dispatchMultiple(Events events, Events confident, const EventData& evtd) override;
 		inline void fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
 				const Callback& cb, Events e, Operations op);
-		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false);
-		inline void repeatRead(void* buf, int32_t len, const Callback& cb) {
-			read(buf, len, cb, true);
-		}
-		void readAll(void* buf, int32_t len, const Callback& cb);
+		inline void fillIOEventHandlerData(EventHandlerData* ed, iovec* iov, int iovcnt,
+				const Callback& cb, Events e, Operations op);
+		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false) override;
+		void readv(iovec* iov, int iovcnt, const Callback& cb, bool repeat = false) override;
+		void readAll(void* buf, int32_t len, const Callback& cb) override;
 
-		void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false);
-		inline void repeatWrite(const void* buf, int32_t len, const Callback& cb) {
-			write(buf, len, cb, true);
-		}
-		void writeAll(const void* buf, int32_t len, const Callback& cb);
+		void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false) override;
+		void writev(iovec* iov, int iovcnt, const Callback& cb, bool repeat = false) override;
+		void writeAll(const void* buf, int32_t len, const Callback& cb) override;
 
 		void recv(void* buf, int32_t len, int32_t flags, const Callback& cb, bool repeat = false);
 		inline void repeatRecv(void* buf, int32_t len, int32_t flags, const Callback& cb) {
