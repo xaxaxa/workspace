@@ -9,6 +9,7 @@
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
 #include <atomic_ops.h>
+#include <list>
 
 #define rmb() AO_nop_read()
 #define wmb() AO_nop_write()
@@ -216,15 +217,19 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 		CP::Poll& p;
 		RGC::Ref<Socket> s;
 		cppsp::CPollRequest req;
-		cppsp::Response resp;
+		list<cppsp::Response> resp;
+		list<cppsp::Response>::iterator lastFlushed;
+		list<cppsp::Response>::iterator flushTo;
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t buf[4096];
 		string path;
+		vector<iovec> tmpiov;
 		bool keepAlive;
-		handler(serverThread& thr,CP::Poll& p,Socket* s):thr(thr),p(p),s(s),req(*s),resp(*s) {
+		handler(serverThread& thr,CP::Poll& p,Socket* s):thr(thr),p(p),s(s),req(*s) {
 			//printf("handler()\n");
 			this->retain();
+			flushTo=resp.begin();
 			req.readHeaders({&handler::readCB,this});
 		}
 		void readCB(bool success) {
@@ -235,7 +240,6 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 			auto it=req.headers.find("connection");
 			if(it!=req.headers.end() && (*it).second=="close")keepAlive=false;
 			else keepAlive=true;
-			resp.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
 			//printf("readCB()\n");
 			char tmp[req.path.length()+rootDir.length()];
 			int l=cppsp::combinePathChroot(rootDir.c_str(),req.path.c_str(),tmp);
@@ -244,17 +248,22 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 		}
 		
 		void loadCB(Page* p, exception* ex) {
+			resp.emplace(resp.end(),*s);
+			Response& response=resp.back();
+			response.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
 			//printf("loadCB()\n");
 			if(ex!=NULL) {
-				cppsp::handleError(ex,resp,path);
-				resp.flush( { &handler::flushCB, this });
+				cppsp::handleError(ex,response,path);
+				flushTo=resp.end();
+				startFlush();
 				goto doFinish;
 			}
 			{
+				
 				//this->p=p;
 				//p->filePath=path;
 				p->request=&req;
-				p->response=&resp;
+				p->response=&response;
 				p->poll=&this->p;
 				p->server=&_server;
 				p->handleRequest({&handler::handleRequestCB,this});
@@ -266,28 +275,66 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 			finalize();
 		}
 		void sockReadCB(int r) {
-			if(r<=0) delete this;
+			if(r<=0) {
+				delete this;
+			}
 		}
 		void flushCB(Response& resp) {
 			//s->shutdown(SHUT_WR);
 			//release();
 			//finalize();
 		}
-		void handleRequestCB(Page& p) {
-			p.release();
+		
+		bool flushing=false;
+		void startFlush() {
+			if(flushing) return;
+			tmpiov.clear();
+			for(auto it=resp.begin();it!=flushTo;it++) {
+				struct {
+					handler* This;
+					void operator()(iovec* iov, int iovcnt) {
+						for(int i=0;i<iovcnt;i++)
+							This->tmpiov.push_back(iov[i]);
+					}
+				} cb {this};
+				(*it).flushTo(&cb);
+				lastFlushed=it;
+			}
+			if(tmpiov.size()>0) {
+				flushing=true;
+				s->writevAll(&tmpiov[0],tmpiov.size(),{&handler::flushResponseCB,this});
+			}
+		}
+		void flushResponseCB(int r) {
+			flushing=false;
+			int n=1;
+			for(auto it=resp.begin();it!=lastFlushed;it++)
+				n++;
+			for(int i=0;i<n;i++) resp.pop_front();
+			startFlush();
+		}
+		void handleRequestCB(Page& p, bool recycle) {
+			if(recycle) {
+				flushTo=resp.end();
+				startFlush();
+				finalize();
+			} else {
+				p.release();
+				s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			}
 			//s->shutdown(SHUT_WR);
 			//release();
 			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
-			finalize();
+			//finalize();
 		}
 		void finalize() {
 			if(keepAlive) {
 				req.reset();
-				resp.reset();
 				req.readHeaders({&handler::readCB,this});
 			} else s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 		}
 		~handler() {
+			p.del(*s);
 			//printf("~handler()\n");
 		}
 	}* hdlr=new handler(thr,p,&s);

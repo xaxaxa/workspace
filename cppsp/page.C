@@ -78,7 +78,10 @@ namespace cppsp
 	}
 	void Page::flush() {
 		if (response->closed) finalizeCB();
-		else response->flush( { &Page::_flushCB, this });
+		else {
+			//response->flush( { &Page::_flushCB, this });
+			cb(*this, true);
+		}
 	}
 	string Page::mapPath(string path) {
 		return server->mapPath(mapRelativePath(path));
@@ -117,7 +120,7 @@ namespace cppsp
 		finalizeCB();
 	}
 	void Page::finalizeCB() {
-		if (this->cb != nullptr) cb(*this);
+		//if (this->cb != nullptr) cb(*this);
 	}
 
 	Request::Request(CP::Stream& inp) :
@@ -173,23 +176,26 @@ namespace cppsp
 		}
 		sw.write("\r\n");
 	}
+	void Response_doWriteHeaders(Response* This) {
+		This->headersWritten = true;
+		{
+			CP::StreamWriter sw(This->tmpbuffer);
+			auto it = This->headers.find("Content-Length");
+			if (it == This->headers.end()) {
+				char tmps[32];
+				snprintf(tmps, 32, "%i", This->buffer.length());
+				This->headers.insert(make_pair("Content-Length", tmps));
+			}
+			Response_doWriteHeaders(This, sw);
+		}
+	}
 	void Response::flush(Callback cb) {
 		//printf("flush\n");
 		if (closed) throw runtime_error("connection has already been closed by the client");
 		output.flush();
 		this->_cb = cb;
 		if (!headersWritten) {
-			headersWritten = true;
-			{
-				CP::StreamWriter sw(tmpbuffer);
-				auto it = this->headers.find("Content-Length");
-				if (it == this->headers.end()) {
-					char tmps[32];
-					snprintf(tmps, 32, "%i", buffer.length());
-					this->headers.insert(make_pair("Content-Length", tmps));
-				}
-				Response_doWriteHeaders(this, sw);
-			}
+			Response_doWriteHeaders(this);
 			iov[0]= {tmpbuffer.data(), (size_t)tmpbuffer.length()};
 			iov[1]= {buffer.data(), (size_t)buffer.length()};
 			outputStream->writevAll(iov, 2, { &Response::_writeCB, this });
@@ -213,7 +219,27 @@ namespace cppsp
 		tmpbuffer.clear();
 		_cb(*this);
 	}
-	
+	void Response::flushTo(Delegate<void(iovec*, int)> cb) {
+		if (closed) {
+			cb(nullptr, 0);
+			return;
+		}
+		output.flush();
+		if (!headersWritten) {
+			Response_doWriteHeaders(this);
+			iov[0]= {tmpbuffer.data(), (size_t)tmpbuffer.length()};
+			iov[1]= {buffer.data(), (size_t)buffer.length()};
+			cb(iov, 2);
+			return;
+		} else {
+			if (buffer.length() <= 0) {
+				cb(nullptr, 0);
+				return;
+			}
+			iov[0]= {buffer.data(), (size_t)buffer.length()};
+			cb(iov, 1);
+		}
+	}
 	void Request::reset() {
 		headers.clear();
 		queryString.clear();
