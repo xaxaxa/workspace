@@ -1758,7 +1758,7 @@ namespace CP
 				return;
 			}
 			checkError(r);
-			h.retain();
+			//h.retain();
 			active++;
 		} else if (new_e == Events::none) {
 			//cout << "deleted " << h.handle << endl;
@@ -1906,7 +1906,7 @@ namespace CP
 			//XXX: see previous comment about EPOLL_CTL_DEL
 			epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
 
-			h.release();
+			//h.release();
 			//tmp_deleted.insert(&h);
 			//has_deleted = true;
 			active--;
