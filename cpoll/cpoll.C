@@ -1793,19 +1793,21 @@ namespace CP
 		evtd.error = (event.events & EPOLLERR);
 		cur_handle = h->handle;
 		Events old_e = h->getEvents();
+		cur_deleted = false;
+		cur_handle = h->handle;
 		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
+		if (cur_deleted) goto aaa;
 		if (events != Events::none) {
 			EventData evtd;
 			evtd.hungUp = evtd.error = false;
-			cur_deleted = false;
-			cur_handle = h->handle;
 			do {
 				events = h->dispatchMultiple(events, Events::none, evtd);
-				if (cur_deleted) return 1;
+				if (cur_deleted) goto aaa;
 				events = events & h->getEvents();
 			} while (events != Events::none);
 		}
 		if (h->getEvents() != old_e) applyHandle(*h, old_e);
+		aaa: cur_handle = -1;
 		return 1;
 	}
 	static bool compareTmpEvent(const Poll::tmpevent& a, const Poll::tmpevent& b) {
@@ -1821,7 +1823,7 @@ namespace CP
 			tmpevents.clear();
 			std::sort(tmpevents1.begin(), tmpevents1.end(), compareTmpEvent);
 			Handle* last_h = NULL;
-			for (int i = 0; i < (int)tmpevents1.size(); i++) {
+			for (int i = 0; i < (int) tmpevents1.size(); i++) {
 				if (last_h == tmpevents1[i].h) continue;
 				last_h = tmpevents1[i].h;
 				_applyHandle(*tmpevents1[i].h, tmpevents1[i].old_events);
