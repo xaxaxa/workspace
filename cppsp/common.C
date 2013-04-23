@@ -465,7 +465,18 @@ namespace cppsp
 	public:
 		map<string, loadedPage*> cache;
 		vector<string> cxxopts;
+		timespec lastCheck { 0, 0 };
 		void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
+		bool shouldCheck() {
+			timespec tmp;
+			clock_gettime(CLOCK_MONOTONIC, &tmp);
+			timespec tmp1 = tmp;
+			tmp1.tv_sec -= 2;
+			if (tsCompare(lastCheck, tmp1) < 0) {
+				lastCheck = tmp;
+				return true;
+			} else return false;
+		}
 	};
 
 	void cppspManager::loadPage(Poll& p, string wd, string path,
@@ -482,7 +493,7 @@ namespace cppsp
 		bool c = false;
 		if (lp.compiling) goto asdf;
 		try {
-			c = shouldCompile(path);
+			c = (!lp1->loaded || shouldCheck()) && shouldCompile(path);
 		} catch (exception& ex) {
 			cb(nullptr, &ex);
 			return;
