@@ -1033,9 +1033,16 @@ namespace CP
 	public:
 		static int32_t MAX_EVENTS;
 		epoll_event* curEvents;
+		struct tmpevent
+		{
+			Handle* h;
+			Events old_events;
+		};
+		vector<tmpevent> tmpevents;
 		int32_t curIndex, curLength;
 		int32_t active;
 		HANDLE cur_handle;
+		bool cur_deleted;
 		//bool debug;
 		//Events cur_last_events;
 		//map<HANDLE, Ref<Handle> > handles;

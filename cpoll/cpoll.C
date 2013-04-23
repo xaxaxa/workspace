@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <sstream>
 #include <sys/timerfd.h>
+#include <algorithm>
 
 namespace CP
 {
@@ -1027,18 +1028,6 @@ namespace CP
 		if (deletionFlag) return true;
 		//this->deletionFlag = NULL;
 		dispatching = tmp;
-		//cout << "clear event" << endl;
-
-		//cout << (eventData[eventToIndex(event)].state==EventHandlerData::States::once
-		//		? "true" : "false") << endl;
-		//if(evtd.hungUp) cout << "socket hung up" << endl;
-		//if(evtd.error) cout << "socket error" << endl;
-		//if(!b) cout << "doOperation returned false" << endl;
-		//cout << "b=" << b << endl;
-		///if (!b) ed.state = EventHandlerData::States::invalid;
-
-		//else cout << (int32_t)eventData[eventToIndex(event)].state << endl;
-		if (!tmp && onEventsChange != nullptr) onEventsChange(*this, preDispatchEvents);
 		return true;
 	}
 	Events File::dispatchMultiple(Events events, Events confident, const EventData& evtd) {
@@ -1058,10 +1047,6 @@ namespace CP
 		if (d) return ret;
 		this->deletionFlag = NULL;
 		dispatching = false;
-		if (onEventsChange != nullptr) {
-			//printf("onEventsChange\n");
-			onEventsChange(*this, preDispatchEvents);
-		}
 		return ret;
 	}
 	void File::fillIOEventHandlerData(EventHandlerData* ed, void* buf, int32_t len,
@@ -1617,7 +1602,7 @@ namespace CP
 	bool Timer::dispatch(Events event, const EventData& evtd, bool confident) {
 		if (event == Events::in) {
 			dispatching = true;
-			bool r = running();
+			//bool r = running();
 			uint64_t tmp;
 			bool d(false);
 			this->deletionFlag = &d;
@@ -1631,7 +1616,6 @@ namespace CP
 			if (d) return true;
 			dispatching = false;
 			deletionFlag = NULL;
-			if (r != running()) onEventsChange(*this, r ? Events::in : Events::none);
 			return true;
 		}
 		return true;
@@ -1744,6 +1728,20 @@ namespace CP
 			}
 			return;
 		}
+		Events new_added = (old_e ^ new_e) & new_e;
+		if (new_added != Events::none) {
+			EventData evtd;
+			evtd.hungUp = evtd.error = false;
+			cur_deleted = false;
+			cur_handle = h.handle;
+			while (new_added != Events::none) {
+				new_added = h.dispatchMultiple(new_added, Events::none, evtd);
+				if (cur_deleted) return;
+				new_e = h.getEvents();
+				new_added = new_added & new_e;
+			}
+		}
+		if (new_e == old_e) return;
 		epoll_event evt;
 		if (old_e == Events::none) {
 			fillEPollEvents(h, evt, new_e);
@@ -1775,6 +1773,7 @@ namespace CP
 		} else {
 			fillEPollEvents(h, evt, new_e);
 			//cout << "modified " << h.handle << endl;
+			//printf("epoll_ctl: old_e=%i new_e=%i\n", old_e, new_e);
 			checkError(epoll_ctl(this->handle, EPOLL_CTL_MOD, h.handle, &evt));
 			uint32_t ep_e = eventsToEPoll(new_e);
 			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
@@ -1788,36 +1787,45 @@ namespace CP
 	int32_t Poll::_doDispatch(const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
 		if (unlikely(h==NULL)) return 0;
-//if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
-		int32_t ret = 0;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-//cerr << "evt=" << (int32_t)evt << endl;
-
-		/*for(int32_t i=0;i<numEvents;i++) {
-		 Events e=indexToEvent(i);
-		 uint32_t ep=eventToEPoll(e);
-		 if(event.events&ep != 0)
-		 evt |= (event_t)e;
-		 }*/
-//cout << "handle fd: " << h->handle << endl;
-//cout << "getevents: " << (int32_t)(h->getEvents()) << endl;
 		cur_handle = h->handle;
-//cur_last_events = h->getEvents();
-		if (h->dispatchMultiple((Events) evt, (Events) evt, evtd) != Events::none) ret = 1;
-//if (unlikely(has_deleted) && tmp_deleted.find(h) != tmp_deleted.end()) return 0;
-//Events new_events = h->getEvents();
-//cout << (int32_t)new_events << " " << (int32_t)cur_last_events << endl;
-//if (new_events != cur_last_events) _applyHandle(*h, cur_last_events);
-//else cout << "new_events==cur_last_events==" << (int32_t)new_events << endl;
-		return ret;
+		Events old_e = h->getEvents();
+		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
+		if (events != Events::none) {
+			EventData evtd;
+			evtd.hungUp = evtd.error = false;
+			cur_deleted = false;
+			cur_handle = h->handle;
+			do {
+				events = h->dispatchMultiple(events, Events::none, evtd);
+				if (cur_deleted) return 1;
+				events = events & h->getEvents();
+			} while (events != Events::none);
+		}
+		if (h->getEvents() != old_e) applyHandle(*h, old_e);
+		return 1;
+	}
+	static bool compareTmpEvent(const Poll::tmpevent& a, const Poll::tmpevent& b) {
+		return a.h < b.h;
 	}
 	int32_t Poll::_doEPoll(int32_t timeout) {
 		if (active <= 0) {
 			//printf("active=%i\n", active);
 			return -1;
+		}
+		while (tmpevents.size() > 0) {
+			vector<tmpevent> tmpevents1 = tmpevents;
+			tmpevents.clear();
+			std::sort(tmpevents1.begin(), tmpevents1.end(), compareTmpEvent);
+			Handle* last_h = NULL;
+			for (int i = 0; i < (int)tmpevents1.size(); i++) {
+				if (last_h == tmpevents1[i].h) continue;
+				last_h = tmpevents1[i].h;
+				_applyHandle(*tmpevents1[i].h, tmpevents1[i].old_events);
+			}
 		}
 		epoll_event evts[MAX_EVENTS];
 		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
@@ -1860,7 +1868,8 @@ namespace CP
 	void Poll::applyHandle(Handle& h, Events old_e) {
 //cout << "applyHandle" << endl;
 //if (h.handle == cur_handle) return;
-		_applyHandle(h, old_e);
+		//_applyHandle(h, old_e);
+		tmpevents.push_back( { &h, old_e });
 	}
 	void Poll::add(Handle& h) {
 //h.retain();
@@ -1874,6 +1883,7 @@ namespace CP
 //tmp_deleted.push_back(&h);
 //throw 0;
 //printf("Poll::del()\n");
+		if (h.handle == cur_handle) cur_deleted = true;
 		if (h.getEvents() != Events::none) {
 			/*if (h.handle < 0) {
 			 //throw runtime_error("test");
