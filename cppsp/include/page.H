@@ -69,8 +69,6 @@ namespace cppsp
 				headersWritten = true;
 			}
 		}*/
-		//iov is guaranteed to be valid until the next flush or flushTo call
-		virtual void flushTo(Delegate<void(iovec* iov,int iovcnt)> cb);
 		virtual void flush(Callback cb);
 		virtual void clear();
 		template<class ... T>
@@ -95,9 +93,7 @@ namespace cppsp
 	class Page: public RGC::Object
 	{
 	public:
-		//if recycle is true, the web server is responsible for flushing the response
-		//web server will call the flushCB() method when it is done flushing
-		typedef Delegate<void(Page&, bool recycle)> Callback;
+		typedef Delegate<void(Page&)> Callback;
 		Page();
 		Page(Request& req, Response& resp);
 		RGC::Ref<Request> request;
