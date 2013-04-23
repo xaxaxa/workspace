@@ -140,6 +140,15 @@ void* thread1(void* v) {
 	} cb {p, thr};
 	thr->listensock->repeatAccept(&cb);
 	p.add(*thr->listensock);
+	Timer t((uint64_t)2000);
+	struct {
+		serverThread* thr;
+		void operator()(int count) {
+			updateTime(thr->mgr);
+		}
+	} cb1 {thr};
+	t.setCallback(&cb1);
+	p.add(t);
 	p.loop();
 	
 }

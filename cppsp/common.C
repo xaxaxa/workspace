@@ -349,6 +349,7 @@ namespace cppsp
 	{
 	public:
 		loadedPage& operator=(const loadedPage& other)=delete;
+		timespec lastCheck {0, 0};
 		void* dlHandle;
 		const uint8_t* stringTable;
 		int stringTableLen;
@@ -465,15 +466,13 @@ namespace cppsp
 	public:
 		map<string, loadedPage*> cache;
 		vector<string> cxxopts;
-		timespec lastCheck { 0, 0 };
+		timespec curTime { 0, 0 };
 		void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
-		bool shouldCheck() {
-			timespec tmp;
-			clock_gettime(CLOCK_MONOTONIC, &tmp);
-			timespec tmp1 = tmp;
+		bool shouldCheck(loadedPage& p) {
+			timespec tmp1 = curTime;
 			tmp1.tv_sec -= 2;
-			if (tsCompare(lastCheck, tmp1) < 0) {
-				lastCheck = tmp;
+			if (tsCompare(p.lastCheck, tmp1) < 0) {
+				p.lastCheck = curTime;
 				return true;
 			} else return false;
 		}
@@ -493,7 +492,7 @@ namespace cppsp
 		bool c = false;
 		if (lp.compiling) goto asdf;
 		try {
-			c = (!lp1->loaded || shouldCheck()) && shouldCompile(path);
+			c = (!lp1->loaded || shouldCheck(*lp1)) && shouldCompile(path);
 		} catch (exception& ex) {
 			cb(nullptr, &ex);
 			return;
@@ -547,7 +546,12 @@ namespace cppsp
 	void cppspManager_delete(cppspManager* mgr) {
 		delete mgr;
 	}
-
+	void updateTime() {
+		clock_gettime(CLOCK_MONOTONIC, &mgr.curTime);
+	}
+	void updateTime(cppspManager* mgr) {
+		clock_gettime(CLOCK_MONOTONIC, &mgr->curTime);
+	}
 	void handleError(exception* ex, cppsp::Response& resp, string path) {
 		resp.clear();
 		resp.headers["Content-Type"] = "text/html; charset=UTF-8";

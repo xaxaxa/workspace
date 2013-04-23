@@ -52,6 +52,8 @@ namespace cppsp
 			Delegate<void(Page*, exception* ex)> cb);
 	vector<string>& CXXOpts();
 	vector<string>& CXXOpts(cppspManager* mgr);
+	void updateTime();
+	void updateTime(cppspManager* mgr);
 	void handleError(exception* ex, cppsp::Response& resp, string path);
 }
 #endif /* COMMON_H_ */
