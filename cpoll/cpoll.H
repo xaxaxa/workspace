@@ -1028,7 +1028,7 @@ namespace CP
 	 };*/
 
 	//epoll wrapper
-	class Poll: public Handle
+	class EPoll: public Handle
 	{
 	public:
 		static int32_t MAX_EVENTS;
@@ -1048,8 +1048,8 @@ namespace CP
 		//map<HANDLE, Ref<Handle> > handles;
 		//set<Handle*> tmp_deleted;
 		//bool has_deleted;
-		Poll(HANDLE handle);
-		Poll();
+		EPoll(HANDLE handle);
+		EPoll();
 		void _applyHandle(Handle& h, Events old_e);
 		int32_t _doDispatch(const epoll_event& event);
 		int32_t _doEPoll(int32_t timeout);
@@ -1058,12 +1058,42 @@ namespace CP
 				override;
 		virtual Events getEvents() override;
 		virtual Events waitAndDispatch() override;
-		void fillEPollEvents(Handle& h, epoll_event& evt, Events e);
 
 		inline void applyHandle(Handle& h, Events old_e);
 		void add(Handle& h);
 		void del(Handle& h);
 	};
+	class NewEPoll: public Handle
+	{
+	public:
+		static int32_t MAX_EVENTS;
+		struct drainInfo
+		{
+			Handle* h;
+			Events new_e;
+		};
+		vector<drainInfo> _pending;
+		vector<drainInfo>* _draining;
+		Handle* _dispatchingHandle;
+		epoll_event* _curEvents;
+		int32_t _curIndex, _curLength;
+		bool _dispatchingDeleted;
+		NewEPoll(HANDLE h);
+		NewEPoll();
+		virtual bool dispatch(Events event, const EventData& evtd, bool confident) override;
+		virtual Events dispatchMultiple(Events event, Events confident, const EventData& evtd)
+				override;
+		virtual Events getEvents() override;
+		virtual Events waitAndDispatch() override;
+		void add(Handle& h);
+		void del(Handle& h);
+		bool _doIteration(int timeout);
+		void _doDispatch(const epoll_event& event);
+		void _drainHandle(Handle& h, Events new_e);
+		void _queueHandle(Handle& h, Events new_e);
+		void _applyHandle(Handle& h, Events old_e);
+	};
+	typedef NewEPoll Poll;
 	class StandardStream: public Stream
 	{
 	public:

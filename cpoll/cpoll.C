@@ -1697,18 +1697,23 @@ namespace CP
 		endAddEvent(e, false);
 	}
 
-//Poll
-	int32_t Poll::MAX_EVENTS(32);
-	Poll::Poll(HANDLE handle) :
+//EPoll
+	static void fillEPollEvents(Handle& h, epoll_event& evt, Events e) {
+		evt.events = eventsToEPoll(e);
+		evt.data.u64 = 0; //work around valgrind warning
+		evt.data.ptr = &h;
+	}
+	int32_t EPoll::MAX_EVENTS(32);
+	EPoll::EPoll(HANDLE handle) :
 			Handle(handle), curEvents(NULL), active(0), cur_handle(-1) {
 		disableSignals();
 	}
-	Poll::Poll() :
+	EPoll::EPoll() :
 			Handle(checkError(epoll_create1(EPOLL_CLOEXEC))), curEvents(NULL), active(0),
 					cur_handle(-1) {
 		disableSignals();
 	}
-	void Poll::_applyHandle(Handle& h, Events old_e) {
+	void EPoll::_applyHandle(Handle& h, Events old_e) {
 		if (!h._supportsEPoll) {
 			//if (debug) printf("_applyHandle: h=%i, h._supportsEPoll=false\n", h.handle);
 			return;
@@ -1784,7 +1789,7 @@ namespace CP
 			}
 		}
 	}
-	int32_t Poll::_doDispatch(const epoll_event& event) {
+	int32_t EPoll::_doDispatch(const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
 		if (unlikely(h==NULL)) return 0;
 		EventData evtd;
@@ -1810,10 +1815,10 @@ namespace CP
 		aaa: cur_handle = -1;
 		return 1;
 	}
-	static bool compareTmpEvent(const Poll::tmpevent& a, const Poll::tmpevent& b) {
+	static bool compareTmpEvent(const EPoll::tmpevent& a, const EPoll::tmpevent& b) {
 		return a.h < b.h;
 	}
-	int32_t Poll::_doEPoll(int32_t timeout) {
+	int32_t EPoll::_doEPoll(int32_t timeout) {
 		if (active <= 0) {
 			//printf("active=%i\n", active);
 			return -1;
@@ -1847,44 +1852,39 @@ namespace CP
 
 		return n;
 	}
-	bool Poll::dispatch(Events event, const EventData& evtd, bool confident) {
+	bool EPoll::dispatch(Events event, const EventData& evtd, bool confident) {
 		return _doEPoll(0) > 0;
 	}
-	Events Poll::dispatchMultiple(Events event, Events confident, const EventData& evtd) {
-//throw CPollException("Poll::dispatch() not implemented");
+	Events EPoll::dispatchMultiple(Events event, Events confident, const EventData& evtd) {
+//throw CPollException("EPoll::dispatch() not implemented");
 		return _doEPoll(0) <= 0 ? Events::none : Events::all;
 	}
-	Events Poll::getEvents() {
-//throw CPollException("Poll::getEvents() not implemented");
+	Events EPoll::getEvents() {
+//throw CPollException("EPoll::getEvents() not implemented");
 		return active ? (Events::all) : (Events::none);
 	}
-	Events Poll::waitAndDispatch() {
+	Events EPoll::waitAndDispatch() {
 		return _doEPoll(-1) <= 0 ? Events::none : Events::all;
 	}
-	void Poll::fillEPollEvents(Handle& h, epoll_event& evt, Events e) {
-		evt.events = eventsToEPoll(e);
-		evt.data.u64 = 0; //work around valgrind warning
-		evt.data.ptr = &h;
-	}
 
-	void Poll::applyHandle(Handle& h, Events old_e) {
+	void EPoll::applyHandle(Handle& h, Events old_e) {
 //cout << "applyHandle" << endl;
 //if (h.handle == cur_handle) return;
 		//_applyHandle(h, old_e);
 		tmpevents.push_back( { &h, old_e });
 	}
-	void Poll::add(Handle& h) {
+	void EPoll::add(Handle& h) {
 //h.retain();
-		h.onEventsChange = Delegate<void(Handle&, Events)>(&Poll::applyHandle, this);
+		h.onEventsChange = Delegate<void(Handle&, Events)>(&EPoll::applyHandle, this);
 		//h.onEventsChange = [this,&h](Events old_events) {this->applyHandle(h,old_events);};
 		_applyHandle(h, Events::none);
-		h.onClose = Delegate<void(Handle& h)>(&Poll::del, this);
+		h.onClose = Delegate<void(Handle& h)>(&EPoll::del, this);
 	}
-	void Poll::del(Handle& h) {
+	void EPoll::del(Handle& h) {
 //h.release();
 //tmp_deleted.push_back(&h);
 //throw 0;
-//printf("Poll::del()\n");
+//printf("EPoll::del()\n");
 		if (h.handle == cur_handle) cur_deleted = true;
 		if (h.getEvents() != Events::none) {
 			/*if (h.handle < 0) {
@@ -1897,7 +1897,7 @@ namespace CP
 			 new_e = h.getEvents();
 			 }
 			 }*/
-			//printf("Poll::del()\n");
+			//printf("EPoll::del()\n");
 			//if we're in the middle of a _doEPoll() loop, disable all pending events in queue
 			//relating to this handle since it might not even exist anymore after this function
 			//returns
@@ -1915,6 +1915,130 @@ namespace CP
 		}
 		h.onEventsChange = nullptr;
 		h.onClose = nullptr;
+	}
+
+//NewEPoll
+	int32_t NewEPoll::MAX_EVENTS(32);
+	static bool compareDrainInfo(const NewEPoll::drainInfo& a, const NewEPoll::drainInfo& b) {
+		return a.h < b.h;
+	}
+	NewEPoll::NewEPoll(HANDLE h) :
+			Handle(h), _draining(NULL), _dispatchingHandle(NULL), _curEvents(NULL) {
+		disableSignals();
+	}
+	NewEPoll::NewEPoll() :
+			Handle(checkError(epoll_create1(EPOLL_CLOEXEC))), _draining(NULL),
+					_dispatchingHandle(NULL), _curEvents(NULL) {
+		disableSignals();
+	}
+	bool NewEPoll::dispatch(Events event, const EventData& evtd, bool confident) {
+		return _doIteration(0);
+	}
+	Events NewEPoll::dispatchMultiple(Events event, Events confident, const EventData& evtd) {
+		return _doIteration(0) ? event : Events::none;
+	}
+	Events NewEPoll::getEvents() {
+		return Events::all;
+	}
+	Events NewEPoll::waitAndDispatch() {
+		return _doIteration(-1) ? Events::all : Events::none;
+	}
+	void NewEPoll::add(Handle& h) {
+		epoll_event evt;
+		fillEPollEvents(h, evt, Events::all);
+		evt.events |= EPOLLET;
+		int r = epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt);
+		if (r < 0 && errno == EPERM) {
+			h._supportsEPoll = false;
+			return;
+		}
+		h.onEventsChange = Delegate<void(Handle&, Events)>(&NewEPoll::_applyHandle, this);
+		_queueHandle(h, h.getEvents());
+		h.onClose = Delegate<void(Handle& h)>(&NewEPoll::del, this);
+	}
+	void NewEPoll::del(Handle& h) {
+		if (&h == _dispatchingHandle) _dispatchingDeleted = true;
+		if (likely(_curEvents!=NULL)) for (int i = _curIndex; i < _curLength; i++) {
+			if (_curEvents[i].data.ptr == (void*) &h) _curEvents[i].data.ptr = NULL;
+		}
+		for (uint32_t i = 0; i < _pending.size(); i++)
+			if (_pending[i].h == &h) _pending[i].h = NULL;
+		if (likely(_draining!=NULL)) for (uint32_t i = 0; i < _draining->size(); i++)
+			if ((*_draining)[i].h == &h) (*_draining)[i].h = NULL;
+		epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
+		h.onEventsChange = nullptr;
+		h.onClose = nullptr;
+	}
+	bool NewEPoll::_doIteration(int timeout) {
+		bool ret = false;
+		while (_pending.size() > 0) {
+			vector<drainInfo> tmpevents1 = _pending;
+			_draining = &tmpevents1;
+			_pending.clear();
+			std::sort(tmpevents1.begin(), tmpevents1.end(), compareDrainInfo);
+			Handle* last_h = NULL;
+			Events last_e = Events::none;
+			for (int i = 0; i < (int) tmpevents1.size(); i++) {
+				if (tmpevents1[i].h == NULL) continue;
+				ret = true;
+				if (last_h == tmpevents1[i].h) {
+					last_e = last_e | tmpevents1[i].new_e;
+					continue;
+				}
+				if (last_h != NULL) _drainHandle(*last_h, last_e);
+				last_h = tmpevents1[i].h;
+				last_e = tmpevents1[i].new_e;
+			}
+			if (last_h != NULL) _drainHandle(*last_h, last_e);
+			_draining = NULL;
+		}
+		epoll_event evts[MAX_EVENTS];
+		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
+		if (unlikely(n < 0)) {
+			goto retry;
+		}
+		if (n > 0) ret = true;
+		_curEvents = evts;
+		_curLength = n;
+		for (_curIndex = 0; _curIndex < n; _curIndex++)
+			_doDispatch(evts[_curIndex]);
+		return ret;
+	}
+	void NewEPoll::_doDispatch(const epoll_event& event) {
+		Handle* h = (Handle*) event.data.ptr;
+		if (unlikely(h==NULL)) return;
+		_dispatchingHandle = h;
+		_dispatchingDeleted = false;
+		EventData evtd;
+		event_t evt = (event_t) ePollToEvents(event.events);
+		evtd.hungUp = (event.events & EPOLLHUP);
+		evtd.error = (event.events & EPOLLERR);
+		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
+		if (_dispatchingDeleted) goto aaa;
+		_drainHandle(*h, events);
+		aaa: _dispatchingHandle = NULL;
+	}
+	void NewEPoll::_drainHandle(Handle& h, Events new_e) {
+		if (new_e != Events::none) {
+			EventData evtd;
+			evtd.hungUp = evtd.error = false;
+			_dispatchingDeleted = false;
+			_dispatchingHandle = &h;
+			do {
+				new_e = h.dispatchMultiple(new_e, Events::none, evtd);
+				if (_dispatchingDeleted) goto out;
+				new_e = new_e & h.getEvents();
+			} while (new_e != Events::none);
+		}
+		out: _dispatchingHandle = NULL;
+	}
+	void NewEPoll::_queueHandle(Handle& h, Events new_e) {
+		_pending.push_back( { &h, new_e });
+	}
+	void NewEPoll::_applyHandle(Handle& h, Events old_e) {
+		Events new_e = h.getEvents();
+		Events new_added = (old_e ^ new_e) & new_e;
+		if (new_added != Events::none) _queueHandle(h, new_added);
 	}
 
 	StandardStream::StandardStream() :
