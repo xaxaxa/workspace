@@ -886,7 +886,8 @@ namespace CP
 	bool File::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate, bool confident) {
 		Operations op = ed.op;
-		int32_t r = 0;
+		int32_t r;
+		redo: r = 0;
 		if (unlikely(handle<0)) {
 			r = -1;
 			goto asdf;
@@ -996,6 +997,10 @@ namespace CP
 		asdf: if (ed.cb != nullptr) ed.cb(r);
 		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) if (ed.cb
 				!= nullptr) ed.cb(-1);
+		success: if (ed.state == EventHandlerData::States::repeat) {
+			confident = false;
+			goto redo;
+		}
 		return true;
 	}
 	bool File::dispatch(Events event, const EventData& evtd, bool confident, bool& deletionFlag) {
@@ -1275,6 +1280,7 @@ namespace CP
 			EventHandlerData::States oldstate, bool confident) {
 		Operations op = ed.op;
 		int r;
+		redo: r = 0;
 		switch (op) {
 			case Operations::accept:
 			{
@@ -1284,7 +1290,7 @@ namespace CP
 					ed.state = EventHandlerData::States::invalid;
 				}
 				ed.cb(h);
-				return true;
+				goto success;
 			}
 			case Operations::shutdown:
 				if (!confident && (checkEvents(event) & event) != event) return false;
@@ -1298,7 +1304,7 @@ namespace CP
 				}
 				if (!confident && (checkEvents(event) & event) != event) return false;
 				ed.cb(0);
-				return true;
+				goto success;
 			case Operations::sendTo:
 				r = sendTo(ed.misc.bufferIO.buf, ed.misc.bufferIO.len, ed.misc.bufferIO.flags,
 						*ed.misc.bufferIO.const_ep);
@@ -1315,6 +1321,10 @@ namespace CP
 			ed.state = EventHandlerData::States::invalid;
 		}
 		if (ed.cb != nullptr) ed.cb(r);
+		success: if (ed.state == EventHandlerData::States::repeat) {
+			confident = false;
+			goto redo;
+		}
 		return true;
 	}
 	void Socket::bind(const sockaddr *addr, int32_t addr_size) {
