@@ -160,8 +160,8 @@ namespace cppsp
 	}
 
 	Response::Response(CP::Stream& out) :
-			outputStream(&out), output((CP::BufferedOutput&) buffer),
-					headersWritten(false), closed(false), sendChunked(false) {
+			outputStream(&out), output((CP::BufferedOutput&) buffer), headersWritten(false),
+					closed(false), sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
 		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
@@ -169,9 +169,19 @@ namespace cppsp
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
 		sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
 		for (auto it = This->headers.begin(); it != This->headers.end(); it++) {
-			sw.writeF("%s: %s\r\n", (*it).first.c_str(), (*it).second.c_str());
+			int l1 = (*it).first.length();
+			int l2 = (*it).second.length();
+			char* tmp = sw.beginWrite(l1 + 4 + l2);
+			memcpy(tmp, (*it).first.data(), l1);
+			tmp[l1] = ':';
+			tmp[l1 + 1] = ' ';
+			memcpy(tmp + l1 + 2, (*it).second.data(), l2);
+			tmp[l1 + 2 + l2] = '\r';
+			tmp[l1 + 2 + l2 + 1] = '\n';
+			sw.endWrite(l1 + 4 + l2);
+			//sw.writeF("%s: %s\r\n", (*it).first.c_str(), (*it).second.c_str());
 		}
-		sw.write("\r\n");
+		sw.write("\r\n", 2);
 	}
 	void Response::flush(Callback cb) {
 		//printf("flush\n");
