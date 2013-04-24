@@ -2024,6 +2024,7 @@ namespace CP
 		while (true) {
 			new_e = h->getEvents();
 			events = (events | (old_e ^ new_e)) & new_e;
+			old_e = new_e;
 			if (events == Events::none) break;
 			events = h->dispatchMultiple(events, Events::none, evtd);
 			if (_dispatchingDeleted) goto aaa;
@@ -2043,6 +2044,7 @@ namespace CP
 				if (_dispatchingDeleted) goto out;
 				Events newest_e = h.getEvents();
 				new_e = (new_e | (old_e ^ newest_e)) & newest_e;
+				old_e = newest_e;
 			} while (new_e != Events::none);
 		}
 		out: _dispatchingHandle = NULL;
