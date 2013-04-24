@@ -560,6 +560,13 @@ namespace CP
 			if (unlikely(buffer->bufferSize - buffer->bufferPos < 21)) buffer->flushBuffer(21);
 			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 21, "%llu", i);
 		}
+		char* beginWrite(int len) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < len)) buffer->flushBuffer(len);
+			return (char*) buffer->buffer + buffer->bufferPos;
+		}
+		void endWrite(int len) {
+			buffer->bufferPos += len;
+		}
 		template<class ... P> void writeF(const char* fmt, P&&... p) {
 			int minSpace = 0;
 			if(minSpace + 1 > buffer->bufferSize - buffer->bufferPos) {
