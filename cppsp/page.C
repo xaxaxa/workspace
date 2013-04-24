@@ -9,7 +9,7 @@
 #include "include/common.H"
 #include <stdexcept>
 #include <stdlib.h>
-
+using namespace CP;
 namespace cppsp
 {
 	
@@ -133,7 +133,7 @@ namespace cppsp
 		if (it == headers.end()) {
 			input.readToEnd(tmpbuffer, { &Request::_readCB, this });
 		} else {
-			input.readChunked(tmpbuffer, atoi((*it).second.c_str()), { &Request::_readCB, this });
+			input.readChunked(tmpbuffer, atoi((*it).second), { &Request::_readCB, this });
 		}
 	}
 	void Request::_readCB(int i) {
@@ -142,19 +142,22 @@ namespace cppsp
 		{
 			Request* This;
 			void operator()(const char* name, int nameLen, const char* value, int valueLen) {
-				CP::StringStream n;
-				CP::StringStream v;
+				int nBegin, vBegin, lastLen;
 				{
-					CP::StreamWriter sw((CP::BufferedOutput&) n);
+					nBegin = This->tmpbuffer.length();
+					CP::StreamWriter sw(This->tmpbuffer);
 					cppsp::urlDecode(name, nameLen, sw);
+					sw.flush();
+					vBegin = This->tmpbuffer.length();
+					if (value != NULL) {
+						cppsp::urlDecode(value, valueLen, sw);
+					}
+					lastLen = This->tmpbuffer.length();
 				}
-				if (value != NULL) {
-					CP::StreamWriter sw((CP::BufferedOutput&) v);
-					cppsp::urlDecode(value, valueLen, sw);
-				}
-				This->form[n.str()] = v.str();
+				This->form[ {(char*)This->tmpbuffer.data()+nBegin,vBegin-nBegin}]
+				= {(char*)This->tmpbuffer.data()+vBegin,lastLen-vBegin};
 			}
-		} cb { this };
+		} cb {this};
 		cppsp::parseQueryString((const char*) tmpbuffer.data() + _readPOST.tmp_i, i, &cb, false);
 		_readPOST.cb(*this);
 	}

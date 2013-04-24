@@ -17,8 +17,10 @@ namespace cppsp
 	class CPollRequest: public Request
 	{
 	public:
+		CP::MemoryStream _lineBuffer;
 		RGC::Ref<CP::Socket> s;
 		Delegate<void(bool)> tmp_cb;
+		int _headers_begin;
 		bool firstLine;
 
 		CPollRequest(CP::Socket& s);

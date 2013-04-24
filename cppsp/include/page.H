@@ -15,6 +15,7 @@
 using namespace std;
 namespace cppsp
 {
+	typedef CP::String String;
 	class Request: public RGC::Object
 	{
 	public:
@@ -22,9 +23,9 @@ namespace cppsp
 		virtual ~Request();
 		RGC::Ref<CP::Stream> inputStream;
 		CP::StreamReader input;
-		map<string, string, ci_less> queryString;
-		map<string, string, ci_less> headers;
-		map<string, string, ci_less> form;
+		map<String, String> queryString;
+		map<String, String> headers;
+		map<String, String> form;
 		CP::MemoryStream tmpbuffer; //may be used to store headers, querystrings, and POST data
 		string method;
 		string path;
@@ -53,7 +54,7 @@ namespace cppsp
 		CP::MemoryStream buffer;
 		CP::StreamWriter output;
 		Callback _cb;
-		map<string, string, ci_less> headers;
+		map<String, String> headers;
 		const char* statusName;
 		iovec iov[2];
 		int statusCode;
@@ -62,12 +63,12 @@ namespace cppsp
 		bool closed;
 		bool sendChunked;
 		/*virtual void doWriteHeaders();
-		void writeHeaders() {
-			if (!headersWritten) {
-				doWriteHeaders();
-				headersWritten = true;
-			}
-		}*/
+		 void writeHeaders() {
+		 if (!headersWritten) {
+		 doWriteHeaders();
+		 headersWritten = true;
+		 }
+		 }*/
 		virtual void flush(Callback cb);
 		virtual void clear();
 		template<class ... T>
