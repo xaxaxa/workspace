@@ -995,9 +995,12 @@ namespace CP
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
 		}
-		asdf: if (ed.cb != nullptr) ed.cb(r);
+		asdf: bool* del = deletionFlag;
+		if (ed.cb != nullptr) ed.cb(r);
+		if (*del) return true;
 		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) if (ed.cb
 				!= nullptr) ed.cb(-1);
+		if (*del) return true;
 		success: if (ed.state == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
@@ -1217,6 +1220,7 @@ namespace CP
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, iov, iovcnt, cb, e, Operations::writev);
+		printf("\x1B[41;1;33mwritev();\x1B[0;0;0m\n");
 		endAddEvent(e, repeat);
 	}
 
@@ -2011,11 +2015,21 @@ namespace CP
 		_dispatchingDeleted = false;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
+		evt = evt & (event_t) h->getEvents();
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
+		Events old_e = h->getEvents();
 		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
 		if (_dispatchingDeleted) goto aaa;
-		_drainHandle(*h, events);
+		Events new_e;
+		while (true) {
+			new_e = h->getEvents();
+			events = events & new_e;
+			if (events == Events::none) break;
+			events = h->dispatchMultiple(events, Events::none, evtd);
+			if (_dispatchingDeleted) goto aaa;
+		}
+		_applyHandle(*h, old_e);
 		aaa: _dispatchingHandle = NULL;
 	}
 	void NewEPoll::_drainHandle(Handle& h, Events new_e) {
