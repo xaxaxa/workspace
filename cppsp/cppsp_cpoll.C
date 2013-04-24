@@ -21,17 +21,17 @@ namespace cppsp
 		_beginRead();
 	}
 	void CPollRequest::_beginRead() {
-		ms.clear();
+		tmpbuffer.clear();
 		//printf("\n_beginRead()\n");
-		input.readTo("\r\n", 2, ms, CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
+		input.readTo("\r\n", 2, tmpbuffer, CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
 	}
 	void CPollRequest::_readCB(int i) {
 		if (i <= 0) goto end;
 		//write(2, ms.data(), ms.length());
 		if (firstLine) {
 			firstLine = false;
-			uint8_t* lineBuf = ms.data();
-			int lineBufLen = ms.length();
+			uint8_t* lineBuf = tmpbuffer.data();
+			int lineBufLen = tmpbuffer.length();
 			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
 			if (tmp == NULL) goto fail;
 			method = string((char*) lineBuf, tmp - lineBuf);
@@ -67,8 +67,8 @@ namespace cppsp
 				this->path = string(path, q - path);
 			}
 		} else {
-			uint8_t* lineBuf = ms.data();
-			int lineBufLen = ms.length();
+			uint8_t* lineBuf = tmpbuffer.data();
+			int lineBufLen = tmpbuffer.length();
 			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ':', lineBufLen);
 			if (tmp == NULL || tmp == lineBuf) goto fail;
 			uint8_t* tmp1 = tmp - 1;
@@ -92,6 +92,7 @@ namespace cppsp
 		fail: _endRead(false);
 	}
 	void CPollRequest::_endRead(bool success) {
+		tmpbuffer.clear();
 		tmp_cb(success);
 	}
 	CPollRequest::~CPollRequest() {

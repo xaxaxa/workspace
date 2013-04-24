@@ -160,7 +160,7 @@ namespace cppsp
 	}
 
 	Response::Response(CP::Stream& out) :
-			outputStream(&out), output((CP::BufferedOutput&) buffer), tmpbuffer(0),
+			outputStream(&out), output((CP::BufferedOutput&) buffer),
 					headersWritten(false), closed(false), sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
@@ -180,8 +180,9 @@ namespace cppsp
 		this->_cb = cb;
 		if (!headersWritten) {
 			headersWritten = true;
+			int bufferL = buffer.length();
 			{
-				CP::StreamWriter sw(tmpbuffer);
+				CP::StreamWriter sw(buffer);
 				auto it = this->headers.find("Content-Length");
 				if (it == this->headers.end()) {
 					char tmps[32];
@@ -190,8 +191,8 @@ namespace cppsp
 				}
 				Response_doWriteHeaders(this, sw);
 			}
-			iov[0]= {tmpbuffer.data(), (size_t)tmpbuffer.length()};
-			iov[1]= {buffer.data(), (size_t)buffer.length()};
+			iov[0]= {buffer.data()+bufferL, (size_t)(buffer.length()-bufferL)};
+			iov[1]= {buffer.data(), (size_t)bufferL};
 			outputStream->writevAll(iov, 2, { &Response::_writeCB, this });
 			return;
 		} else {
@@ -210,7 +211,6 @@ namespace cppsp
 	void Response::_writeCB(int r) {
 		if (r <= 0) closed = true;
 		buffer.clear();
-		tmpbuffer.clear();
 		_cb(*this);
 	}
 	
@@ -226,7 +226,6 @@ namespace cppsp
 		headers.clear();
 		output.flush();
 		buffer.clear();
-		tmpbuffer.clear();
 		headersWritten = false;
 		closed = false;
 		sendChunked = false;

@@ -30,7 +30,7 @@ struct cppsp_request
 	HANDLE fd;
 };
 struct serverThread;
-void processRequest(serverThread& thr,Poll& p,Socket& s);
+void processRequest(serverThread& thr,Poll& p,HANDLE s);
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb);
 #define CACHELINE_SIZE 64
 template<class T> class RingBuffer
@@ -130,15 +130,13 @@ void* thread1(void* v) {
 	struct {
 		Poll& p;
 		serverThread* thr;
-		void operator()(Socket* sock) {
+		void operator()(HANDLE sock) {
 			//printf("thread %i: accepted socket: %p (%i)\n",thr->threadid,sock,sock->handle);
 			cppsp_request* req;
-			p.add(*sock);
-			processRequest(*thr,p,*sock);
-			sock->release();
+			processRequest(*thr,p,sock);
 		}
 	} cb {p, thr};
-	thr->listensock->repeatAccept(&cb);
+	thr->listensock->repeatAcceptHandle(&cb);
 	p.add(*thr->listensock);
 	Timer t((uint64_t)2000);
 	struct {
@@ -219,11 +217,11 @@ int main(int argc, char** argv) {
 	p.loop();*/
 	while(1)sleep(3600);
 }
-void processRequest(serverThread& thr,Poll& p,Socket& s) {
+void processRequest(serverThread& thr,Poll& p,HANDLE s) {
 	struct handler:public RGC::Object {
 		serverThread& thr;
 		CP::Poll& p;
-		RGC::Ref<Socket> s;
+		Socket s;
 		cppsp::CPollRequest req;
 		cppsp::Response resp;
 		//Page* p;
@@ -231,8 +229,11 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 		uint8_t buf[4096];
 		string path;
 		bool keepAlive;
-		handler(serverThread& thr,CP::Poll& p,Socket* s):thr(thr),p(p),s(s),req(*s),resp(*s) {
+		handler(serverThread& thr,CP::Poll& p,HANDLE s):thr(thr),p(p),
+			s(s,thr.listensock->addressFamily,thr.listensock->type,thr.listensock->protocol),
+			req(this->s),resp(this->s) {
 			//printf("handler()\n");
+			p.add(this->s);
 			this->retain();
 			req.readHeaders({&handler::readCB,this});
 		}
@@ -294,12 +295,12 @@ void processRequest(serverThread& thr,Poll& p,Socket& s) {
 				req.reset();
 				resp.reset();
 				req.readHeaders({&handler::readCB,this});
-			} else s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			} else s.repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 		}
 		~handler() {
 			//printf("~handler()\n");
 		}
-	}* hdlr=new handler(thr,p,&s);
+	}* hdlr=new handler(thr,p,s);
 	hdlr->release();
 }
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {

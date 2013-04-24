@@ -52,7 +52,6 @@ namespace cppsp
 		RGC::Ref<CP::Stream> outputStream;
 		CP::MemoryStream buffer;
 		CP::StreamWriter output;
-		CP::MemoryStream tmpbuffer;
 		Callback _cb;
 		map<string, string, ci_less> headers;
 		const char* statusName;
