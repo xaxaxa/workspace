@@ -1220,7 +1220,7 @@ namespace CP
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, iov, iovcnt, cb, e, Operations::writev);
-		printf("\x1B[41;1;33mwritev();\x1B[0;0;0m\n");
+		//printf("\x1B[41;1;33mwritev();\x1B[0;0;0m\n");
 		endAddEvent(e, repeat);
 	}
 
