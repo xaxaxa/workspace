@@ -1220,7 +1220,6 @@ namespace CP
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, iov, iovcnt, cb, e, Operations::writev);
-		//printf("\x1B[41;1;33mwritev();\x1B[0;0;0m\n");
 		endAddEvent(e, repeat);
 	}
 
@@ -2024,15 +2023,16 @@ namespace CP
 		Events new_e;
 		while (true) {
 			new_e = h->getEvents();
-			events = events & new_e;
+			events = (events | (old_e ^ new_e)) & new_e;
 			if (events == Events::none) break;
 			events = h->dispatchMultiple(events, Events::none, evtd);
 			if (_dispatchingDeleted) goto aaa;
 		}
-		_applyHandle(*h, old_e);
+		//_applyHandle(*h, old_e);
 		aaa: _dispatchingHandle = NULL;
 	}
 	void NewEPoll::_drainHandle(Handle& h, Events new_e) {
+		Events old_e = h.getEvents();
 		if (new_e != Events::none) {
 			EventData evtd;
 			evtd.hungUp = evtd.error = false;
@@ -2041,7 +2041,8 @@ namespace CP
 			do {
 				new_e = h.dispatchMultiple(new_e, Events::none, evtd);
 				if (_dispatchingDeleted) goto out;
-				new_e = new_e & h.getEvents();
+				Events newest_e = h.getEvents();
+				new_e = (new_e | (old_e ^ newest_e)) & newest_e;
 			} while (new_e != Events::none);
 		}
 		out: _dispatchingHandle = NULL;
