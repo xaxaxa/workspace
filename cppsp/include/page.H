@@ -8,7 +8,6 @@
 #ifndef PAGE_H_
 #define PAGE_H_
 #include <rgc.H>
-#include <string>
 #include <map>
 #include <cpoll.H>
 #include "stringutils.H"
@@ -19,22 +18,24 @@ namespace cppsp
 	class Request: public RGC::Object
 	{
 	public:
-		Request(CP::Stream& inp);
+		Request(CP::Stream& inp, CP::StringPool* sp);
 		virtual ~Request();
 		RGC::Ref<CP::Stream> inputStream;
 		CP::StreamReader input;
 		map<String, String> queryString;
 		map<String, String> headers;
 		map<String, String> form;
-		CP::MemoryStream tmpbuffer; //may be used to store headers, querystrings, and POST data
-		string method;
-		string path;
+		CP::StringPool* sp; //may be used to store headers, querystrings, and POST data
+		String method;
+		String path;
 		//string httpVersion;
 		union
 		{
 			struct
 			{
 				DelegateBase<void(Request&)> cb;
+				CP::MemoryStream* ms;
+				char ms1[sizeof(CP::MemoryStream)];
 				int tmp_i;
 			} _readPOST;
 		};
@@ -49,13 +50,14 @@ namespace cppsp
 	{
 	public:
 		typedef Delegate<void(Response&)> Callback;
-		Response(CP::Stream& out);
+		Response(CP::Stream& out, CP::StringPool* sp);
 		RGC::Ref<CP::Stream> outputStream;
 		CP::MemoryStream buffer;
 		CP::StreamWriter output;
 		Callback _cb;
+		CP::StringPool* sp;
 		map<String, String> headers;
-		const char* statusName;
+		String statusName;
 		iovec iov[2];
 		int statusCode;
 
@@ -71,6 +73,7 @@ namespace cppsp
 		 }*/
 		virtual void flush(Callback cb);
 		virtual void clear();
+		void addDefaultHeaders();
 		template<class ... T>
 		void write(T&&... a) {
 			output.write(std::forward<T>(a)...);
@@ -84,8 +87,8 @@ namespace cppsp
 	public:
 		virtual const char* rootDir()=0;
 		//path is relative to rootDir
-		virtual void loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb);
-		virtual void loadPageFromFile(CP::Poll& p, string path,
+		virtual void loadPage(CP::Poll& p, String path, Delegate<void(Page*, exception* ex)> cb);
+		virtual void loadPageFromFile(CP::Poll& p, String path,
 				Delegate<void(Page*, exception* ex)> cb);
 		//path is relative to rootDir
 		virtual string mapPath(string path);
@@ -95,14 +98,15 @@ namespace cppsp
 	public:
 		typedef Delegate<void(Page&)> Callback;
 		Page();
-		Page(Request& req, Response& resp);
+		Page(Request& req, Response& resp, CP::StringPool* sp);
 		RGC::Ref<Request> request;
 		RGC::Ref<Response> response;
 		Delegate<void(Page*, exception* ex)> pageCB;
 		CP::Poll* poll;
 		Server* server;
 		Callback cb;
-		string filePath;
+		String filePath;
+		CP::StringPool* sp;
 		bool doRender;
 		bool doReadPost;
 		inline void cancelRender() {

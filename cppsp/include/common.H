@@ -11,6 +11,7 @@
 #include <vector>
 #include "page.H"
 using namespace std;
+typedef CP::String String;
 namespace cppsp
 {
 	class ParserException: public std::exception
@@ -43,17 +44,17 @@ namespace cppsp
 	int combinePath(const char* p1, const char* p2, char* buf);
 	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf);
 	int combinePathChroot(const char* p1, const char* p2, char* buf);
-	string combinePath(const char* p1, const char* p2);
-	string combinePathChroot(const char* p1, const char* p2);
-	void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
+	String combinePath(const char* p1, const char* p2, CP::StringPool& sp);
+	String combinePathChroot(const char* p1, const char* p2, CP::StringPool& sp);
+	void loadPage(CP::Poll& p, String wd, String path, Delegate<void(Page*, exception* ex)> cb);
 	cppspManager* cppspManager_new();
 	void cppspManager_delete(cppspManager* mgr);
-	void loadPage(cppspManager* mgr, CP::Poll& p, string wd, string path,
+	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path,
 			Delegate<void(Page*, exception* ex)> cb);
 	vector<string>& CXXOpts();
 	vector<string>& CXXOpts(cppspManager* mgr);
 	void updateTime();
 	void updateTime(cppspManager* mgr);
-	void handleError(exception* ex, cppsp::Response& resp, string path);
+	void handleError(exception* ex, cppsp::Response& resp, String path);
 }
 #endif /* COMMON_H_ */

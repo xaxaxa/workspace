@@ -19,6 +19,7 @@
 #include <sys/wait.h>
 #include "include/common.H"
 #include "include/page.H"
+#include <errno.h>
 
 using namespace CP;
 using namespace std;
@@ -151,15 +152,17 @@ namespace cppsp
 		return combinePathChroot(p1, strlen(p1), p2, strlen(p2), buf);
 	}
 
-	string combinePath(const char* p1, const char* p2) {
-		char tmp[strlen(p1) + strlen(p2)];
+	String combinePath(const char* p1, const char* p2, StringPool& sp) {
+		char* tmp = sp.beginAdd(strlen(p1) + strlen(p2));
 		int l = combinePath(p1, p2, tmp);
-		return string(tmp, l);
+		sp.endAdd(l);
+		return {tmp,l};
 	}
-	string combinePathChroot(const char* p1, const char* p2) {
-		char tmp[strlen(p1) + strlen(p2)];
+	String combinePathChroot(const char* p1, const char* p2, StringPool& sp) {
+		char* tmp = sp.beginAdd(strlen(p1) + strlen(p2));
 		int l = combinePathChroot(p1, p2, tmp);
-		return string(tmp, l);
+		sp.endAdd(l);
+		return {tmp,l};
 	}
 	//parses a cppsp page and generates code (to out) and string table (to st_out)
 	void doParse(const char* name, const char* in, int inLen, Stream& out, Stream& st_out,
@@ -329,18 +332,36 @@ namespace cppsp
 		else if (time1.tv_nsec > time2.tv_nsec) return (1); /* Greater than. */
 		else return (0); /* Equal. */
 	}
-	bool shouldCompile(string page) {
+
+#define CONCAT_TO(in,inLen,out,conc) char out[strlen(conc)+inLen+1];\
+	memcpy(out,in,inLen);\
+	memcpy(out+inLen,conc,strlen(conc));\
+	out[strlen(conc)+inLen]=0;
+#define TO_C_STR(in,inLen,out) char out[inLen+1];\
+	memcpy(out,in,inLen);\
+	out[inLen]=0;
+
+	bool shouldCompile(String page) {
 		struct stat st;
-		checkError(stat(page.c_str(), &st));
+		{
+			TO_C_STR(page.data(), page.length(), s1);
+			checkError(stat(s1, &st));
+		}
 		timespec modif_cppsp = st.st_mtim;
-		if (stat((page + ".txt").c_str(), &st) < 0) {
-			if (errno == ENOENT) return true;
-			else checkError(-1);
+		{
+			CONCAT_TO(page.data(), page.length(), s1, ".txt");
+			if (stat(s1, &st) < 0) {
+				if (errno == ENOENT) return true;
+				else checkError(-1);
+			}
 		}
 		timespec modif_txt = st.st_mtim;
-		if (stat((page + ".so").c_str(), &st) < 0) {
-			if (errno == ENOENT) return true;
-			else checkError(-1);
+		{
+			CONCAT_TO(page.data(), page.length(), s1, ".so");
+			if (stat(s1, &st) < 0) {
+				if (errno == ENOENT) return true;
+				else checkError(-1);
+			}
 		}
 		timespec modif_so = st.st_mtim;
 		return (tsCompare(modif_cppsp, modif_txt) == 1 || tsCompare(modif_cppsp, modif_so) == 1);
@@ -447,7 +468,7 @@ namespace cppsp
 			Page* tmp = createObject(NULL);
 			checkError(tmp);
 			tmp->__stringTable = stringTable;
-			tmp->filePath = path;
+			tmp->filePath = {path.data(),(int)path.length()};
 			return tmp;
 		}
 		loadedPage():dlHandle(NULL),stringTable(NULL),stringTableFD(-1) {
@@ -464,10 +485,11 @@ namespace cppsp
 	class cppspManager
 	{
 	public:
-		map<string, loadedPage*> cache;
+		StringPool sp;
+		map<String, loadedPage*> cache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
-		void loadPage(CP::Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb);
+		void loadPage(CP::Poll& p, String wd, String path, Delegate<void(Page*, exception* ex)> cb);
 		bool shouldCheck(loadedPage& p) {
 			timespec tmp1 = curTime;
 			tmp1.tv_sec -= 2;
@@ -478,14 +500,14 @@ namespace cppsp
 		}
 	};
 
-	void cppspManager::loadPage(Poll& p, string wd, string path,
+	void cppspManager::loadPage(Poll& p, String wd, String path,
 			Delegate<void(Page*, exception* ex)> cb) {
 		loadedPage* lp1;
 		auto it = cache.find(path);
 		if (it == cache.end()) {
 			lp1 = new loadedPage();
-			lp1->path = path;
-			cache.insert( { path, lp1 });
+			lp1->path = path.toSTDString();
+			cache.insert( { sp.addString(path), lp1 });
 		} else lp1 = (*it).second;
 		loadedPage& lp(*lp1);
 
@@ -500,7 +522,7 @@ namespace cppsp
 		if (c) {
 			lp.loadCB.push_back(cb);
 			try {
-				lp.doCompile(p, wd, cxxopts);
+				lp.doCompile(p, wd.toSTDString(), cxxopts);
 			} catch (exception& ex) {
 				lp.loadCB.resize(lp.loadCB.size() - 1);
 				cb(nullptr, &ex);
@@ -527,7 +549,7 @@ namespace cppsp
 	}
 
 	cppspManager mgr;
-	void loadPage(Poll& p, string wd, string path, Delegate<void(Page*, exception* ex)> cb) {
+	void loadPage(Poll& p, String wd, String path, Delegate<void(Page*, exception* ex)> cb) {
 		mgr.loadPage(p, wd, path, cb);
 	}
 	vector<string>& CXXOpts() {
@@ -539,7 +561,7 @@ namespace cppsp
 	cppspManager* cppspManager_new() {
 		return new cppspManager();
 	}
-	void loadPage(cppspManager* mgr, CP::Poll& p, string wd, string path,
+	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path,
 			Delegate<void(Page*, exception* ex)> cb) {
 		return mgr->loadPage(p, wd, path, cb);
 	}
@@ -552,11 +574,11 @@ namespace cppsp
 	void updateTime(cppspManager* mgr) {
 		clock_gettime(CLOCK_MONOTONIC, &mgr->curTime);
 	}
-	void handleError(exception* ex, cppsp::Response& resp, string path) {
+	void handleError(exception* ex, cppsp::Response& resp, String path) {
 		resp.clear();
 		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
 		//resp.writeHeaders();
-		string title = "Server error in " + path;
+		string title = "Server error in " + path.toSTDString();
 		resp.output.writeF("<html><head><title>%s</title>"
 				"<style></style></head>", title.c_str());
 		resp.output.writeF("<body><h1 style=\"color: #aa1111\">%s</h1><hr />"

@@ -11,9 +11,9 @@
 #include <cpoll/cpoll.H>
 #include <string>
 using namespace std;
+typedef CP::String String;
 namespace cppsp
 {
-
 	class CPollRequest: public Request
 	{
 	public:
@@ -23,7 +23,7 @@ namespace cppsp
 		int _headers_begin;
 		bool firstLine;
 
-		CPollRequest(CP::Socket& s);
+		CPollRequest(CP::Socket& s, CP::StringPool* sp);
 		void readHeaders(const Delegate<void(bool)>& cb);
 		void _beginRead();
 		void _readCB(int i);

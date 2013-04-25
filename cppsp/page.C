@@ -17,8 +17,8 @@ namespace cppsp
 			doRender(true) {
 		
 	}
-	Page::Page(Request& req, Response& resp) :
-			request(&req), response(&resp), doRender(true) {
+	Page::Page(Request& req, Response& resp, CP::StringPool* sp) :
+			request(&req), response(&resp), sp(sp), doRender(true) {
 	}
 	void Page::__writeStringTable(int i, int len) {
 		response->output.write(__stringTable + i, len);
@@ -91,11 +91,13 @@ namespace cppsp
 	}
 	void Page::loadNestedPage(string path, Delegate<void(Page*, exception* ex)> cb) {
 		this->pageCB = cb;
-		server->loadPage(*poll, mapRelativePath(path), { &Page::_pageCB, this });
+		string tmp = mapRelativePath(path);
+		server->loadPage(*poll, { tmp.data(), (int) tmp.length() }, { &Page::_pageCB, this });
 	}
 	void Page::loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb) {
 		this->pageCB = cb;
-		server->loadPageFromFile(*poll, path, { &Page::_pageCB, this });
+		server->loadPageFromFile(*poll, { path.data(), (int) path.length() },
+				{ &Page::_pageCB, this });
 	}
 	
 	void Page::_pageCB(Page* p, exception* ex) {
@@ -120,53 +122,61 @@ namespace cppsp
 		if (this->cb != nullptr) cb(*this);
 	}
 
-	Request::Request(CP::Stream& inp) :
-			inputStream(&inp), input(inp) {
+	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
+			inputStream(&inp), input(inp), sp(sp) {
 	}
 	Request::~Request() {
 	}
 	
 	void Request::readPost(Delegate<void(Request&)> cb) {
 		_readPOST.cb = cb;
-		_readPOST.tmp_i = tmpbuffer.length();
+		_readPOST.ms = new (_readPOST.ms1) MemoryStream();
+		_readPOST.tmp_i = _readPOST.ms->length();
 		auto it = headers.find("Content-Length");
 		if (it == headers.end()) {
-			input.readToEnd(tmpbuffer, { &Request::_readCB, this });
+			input.readToEnd(*_readPOST.ms, { &Request::_readCB, this });
 		} else {
-			input.readChunked(tmpbuffer, atoi((*it).second), { &Request::_readCB, this });
+			input.readChunked(*_readPOST.ms, atoi((*it).second), { &Request::_readCB, this });
 		}
 	}
 	void Request::_readCB(int i) {
-		tmpbuffer.flush();
+		_readPOST.ms->flush();
 		struct
 		{
 			Request* This;
 			void operator()(const char* name, int nameLen, const char* value, int valueLen) {
 				int nBegin, vBegin, lastLen;
 				{
-					nBegin = This->tmpbuffer.length();
-					CP::StreamWriter sw(This->tmpbuffer);
+					nBegin = This->_readPOST.ms->length();
+					CP::StreamWriter sw(*This->_readPOST.ms);
 					cppsp::urlDecode(name, nameLen, sw);
 					sw.flush();
-					vBegin = This->tmpbuffer.length();
+					vBegin = This->_readPOST.ms->length();
 					if (value != NULL) {
 						cppsp::urlDecode(value, valueLen, sw);
 					}
-					lastLen = This->tmpbuffer.length();
+					lastLen = This->_readPOST.ms->length();
 				}
-				This->form[ {(char*)This->tmpbuffer.data()+nBegin,vBegin-nBegin}]
-				= {(char*)This->tmpbuffer.data()+vBegin,lastLen-vBegin};
+				String n { This->sp->add((char*) This->_readPOST.ms->data() + nBegin, vBegin - nBegin),
+						vBegin - nBegin };
+				String v { This->sp->add((char*) This->_readPOST.ms->data() + vBegin, lastLen - vBegin),
+						lastLen - vBegin };
+				This->form[n] = v;
 			}
-		} cb {this};
-		cppsp::parseQueryString((const char*) tmpbuffer.data() + _readPOST.tmp_i, i, &cb, false);
+		} cb { this };
+		cppsp::parseQueryString((const char*) _readPOST.ms->data() + _readPOST.tmp_i, i, &cb, false);
+		_readPOST.ms->~MemoryStream();
 		_readPOST.cb(*this);
 	}
 
-	Response::Response(CP::Stream& out) :
-			outputStream(&out), output((CP::BufferedOutput&) buffer), headersWritten(false),
+	Response::Response(CP::Stream& out, CP::StringPool* sp) :
+			outputStream(&out), output((CP::BufferedOutput&) buffer), sp(sp), headersWritten(false),
 					closed(false), sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
+		addDefaultHeaders();
+	}
+	void Response::addDefaultHeaders() {
 		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
 	}
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
@@ -231,12 +241,10 @@ namespace cppsp
 		headers.clear();
 		queryString.clear();
 		form.clear();
-		tmpbuffer.clear();
-		method.clear();
-		path.clear();
 	}
 	void Response::reset() {
 		headers.clear();
+		addDefaultHeaders();
 		output.flush();
 		buffer.clear();
 		headersWritten = false;
@@ -246,11 +254,12 @@ namespace cppsp
 
 } /* namespace cppsp */
 
-void cppsp::Server::loadPage(CP::Poll& p, string path, Delegate<void(Page*, exception* ex)> cb) {
-	cppsp::loadPage(p, rootDir(), mapPath(path), cb);
+void cppsp::Server::loadPage(CP::Poll& p, String path, Delegate<void(Page*, exception* ex)> cb) {
+	string tmp = mapPath(path.toSTDString());
+	cppsp::loadPage(p, rootDir(), { tmp.data(), (int) tmp.length() }, cb);
 }
 
-void cppsp::Server::loadPageFromFile(CP::Poll& p, string path,
+void cppsp::Server::loadPageFromFile(CP::Poll& p, String path,
 		Delegate<void(Page*, exception* ex)> cb) {
 	cppsp::loadPage(p, rootDir(), path, cb);
 }

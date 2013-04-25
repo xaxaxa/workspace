@@ -176,7 +176,7 @@ int main(int argc, char** argv) {
 	//CP::Poll p;
 	
 	int i=(int)listen.find(':');
-	if(i<0) throw runtime_error("expected \":\" in listen");;
+	if(i<0) throw runtime_error("expected \":\" in listen");
 	listensock.bind(listen.substr(0,i).c_str(),
 		listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM);
 	listensock.listen(512);
@@ -224,14 +224,15 @@ void processRequest(serverThread& thr,Poll& p,HANDLE s) {
 		Socket s;
 		cppsp::CPollRequest req;
 		cppsp::Response resp;
+		StringPool sp;
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t buf[4096];
-		string path;
+		String path;
 		bool keepAlive;
 		handler(serverThread& thr,CP::Poll& p,HANDLE s):thr(thr),p(p),
 			s(s,thr.listensock->addressFamily,thr.listensock->type,thr.listensock->protocol),
-			req(this->s),resp(this->s) {
+			req(this->s,&sp),resp(this->s,&sp) {
 			//printf("handler()\n");
 			p.add(this->s);
 			this->retain();
@@ -248,9 +249,10 @@ void processRequest(serverThread& thr,Poll& p,HANDLE s) {
 			resp.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
 			//printf("readCB()\n");
 			char tmp[req.path.length()+rootDir.length()];
-			int l=cppsp::combinePathChroot(rootDir.c_str(),req.path.c_str(),tmp);
-			path=string(tmp,l);
-			cppsp::loadPage(thr.mgr,p,rootDir,path,{&handler::loadCB,this});
+			int l=cppsp::combinePathChroot(rootDir.data(),rootDir.length(),
+				req.path.data(),req.path.length(),tmp);
+			path=sp.addString(tmp,l);
+			cppsp::loadPage(thr.mgr,p,{rootDir.data(),(int)rootDir.length()},path,{&handler::loadCB,this});
 		}
 		
 		void loadCB(Page* p, exception* ex) {
@@ -261,6 +263,7 @@ void processRequest(serverThread& thr,Poll& p,HANDLE s) {
 				goto doFinish;
 			}
 			{
+				p->sp=&sp;
 				//this->p=p;
 				//p->filePath=path;
 				p->request=&req;
@@ -284,6 +287,7 @@ void processRequest(serverThread& thr,Poll& p,HANDLE s) {
 			//finalize();
 		}
 		void handleRequestCB(Page& p) {
+			sp.clear();
 			p.release();
 			//s->shutdown(SHUT_WR);
 			//release();

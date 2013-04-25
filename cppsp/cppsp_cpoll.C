@@ -8,11 +8,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "include/stringutils.H"
+using namespace CP;
 namespace cppsp
 {
 	//static int CPollRequest::bufSize=4096;
-	CPollRequest::CPollRequest(CP::Socket& s) :
-			Request(s), s(s) {
+	CPollRequest::CPollRequest(CP::Socket& s, CP::StringPool* sp) :
+			Request(s, sp), s(s) {
 	}
 	
 	void CPollRequest::readHeaders(const Delegate<void(bool)>& cb) {
@@ -35,7 +36,7 @@ namespace cppsp
 			int lineBufLen = _lineBuffer.length();
 			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
 			if (tmp == NULL) goto fail;
-			method = string((char*) lineBuf, tmp - lineBuf);
+			method = sp->addString((char*) lineBuf, tmp - lineBuf);
 			tmp++;
 			if (lineBuf + lineBufLen - tmp <= 0) goto fail;
 			uint8_t* tmp1 = (uint8_t*) memchr(tmp, ' ', lineBuf + lineBufLen - tmp);
@@ -45,30 +46,30 @@ namespace cppsp
 			if (pathLen <= 0) goto fail;
 
 			const char* q = (const char*) memchr(path, '?', pathLen);
-			if (q == NULL) this->path = string(path, pathLen);
+			if (q == NULL) this->path = sp->addString(path, pathLen);
 			else {
 				struct
 				{
 					CPollRequest* This;
+					MemoryStream ms;
 					void operator()(const char* name, int nameLen, const char* value, int valueLen) {
-						int nBegin, vBegin, lastLen;
+						String n, v;
 						{
-							nBegin = This->tmpbuffer.length();
-							CP::StreamWriter sw(This->tmpbuffer);
+							CP::StreamWriter sw(ms);
 							cppsp::urlDecode(name, nameLen, sw);
 							sw.flush();
-							vBegin = This->tmpbuffer.length();
+							n= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
+							ms.clear();
 							if (value != NULL) {
 								cppsp::urlDecode(value, valueLen, sw);
 							}
-							lastLen = This->tmpbuffer.length();
 						}
-						This->queryString[ {(char*)This->tmpbuffer.data()+nBegin,vBegin-nBegin}]
-						= {(char*)This->tmpbuffer.data()+vBegin,lastLen-vBegin};
+						v= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
+						This->queryString[n] = v;
 					}
-				} cb {this};
+				} cb { this };
 				cppsp::parseQueryString(q + 1, path + pathLen - q - 1, &cb, false);
-				this->path = string(path, q - path);
+				this->path = sp->addString(path, q - path);
 			}
 		} else {
 			uint8_t* lineBuf = _lineBuffer.data();
@@ -77,20 +78,16 @@ namespace cppsp
 			if (tmp == NULL || tmp == lineBuf) goto fail;
 			uint8_t* tmp1 = tmp - 1;
 			while (tmp1 > lineBuf && *tmp1 == ' ')
-			tmp1--;
-			int nBegin=tmpbuffer.length();
-			tmpbuffer.write(lineBuf, tmp1 - lineBuf + 1);
-			//string name((char*) lineBuf, tmp1 - lineBuf + 1);
+				tmp1--;
+			String n { sp->add((const char*) lineBuf, tmp1 - lineBuf + 1), tmp1 - lineBuf + 1 };
 
 			tmp1 = tmp + 1;
-			while (tmp1 < (lineBuf + lineBufLen) && *tmp1 == ' ') tmp1++;
-			int vBegin=tmpbuffer.length();
-			tmpbuffer.write(tmp1, lineBuf + lineBufLen - tmp1);
-			int lastLen=tmpbuffer.length();
-			//string value((char*) tmp1, lineBuf + lineBufLen - tmp1);
+			while (tmp1 < (lineBuf + lineBufLen) && *tmp1 == ' ')
+				tmp1++;
+			String v { sp->add((const char*) tmp1, lineBuf + lineBufLen - tmp1), lineBuf + lineBufLen
+					- tmp1 };
 
-			headers.insert(make_pair( String {(char*)tmpbuffer.data()+nBegin,vBegin-nBegin},
-							String {(char*)tmpbuffer.data()+vBegin,lastLen-vBegin}));
+			headers.insert(make_pair(n, v));
 		}
 		if (input.eof) {
 			end: _endRead(!firstLine);
