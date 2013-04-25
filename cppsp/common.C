@@ -51,20 +51,32 @@ namespace cppsp
 		return message.c_str();
 	}
 
-	static void split(const char* s, int len, char delim,
-			const function<void(const char*, int)>& cb) {
-		if (len == -1) len = strlen(s);
-		const char* s1 = s;
-		const char* end = s + len;
-		while (true) {
-			s = (const char*) memchr(s, delim, end - s);
-			if (s == NULL) break;
-			cb(s1, s - s1);
-			s1 = ++s;
+	struct split
+	{
+		const char* s;
+		const char* end;
+		const char* s1;
+		String value;
+		char delim;
+		split(const char* s, int len, char delim) {
+			if (len == -1) len = strlen(s);
+			this->s = s;
+			this->s1 = s;
+			this->end = s + len;
+			this->delim = delim;
 		}
-		cb(s1, end - s1);
-	}
-
+		bool read() {
+			if (s == NULL) return false;
+			s = (const char*) memchr(s, delim, end - s);
+			if (s == NULL) {
+				value= {s1, end - s1};
+				return true;
+			}
+			value= {s1, s - s1};
+			s1 = ++s;
+			return true;
+		}
+	};
 	// "/"		+ "aaaaa"	=> "/aaaaa"
 	// "/asdf/"	+ "zzz"		=> "/asdf/zzz"
 	// "/asdf/"	+ "zzz/"		=> "/asdf/zzz/"
@@ -86,23 +98,26 @@ namespace cppsp
 			while (i >= 0 && buf[i] != '/')
 				i--;
 			if (i < 0) i = 0;
-			split(p2, l2, '/', [&](const char* s, int l) {
-				if(l==2 && memcmp(s,"..",2)==0) {
+			split spl(p2, l2, '/');
+			while (spl.read()) {
+				const char* s = spl.value.data();
+				int l = spl.value.length();
+				if (l == 2 && memcmp(s, "..", 2) == 0) {
 					i--;
-					while(i>=0 && buf[i]!='/')i--;
-					if(i<0) i=0;
-				} else if(l==1 && *s=='.') {
-					buf[i]='/';
+					while (i >= 0 && buf[i] != '/')
+						i--;
+					if (i < 0) i = 0;
+				} else if (l == 1 && *s == '.') {
+					buf[i] = '/';
 					i++;
-				}
-				else {
+				} else {
 					//while(i>=0 && buf[i]!='/')i--;
-					buf[i]='/';
+					buf[i] = '/';
 					i++;
-					memcpy(buf+i,s,l);
-					i+=l;
+					memcpy(buf + i, s, l);
+					i += l;
 				}
-			});
+			}
 			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
 		}
 		if (i < 0) i = 0;
@@ -118,31 +133,34 @@ namespace cppsp
 		memcpy(buf, p1, i);
 		if (l2 > 0) {
 			bool first(true);
-			split(p2, l2, '/', [&](const char* s, int l) {
-				if(first) {
-					first=false;
-					if(l==0) return;
+			split spl(p2, l2, '/');
+			while (spl.read()) {
+				const char* s = spl.value.data();
+				int l = spl.value.length();
+				if (first) {
+					first = false;
+					if (l == 0) continue;
 				}
-				if(l==2 && memcmp(s,"..",2)==0) {
+				if (l == 2 && memcmp(s, "..", 2) == 0) {
 					i--;
-					while(i>=0 && buf[i]!='/')i--;
-					if(i<l1) i=l1;
-				} else if(l==1 && *s=='.') {
-					if(!(i>0 && buf[i-1]=='/')) {
-						buf[i]='/';
+					while (i >= 0 && buf[i] != '/')
+						i--;
+					if (i < l1) i = l1;
+				} else if (l == 1 && *s == '.') {
+					if (!(i > 0 && buf[i - 1] == '/')) {
+						buf[i] = '/';
 						i++;
 					}
-				}
-				else {
+				} else {
 					//while(i>=0 && buf[i]!='/')i--;
-					if(!(i>0 && buf[i-1]=='/')) {
-						buf[i]='/';
+					if (!(i > 0 && buf[i - 1] == '/')) {
+						buf[i] = '/';
 						i++;
 					}
-					memcpy(buf+i,s,l);
-					i+=l;
+					memcpy(buf + i, s, l);
+					i += l;
 				}
-			});
+			}
 			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
 		}
 		if (i < l1) i = l1;
@@ -211,27 +229,30 @@ namespace cppsp
 				case '@':
 				{ //cppsp options
 					int nextopt = 0;
-					split(s + 1, s1 - s - 1, ' ', [&](const char* s1, int l1) {
-						switch(nextopt) {
+					split spl(s + 1, s1 - s - 1, ' ');
+					while (spl.read()) {
+						const char* s1 = spl.value.data();
+						int l1 = spl.value.length();
+						switch (nextopt) {
 							case 0:
 							{
-								if(l1==8 && memcmp(s1,"inherits",8)==0) nextopt=1;
-								else if(l1==5 && memcmp(s1,"class",5)==0) nextopt=2;
+								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0) nextopt = 1;
+								else if (l1 == 5 && memcmp(s1, "class", 5) == 0) nextopt = 2;
 								return;
 							}
 							case 1:
 							{
-								inherits=string(s1,l1);
+								inherits = string(s1, l1);
 								break;
 							}
 							case 2:
 							{
-								if(name==NULL) classname=string(s1,l1);
+								if (name == NULL) classname = string(s1, l1);
 								break;
 							}
 						}
-						nextopt=0;
-					});
+						nextopt = 0;
+					}
 					break;
 				}
 				case '#':
