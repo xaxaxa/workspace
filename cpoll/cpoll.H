@@ -163,6 +163,9 @@ namespace CP
 		inline int length() const {
 			return len;
 		}
+		inline string toSTDString() {
+			return string(d, len);
+		}
 	};
 #define __CPOLL_DO_ATOI(func,str) char tmp[str.len + 1];\
 												memcpy(tmp, str.d, str.len);\
@@ -1272,6 +1275,48 @@ namespace CP
 		virtual void flushBuffer(int minBufferAllocation);
 		//user must delete the MemoryStream instance after this call
 		void keepBuffer();
+	};
+	class StringPool: public RGC::Object
+	{
+	public:
+		struct _pageHeader
+		{
+			_pageHeader* next;
+		};
+		_pageHeader* _firstPage;
+		_pageHeader* _curPage;
+		_pageHeader* _firstRawItem;
+		_pageHeader* _curRawItem;
+		int _pageSize;
+		int _curIndex;
+		StringPool(int pageSize = 4096);
+		~StringPool();
+		char* add(int length);
+		char* beginAdd(int length);
+		char* add(const char* s, int length);
+		char* add(String s) {
+			return add(s.data(), s.length());
+		}
+		char* add(const char* s) {
+			return add(s, strlen(s));
+		}
+		String addString(int length) {
+			return {add(length),length};
+		}
+		String addString(const char* s, int length) {
+			return {add(s,length),length};
+		}
+		String addString(String s) {
+			return {add(s.data(), s.length()),s.length()};
+		}
+		String addString(const char* s) {
+			int l = strlen(s);
+			return {add(s, l),l};
+		}
+		void endAdd(int length);
+		void clear();
+		void _addPage();
+		void _addRaw(int len);
 	};
 	class StringStream: public Stream, public BufferedOutput, public MemoryBuffer
 	{

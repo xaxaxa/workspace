@@ -2230,6 +2230,71 @@ namespace CP
 		buffer = NULL;
 	}
 
+	StringPool::StringPool(int pageSize) :
+			_firstPage(NULL), _curPage(NULL), _firstRawItem(NULL), _curRawItem(NULL),
+					_pageSize(pageSize) {
+
+	}
+	StringPool::~StringPool() {
+		clear();
+	}
+	char* StringPool::add(int length) {
+		char* tmp = beginAdd(length);
+		endAdd(length);
+		return tmp;
+	}
+	char* StringPool::add(const char* s, int length) {
+		char* tmp = beginAdd(length);
+		memcpy(tmp, s, length);
+		endAdd(length);
+		return tmp;
+	}
+	char* StringPool::beginAdd(int length) {
+		if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
+			_addRaw(length);
+			return ((char*) (_curRawItem + 1));
+		}
+		if (_curPage == NULL || length > (_pageSize - (int) sizeof(_pageHeader) - _curIndex)) {
+			_addPage();
+		}
+		return ((char*) (_curPage + 1)) + _curIndex;
+	}
+	void StringPool::endAdd(int length) {
+		_curIndex += length;
+	}
+	void StringPool::clear() {
+		_pageHeader* h = _firstPage;
+		while (h != NULL) {
+			_pageHeader* n = h->next;
+			free(h);
+			h = n;
+		}
+		h = _firstRawItem;
+		while (h != NULL) {
+			_pageHeader* n = h->next;
+			free(h);
+			h = n;
+		}
+		_firstPage = _curPage = _firstRawItem = _curRawItem = NULL;
+	}
+	void StringPool::_addPage() {
+		void* tmp = malloc(_pageSize);
+		if (tmp == NULL) throw bad_alloc();
+		if (_curPage != NULL) _curPage->next = (_pageHeader*) tmp;
+		_curPage = (_pageHeader*) tmp;
+		_curPage->next = NULL;
+		if (_firstPage == NULL) _firstPage = (_pageHeader*) tmp;
+		_curIndex = 0;
+	}
+	void StringPool::_addRaw(int len) {
+		void* tmp = malloc(len + sizeof(_pageHeader));
+		if (tmp == NULL) throw bad_alloc();
+		if (_curRawItem != NULL) _curRawItem->next = (_pageHeader*) tmp;
+		_curRawItem = (_pageHeader*) tmp;
+		_curRawItem->next = NULL;
+		if (_firstRawItem == NULL) _firstRawItem = (_pageHeader*) tmp;
+	}
+
 	StringStream::StringStream() :
 			BufferedOutput(NULL, 0, 0), len(0) {
 
