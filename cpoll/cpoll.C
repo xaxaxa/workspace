@@ -2237,6 +2237,7 @@ namespace CP
 	}
 	StringPool::~StringPool() {
 		clear();
+		if (_firstPage != NULL) free(_firstPage);
 	}
 	char* StringPool::add(int length) {
 		char* tmp = beginAdd(length);
@@ -2263,11 +2264,14 @@ namespace CP
 		_curIndex += length;
 	}
 	void StringPool::clear() {
-		_pageHeader* h = _firstPage;
-		while (h != NULL) {
-			_pageHeader* n = h->next;
-			free(h);
-			h = n;
+		_pageHeader* h;
+		if (_firstPage != NULL) {
+			h = _firstPage->next;
+			while (h != NULL) {
+				_pageHeader* n = h->next;
+				free(h);
+				h = n;
+			}
 		}
 		h = _firstRawItem;
 		while (h != NULL) {
@@ -2275,7 +2279,9 @@ namespace CP
 			free(h);
 			h = n;
 		}
-		_firstPage = _curPage = _firstRawItem = _curRawItem = NULL;
+		_curPage = _firstPage;
+		_curIndex = 0;
+		_firstRawItem = _curRawItem = NULL;
 	}
 	void StringPool::_addPage() {
 		void* tmp = malloc(_pageSize);
