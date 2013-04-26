@@ -238,7 +238,7 @@ namespace cppsp
 							{
 								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0) nextopt = 1;
 								else if (l1 == 5 && memcmp(s1, "class", 5) == 0) nextopt = 2;
-								return;
+								continue;
 							}
 							case 1:
 							{
@@ -301,6 +301,10 @@ namespace cppsp
 	}
 	static inline void* checkError(void* p) {
 		if (p == NULL) throw runtime_error(strerror(errno));
+		return p;
+	}
+	static inline void* checkDLError(void* p) {
+		if (p == NULL) throw runtime_error(dlerror());
 		return p;
 	}
 	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid) {
@@ -466,8 +470,8 @@ namespace cppsp
 					mmap(NULL, stringTableLen, PROT_READ, MAP_SHARED, stringTableFD, 0));
 			dlHandle = dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY);
 			if(dlHandle==NULL) throw runtime_error(dlerror());
-			getObjectSize = (getObjectSize_t) checkError(dlsym(dlHandle, "getObjectSize"));
-			createObject = (createObject_t) checkError(dlsym(dlHandle, "createObject"));
+			getObjectSize = (getObjectSize_t) checkDLError(dlsym(dlHandle, "getObjectSize"));
+			createObject = (createObject_t) checkDLError(dlsym(dlHandle, "createObject"));
 			loaded = true;
 			//printf("loaded: dlHandle=%p; createObject=%p\n",dlHandle,(void*)createObject);
 		}

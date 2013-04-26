@@ -155,8 +155,8 @@ namespace cppsp
 					if (value != NULL) {
 						cppsp::urlDecode(value, valueLen, sw);
 					}
-					lastLen = This->_readPOST.ms->length();
 				}
+				lastLen = This->_readPOST.ms->length();
 				String n { This->sp->add((char*) This->_readPOST.ms->data() + nBegin, vBegin - nBegin),
 						vBegin - nBegin };
 				String v { This->sp->add((char*) This->_readPOST.ms->data() + vBegin, lastLen - vBegin),
