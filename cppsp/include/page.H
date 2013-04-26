@@ -24,7 +24,7 @@ namespace cppsp
 		CP::StreamReader input;
 		CP::StringPool* sp; //may be used to store headers, querystrings, and POST data
 		typedef unordered_map<String, String, std::hash<String>, equal_to<String>,
-				CP::PoolAllocator<std::pair<String, String> > > StringMap;
+						CP::PoolAllocator<std::pair<String, String> > > StringMap;
 		CP::PoolAllocator<std::pair<const String, String> > alloc;
 		StringMap queryString;
 		StringMap headers;
@@ -48,10 +48,6 @@ namespace cppsp
 
 		void _readCB(int i);
 		virtual void reset();
-
-		//prepare for StringPool reset
-		virtual void partialDestruct();
-		virtual void partialConstruct();
 	};
 	class Response: public RGC::Object
 	{
@@ -90,8 +86,6 @@ namespace cppsp
 		}
 		void _writeCB(int r);
 		virtual void reset();
-		virtual void partialDestruct();
-		virtual void partialConstruct();
 	};
 	class Page;
 	class Server: public RGC::Object

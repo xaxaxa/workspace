@@ -174,6 +174,7 @@ struct handler:public RGC::Object {
 		//finalize();
 	}
 	void handleRequestCB(Page& p) {
+		sp.clear();
 		p.release();
 		//s->shutdown(SHUT_WR);
 		//release();
@@ -182,11 +183,8 @@ struct handler:public RGC::Object {
 	}
 	void finalize() {
 		if(keepAlive) {
-			resp.partialDestruct();
-			req.partialDestruct();
-			sp.clear();
-			req.partialConstruct();
-			resp.partialConstruct();
+			req.reset();
+			resp.reset();
 			req.readHeaders({&handler::readCB,this});
 		} else s.repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 	}
