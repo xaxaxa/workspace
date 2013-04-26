@@ -20,6 +20,7 @@
 #include "include/common.H"
 #include "include/page.H"
 #include <errno.h>
+#include <unordered_map>
 
 using namespace CP;
 using namespace std;
@@ -511,7 +512,7 @@ namespace cppsp
 	{
 	public:
 		StringPool sp;
-		map<String, loadedPage*> cache;
+		unordered_map<String, loadedPage*> cache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
 		void loadPage(CP::Poll& p, String wd, String path, Delegate<void(Page*, exception* ex)> cb);
