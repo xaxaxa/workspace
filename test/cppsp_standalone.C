@@ -18,6 +18,7 @@ using namespace std;
 using namespace socketd;
 using namespace CP;
 using namespace cppsp;
+using namespace RGC;
 string rootDir;
 class cppsp_Server: public cppsp::Server {
 	virtual const char* rootDir() {
@@ -103,6 +104,94 @@ struct serverThread
 } __attribute__((aligned(CACHELINE_SIZE)));
 
 CP::Socket listensock;
+struct handler:public RGC::Object {
+	Allocator* alloc;
+	serverThread& thr;
+	CP::Poll& p;
+	Socket s;
+	cppsp::CPollRequest req;
+	cppsp::Response resp;
+	StringPool sp;
+	//Page* p;
+	//MemoryStream ms;
+	uint8_t buf[4096];
+	String path;
+	bool keepAlive;
+	handler(serverThread& thr,CP::Poll& p,HANDLE s):thr(thr),p(p),
+		s(s,thr.listensock->addressFamily,thr.listensock->type,thr.listensock->protocol),
+		req(this->s,&sp),resp(this->s,&sp) {
+		//printf("handler()\n");
+		p.add(this->s);
+		this->retain();
+		req.readHeaders({&handler::readCB,this});
+	}
+	void readCB(bool success) {
+		if(!success) {
+			destruct();
+			return;
+		}
+		auto it=req.headers.find("connection");
+		if(it!=req.headers.end() && (*it).second=="close")keepAlive=false;
+		else keepAlive=true;
+		resp.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
+		//printf("readCB()\n");
+		char tmp[req.path.length()+rootDir.length()];
+		int l=cppsp::combinePathChroot(rootDir.data(),rootDir.length(),
+			req.path.data(),req.path.length(),tmp);
+		path=sp.addString(tmp,l);
+		cppsp::loadPage(thr.mgr,p,{rootDir.data(),(int)rootDir.length()},path,{&handler::loadCB,this});
+	}
+	
+	void loadCB(Page* p, exception* ex) {
+		//printf("loadCB()\n");
+		if(ex!=NULL) {
+			cppsp::handleError(ex,resp,path);
+			resp.flush( { &handler::flushCB, this });
+			goto doFinish;
+		}
+		{
+			p->sp=&sp;
+			//this->p=p;
+			//p->filePath=path;
+			p->request=&req;
+			p->response=&resp;
+			p->poll=&this->p;
+			p->server=&_server;
+			p->handleRequest({&handler::handleRequestCB,this});
+			return;
+		}
+	doFinish:
+		//s->write(ms.data(),ms.length(),{&handler::writeCB,this});
+		//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+		finalize();
+	}
+	void sockReadCB(int r) {
+		if(r<=0) destruct();
+	}
+	void flushCB(Response& resp) {
+		//s->shutdown(SHUT_WR);
+		//release();
+		//finalize();
+	}
+	void handleRequestCB(Page& p) {
+		sp.clear();
+		p.release();
+		//s->shutdown(SHUT_WR);
+		//release();
+		//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+		finalize();
+	}
+	void finalize() {
+		if(keepAlive) {
+			req.reset();
+			resp.reset();
+			req.readHeaders({&handler::readCB,this});
+		} else s.repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+	}
+	~handler() {
+		//printf("~handler()\n");
+	}
+};
 void* thread1(void* v) {
 	serverThread* thr=(serverThread*)v;
 	Poll p;
@@ -127,15 +216,17 @@ void* thread1(void* v) {
 	} cb {p, thr};
 	thr->efd.repeatGetEvent(&cb);*/
 	
+	MemoryPool handlerPool(sizeof(handler));
 	struct {
 		Poll& p;
 		serverThread* thr;
+		MemoryPool& handlerPool;
 		void operator()(HANDLE sock) {
 			//printf("thread %i: accepted socket: %p (%i)\n",thr->threadid,sock,sock->handle);
-			cppsp_request* req;
-			processRequest(*thr,p,sock);
+			handler* hdlr=new (handlerPool.alloc()) handler(*thr,p,sock);
+			hdlr->allocator=&handlerPool;
 		}
-	} cb {p, thr};
+	} cb {p, thr, handlerPool};
 	thr->listensock->repeatAcceptHandle(&cb);
 	p.add(*thr->listensock);
 	Timer t((uint64_t)2000);
@@ -216,96 +307,6 @@ int main(int argc, char** argv) {
 	listensock.repeatAcceptHandle(&cb);
 	p.loop();*/
 	while(1)sleep(3600);
-}
-void processRequest(serverThread& thr,Poll& p,HANDLE s) {
-	struct handler:public RGC::Object {
-		serverThread& thr;
-		CP::Poll& p;
-		Socket s;
-		cppsp::CPollRequest req;
-		cppsp::Response resp;
-		StringPool sp;
-		//Page* p;
-		//MemoryStream ms;
-		uint8_t buf[4096];
-		String path;
-		bool keepAlive;
-		handler(serverThread& thr,CP::Poll& p,HANDLE s):thr(thr),p(p),
-			s(s,thr.listensock->addressFamily,thr.listensock->type,thr.listensock->protocol),
-			req(this->s,&sp),resp(this->s,&sp) {
-			//printf("handler()\n");
-			p.add(this->s);
-			this->retain();
-			req.readHeaders({&handler::readCB,this});
-		}
-		void readCB(bool success) {
-			if(!success) {
-				delete this;
-				return;
-			}
-			auto it=req.headers.find("connection");
-			if(it!=req.headers.end() && (*it).second=="close")keepAlive=false;
-			else keepAlive=true;
-			resp.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
-			//printf("readCB()\n");
-			char tmp[req.path.length()+rootDir.length()];
-			int l=cppsp::combinePathChroot(rootDir.data(),rootDir.length(),
-				req.path.data(),req.path.length(),tmp);
-			path=sp.addString(tmp,l);
-			cppsp::loadPage(thr.mgr,p,{rootDir.data(),(int)rootDir.length()},path,{&handler::loadCB,this});
-		}
-		
-		void loadCB(Page* p, exception* ex) {
-			//printf("loadCB()\n");
-			if(ex!=NULL) {
-				cppsp::handleError(ex,resp,path);
-				resp.flush( { &handler::flushCB, this });
-				goto doFinish;
-			}
-			{
-				p->sp=&sp;
-				//this->p=p;
-				//p->filePath=path;
-				p->request=&req;
-				p->response=&resp;
-				p->poll=&this->p;
-				p->server=&_server;
-				p->handleRequest({&handler::handleRequestCB,this});
-				return;
-			}
-		doFinish:
-			//s->write(ms.data(),ms.length(),{&handler::writeCB,this});
-			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
-			finalize();
-		}
-		void sockReadCB(int r) {
-			if(r<=0) delete this;
-		}
-		void flushCB(Response& resp) {
-			//s->shutdown(SHUT_WR);
-			//release();
-			//finalize();
-		}
-		void handleRequestCB(Page& p) {
-			sp.clear();
-			p.release();
-			//s->shutdown(SHUT_WR);
-			//release();
-			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
-			finalize();
-		}
-		void finalize() {
-			if(keepAlive) {
-				req.reset();
-				resp.reset();
-				req.readHeaders({&handler::readCB,this});
-			} else s.repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
-		}
-		~handler() {
-			//printf("~handler()\n");
-		}
-	}* hdlr=new handler(thr,p,s);
-	hdlr->release();
 }
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
