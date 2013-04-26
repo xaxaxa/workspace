@@ -12,7 +12,26 @@
 using namespace CP;
 namespace cppsp
 {
-	
+	static inline int itoa(int i, char* b) {
+		static char const digit[] = "0123456789";
+		char* p = b;
+		if (i < 0) {
+			*p++ = '-';
+			i = -i;
+		}
+		register int shifter = i;
+		do { //Move to where representation ends
+			++p;
+			shifter = shifter / 10;
+		} while (shifter);
+		*p = '\0';
+		int l = p - b;
+		do { //Move back, inserting digits as u go
+			*--p = digit[i % 10];
+			i = i / 10;
+		} while (i);
+		return l;
+	}
 	Page::Page() :
 			doRender(true) {
 		
@@ -172,7 +191,8 @@ namespace cppsp
 
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :
 			outputStream(&out), output((CP::BufferedOutput&) buffer), sp(sp), alloc(sp),
-					headers(less<String>(),alloc), headersWritten(false), closed(false), sendChunked(false) {
+					headers(less<String>(), alloc), headersWritten(false), closed(false),
+					sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
 		addDefaultHeaders();
@@ -181,7 +201,19 @@ namespace cppsp
 		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
 	}
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
-		sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
+		//sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
+		{
+			char s1[32] = "HTTP/1.1 ";
+			int x = 9 + itoa(This->statusCode, s1 + 9);
+			s1[x] = ' ';
+			x++;
+			memcpy(s1 + x, This->statusName.data(), This->statusName.length());
+			x += This->statusName.length();
+			s1[x] = '\r';
+			s1[x + 1] = '\n';
+			x += 2;
+			sw.write(s1, x);
+		}
 		for (auto it = This->headers.begin(); it != This->headers.end(); it++) {
 			int l1 = (*it).first.length();
 			int l2 = (*it).second.length();
@@ -209,8 +241,9 @@ namespace cppsp
 				CP::StreamWriter sw(buffer);
 				auto it = this->headers.find("Content-Length");
 				if (it == this->headers.end()) {
-					char tmps[32];
-					snprintf(tmps, 32, "%i", buffer.length());
+					char tmps[16];
+					//snprintf(tmps, 32, "%i", buffer.length());
+					itoa(buffer.length(), tmps);
 					this->headers.insert(make_pair("Content-Length", tmps));
 				}
 				Response_doWriteHeaders(this, sw);
