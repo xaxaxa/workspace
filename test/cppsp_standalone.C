@@ -109,9 +109,9 @@ struct handler:public RGC::Object {
 	serverThread& thr;
 	CP::Poll& p;
 	Socket s;
+	StringPool sp;
 	cppsp::CPollRequest req;
 	cppsp::Response resp;
-	StringPool sp;
 	//Page* p;
 	//MemoryStream ms;
 	uint8_t buf[4096];
