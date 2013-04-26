@@ -2413,12 +2413,16 @@ namespace CP
 		}
 	}
 	void* MemoryPool::alloc() {
-		if (_freeList == NULL) return ((_item*) malloc(size + sizeof(_item))) + 1;
-		else {
+		if (_freeList == NULL) {
+			_item* tmp = (_item*) malloc(size + sizeof(_item));
+			tmp->nextFree = (_item*) this;
+			return tmp + 1;
+		} else {
 			_item* tmp = _freeList;
 			_freeList = _freeList->nextFree;
 			items--;
 			if (tmp == _lastFree) _lastFree = NULL;
+			tmp->nextFree = (_item*) this; //for double-free detection
 			return (tmp + 1);
 		}
 	}
@@ -2429,9 +2433,12 @@ namespace CP
 	}
 	void MemoryPool::free(void* obj) {
 		_item* o = ((_item*) obj) - 1;
+		if (o->nextFree != (_item*) this) throw runtime_error(
+				"MemoryPool::free(): double free or corruption");
 		if (items > maxItems) {
 			free(o);
 		} else {
+			items++;
 			o->nextFree = NULL;
 			if (_lastFree != NULL) {
 				_lastFree->nextFree = o;
