@@ -22,10 +22,12 @@ namespace cppsp
 		virtual ~Request();
 		RGC::Ref<CP::Stream> inputStream;
 		CP::StreamReader input;
-		map<String, String> queryString;
-		map<String, String> headers;
-		map<String, String> form;
 		CP::StringPool* sp; //may be used to store headers, querystrings, and POST data
+		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String,String> > > StringMap;
+		CP::PoolAllocator<std::pair<const String,String> > alloc;
+		StringMap queryString;
+		StringMap headers;
+		StringMap form;
 		String method;
 		String path;
 		//string httpVersion;
@@ -56,7 +58,9 @@ namespace cppsp
 		CP::StreamWriter output;
 		Callback _cb;
 		CP::StringPool* sp;
-		map<String, String> headers;
+		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<String,String> > > StringMap;
+		CP::PoolAllocator<std::pair<String,String> > alloc;
+		StringMap headers;
 		String statusName;
 		iovec iov[2];
 		int statusCode;
