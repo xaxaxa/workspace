@@ -12,6 +12,12 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
+
+/*
+ * uses code from http://www.cse.yorku.ca/~oz/hash.html
+ * for sdbm hash algorithm
+ * */
+
 /*
  * TODO:
  * 
@@ -1456,5 +1462,23 @@ namespace CP
 		void free(void* obj) override;
 
 	};}
-
+static unsigned long sdbm(uint8_t* str, int len) {
+	unsigned long hash = 0;
+	int c;
+	for (int i = 0; i < len; i++) {
+		c = str[i];
+		hash = c + (hash << 6) + (hash << 16) - hash;
+	}
+	return hash;
+}
+namespace std
+{
+	template<>
+	struct hash<CP::String>
+	{
+		size_t operator()(const ::CP::String& val) const {
+			return sdbm((uint8_t*) val.data(), val.length());
+		}
+	};
+}
 #endif
