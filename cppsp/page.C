@@ -142,10 +142,8 @@ namespace cppsp
 	}
 
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
-			inputStream(&inp), input(inp), sp(sp), alloc(sp),
-					queryString(0, hash<String>(), equal_to<String>(), alloc),
-					headers(0, hash<String>(), equal_to<String>(), alloc),
-					form(0, hash<String>(), equal_to<String>(), alloc) {
+			inputStream(&inp), input(inp), sp(sp), alloc(sp), queryString(less<String>(), alloc),
+					headers(less<String>(), alloc), form(less<String>(), alloc) {
 	}
 	Request::~Request() {
 	}
@@ -193,8 +191,8 @@ namespace cppsp
 
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :
 			outputStream(&out), output((CP::BufferedOutput&) buffer), sp(sp), alloc(sp),
-					headers(0, hash<String>(), equal_to<String>(), alloc), headersWritten(false),
-					closed(false), sendChunked(false) {
+					headers(less<String>(), alloc), headersWritten(false), closed(false),
+					sendChunked(false) {
 		statusCode = 200;
 		statusName = "OK";
 		addDefaultHeaders();

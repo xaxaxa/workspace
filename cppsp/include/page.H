@@ -8,7 +8,7 @@
 #ifndef PAGE_H_
 #define PAGE_H_
 #include <rgc.H>
-#include <unordered_map>
+#include <map>
 #include <cpoll.H>
 #include "stringutils.H"
 using namespace std;
@@ -23,9 +23,8 @@ namespace cppsp
 		RGC::Ref<CP::Stream> inputStream;
 		CP::StreamReader input;
 		CP::StringPool* sp; //may be used to store headers, querystrings, and POST data
-		typedef unordered_map<String, String, std::hash<String>, equal_to<String>,
-						CP::PoolAllocator<std::pair<String, String> > > StringMap;
-		CP::PoolAllocator<std::pair<const String, String> > alloc;
+		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String,String> > > StringMap;
+		CP::PoolAllocator<std::pair<const String,String> > alloc;
 		StringMap queryString;
 		StringMap headers;
 		StringMap form;
@@ -59,9 +58,8 @@ namespace cppsp
 		CP::StreamWriter output;
 		Callback _cb;
 		CP::StringPool* sp;
-		typedef unordered_map<String, String, std::hash<String>, equal_to<String>,
-				CP::PoolAllocator<std::pair<String, String> > > StringMap;
-		CP::PoolAllocator<std::pair<String, String> > alloc;
+		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<String,String> > > StringMap;
+		CP::PoolAllocator<std::pair<String,String> > alloc;
 		StringMap headers;
 		String statusName;
 		iovec iov[2];
