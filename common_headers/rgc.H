@@ -32,11 +32,14 @@ namespace RGC
 #define atomic_inc_and_test(v)          ++v == 0
 #define atomic_add_negative(i,v)        (v += i) < 0
 	//static int objs=0;
+	class Allocator;
 	class Object
 	{
 	public:
+		Allocator* allocator;
 		atomic_t refCount; //reference counter
 		Object() {
+			allocator = NULL;
 			refCount = 1;
 			/*objs++;
 			 cout << objs << " objects" << endl;*/
@@ -51,9 +54,7 @@ namespace RGC
 		inline void retain(int n=1) {
 			atomic_add(n,refCount);
 		}
-		inline void destruct() {
-			delete this;
-		}
+		inline void destruct();
 		inline bool release(int n=1) { //returns whether or not destruction occurred
 			atomic_sub(n,refCount);
 			if (refCount <= 0) {
@@ -68,6 +69,21 @@ namespace RGC
 		 return *this;
 		 }*/
 	};
+	class Allocator: public virtual Object
+	{
+	public:
+		virtual void* alloc(int s)=0;
+		virtual void free(void* obj)=0;
+		template<class T>
+		void del(T* obj) {
+			obj->~T();
+			free(obj);
+		}
+	};
+	void Object::destruct() {
+		if(allocator==NULL) delete this;
+		else allocator->del(this);
+	}
 	//template<class T> struct Ref;
 	template<class T> struct Ref
 	{
