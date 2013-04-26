@@ -40,6 +40,7 @@
 #include <sys/eventfd.h>
 #include <delegate.H>
 #include <sys/epoll.h>
+#include <limits>
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -181,9 +182,9 @@ namespace CP
 		__CPOLL_DO_ATOI(::atoll, s);
 	}
 	/*
-	static long long atoq(String s) {
-		__CPOLL_DO_ATOI(::atoq, s);
-	}*/
+	 static long long atoq(String s) {
+	 __CPOLL_DO_ATOI(::atoq, s);
+	 }*/
 
 	class MemoryBuffer: virtual public RGC::Object
 	{
@@ -1319,6 +1320,75 @@ namespace CP
 		void _addPage();
 		void _addRaw(int len);
 	};
+	template<class T>
+	class PoolAllocator
+	{
+	public:
+		typedef size_t size_type;
+		typedef ptrdiff_t difference_type;
+		typedef T* pointer;
+		typedef const T* const_pointer;
+		typedef T& reference;
+		typedef const T& const_reference;
+		typedef T value_type;
+
+		StringPool* sp;
+		template<class U>
+		struct rebind
+		{
+			typedef PoolAllocator<U> other;
+		};
+		PoolAllocator(StringPool* sp) throw () :
+				sp(sp) {
+
+		}
+		template<class U>
+		PoolAllocator(const PoolAllocator<U>& other) :
+				sp(other.sp) {
+
+		}
+		~PoolAllocator() {
+		}
+		template<class U>
+		PoolAllocator& operator=(const PoolAllocator<U>& other) throw () {
+			sp = other.sp;
+			return *this;
+		}
+		//    address
+		inline pointer address(reference r) {
+			return &r;
+		}
+		inline const_pointer address(const_reference r) {
+			return &r;
+		}
+		//    memory allocation
+		inline pointer allocate(size_type cnt, typename std::allocator<void>::const_pointer = 0) {
+			int size = cnt * sizeof(T);
+			pointer p = (pointer) sp->add(size);
+			//printf("allocate(size=%i): %p\n", size, p);
+			return p;
+		}
+		inline void deallocate(pointer p, size_type) {
+
+		}
+		//    size
+		inline size_type max_size() const {
+			return std::numeric_limits<size_type>::max() / sizeof(T);
+		}
+		//    construction/destruction
+		inline void construct(pointer p, const T& t) {
+			new (p) T(t);
+		}
+		inline void destroy(pointer p) {
+			p->~T();
+		}
+		inline bool operator==(PoolAllocator const&) {
+			return true;
+		}
+		inline bool operator!=(PoolAllocator const& a) {
+			return !operator==(a);
+		}
+	};
 	class StringStream: public Stream, public BufferedOutput, public MemoryBuffer
 	{
 	public:
@@ -1367,7 +1437,6 @@ namespace CP
 	};
 	void listDirectory(const char* path, Delegate<void(const char*)> cb);
 
-
 	class MemoryPool: public RGC::Allocator
 	{
 	public:
@@ -1380,14 +1449,12 @@ namespace CP
 		int size;
 		int items;
 		int maxItems;
-		MemoryPool(int size, int maxItems = 1024);
-		MemoryPool(const MemoryPool& other)=delete;
+		MemoryPool(int size, int maxItems = 1024); MemoryPool(const MemoryPool& other)=delete;
 		~MemoryPool();
 		void* alloc();
 		void* alloc(int s) override;
 		void free(void* obj) override;
 
-	};
-}
+	};}
 
 #endif
