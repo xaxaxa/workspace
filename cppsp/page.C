@@ -267,6 +267,7 @@ namespace cppsp
 		buffer.clear();
 		headersWritten = false;
 	}
+
 	void Response::_writeCB(int r) {
 		if (r <= 0) closed = true;
 		buffer.clear();
@@ -278,6 +279,16 @@ namespace cppsp
 		queryString.clear();
 		form.clear();
 	}
+	void Request::partialDestruct() {
+		headers.~StringMap();
+		queryString.~StringMap();
+		form.~StringMap();
+	}
+	void Request::partialConstruct() {
+		new (&headers) StringMap(0, hash<String>(), equal_to<String>(), alloc);
+		new (&queryString) StringMap(0, hash<String>(), equal_to<String>(), alloc);
+		new (&form) StringMap(0, hash<String>(), equal_to<String>(), alloc);
+	}
 	void Response::reset() {
 		headers.clear();
 		addDefaultHeaders();
@@ -286,6 +297,18 @@ namespace cppsp
 		headersWritten = false;
 		closed = false;
 		sendChunked = false;
+	}
+	void Response::partialDestruct() {
+		output.flush();
+		buffer.clear();
+		headersWritten = false;
+		closed = false;
+		sendChunked = false;
+		headers.~StringMap();
+	}
+	void Response::partialConstruct() {
+		new (&headers) StringMap(0, hash<String>(), equal_to<String>(), alloc);
+		addDefaultHeaders();
 	}
 
 } /* namespace cppsp */
