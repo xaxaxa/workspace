@@ -2400,5 +2400,45 @@ namespace CP
 		closedir(d);
 	}
 
-}
+	MemoryPool::MemoryPool(int size, int maxItems) :
+			_freeList(NULL), _lastFree(NULL), size(size), items(0), maxItems(maxItems) {
 
+	}
+	MemoryPool::~MemoryPool() {
+		_item* tmp = _freeList;
+		while (tmp != NULL) {
+			_item* n = tmp->nextFree;
+			free(tmp);
+			tmp = n;
+		}
+	}
+	void* MemoryPool::alloc() {
+		if (_freeList == NULL) return ((_item*) malloc(size + sizeof(_item))) + 1;
+		else {
+			_item* tmp = _freeList;
+			_freeList = _freeList->nextFree;
+			items--;
+			if (tmp == _lastFree) _lastFree = NULL;
+			return (tmp + 1);
+		}
+	}
+	void* MemoryPool::alloc(int s) {
+		if (s != size) throw CPollException(
+				"attempting to allocate an object of the wrong size from a MemoryPool");
+		return alloc();
+	}
+	void MemoryPool::free(void* obj) {
+		_item* o = ((_item*) obj) - 1;
+		if (items > maxItems) {
+			free(o);
+		} else {
+			o->nextFree = NULL;
+			if (_lastFree != NULL) {
+				_lastFree->nextFree = o;
+			}
+			_lastFree = o;
+			if (_freeList == NULL) _freeList = o;
+		}
+	}
+
+}

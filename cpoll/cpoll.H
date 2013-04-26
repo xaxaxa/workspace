@@ -1365,6 +1365,28 @@ namespace CP
 		}
 	};
 	void listDirectory(const char* path, Delegate<void(const char*)> cb);
+
+
+	class MemoryPool: public RGC::Allocator
+	{
+	public:
+		struct _item
+		{
+			_item* nextFree;
+		};
+		_item* _freeList;
+		_item* _lastFree;
+		int size;
+		int items;
+		int maxItems;
+		MemoryPool(int size, int maxItems = 1024);
+		MemoryPool(const MemoryPool& other)=delete;
+		~MemoryPool();
+		void* alloc();
+		void* alloc(int s) override;
+		void free(void* obj) override;
+
+	};
 }
 
 #endif
