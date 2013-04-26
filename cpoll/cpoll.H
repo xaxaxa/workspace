@@ -163,7 +163,7 @@ namespace CP
 		inline int length() const {
 			return len;
 		}
-		inline string toSTDString() {
+		inline string toSTDString() const {
 			return string(d, len);
 		}
 	};
@@ -172,17 +172,18 @@ namespace CP
 												tmp[str.len] = 0;\
 												return func(tmp);
 	static int atoi(String s) {
-		__CPOLL_DO_ATOI(atoi, s);
+		__CPOLL_DO_ATOI(::atoi, s);
 	}
 	static long atol(String s) {
-		__CPOLL_DO_ATOI(atol, s);
+		__CPOLL_DO_ATOI(::atol, s);
 	}
 	static long long atoll(String s) {
-		__CPOLL_DO_ATOI(atoll, s);
+		__CPOLL_DO_ATOI(::atoll, s);
 	}
+	/*
 	static long long atoq(String s) {
-		__CPOLL_DO_ATOI(atoq, s);
-	}
+		__CPOLL_DO_ATOI(::atoq, s);
+	}*/
 
 	class MemoryBuffer: virtual public RGC::Object
 	{
