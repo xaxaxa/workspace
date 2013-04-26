@@ -26,7 +26,7 @@ C_UPPER_DEPS += \
 %.o: ../%.C
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross G++ Compiler'
-	g++ -I../../include -O3 -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -march=native -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -I../../include -O3 -Wall -c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fno-omit-frame-pointer -march=native -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
