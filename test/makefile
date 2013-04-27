@@ -44,7 +44,9 @@ urlparser_test: urlparser_test.C
 httptest: httptest.C
 	g++ httptest.C -o httptest -g3 -I../include -L../lib --std=c++0x -lcpoll -ldl -lcurl
 cppsp_standalone: cppsp_standalone.C
-	g++ cppsp_standalone.C -o cppsp_standalone --std=c++0x -g3 -I../include -L../lib -lcpoll -lcppsp -ldl -Wno-pmf-conversions
+	g++ cppsp_standalone.C -o cppsp_standalone --std=c++0x -g3 -I../include -L../lib -lcpoll -lcppsp -ldl -lrt -Wno-pmf-conversions
+simplehttp: simplehttp.C
+	g++ simplehttp.C -o simplehttp --std=c++0x -g3 -I../include -L../lib -lcpoll -ldl -Wno-pmf-conversions
 
 
 
