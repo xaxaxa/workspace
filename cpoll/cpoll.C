@@ -963,7 +963,9 @@ namespace CP
 				break;
 		}
 		if (r < 0 && isWouldBlock()) return false;
-		if (r <= 0 && op != Operations::none) {
+		//micro-optimization: assume that the above syscalls will return -1 if there is
+		//an error or hang-up condition
+		if ((r <= 0 && op != Operations::none) /*|| evtd.error || evtd.hungUp*/) {
 			//invalidate the current event listener
 			ed.state = EventHandlerData::States::invalid;
 		}
@@ -983,14 +985,9 @@ namespace CP
 		//cout << (int32_t)event << " dispatched" << endl;
 		EventHandlerData& ed = eventData[eventToIndex(event)];
 		if (ed.state == EventHandlerData::States::invalid) return true;
-		bool tmp;
-		if (!(tmp = dispatching)) preDispatchEvents = _getEvents();
 		EventHandlerData::States oldstate = ed.state;
-		if ((ed.state == EventHandlerData::States::once) || evtd.hungUp || evtd.error) ed.state =
-				EventHandlerData::States::invalid;
+		if (ed.state == EventHandlerData::States::once) ed.state = EventHandlerData::States::invalid;
 		dispatching = true;
-
-		//this->deletionFlag = &deletionFlag;
 		try {
 			if (!doOperation(event, ed, evtd, oldstate, confident)) {
 				dispatching = false;
@@ -1001,8 +998,7 @@ namespace CP
 			ed.state = EventHandlerData::States::invalid;
 		}
 		if (deletionFlag) return true;
-		//this->deletionFlag = NULL;
-		dispatching = tmp;
+		dispatching = false;
 		return true;
 	}
 	Events File::dispatchMultiple(Events events, Events confident, const EventData& evtd) {
@@ -1015,8 +1011,22 @@ namespace CP
 			Events e = indexToEvent(i);
 			//cout << (int32_t)e << " " << (((event_t)e)&((event_t)events)) << endl;
 			if ((((event_t) e) & ((event_t) events)) == (event_t) e) {
-				if (dispatch(e, evtd, (confident & e) == e, d)) ret |= e;
-				if (d) break;
+				EventHandlerData& ed = eventData[i];
+				EventHandlerData::States oldstate = ed.state;
+				if (ed.state == EventHandlerData::States::once) ed.state =
+						EventHandlerData::States::invalid;
+				try {
+					if (doOperation(e, ed, evtd, oldstate, (confident & e) == e)) {
+						if (d) break;
+						ret |= e;
+					} else {
+						ed.state = oldstate;
+					}
+				} catch (const CancelException& ex) {
+					if (d) break;
+					ed.state = EventHandlerData::States::invalid;
+				}
+				//if (dispatch(e, evtd, (confident & e) == e, d)) ret |= e;
 			}
 		}
 		if (d) return ret;
