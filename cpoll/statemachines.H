@@ -286,6 +286,122 @@ namespace CP
 			}
 			//if (delayedProcessing) goto reprocess;
 		}
-	};}
-
+	};
+	struct newPersistentStreamReader
+	{
+		struct item
+		{
+			String data;
+		};
+		uint8_t* buffer;
+		const char* delim1;
+		int capacity;
+		int len;
+		int pos;
+		int searchPos;
+		int state; //0: none; 1: readUntilString; 2: readUntilChar
+		int delim1_len;
+		char delim2;
+		bool repeat;
+		inline void clearBuffer() {
+			searchPos = pos = len;
+		}
+		void resize(int nc) {
+			uint8_t* tmp = (uint8_t*) realloc(buffer, nc);
+			if (tmp == NULL) throw runtime_error(strerror(errno));
+			buffer = tmp;
+			capacity = nc;
+		}
+		void ensureCapacity(int c) {
+			if (likely(c < capacity)) return;
+			int nc = capacity;
+			while (nc < c)
+				nc *= 2;
+			if (nc != capacity) resize(nc);
+		}
+		void reset() {
+			len = pos = searchPos = state = 0;
+		}
+		newPersistentStreamReader(int c = 4096) :
+				capacity(c), len(0), pos(0), searchPos(0), state(0) {
+			buffer = (uint8_t*) malloc(c);
+			if (buffer == NULL) throw runtime_error(strerror(errno));
+		}
+		~newPersistentStreamReader() {
+			free(buffer);
+		}
+		bool process(item& it) {
+			if (len <= searchPos) return false;
+			switch (state) {
+				case 0:
+					return false;
+				case 1:
+				{
+					uint8_t* tmp = (uint8_t*) memmem(buffer + searchPos, len - searchPos, delim1,
+							delim1_len);
+					if (tmp == NULL) {
+						//overlap the search so that delimitors that are cut in half at
+						//the end of the buffer can be caught
+						searchPos = len - delim1_len;
+						return false;
+					} else {
+						int oldPos = pos;
+						pos = searchPos = (tmp - buffer) + delim1_len;
+						if (!repeat) state = 0;
+						it= { {(char*)buffer + oldPos, tmp - buffer - oldPos}};
+						return true;
+					}
+				}
+				case 2:
+				{
+					uint8_t* tmp = (uint8_t*) memchr(buffer + searchPos, delim2, len - searchPos);
+					if (tmp == NULL) {
+						searchPos = len;
+						return false;
+					} else {
+						int oldPos = pos;
+						pos = searchPos = (tmp - buffer) + 1;
+						if (!repeat) state = 0;
+						it= { {(char*)buffer + oldPos, tmp - buffer - oldPos}};
+						return true;
+					}
+				}
+				default:
+					return false;
+			}
+		}
+		void readUntilString(const char* delim, int len, bool repeat = false) {
+			state = 1;
+			delim1 = delim;
+			delim1_len = len;
+			this->repeat = repeat;
+		}
+		void readUntilChar(char delim, bool repeat = false) {
+			state = 2;
+			delim2 = delim;
+			this->repeat = repeat;
+		}
+		String beginPutData(int len) {
+			ensureCapacity(this->len + len);
+			return {(char*)buffer + this->len,this->capacity-this->len};
+		}
+		void endPutData(int len) {
+			this->len += len;
+		}
+		inline String getBufferData() {
+			return {(char*)buffer + pos, len - pos};
+		}
+		inline String getHistory(bool includeUnprocessed = true) {
+			return {(char*)buffer, includeUnprocessed ? len : pos};
+		}
+		void clearHistory() {
+			if (pos > 0) {
+				memmove(buffer, buffer + pos, len - pos);
+				len -= pos;
+				pos = 0;
+			}
+		}
+	}
+	;
+}
 #endif /* STATEMACHINES_H_ */
