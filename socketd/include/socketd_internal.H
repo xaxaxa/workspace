@@ -21,7 +21,7 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
-#include <cpoll.H>
+#include <cpoll/cpoll.H>
 #include <rgc.H>
 #include <string>
 #include <map>

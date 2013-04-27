@@ -21,7 +21,7 @@
 #include <assert.h>
 #include "include/socketd_internal.H"
 #include "include/configparser.H"
-#include <cpoll.H>
+#include <cpoll/cpoll.H>
 #include <tuple>
 #include <sys/types.h>
 #include <sys/stat.h>
