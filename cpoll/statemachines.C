@@ -91,8 +91,6 @@ namespace CP
 				bufferPos = bufferLen = 0;
 				return;
 			}
-			reprocess:
-			//reprocess: delayedProcessing = false;
 			switch (state) {
 				case 0:
 					break;

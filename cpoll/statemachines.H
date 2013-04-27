@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <stdexcept>
 #include <delegate.H>
-
+#include "basictypes.H"
 #ifndef likely
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -162,6 +162,129 @@ namespace CP
 			return make_tuple(buffer, includeUnprocessed ? len : pos);
 		}
 	};
-}
+
+	//revised version of streamReader which does not use callbacks
+	struct newStreamReader
+	{
+		struct item
+		{
+			String data;
+			bool delimReached;
+		};
+		uint8_t* buffer;
+		const char* delim1;
+		int bufferCapacity;
+		int bufferLen;
+		int bufferPos;
+		int state; //0: none; 1: readUntilString; 2: readUntilChar
+		int delim1len;
+		char delim2;
+		bool repeat;
+		inline void reset() {
+			bufferPos = 0;
+			bufferLen = 0;
+			state = 0;
+			repeat = false;
+			//delayProcessing = false;
+		}
+		newStreamReader(void* buffer, int capacity) {
+			this->buffer = (uint8_t*) buffer;
+			bufferCapacity = capacity;
+			reset();
+		}
+		newStreamReader(int capacity) {
+			this->buffer = (uint8_t*) (this + 1);
+			bufferCapacity = capacity;
+			reset();
+		}
+		inline void readUntilString(const char* delim, int delimLen, bool repeat = false) {
+			state = 1;
+			delim1 = delim;
+			delim1len = delimLen;
+			this->repeat = repeat;
+		}
+		inline void readUntilChar(char delim, bool repeat = false) {
+			state = 2;
+			delim2 = delim;
+			this->repeat = repeat;
+		}
+		inline String beginPutData() {
+			//printf("%i %i\n",bufferLen, bufferCapacity - bufferLen);
+			return {(char*) buffer + bufferLen, bufferCapacity - bufferLen};
+		}
+		//len <= length returned from beginPutData()
+		inline void endPutData(int len) {
+			bufferLen += len;
+		}
+		inline String getBufferData() {
+			return {(char*)buffer + bufferPos, bufferLen - bufferPos};
+		}
+		inline void skip(int i) {
+			bufferPos += i;
+		}
+		bool process(item& it) {
+			if (bufferPos >= bufferLen) {
+				bufferPos = bufferLen = 0;
+				return false;
+			}
+			bool ret = false;
+			switch (state) {
+				case 0:
+					return false;
+				case 1:
+				{
+					uint8_t* buf = buffer;
+					if (bufferLen - bufferPos < (int) delim1len) {
+						if (unlikely(bufferPos==0)) return false;
+						asdfg: memmove(buf, buf + bufferPos, bufferLen - bufferPos);
+						bufferLen -= bufferPos;
+						bufferPos = 0;
+						return ret;
+					}
+					uint8_t* tmp = (uint8_t*) memmem(buf + bufferPos, bufferLen - bufferPos, delim1,
+							delim1len);
+					if (tmp == NULL) {
+						it= { {(char*)buf + bufferPos, bufferLen - bufferPos - delim1len + 1}, false};
+						bufferPos = bufferLen - delim1len + 1;
+						ret=true;
+						goto asdfg;
+					} else {
+						int oldPos = bufferPos;
+						int newPos = tmp - buf;
+						bufferPos = newPos + delim1len;
+						if (bufferPos >= bufferLen) {
+							bufferLen = bufferPos = 0;
+						}
+						if(!repeat)state = 0;
+						it= { {(char*)buf + oldPos, newPos - oldPos}, true};
+						return true;
+					}
+				}
+				case 2:
+				{
+					uint8_t* buf = buffer;
+					uint8_t* tmp = (uint8_t*) memchr(buf + bufferPos, delim2, bufferLen - bufferPos);
+					int oldPos = bufferPos;
+					if (tmp == NULL) {
+						int oldLen = bufferLen;
+						bufferLen = bufferPos = 0;
+						it= { {(char*)buf + oldPos, oldLen - oldPos}, false};
+						return true;
+					} else {
+						int newPos = tmp - buf;
+						bufferPos = newPos + 1;
+						if (bufferPos >= bufferLen) {
+							bufferLen = bufferPos = 0;
+						}
+						if (!repeat) state = 0;
+						it= { {(char*)buf + oldPos, newPos - oldPos}, true};
+						return true;
+					}
+				}
+				default: return false;
+			}
+			//if (delayedProcessing) goto reprocess;
+		}
+	};}
 
 #endif /* STATEMACHINES_H_ */
