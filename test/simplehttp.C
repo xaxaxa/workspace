@@ -18,7 +18,9 @@ struct serverThread
 	~serverThread() {}
 } __attribute__((aligned(CACHELINE_SIZE)));
 
-
+#define MAXRESPONSES 128
+//the maximum # of io vectors one response can generate
+#define IOVMINFREE 2
 struct handler:public RGC::Object {
 	serverThread& thr;
 	CP::Poll& p;
@@ -32,7 +34,8 @@ struct handler:public RGC::Object {
 	StringMap headers;
 	String path;
 	String method;
-	iovec iov[2];
+	iovec iov[MAXRESPONSES];
+	int iovcnt;
 	bool keepAlive;
 	bool firstLine;
 	void reset() {
@@ -68,20 +71,26 @@ struct handler:public RGC::Object {
 	//returns whether or not to continue reading
 	bool process() {
 		newStreamReader::item it;
+		iovcnt=0;
 		while(sr.process(it)) {
 			ms.write(it.data.data(),it.data.length());
 			if(it.delimReached) {
 				if(ms.length()==0) {
 					//process request
 					handleRequest();
-					return false; //break out of the readLine loop
+					reset();
 				} else {
 					if(!processLine({(char*)ms.data(),ms.length()})) return false;
 					ms.clear();
 				}
 			}
+			if(MAXRESPONSES-iovcnt<IOVMINFREE) break;
 		}
-		return true;
+		if(iovcnt>0) {
+			//flush i/o vectors
+			s.writevAll(iov,iovcnt,{&handler::writeCB,this});
+			return false; //break out of the readLine loop
+		} else return true;
 	}
 	bool processLine(String l) {
 		uint8_t* lineBuf = (uint8_t*)l.data();
@@ -121,12 +130,13 @@ struct handler:public RGC::Object {
 		return false;
 	}
 	void handleRequest() {
-		iov[0]={::headers.data(),(size_t)::headers.length()};
-		iov[1]={::content.data(),(size_t)::content.length()};
-		s.writevAll(iov,2,{&handler::writeCB,this});
+		//printf("handleRequest\n");
+		iov[iovcnt]={::headers.data(),(size_t)::headers.length()};
+		iov[iovcnt+1]={::content.data(),(size_t)::content.length()};
+		iovcnt+=2;
 	}
 	void writeCB(int r) {
-		startCycle();
+		if(process()) startRead();
 	}
 	~handler() {
 	}
