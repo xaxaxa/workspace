@@ -23,10 +23,10 @@ struct handler:public RGC::Object {
 	serverThread& thr;
 	CP::Poll& p;
 	Socket s;
-	newStreamReader sr;
+	newPersistentStreamReader sr;
 	StringPool sp;
-	uint8_t buf[8192];
-	MemoryStream ms;
+	//uint8_t buf[8192];
+	//MemoryStream ms;
 	CP::PoolAllocator<std::pair<const String,String> > alloc;
 	typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String,String> > > StringMap;
 	StringMap headers;
@@ -43,7 +43,7 @@ struct handler:public RGC::Object {
 	}
 	handler(serverThread& thr,CP::Poll& p,HANDLE s):thr(thr),p(p),
 		s(s,thr.listensock->addressFamily,thr.listensock->type,thr.listensock->protocol),
-		sr(buf,sizeof(buf)),alloc(&sp),headers(less<String>(), alloc) {
+		sr(8192),alloc(&sp),headers(less<String>(), alloc) {
 		p.add(this->s);
 		this->retain();
 		sr.readUntilString("\r\n",2,true);
@@ -54,7 +54,7 @@ struct handler:public RGC::Object {
 		if(process()) startRead();
 	}
 	void startRead() {
-		String b=sr.beginPutData();
+		String b=sr.beginPutData(4096);
 		s.read(b.data(),b.length(),{&handler::readCB,this});
 	}
 	void readCB(int r) {
@@ -67,18 +67,15 @@ struct handler:public RGC::Object {
 	}
 	//returns whether or not to continue reading
 	bool process() {
-		newStreamReader::item it;
+		newPersistentStreamReader::item it;
 		while(sr.process(it)) {
-			ms.write(it.data.data(),it.data.length());
-			if(it.delimReached) {
-				if(ms.length()==0) {
-					//process request
-					handleRequest();
-					return false; //break out of the readLine loop
-				} else {
-					if(!processLine({(char*)ms.data(),ms.length()})) return false;
-					ms.clear();
-				}
+			if(it.data.length()==0) {
+				//process request
+				handleRequest();
+				return false; //break out of the readLine loop
+			} else {
+				if(!processLine({(char*)it.data.data(),it.data.length()}))
+					return false;
 			}
 		}
 		return true;
