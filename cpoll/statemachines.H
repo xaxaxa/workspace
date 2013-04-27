@@ -83,6 +83,7 @@ namespace CP
 			uint8_t* tmp = (uint8_t*) realloc(buffer, nc);
 			if (tmp == NULL) throw runtime_error(strerror(errno));
 			buffer = tmp;
+			capacity = nc;
 		}
 		void ensureCapacity(int c) {
 			if (likely(c < capacity)) return;
