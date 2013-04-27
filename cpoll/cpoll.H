@@ -47,6 +47,7 @@
 #include <sys/epoll.h>
 #include <limits>
 #include "basictypes.H"
+#include "statemachines.H"
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -591,7 +592,8 @@ namespace CP
 		typedef Delegate<void(const string&)> Callback;
 		typedef Delegate<void(int)> StreamCallback;
 		RGC::Ref<Stream> input;
-		void* sr;
+		//void* sr;
+		newStreamReader _sr;
 		bool* deletionFlag;
 		Stream* out_s;
 		union
@@ -606,8 +608,6 @@ namespace CP
 		int tmp_i;
 		int bufSize;
 
-		bool shouldRead;
-		bool reading;
 		bool eof;
 		/*void* curBuffer;
 		 int curBufferLen;
@@ -674,10 +674,10 @@ namespace CP
 		virtual void freeBuffer(void* buf, int32_t len);
 
 		//internal
+		bool _loop(bool);
 		void _beginRead();
 		void _doSyncRead();
 		void _readCB(int i);
-		void _CB(uint8_t* data, int len, bool delimReached);
 	}
 	;
 

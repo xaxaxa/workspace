@@ -447,25 +447,20 @@ namespace CP
 	}
 
 	StreamReader::StreamReader(Stream& input, int bufsize) :
-			input(&input), deletionFlag(NULL), bufSize(bufsize), shouldRead(false), reading(false),
+			input(&input), _sr(malloc(bufsize), bufsize), deletionFlag(NULL), bufSize(bufsize),
 					eof(false) {
-		sr = malloc(streamReader_getSize() + bufsize);
-		if (sr == NULL) throw bad_alloc();
-		streamReader_init((streamReader*) sr, bufsize);
-		streamReader_setCallback((streamReader*) sr,
-				Delegate<void(uint8_t*, int, bool)>(&StreamReader::_CB, this));
+		//sr = malloc(streamReader_getSize() + bufsize);
+		if (_sr.buffer == NULL) throw bad_alloc();
 	}
 	StreamReader::~StreamReader() {
-		streamReader_deinit((streamReader*) sr);
-		free(sr);
 		if (deletionFlag != NULL) *deletionFlag = true;
 	}
 	void StreamReader_checkReading1(StreamReader* This) {
-		if (This->shouldRead) throw CPollException("StreamReader is already reading");
+		//if (This->shouldRead) throw CPollException("StreamReader is already reading");
 	}
 	void StreamReader_checkReading(StreamReader* This) {
-		StreamReader_checkReading1(This);
-		This->shouldRead = true;
+		//StreamReader_checkReading1(This);
+		//This->shouldRead = true;
 	}
 	void StreamReader_prepareAsyncRead(StreamReader* This, const StreamReader::Callback& cb) {
 		This->cb = cb;
@@ -494,50 +489,38 @@ namespace CP
 
 	void StreamReader::readTo(char delim, const Callback& cb) {
 		StreamReader_prepareAsyncRead(this, cb);
-		bool delFlag = false;
-		deletionFlag = &delFlag;
-		streamReader_readUntilChar((streamReader*) sr, delim);
-		if (delFlag) return;
-		deletionFlag = NULL;
-		_beginRead();
+		_sr.readUntilChar(delim);
+		_loop(true);
 	}
 	void StreamReader::readTo(const char* delim, int delimLen, const Callback& cb) {
 		StreamReader_prepareAsyncRead(this, cb);
-		bool delFlag = false;
-		deletionFlag = &delFlag;
-		streamReader_readUntilString((streamReader*) sr, delim, delimLen);
-		if (delFlag) return;
-		deletionFlag = NULL;
-		_beginRead();
+		_sr.readUntilString(delim, delimLen);
+		_loop(true);
 	}
 	void StreamReader::readTo(string delim, const Callback& cb) {
 		StreamReader_prepareAsyncRead(this, cb);
 		tmp_delim = delim;
-		bool delFlag = false;
-		deletionFlag = &delFlag;
-		streamReader_readUntilString((streamReader*) sr, tmp_delim.data(), tmp_delim.length());
-		if (delFlag) return;
-		deletionFlag = NULL;
-		_beginRead();
+		_sr.readUntilString(tmp_delim.data(), tmp_delim.length());
+		_loop(true);
 	}
 	void StreamReader::readLine(const Callback& cb) {
 		readTo('\n', cb);
 	}
 	string StreamReader::readTo(char delim) {
 		StreamReader_prepareSyncRead(this);
-		streamReader_readUntilChar((streamReader*) sr, delim);
+		_sr.readUntilChar(delim);
 		_doSyncRead();
 		return this->tmp;
 	}
 	string StreamReader::readTo(const char* delim, int delimLen) {
 		StreamReader_prepareSyncRead(this);
-		streamReader_readUntilString((streamReader*) sr, delim, delimLen);
+		_sr.readUntilString(delim, delimLen);
 		_doSyncRead();
 		return this->tmp;
 	}
 	string StreamReader::readTo(string delim) {
 		StreamReader_prepareSyncRead(this);
-		streamReader_readUntilString((streamReader*) sr, delim.data(), delim.length());
+		_sr.readUntilString(delim.data(), delim.length());
 		_doSyncRead();
 		return this->tmp;
 	}
@@ -546,20 +529,20 @@ namespace CP
 	}
 	int StreamReader::readTo(char delim, Stream& s) {
 		StreamReader_prepareSyncReadStream(this, s);
-		streamReader_readUntilChar((streamReader*) sr, delim);
+		_sr.readUntilChar(delim);
 		_doSyncRead();
 		return this->tmp_i;
 	}
 	int StreamReader::readTo(const char* delim, int delimLen, Stream& s) {
 		StreamReader_prepareSyncReadStream(this, s);
-		streamReader_readUntilString((streamReader*) sr, delim, delimLen);
+		_sr.readUntilString(delim, delimLen);
 		_doSyncRead();
 		return this->tmp_i;
 	}
 	int StreamReader::readTo(string delim, Stream& s) {
 		StreamReader_prepareSyncReadStream(this, s);
 		tmp_delim = delim;
-		streamReader_readUntilString((streamReader*) sr, tmp_delim.data(), tmp_delim.length());
+		_sr.readUntilString(tmp_delim.data(), tmp_delim.length());
 		_doSyncRead();
 		return this->tmp_i;
 	}
@@ -567,38 +550,20 @@ namespace CP
 		return readTo('\n', s);
 	}
 	void StreamReader::readTo(char delim, Stream& s, const StreamCallback& cb) {
-		{
-			StreamReader_prepareAsyncReadStream(this, s, cb);
-			bool delFlag = false;
-			deletionFlag = &delFlag;
-			streamReader_readUntilChar((streamReader*) sr, delim);
-			if (delFlag) return;
-			deletionFlag = NULL;
-		}
-		_beginRead();
+		StreamReader_prepareAsyncReadStream(this, s, cb);
+		_sr.readUntilChar(delim);
+		_loop(true);
 	}
 	void StreamReader::readTo(const char* delim, int delimLen, Stream& s, const StreamCallback& cb) {
-		{
-			StreamReader_prepareAsyncReadStream(this, s, cb);
-			bool delFlag = false;
-			deletionFlag = &delFlag;
-			streamReader_readUntilString((streamReader*) sr, delim, delimLen);
-			if (delFlag) return;
-			deletionFlag = NULL;
-		}
-		_beginRead();
+		StreamReader_prepareAsyncReadStream(this, s, cb);
+		_sr.readUntilString(delim, delimLen);
+		_loop(true);
 	}
 	void StreamReader::readTo(string delim, Stream& s, const StreamCallback& cb) {
-		{
-			StreamReader_prepareAsyncReadStream(this, s, cb);
-			tmp_delim = delim;
-			bool delFlag = false;
-			deletionFlag = &delFlag;
-			streamReader_readUntilString((streamReader*) sr, tmp_delim.data(), tmp_delim.length());
-			if (delFlag) return;
-			deletionFlag = NULL;
-		}
-		_beginRead();
+		StreamReader_prepareAsyncReadStream(this, s, cb);
+		tmp_delim = delim;
+		_sr.readUntilString(tmp_delim.data(), tmp_delim.length());
+		_loop(true);
 	}
 	void StreamReader::readLine(Stream& s, const StreamCallback& cb) {
 		readTo('\n', s, cb);
@@ -650,86 +615,93 @@ namespace CP
 	}
 	int32_t StreamReader::readBuffer(void*& buf, int32_t maxlen) {
 		StreamReader_checkReading1(this);
-		void* b;
-		int l;
-		std::tie(b, l) = streamReader_getBufferData((streamReader*) sr);
-		if (l > maxlen) l = maxlen;
-		if (l <= 0) return 0;
-		buf = b;
-		return l;
+		String tmp = _sr.getBufferData();
+		if (tmp.len > maxlen) tmp.len = maxlen;
+		if (tmp.len <= 0) return 0;
+		buf = tmp.data();
+		return tmp.len;
 	}
 	void StreamReader::freeBuffer(void* buf, int32_t len) {
-		streamReader_skip((streamReader*) sr, len);
+		_sr.skip(len);
+	}
+
+	bool StreamReader::_loop(bool async) {
+		newStreamReader::item it;
+		bool delFlag = false;
+		deletionFlag = &delFlag;
+		while (_sr.process(it)) {
+			if (out_s != NULL) {
+				out_s->write(it.data.data(), it.data.length());
+				tmp_i += it.data.length();
+			} else tmp.append(it.data.data(), it.data.length());
+			if (it.delimReached) {
+				if (out_s == NULL) {
+					if (cb == nullptr) goto skipRead;
+					bool* delFlag = deletionFlag;
+					cb(tmp);
+					if (*delFlag) goto skipRead;
+					tmp.clear();
+				} else {
+					if (cb_s == nullptr) goto skipRead;
+					cb_s(tmp_i);
+				}
+				return false;
+			}
+		}
+		if (async) {
+			_beginRead();
+			deletionFlag = NULL;
+			return true;
+		}
+		skipRead: if (!delFlag) deletionFlag = NULL;
+		return false;
 	}
 	void StreamReader::_beginRead() {
-		if (!shouldRead || reading) return;
-		auto buf = streamReader_beginPutData((streamReader*) sr);
-		if (get < 1 > (buf) <= 0) return;
-		reading = true;
-		input->read(get < 0 > (buf), get < 1 > (buf), CP::Callback(&StreamReader::_readCB, this));
+		String buf = _sr.beginPutData();
+		if (buf.data() == NULL) return;
+		input->read(buf.data(), buf.length(), CP::Callback(&StreamReader::_readCB, this));
 	}
 	void StreamReader::_doSyncRead() {
-		while (shouldRead) {
-			auto buf = streamReader_beginPutData((streamReader*) sr);
+		while (_loop(false)) {
+			String buf = _sr.beginPutData();
 			//if (get < 1 > (buf) <= 0) return;
-			int r = input->read(get < 0 > (buf), get < 1 > (buf));
+			int r = input->read(buf.data(), buf.length());
 			if (r <= 0) {
-				uint8_t* buf;
-				int len;
-				std::tie(buf, len) = streamReader_getBufferData((streamReader*) sr);
-				this->tmp = string((const char*) buf, len);
-				streamReader_reset((streamReader*) sr);
-				eof = true;
+				String tmp = _sr.getBufferData();
+				if (out_s == NULL) {
+					string tmps = tmp.toSTDString();
+					eof = true;
+					_sr.reset();
+					cb(tmps);
+				} else {
+					out_s->write(tmp.data(), tmp.length());
+					tmp_i += tmp.length();
+					_sr.reset();
+					cb_s(tmp_i);
+				}
 				return;
 			} else {
-				streamReader_endPutData((streamReader*) sr, r);
+				_sr.endPutData(r);
 			}
 		}
 	}
 	void StreamReader::_readCB(int i) {
-		reading = false;
-		bool delFlag = false;
-		deletionFlag = &delFlag;
 		if (i <= 0) {
-			shouldRead = false;
-			uint8_t* buf;
-			int len;
-			std::tie(buf, len) = streamReader_getBufferData((streamReader*) sr);
+			String tmp = _sr.getBufferData();
+			eof = true;
 			if (out_s == NULL) {
-				string tmps((const char*) buf, len);
-				eof = true;
-				streamReader_reset((streamReader*) sr);
+				string tmps = tmp.toSTDString();
+				_sr.reset();
 				cb(tmps);
 			} else {
-				out_s->write(buf, len);
-				tmp_i += len;
-				streamReader_reset((streamReader*) sr);
+				out_s->write(tmp.data(), tmp.length());
+				tmp_i += tmp.length();
+				_sr.reset();
 				cb_s(tmp_i);
 			}
 		} else {
-			streamReader_endPutData((streamReader*) sr, i);
-		}
-		if (delFlag) return;
-		deletionFlag = NULL;
-		if (i > 0) _beginRead();
-	}
-	void StreamReader::_CB(uint8_t* data, int len, bool delimReached) {
-		if (out_s != NULL) {
-			out_s->write(data, len);
-			tmp_i += len;
-		} else tmp.append((const char*) data, len);
-		if (delimReached) {
-			shouldRead = false;
-			if (out_s == NULL) {
-				if (cb == nullptr) return;
-				bool* delFlag = deletionFlag;
-				cb(tmp);
-				if (*delFlag) return;
-				tmp.clear();
-			} else {
-				if (cb_s == nullptr) return;
-				cb_s(tmp_i);
-			}
+			_sr.endPutData(i);
+			_loop(true);
 		}
 	}
 	void StreamReader::cancelRead() {
@@ -1001,7 +973,7 @@ namespace CP
 		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) if (ed.cb
 				!= nullptr) ed.cb(-1);
 		if (*del) return true;
-		success: if (ed.state == EventHandlerData::States::repeat) {
+		if (ed.state == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
 		}
