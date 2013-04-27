@@ -40,13 +40,13 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/un.h>
-#include <rgc.H>
 #include <vector>
 #include <sys/signalfd.h>
 #include <sys/eventfd.h>
 #include <delegate.H>
 #include <sys/epoll.h>
 #include <limits>
+#include "basictypes.H"
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -92,9 +92,6 @@
 namespace CP
 {
 	using namespace std;
-	typedef int32_t HANDLE; //file descriptor or handle
-	typedef Delegate<void(int32_t)> Callback;
-	typedef uint8_t event_t;
 	class CPollException: public std::exception
 	{
 	public:
@@ -120,86 +117,6 @@ namespace CP
 		CancelException();
 		~CancelException() throw ();
 		const char* what() const throw ();
-	};
-	struct String
-	{
-		char* d;
-		int len;
-		String() :
-				len(0) {
-		}
-		String(char* data, int length) :
-				d(data), len(length) {
-		}
-		String(char* data) :
-				d(data), len(strlen(data)) {
-		}
-		String(const char* data, int length) :
-				d(const_cast<char*>(data)), len(length) {
-		}
-		String(const char* data) :
-				d(const_cast<char*>(data)), len(strlen(data)) {
-		}
-		int compare(const String& other) const {
-			if (len < other.len) return -1;
-			else if (len > other.len) return 1;
-			else if (len == 0) return 0;
-			else return memcmp(d, other.d, len);
-		}
-		inline bool operator<(const String& other) const {
-			return compare(other) < 0;
-		}
-		inline bool operator>(const String& other) const {
-			return compare(other) > 0;
-		}
-		inline bool operator<=(const String& other) const {
-			return compare(other) <= 0;
-		}
-		inline bool operator>=(const String& other) const {
-			return compare(other) >= 0;
-		}
-		inline bool operator==(const String& other) const {
-			return compare(other) == 0;
-		}
-		inline bool operator==(std::nullptr_t other) const {
-			return len == 0;
-		}
-		inline char* data() const {
-			return d;
-		}
-		inline int length() const {
-			return len;
-		}
-		inline string toSTDString() const {
-			return string(d, len);
-		}
-	};
-#define __CPOLL_DO_ATOI(func,str) char tmp[str.len + 1];\
-												memcpy(tmp, str.d, str.len);\
-												tmp[str.len] = 0;\
-												return func(tmp);
-	static int atoi(String s) {
-		__CPOLL_DO_ATOI(::atoi, s);
-	}
-	static long atol(String s) {
-		__CPOLL_DO_ATOI(::atol, s);
-	}
-	static long long atoll(String s) {
-		__CPOLL_DO_ATOI(::atoll, s);
-	}
-	/*
-	 static long long atoq(String s) {
-	 __CPOLL_DO_ATOI(::atoq, s);
-	 }*/
-
-	class MemoryBuffer: virtual public RGC::Object
-	{
-	public:
-		virtual uint8_t* data() const=0;
-		virtual int length() const=0;
-		CP::String String() {
-			return {(char*)data(),length()};
-		}
 	};
 
 	//==============================================================
