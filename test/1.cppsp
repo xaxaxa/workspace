@@ -32,8 +32,8 @@ form:
 for(auto it=request->form.begin();it!=request->form.end();it++) {
 	%>
 	<tr>
-		<td><%=htmlEscape((*it).first)%></td>
-		<td><%=htmlEscape((*it).second)%></td>
+		<td><%=htmlEscape((*it).first.toSTDString())%></td>
+		<td><%=htmlEscape((*it).second.toSTDString())%></td>
 	</tr>
 	<%
 }
@@ -45,8 +45,8 @@ querystring:
 for(auto it=request->queryString.begin();it!=request->queryString.end();it++) {
 	%>
 	<tr>
-		<td><%=htmlEscape((*it).first)%></td>
-		<td><%=htmlEscape((*it).second)%></td>
+		<td><%=htmlEscape((*it).first.toSTDString())%></td>
+		<td><%=htmlEscape((*it).second.toSTDString())%></td>
 	</tr>
 	<%
 }
