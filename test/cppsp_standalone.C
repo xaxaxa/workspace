@@ -20,12 +20,6 @@ using namespace CP;
 using namespace cppsp;
 using namespace RGC;
 string rootDir;
-class cppsp_Server: public cppsp::Server {
-	virtual const char* rootDir() {
-		return ::rootDir.c_str();
-	}
-};
-cppsp_Server _server;
 struct cppsp_request
 {
 	HANDLE fd;
@@ -89,6 +83,7 @@ struct serverThread
 {
 	cppspManager* mgr;
 	Socket* listensock;
+	cppsp::Server* srv;
 	//EventFD efd;
 	pthread_t thr;
 	int threadid;
@@ -104,6 +99,22 @@ struct serverThread
 } __attribute__((aligned(CACHELINE_SIZE)));
 
 CP::Socket listensock;
+class cppsp_Server: public cppsp::Server {
+public:
+	serverThread* thr;
+	cppsp_Server(serverThread* thr): thr(thr) {}
+	const char* rootDir() override {
+		return ::rootDir.c_str();
+	}
+	void loadPage(CP::Poll& p, String path, Delegate<void(Page*, exception* ex)> cb) override {
+		string tmp = mapPath(path.toSTDString());
+		cppsp::loadPage(thr->mgr, p, rootDir(), { tmp.data(), (int) tmp.length() }, cb);
+	}
+	void loadPageFromFile(CP::Poll& p, String path,
+			Delegate<void(Page*, exception* ex)> cb) override {
+		cppsp::loadPage(thr->mgr, p, rootDir(), path, cb);
+	}
+};
 struct handler:public RGC::Object {
 	Allocator* alloc;
 	serverThread& thr;
@@ -156,7 +167,7 @@ struct handler:public RGC::Object {
 			p->request=&req;
 			p->response=&resp;
 			p->poll=&this->p;
-			p->server=&_server;
+			p->server=thr.srv;
 			p->handleRequest({&handler::handleRequestCB,this});
 			return;
 		}
@@ -194,6 +205,8 @@ struct handler:public RGC::Object {
 };
 void* thread1(void* v) {
 	serverThread* thr=(serverThread*)v;
+	cppsp_Server srv(thr);
+	thr->srv=&srv;
 	Poll p;
 	
 	/*
