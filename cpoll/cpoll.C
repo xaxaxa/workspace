@@ -1758,7 +1758,6 @@ namespace CP
 			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
 				if (curEvents[i].data.ptr == (void*) &h) curEvents[i].data.ptr = NULL;
 			}
-			h.release();
 			active--;
 		} else {
 			fillEPollEvents(h, evt, new_e);
