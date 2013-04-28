@@ -1025,6 +1025,7 @@ namespace CP
 				EventHandlerData& ed = eventData[i];
 				if (ed.opcb != nullptr) {
 					ed.opcb(e, ed, evtd, (confident & e) == e);
+					if (d) break;
 					continue;
 				}
 				EventHandlerData::States oldstate = ed.state;
