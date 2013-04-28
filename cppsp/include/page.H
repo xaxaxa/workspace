@@ -65,7 +65,7 @@ namespace cppsp
 					b = b->next;
 					this->i -= bucketSize;
 				}
-				if (b != NULL && this->i > b->length) b = NULL;
+				if (b != NULL && this->i >= b->length) b = NULL;
 			}
 			void operator++(int) {
 				operator+=(1);
@@ -158,7 +158,7 @@ namespace cppsp
 					b = b->next;
 					this->i -= bucketSize;
 				}
-				if (b != NULL && this->i > b->length) b = NULL;
+				if (b != NULL && this->i >= b->length) b = NULL;
 			}
 			void operator++(int) {
 				operator+=(1);
