@@ -142,9 +142,9 @@ struct handler:public RGC::Object {
 			return;
 		}
 		auto it=req.headers.find("connection");
-		if(it!=req.headers.end() && (*it).second=="close")keepAlive=false;
+		if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 		else keepAlive=true;
-		resp.headers.insert( { "Connection", keepAlive?"keep-alive":"close" });
+		resp.headers.add("Connection", keepAlive?"keep-alive":"close");
 		//printf("readCB()\n");
 		char tmp[req.path.length()+rootDir.length()];
 		int l=cppsp::combinePathChroot(rootDir.data(),rootDir.length(),
