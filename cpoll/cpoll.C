@@ -1707,7 +1707,7 @@ namespace CP
 	}
 
 //EPoll
-	static void fillEPollEvents(Handle& h, epoll_event& evt, Events e) {
+	static inline void fillEPollEvents(Handle& h, epoll_event& evt, Events e) {
 		evt.events = eventsToEPoll(e);
 		evt.data.u64 = 0; //work around valgrind warning
 		evt.data.ptr = &h;
@@ -1721,6 +1721,16 @@ namespace CP
 			Handle(checkError(epoll_create1(EPOLL_CLOEXEC))), curEvents(NULL), active(0),
 					cur_handle(-1) {
 		disableSignals();
+	}
+	void EPoll_disableHandle(EPoll* This, Handle& h) {
+		Events new_e = h.getEvents();
+		h._supportsEPoll = false;
+		EventData evtd;
+		evtd.hungUp = evtd.error = false;
+		while (new_e != Events::none) {
+			h.dispatchMultiple(new_e, new_e, evtd);
+			new_e = h.getEvents();
+		}
 	}
 	void EPoll::_applyHandle(Handle& h, Events old_e) {
 		if (!h._supportsEPoll) {
@@ -1738,17 +1748,10 @@ namespace CP
 			//cout << "added " << h.handle << endl;
 			int r = epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt);
 			if (r < 0 && errno == EPERM) {
-				h._supportsEPoll = false;
-				EventData evtd;
-				evtd.hungUp = evtd.error = false;
-				while (new_e != Events::none) {
-					h.dispatchMultiple(new_e, new_e, evtd);
-					new_e = h.getEvents();
-				}
+				EPoll_disableHandle(this, h);
 				return;
 			}
 			checkError(r);
-			//h.retain();
 			active++;
 		} else if (new_e == Events::none) {
 			//cout << "deleted " << h.handle << endl;

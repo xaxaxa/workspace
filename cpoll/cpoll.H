@@ -867,7 +867,7 @@ namespace CP
 			send(buf, len, flags, cb, true);
 		}
 		void sendAll(const void* buf, int32_t len, int32_t flags, const Callback& cb);
-		virtual Events getEvents() {
+		virtual Events getEvents() override final {
 			return _getEvents();
 		}
 		~File();
