@@ -1787,15 +1787,6 @@ namespace CP
 		cur_handle = h->handle;
 		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
 		if (cur_deleted) goto aaa;
-		if (events != Events::none) {
-			EventData evtd;
-			evtd.hungUp = evtd.error = false;
-			do {
-				events = h->dispatchMultiple(events, Events::none, evtd);
-				if (cur_deleted) goto aaa;
-				events = events & h->getEvents();
-			} while (events != Events::none);
-		}
 		if (h->getEvents() != old_e) applyHandle(*h, old_e);
 		aaa: cur_handle = -1;
 		return 1;
