@@ -1776,21 +1776,21 @@ namespace CP
 			}
 		}
 	}
-	int32_t EPoll::_doDispatch(const epoll_event& event) {
+	static inline int32_t EPoll_doDispatch(EPoll* This, const epoll_event& event) {
 		Handle* h = (Handle*) event.data.ptr;
 		if (unlikely(h==NULL)) return 0;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-		cur_handle = h->handle;
+		This->cur_handle = h->handle;
 		Events old_e = h->getEvents();
-		cur_deleted = false;
-		cur_handle = h->handle;
+		This->cur_deleted = false;
+		This->cur_handle = h->handle;
 		h->dispatchMultiple((Events) evt, (Events) evt, evtd);
-		if (cur_deleted) goto aaa;
-		if (h->getEvents() != old_e) applyHandle(*h, old_e);
-		aaa: cur_handle = -1;
+		if (This->cur_deleted) goto aaa;
+		if (h->getEvents() != old_e) This->applyHandle(*h, old_e);
+		aaa: This->cur_handle = -1;
 		return 1;
 	}
 	int32_t EPoll::_doEPoll(int32_t timeout) {
@@ -1806,7 +1806,7 @@ namespace CP
 		curEvents = evts;
 		curLength = n;
 		for (curIndex = 0; curIndex < n; curIndex++)
-			_doDispatch(evts[curIndex]);
+			EPoll_doDispatch(this, evts[curIndex]);
 
 		return n;
 	}

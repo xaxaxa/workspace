@@ -1050,7 +1050,6 @@ namespace CP
 		EPoll(HANDLE handle);
 		EPoll();
 		void _applyHandle(Handle& h, Events old_e);
-		int32_t _doDispatch(const epoll_event& event);
 		int32_t _doEPoll(int32_t timeout);
 		virtual bool dispatch(Events event, const EventData& evtd, bool confident) override;
 		virtual Events dispatchMultiple(Events event, Events confident, const EventData& evtd)
