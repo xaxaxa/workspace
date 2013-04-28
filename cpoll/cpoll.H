@@ -509,6 +509,9 @@ namespace CP
 		void write(string s) {
 			write(s.data(), s.length());
 		}
+		void write(String s) {
+			write(s.data(), s.length());
+		}
 		void write(const char* s) {
 			write((const uint8_t*) s, strlen(s));
 		}
