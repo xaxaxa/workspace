@@ -72,6 +72,7 @@ namespace cppsp
 				this->path = sp->addString(path, q - path);
 			}
 		} else {
+			headerContainer::item it;
 			uint8_t* lineBuf = _lineBuffer.data();
 			int lineBufLen = _lineBuffer.length();
 			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ':', lineBufLen);
@@ -87,7 +88,7 @@ namespace cppsp
 			String v { sp->add((const char*) tmp1, lineBuf + lineBufLen - tmp1), lineBuf + lineBufLen
 					- tmp1 };
 
-			headers.insert(make_pair(n, v));
+			headers.add(n, v);
 		}
 		if (input.eof) {
 			end: _endRead(!firstLine);
