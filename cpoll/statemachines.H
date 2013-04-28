@@ -398,6 +398,7 @@ namespace CP
 			if (pos > 0) {
 				memmove(buffer, buffer + pos, len - pos);
 				len -= pos;
+				searchPos -= pos;
 				pos = 0;
 			}
 		}
