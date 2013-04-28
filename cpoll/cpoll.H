@@ -721,6 +721,11 @@ namespace CP
 		sendAll, recvAll, shutdown, connect, close, readv, writev, lastItem
 	};
 
+	struct EventData
+	{
+	public:
+		bool hungUp, error;
+	};
 	struct EventHandlerData
 	{
 	public:
@@ -753,6 +758,7 @@ namespace CP
 				eventfd_t evt;
 			} eventfd;
 		} misc;
+		Delegate<bool(Events event, EventHandlerData& ed, const EventData& evtd, bool confident)> opcb;
 		Operations op;
 		enum class States
 			: uint8_t {
@@ -761,11 +767,6 @@ namespace CP
 		EventHandlerData() :
 				state(States::invalid) {
 		}
-	};
-	struct EventData
-	{
-	public:
-		bool hungUp, error;
 	};
 	
 	static const int32_t numEvents = 2;

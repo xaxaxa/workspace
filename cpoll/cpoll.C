@@ -802,15 +802,18 @@ namespace CP
 	}
 ///only accepts one event
 	EventHandlerData* File::beginAddEvent(Events event) {
-		EventHandlerData *ed = &eventData[eventToIndex(event)];
+		int i = eventToIndex(event);
+		EventHandlerData *ed = &eventData[i];
 		if (ed->state != EventHandlerData::States::invalid) throw CPollException(
 				"Already listening for the specified event on the specified file. "
 						"For example, you may not read() and recv() on one socket at the same time.");
+		eventData[i].opcb = nullptr;
 		return ed;
 	}
 	void File::endAddEvent(Events event, bool repeat) {
 		Events old_events = _getEvents();
-		eventData[eventToIndex(event)].state =
+		int i = eventToIndex(event);
+		eventData[i].state =
 				repeat ? (EventHandlerData::States::repeat) : (EventHandlerData::States::once);
 		if (onEventsChange != nullptr && !dispatching) onEventsChange(*this, old_events);
 	}
@@ -972,9 +975,6 @@ namespace CP
 		asdf: bool* del = deletionFlag;
 		if (ed.cb != nullptr) ed.cb(r);
 		if (*del) return true;
-		if (r > 0 && (evtd.error || evtd.hungUp) && oldstate == EventHandlerData::States::repeat) if (ed.cb
-				!= nullptr) ed.cb(-1);
-		if (*del) return true;
 		if (ed.state == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
@@ -1012,6 +1012,10 @@ namespace CP
 			//cout << (int32_t)e << " " << (((event_t)e)&((event_t)events)) << endl;
 			if ((((event_t) e) & ((event_t) events)) == (event_t) e) {
 				EventHandlerData& ed = eventData[i];
+				if (ed.opcb != nullptr) {
+					ed.opcb(e, ed, evtd, (confident & e) == e);
+					continue;
+				}
 				EventHandlerData::States oldstate = ed.state;
 				if (ed.state == EventHandlerData::States::once) ed.state =
 						EventHandlerData::States::invalid;
@@ -1048,6 +1052,24 @@ namespace CP
 		ed->misc.bufferIOv.iovcnt = iovcnt;
 		ed->op = op;
 	}
+	bool File_doRead(File* This, Events event, EventHandlerData& ed, const EventData& evtd,
+			bool confident) {
+		int r = ::read(This->handle, ed.misc.bufferIO.buf, ed.misc.bufferIO.len);
+		if (r < 0 && isWouldBlock()) return false;
+		if (ed.state == EventHandlerData::States::once || r <= 0) ed.state =
+				EventHandlerData::States::invalid;
+		ed.cb(r);
+		return true;
+	}
+	bool File_doWritev(File* This, Events event, EventHandlerData& ed, const EventData& evtd,
+			bool confident) {
+		int r = ::writev(This->handle, ed.misc.bufferIOv.iov, ed.misc.bufferIOv.iovcnt);
+		if (r < 0 && isWouldBlock()) return false;
+		if (ed.state == EventHandlerData::States::once || r <= 0) ed.state =
+				EventHandlerData::States::invalid;
+		ed.cb(r);
+		return true;
+	}
 	void File::read(void* buf, int32_t len, const Callback& cb, bool repeat) {
 		if (!_supportsEPoll) {
 			asdfg: int32_t r = read(buf, len);
@@ -1058,6 +1080,7 @@ namespace CP
 		static const Events e = Events::in;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, buf, len, cb, e, Operations::read);
+		ed->opcb= {&File_doRead,this};
 		endAddEvent(e, repeat);
 	}
 	void File::readAll(void* buf, int32_t len, const Callback& cb) {
@@ -1202,6 +1225,7 @@ namespace CP
 		static const Events e = Events::out;
 		EventHandlerData* ed = beginAddEvent(e);
 		fillIOEventHandlerData(ed, iov, iovcnt, cb, e, Operations::writev);
+		ed->opcb= {&File_doWritev,this};
 		endAddEvent(e, repeat);
 	}
 
