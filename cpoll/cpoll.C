@@ -334,7 +334,7 @@ namespace CP
 		}
 		_beginReadv();
 	}
-	void Stream::_beginReadv() {
+	inline void Stream::_beginReadv() {
 		if (_readvAll.i < _readvAll.iovcnt) readv(_readvAll.iov + _readvAll.i,
 				_readvAll.iovcnt - _readvAll.i, { &Stream::_readvCB, this });
 		else {
@@ -360,7 +360,7 @@ namespace CP
 		}
 		_beginWritev();
 	}
-	void Stream::_beginWritev() {
+	inline void Stream::_beginWritev() {
 		if (_writevAll.i < _writevAll.iovcnt) writev(_writevAll.iov + _writevAll.i,
 				_writevAll.iovcnt - _writevAll.i, { &Stream::_writevCB, this });
 		else {
@@ -1732,7 +1732,7 @@ namespace CP
 			new_e = h.getEvents();
 		}
 	}
-	void EPoll::_applyHandle(Handle& h, Events old_e) {
+	static inline void EPoll_applyHandle(EPoll* This, Handle& h, Events old_e) {
 		if (!h._supportsEPoll) {
 			//if (debug) printf("_applyHandle: h=%i, h._supportsEPoll=false\n", h.handle);
 			return;
@@ -1746,32 +1746,32 @@ namespace CP
 		if (old_e == Events::none) {
 			fillEPollEvents(h, evt, new_e);
 			//cout << "added " << h.handle << endl;
-			int r = epoll_ctl(this->handle, EPOLL_CTL_ADD, h.handle, &evt);
+			int r = epoll_ctl(This->handle, EPOLL_CTL_ADD, h.handle, &evt);
 			if (r < 0 && errno == EPERM) {
-				EPoll_disableHandle(this, h);
+				EPoll_disableHandle(This, h);
 				return;
 			}
 			checkError(r);
-			active++;
+			This->active++;
 		} else if (new_e == Events::none) {
 			//cout << "deleted " << h.handle << endl;
 			//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, NULL));
 			//XXX: removed error checking to work around cURL bug
-			epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, NULL);
-			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
-				if (curEvents[i].data.ptr == (void*) &h) curEvents[i].data.ptr = NULL;
+			epoll_ctl(This->handle, EPOLL_CTL_DEL, h.handle, NULL);
+			if (likely(This->curEvents!=NULL)) for (int i = This->curIndex; i < This->curLength; i++) {
+				if (This->curEvents[i].data.ptr == (void*) &h) This->curEvents[i].data.ptr = NULL;
 			}
-			active--;
+			This->active--;
 		} else {
 			fillEPollEvents(h, evt, new_e);
 			//cout << "modified " << h.handle << endl;
 			//printf("epoll_ctl: old_e=%i new_e=%i\n", old_e, new_e);
-			checkError(epoll_ctl(this->handle, EPOLL_CTL_MOD, h.handle, &evt));
+			checkError(epoll_ctl(This->handle, EPOLL_CTL_MOD, h.handle, &evt));
 			uint32_t ep_e = eventsToEPoll(new_e);
-			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
-				if (curEvents[i].data.ptr == (void*) &h) {
-					curEvents[i].events &= ep_e;
-					if (curEvents[i].events == 0) curEvents[i].data.ptr = NULL;
+			if (likely(This->curEvents!=NULL)) for (int i = This->curIndex; i < This->curLength; i++) {
+				if (This->curEvents[i].data.ptr == (void*) &h) {
+					This->curEvents[i].events &= ep_e;
+					if (This->curEvents[i].events == 0) This->curEvents[i].data.ptr = NULL;
 				}
 			}
 		}
@@ -1828,13 +1828,13 @@ namespace CP
 	void EPoll::applyHandle(Handle& h, Events old_e) {
 //cout << "applyHandle" << endl;
 //if (h.handle == cur_handle) return;
-		_applyHandle(h, old_e);
+		EPoll_applyHandle(this, h, old_e);
 	}
 	void EPoll::add(Handle& h) {
 //h.retain();
 		h.onEventsChange = Delegate<void(Handle&, Events)>(&EPoll::applyHandle, this);
 		//h.onEventsChange = [this,&h](Events old_events) {this->applyHandle(h,old_events);};
-		_applyHandle(h, Events::none);
+		EPoll_applyHandle(this, h, Events::none);
 		h.onClose = Delegate<void(Handle& h)>(&EPoll::del, this);
 	}
 	void EPoll::del(Handle& h) {

@@ -317,9 +317,9 @@ namespace CP
 			} _writevAll;
 		};
 		void _readvCB(int r);
-		void _beginReadv();
+		inline void _beginReadv();
 		void _writevCB(int r);
-		void _beginWritev();
+		inline void _beginWritev();
 
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0; //required
@@ -1049,7 +1049,6 @@ namespace CP
 		//bool has_deleted;
 		EPoll(HANDLE handle);
 		EPoll();
-		void _applyHandle(Handle& h, Events old_e);
 		int32_t _doEPoll(int32_t timeout);
 		virtual bool dispatch(Events event, const EventData& evtd, bool confident) override;
 		virtual Events dispatchMultiple(Events event, Events confident, const EventData& evtd)
