@@ -134,7 +134,7 @@ struct handler:public RGC::Object {
 		//printf("handler()\n");
 		p.add(this->s);
 		this->retain();
-		req.readHeaders({&handler::readCB,this});
+		if(req.readRequest({&handler::readCB,this})) readCB(true);
 	}
 	void readCB(bool success) {
 		if(!success) {
@@ -171,10 +171,7 @@ struct handler:public RGC::Object {
 			p->handleRequest({&handler::handleRequestCB,this});
 			return;
 		}
-	doFinish:
-		//s->write(ms.data(),ms.length(),{&handler::writeCB,this});
-		//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
-		finalize();
+	doFinish:;
 	}
 	void sockReadCB(int r) {
 		if(r<=0) destruct();
@@ -182,7 +179,7 @@ struct handler:public RGC::Object {
 	void flushCB(Response& resp) {
 		//s->shutdown(SHUT_WR);
 		//release();
-		//finalize();
+		finalize();
 	}
 	void handleRequestCB(Page& p) {
 		sp.clear();
@@ -196,7 +193,7 @@ struct handler:public RGC::Object {
 		if(keepAlive) {
 			req.reset();
 			resp.reset();
-			req.readHeaders({&handler::readCB,this});
+			if(req.readRequest({&handler::readCB,this})) readCB(true);
 		} else s.repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
 	}
 	~handler() {

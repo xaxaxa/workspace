@@ -142,51 +142,37 @@ namespace cppsp
 	}
 
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
-			inputStream(&inp), input(inp), sp(sp), alloc(sp), headers(sp),
+			inputStream(&inp), sp(sp), alloc(sp), headers(NULL,sp),
 					queryString(less<String>(), alloc), form(less<String>(), alloc) {
 	}
 	Request::~Request() {
 	}
-	
-	void Request::readPost(Delegate<void(Request&)> cb) {
-		_readPOST.cb = cb;
-		_readPOST.ms = new (_readPOST.ms1) MemoryStream();
-		_readPOST.tmp_i = _readPOST.ms->length();
-		auto it = headers.find("Content-Length");
-		if (it == headers.end()) {
-			input.readToEnd(*_readPOST.ms, { &Request::_readCB, this });
-		} else {
-			input.readChunked(*_readPOST.ms, atoi((*it).value), { &Request::_readCB, this });
-		}
-	}
-	void Request::_readCB(int i) {
-		_readPOST.ms->flush();
+	void Request::parsePost(String buf) {
 		struct
 		{
 			Request* This;
+			MemoryStream ms;
 			void operator()(const char* name, int nameLen, const char* value, int valueLen) {
 				int nBegin, vBegin, lastLen;
 				{
-					nBegin = This->_readPOST.ms->length();
-					CP::StreamWriter sw(*This->_readPOST.ms);
+					nBegin = ms.length();
+					CP::StreamWriter sw(ms);
 					cppsp::urlDecode(name, nameLen, sw);
 					sw.flush();
-					vBegin = This->_readPOST.ms->length();
+					vBegin = ms.length();
 					if (value != NULL) {
 						cppsp::urlDecode(value, valueLen, sw);
 					}
 				}
-				lastLen = This->_readPOST.ms->length();
-				String n { This->sp->add((char*) This->_readPOST.ms->data() + nBegin, vBegin - nBegin),
+				lastLen = ms.length();
+				String n { This->sp->add((char*) ms.data() + nBegin, vBegin - nBegin),
 						vBegin - nBegin };
-				String v { This->sp->add((char*) This->_readPOST.ms->data() + vBegin, lastLen - vBegin),
+				String v { This->sp->add((char*) ms.data() + vBegin, lastLen - vBegin),
 						lastLen - vBegin };
 				This->form[n] = v;
 			}
 		} cb { this };
-		cppsp::parseQueryString((const char*) _readPOST.ms->data() + _readPOST.tmp_i, i, &cb, false);
-		_readPOST.ms->~MemoryStream();
-		_readPOST.cb(*this);
+		cppsp::parseQueryString(buf.data(), buf.length(), &cb, false);
 	}
 
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :

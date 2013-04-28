@@ -13,94 +13,53 @@ namespace cppsp
 {
 	//static int CPollRequest::bufSize=4096;
 	CPollRequest::CPollRequest(CP::Socket& s, CP::StringPool* sp) :
-			Request(s, sp), s(s) {
+			Request(s, sp), _parser(&headers), s(s) {
 	}
-	
-	void CPollRequest::readHeaders(const Delegate<void(bool)>& cb) {
-		this->tmp_cb = cb;
-		this->firstLine = true;
-		_beginRead();
+	bool CPollRequest_parseReqLine(CPollRequest* This) {
+		uint8_t* lineBuf = (uint8_t*) This->_parser.reqLine.data();
+		int lineBufLen = This->_parser.reqLine.length();
+		uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
+		if (tmp == NULL) return false;
+		This->method = This->sp->addString((char*) lineBuf, tmp - lineBuf);
+		tmp++;
+		if (lineBuf + lineBufLen - tmp <= 0) return false;
+		uint8_t* tmp1 = (uint8_t*) memchr(tmp, ' ', lineBuf + lineBufLen - tmp);
+		if (tmp1 == NULL) return false;
+		const char* path = (const char*) tmp;
+		int pathLen = tmp1 - tmp;
+		if (pathLen <= 0) return false;
+		This->path = This->sp->addString(path, pathLen);
+		return true;
 	}
-	void CPollRequest::_beginRead() {
-		//printf("\n_beginRead()\n");
-		_lineBuffer.clear();
-		input.readTo("\r\n", 2, _lineBuffer,
-				CP::StreamReader::StreamCallback(&CPollRequest::_readCB, this));
-	}
-	void CPollRequest::_readCB(int i) {
-		if (i <= 0) goto end;
-		//write(2, ms.data(), ms.length());
-		if (firstLine) {
-			firstLine = false;
-			uint8_t* lineBuf = _lineBuffer.data();
-			int lineBufLen = _lineBuffer.length();
-			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
-			if (tmp == NULL) goto fail;
-			method = sp->addString((char*) lineBuf, tmp - lineBuf);
-			tmp++;
-			if (lineBuf + lineBufLen - tmp <= 0) goto fail;
-			uint8_t* tmp1 = (uint8_t*) memchr(tmp, ' ', lineBuf + lineBufLen - tmp);
-			if (tmp1 == NULL) goto fail;
-			const char* path = (const char*) tmp;
-			int pathLen = tmp1 - tmp;
-			if (pathLen <= 0) goto fail;
-
-			const char* q = (const char*) memchr(path, '?', pathLen);
-			if (q == NULL) this->path = sp->addString(path, pathLen);
+	bool CPollRequest::readRequest(const Delegate<void(bool)>& cb) {
+		if (_parser.process()) {
+			if (CPollRequest_parseReqLine(this)) return true;
 			else {
-				struct
-				{
-					CPollRequest* This;
-					MemoryStream ms;
-					void operator()(const char* name, int nameLen, const char* value, int valueLen) {
-						String n, v;
-						{
-							CP::StreamWriter sw(ms);
-							cppsp::urlDecode(name, nameLen, sw);
-							sw.flush();
-							n= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
-							ms.clear();
-							if (value != NULL) {
-								cppsp::urlDecode(value, valueLen, sw);
-							}
-						}
-						v= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
-						This->queryString[n] = v;
-					}
-				} cb { this };
-				cppsp::parseQueryString(q + 1, path + pathLen - q - 1, &cb, false);
-				this->path = sp->addString(path, q - path);
+				cb(false);
+				return false;
 			}
 		} else {
-			headerContainer::item it;
-			uint8_t* lineBuf = _lineBuffer.data();
-			int lineBufLen = _lineBuffer.length();
-			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ':', lineBufLen);
-			if (tmp == NULL || tmp == lineBuf) goto fail;
-			uint8_t* tmp1 = tmp - 1;
-			while (tmp1 > lineBuf && *tmp1 == ' ')
-				tmp1--;
-			String n { sp->add((const char*) lineBuf, tmp1 - lineBuf + 1), tmp1 - lineBuf + 1 };
-
-			tmp1 = tmp + 1;
-			while (tmp1 < (lineBuf + lineBufLen) && *tmp1 == ' ')
-				tmp1++;
-			String v { sp->add((const char*) tmp1, lineBuf + lineBufLen - tmp1), lineBuf + lineBufLen
-					- tmp1 };
-
-			headers.add(n, v);
+			this->tmp_cb = cb;
+			//_parser.reset();
+			_beginRead();
+			return false;
 		}
-		if (input.eof) {
-			end: _endRead(!firstLine);
+	}
+	void CPollRequest::_beginRead() {
+		String b = _parser.beginPutData(4096);
+		inputStream->read(b.data(), b.length(), { &CPollRequest::_readCB, this });
+	}
+	void CPollRequest::_readCB(int i) {
+		if (i <= 0) {
+			tmp_cb(false);
 			return;
 		}
-		_beginRead();
-		return;
-		fail: _endRead(false);
-	}
-	void CPollRequest::_endRead(bool success) {
-		_lineBuffer.clear();
-		tmp_cb(success);
+		_parser.endPutData(i);
+		if (_parser.process()) {
+			tmp_cb(CPollRequest_parseReqLine(this));
+		} else {
+			_beginRead();
+		}
 	}
 	CPollRequest::~CPollRequest() {
 	}
