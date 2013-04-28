@@ -317,9 +317,7 @@ namespace CP
 			} _writevAll;
 		};
 		void _readvCB(int r);
-		inline void _beginReadv();
 		void _writevCB(int r);
-		inline void _beginWritev();
 
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0; //required
@@ -424,10 +422,7 @@ namespace CP
 			readv(iov, iovcnt, cb, true);
 		}
 		virtual void readAll(void* buf, int32_t len, const Callback& cb)=0;
-		virtual void readvAll(iovec* iov, int iovcnt, const Callback& cb) {
-			_readvAll= {cb,iov,iovcnt,0,0};
-			_beginReadv();
-		}
+		virtual void readvAll(iovec* iov, int iovcnt, const Callback& cb);
 		virtual void readToEnd(BufferedOutput& out, const Callback& cb, int bufSize = 4096);
 		virtual void readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int bufSize =
 				4096);
@@ -447,10 +442,7 @@ namespace CP
 			writev(iov, iovcnt, cb, true);
 		}
 		virtual void writeAll(const void* buf, int32_t len, const Callback& cb)=0;
-		virtual void writevAll(iovec* iov, int iovcnt, const Callback& cb) {
-			_writevAll= {cb,iov,iovcnt,0,0};
-			_beginWritev();
-		}
+		virtual void writevAll(iovec* iov, int iovcnt, const Callback& cb);
 		//only for async read/write operations
 		virtual void cancelRead()=0;
 		virtual void cancelWrite()=0;

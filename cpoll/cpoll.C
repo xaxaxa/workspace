@@ -315,6 +315,14 @@ namespace CP
 		Stream_beginRead1(This);
 	}
 
+	static inline void Stream_beginReadv(Stream* This) {
+		if (This->_readvAll.i < This->_readvAll.iovcnt) This->readv(
+				This->_readvAll.iov + This->_readvAll.i, This->_readvAll.iovcnt - This->_readvAll.i, {
+						&Stream::_readvCB, This });
+		else {
+			This->_readvAll.cb(This->_readvAll.br);
+		}
+	}
 	void Stream::_readvCB(int r) {
 		if (r <= 0) {
 			_readvAll.cb(_readvAll.br);
@@ -332,13 +340,14 @@ namespace CP
 				_readvAll.i++;
 			}
 		}
-		_beginReadv();
+		Stream_beginReadv(this);
 	}
-	inline void Stream::_beginReadv() {
-		if (_readvAll.i < _readvAll.iovcnt) readv(_readvAll.iov + _readvAll.i,
-				_readvAll.iovcnt - _readvAll.i, { &Stream::_readvCB, this });
+	static inline void Stream_beginWritev(Stream* This) {
+		if (This->_writevAll.i < This->_writevAll.iovcnt) This->writev(
+				This->_writevAll.iov + This->_writevAll.i, This->_writevAll.iovcnt - This->_writevAll.i,
+				{ &Stream::_writevCB, This });
 		else {
-			_readvAll.cb(_readvAll.br);
+			This->_writevAll.cb(This->_writevAll.br);
 		}
 	}
 	void Stream::_writevCB(int r) {
@@ -358,15 +367,9 @@ namespace CP
 				_writevAll.i++;
 			}
 		}
-		_beginWritev();
+		Stream_beginWritev(this);
 	}
-	inline void Stream::_beginWritev() {
-		if (_writevAll.i < _writevAll.iovcnt) writev(_writevAll.iov + _writevAll.i,
-				_writevAll.iovcnt - _writevAll.i, { &Stream::_writevCB, this });
-		else {
-			_writevAll.cb(_writevAll.br);
-		}
-	}
+
 	int Stream::readToEnd(BufferedOutput& out, int32_t bufSize) {
 		int r = 0;
 		while (true) {
@@ -407,6 +410,14 @@ namespace CP
 	}
 	BufferedOutput* Stream::getBufferedOutput() {
 		return NULL;
+	}
+	void Stream::readvAll(iovec* iov, int iovcnt, const Callback& cb) {
+		_readvAll= {cb,iov,iovcnt,0,0};
+		Stream_beginReadv(this);
+	}
+	void Stream::writevAll(iovec* iov, int iovcnt, const Callback& cb) {
+		_writevAll= {cb,iov,iovcnt,0,0};
+		Stream_beginWritev(this);
 	}
 
 	StreamWriter::StreamWriter(BufferedOutput& s) :
