@@ -18,7 +18,64 @@ struct serverThread
 	~serverThread() {}
 } __attribute__((aligned(CACHELINE_SIZE)));
 
-
+int ci_compare(String s1, String s2) {
+	if(s1.length()>s2.length()) return 1;
+	if(s1.length()<s2.length()) return -1;
+	if(s1.length()==0) return 0;
+	char a,b;
+	for(int i=0;i<s1.length();i++) {
+		a=tolower(s1.data()[i]);
+		b=tolower(s2.data()[i]);
+		if(a<b) return -1;
+		if(a>b) return 1;
+	}
+	return 0;
+}
+struct headerContainer
+{
+	uint8_t** buffer;
+	StringPool* sp;
+	struct item {
+		int nameStart;
+		int nameLength;
+		int valueStart;
+		int valueLength;
+	};
+	static const int bucketSize=8;
+	struct bucket {
+		bucket* next;
+		item items[bucketSize];
+		int length;
+	};
+	bucket* first=NULL;
+	bucket* last=NULL;
+	headerContainer(uint8_t** buffer, StringPool* sp):buffer(buffer),sp(sp) {}
+	void add(item it) {
+		if(last==NULL || last->length>=bucketSize) addBucket();
+		last->items[last->length]=it;
+		last->length++;
+	}
+	void addBucket() {
+		bucket* b=(bucket*)sp->add(sizeof(bucket));
+		b->next=NULL;
+		b->length=0;
+		if(last!=NULL)last->next=b;
+		last=b;
+		if(first==NULL)first=b;
+	}
+	String operator[](String name) {
+		char* tmp=(char*)*buffer;
+		for(bucket* b=first;b!=NULL;b=b->next) {
+			for(int i=0;i<b->length;i++)
+				if(ci_compare(name,{tmp+b->items[i].nameStart,b->items[i].nameLength})==0)
+					return {tmp+b->items[i].valueStart,b->items[i].valueLength};
+		}
+		return {(char*)nullptr,0};
+	}
+	void clear() {
+		first=last=NULL;
+	}
+};
 struct handler:public RGC::Object {
 	serverThread& thr;
 	CP::Poll& p;
@@ -27,9 +84,9 @@ struct handler:public RGC::Object {
 	StringPool sp;
 	//uint8_t buf[8192];
 	//MemoryStream ms;
-	CP::PoolAllocator<std::pair<const String,String> > alloc;
-	typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String,String> > > StringMap;
-	StringMap headers;
+	//CP::PoolAllocator<std::pair<const String,String> > alloc;
+	//typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String,String> > > StringMap;
+	headerContainer headers;
 	String path;
 	String method;
 	iovec iov[2];
@@ -43,7 +100,7 @@ struct handler:public RGC::Object {
 	}
 	handler(serverThread& thr,CP::Poll& p,HANDLE s):thr(thr),p(p),
 		s(s,thr.listensock->addressFamily,thr.listensock->type,thr.listensock->protocol),
-		sr(8192),alloc(&sp),headers(less<String>(), alloc) {
+		sr(8192),headers(&sr.buffer,&sp) {
 		p.add(this->s);
 		this->retain();
 		sr.readUntilString("\r\n",2,true);
@@ -97,19 +154,21 @@ struct handler:public RGC::Object {
 			if (pathLen <= 0) goto fail;
 			this->path = sp.addString(path, pathLen);
 		} else {
+			headerContainer::item it;
 			uint8_t* tmp = (uint8_t*) memchr(lineBuf, ':', lineBufLen);
 			if (tmp == NULL || tmp == lineBuf) goto fail;
 			uint8_t* tmp1 = tmp - 1;
 			while (tmp1 > lineBuf && *tmp1 == ' ')
 				tmp1--;
-			String n { sp.add((const char*) lineBuf, tmp1 - lineBuf + 1), tmp1 - lineBuf + 1 };
+			it.nameStart=(int)(lineBuf-sr.buffer);
+			it.nameLength=(int)(tmp1 - lineBuf + 1);
 
 			tmp1 = tmp + 1;
 			while (tmp1 < (lineBuf + lineBufLen) && *tmp1 == ' ')
 				tmp1++;
-			String v { sp.add((const char*) tmp1, lineBuf + lineBufLen - tmp1), lineBuf + lineBufLen
-					- tmp1 };
-			headers.insert(make_pair(n, v));
+			it.valueStart=(int)(tmp1-sr.buffer);
+			it.valueLength=(int)(lineBuf + lineBufLen - tmp1);
+			headers.add(it);
 		}
 		end:
 		return true;
