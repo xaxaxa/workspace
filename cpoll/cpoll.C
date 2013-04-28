@@ -1732,30 +1732,6 @@ namespace CP
 //if (debug) printf("_applyHandle: h=%i, old_e=%i, new_e=%i\n", h.handle, old_e, new_e);
 		if (new_e == old_e) return;
 
-		if (h.handle < 0) {
-			//throw runtime_error("test");
-			EventData evtd;
-			evtd.hungUp = evtd.error = true;
-			while (new_e != Events::none) {
-				h.dispatchMultiple(new_e, new_e, evtd);
-				new_e = h.getEvents();
-			}
-			return;
-		}
-		Events new_added = (old_e ^ new_e) & new_e;
-		if (new_added != Events::none) {
-			EventData evtd;
-			evtd.hungUp = evtd.error = false;
-			cur_deleted = false;
-			cur_handle = h.handle;
-			while (new_added != Events::none) {
-				new_added = h.dispatchMultiple(new_added, Events::none, evtd);
-				if (cur_deleted) return;
-				new_e = h.getEvents();
-				new_added = new_added & new_e;
-			}
-		}
-		if (new_e == old_e) return;
 		epoll_event evt;
 		if (old_e == Events::none) {
 			fillEPollEvents(h, evt, new_e);
@@ -1809,30 +1785,16 @@ namespace CP
 		Events old_e = h->getEvents();
 		cur_deleted = false;
 		cur_handle = h->handle;
-		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
+		h->dispatchMultiple((Events) evt, (Events) evt, evtd);
 		if (cur_deleted) goto aaa;
 		if (h->getEvents() != old_e) applyHandle(*h, old_e);
 		aaa: cur_handle = -1;
 		return 1;
 	}
-	static bool compareTmpEvent(const EPoll::tmpevent& a, const EPoll::tmpevent& b) {
-		return a.h < b.h;
-	}
 	int32_t EPoll::_doEPoll(int32_t timeout) {
 		if (active <= 0) {
 			//printf("active=%i\n", active);
 			return -1;
-		}
-		while (tmpevents.size() > 0) {
-			vector<tmpevent> tmpevents1 = tmpevents;
-			tmpevents.clear();
-			std::sort(tmpevents1.begin(), tmpevents1.end(), compareTmpEvent);
-			Handle* last_h = NULL;
-			for (int i = 0; i < (int) tmpevents1.size(); i++) {
-				if (last_h == tmpevents1[i].h) continue;
-				last_h = tmpevents1[i].h;
-				_applyHandle(*tmpevents1[i].h, tmpevents1[i].old_events);
-			}
 		}
 		epoll_event evts[MAX_EVENTS];
 		retry: int32_t n = checkError(epoll_wait(handle, evts, MAX_EVENTS, timeout));
@@ -1843,12 +1805,6 @@ namespace CP
 		curLength = n;
 		for (curIndex = 0; curIndex < n; curIndex++)
 			_doDispatch(evts[curIndex]);
-
-		/*if (likely(!has_deleted)) return ret;
-		 for (auto it = tmp_deleted.begin(); it != tmp_deleted.end(); it++)
-		 (*it)->release();
-		 tmp_deleted.clear();
-		 has_deleted = false;*/
 
 		return n;
 	}
@@ -1870,8 +1826,7 @@ namespace CP
 	void EPoll::applyHandle(Handle& h, Events old_e) {
 //cout << "applyHandle" << endl;
 //if (h.handle == cur_handle) return;
-		//_applyHandle(h, old_e);
-		tmpevents.push_back( { &h, old_e });
+		_applyHandle(h, old_e);
 	}
 	void EPoll::add(Handle& h) {
 //h.retain();
