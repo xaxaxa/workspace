@@ -37,20 +37,11 @@ namespace cppsp
 		for (int i = 0; i < len; i++)
 			((char*) dst)[i] = ((const char*) src)[i];
 	}
-	Page::Page() :
-			doRender(true) {
-		
-	}
 	Page::Page(Request& req, Response& resp, CP::StringPool* sp) :
 			request(&req), response(&resp), sp(sp), doRender(true) {
 	}
 	void Page::__writeStringTable(int i, int len) {
 		response->output.write(__stringTable + i, len);
-	}
-	void Page::load() {
-
-	}
-	Page::~Page() {
 	}
 	void Page::handleRequest(Callback cb) {
 		this->cb = cb;
@@ -61,16 +52,10 @@ namespace cppsp
 			flush();
 		}
 	}
-	void Page::processRequest() {
-		doInit();
-	}
 	void Page::render(CP::StreamWriter& out) {
 		out.write("This is the default page of the cppsp C++ "
 				"web application framework. If you see this, it means "
 				"you haven't overridden the render() method derived from cppsp::Page.");
-	}
-	void Page::init() {
-
 	}
 	void Page::doInit() {
 		doReadPost = false;
@@ -136,12 +121,6 @@ namespace cppsp
 	void Page::_flushCB(Response& r) {
 		flushCB();
 	}
-	void Page::flushCB() {
-		finalize();
-	}
-	void Page::finalize() {
-		finalizeCB();
-	}
 	void Page::finalizeCB() {
 		if (this->cb != nullptr) cb(*this);
 	}
@@ -149,8 +128,6 @@ namespace cppsp
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
 			inputStream(&inp), sp(sp), alloc(sp), headers(NULL, sp),
 					queryString(less<String>(), alloc), form(less<String>(), alloc) {
-	}
-	Request::~Request() {
 	}
 	void Request::parsePost(String buf) {
 		struct

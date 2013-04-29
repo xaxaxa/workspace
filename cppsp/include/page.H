@@ -20,7 +20,7 @@ namespace cppsp
 	{
 	public:
 		Request(CP::Stream& inp, CP::StringPool* sp);
-		virtual ~Request();
+		virtual ~Request() {}
 		RGC::Ref<CP::Stream> inputStream;
 		CP::StringPool* sp; //may be used to store headers, querystrings, and POST data
 		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String, String> > > StringMap;
@@ -93,7 +93,6 @@ namespace cppsp
 	{
 	public:
 		typedef Delegate<void(Page&)> Callback;
-		Page();
 		Page(Request& req, Response& resp, CP::StringPool* sp);
 		RGC::Ref<Request> request;
 		RGC::Ref<Response> response;
@@ -105,6 +104,9 @@ namespace cppsp
 		CP::StringPool* sp;
 		bool doRender;
 		bool doReadPost;
+		Page() :
+				doRender(true) {
+		}
 		inline void cancelRender() {
 			doRender = false;
 		}
@@ -118,21 +120,30 @@ namespace cppsp
 		//path is absolute
 		void loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb);
 		virtual void handleRequest(Callback cb = nullptr);
-		virtual void processRequest();
+		virtual void processRequest() {
+			doInit();
+		}
 		//each page goes through these operations (in order): init, [readPost], load, render, flush, finalize
 
-		virtual void init(); //to be overridden by base class; called before load() is called, and
-									//must call initCB() or cancelLoad() after it's done
+		virtual void init() { //to be overridden by base class; called before load() is called, and
+									 //must call initCB() or cancelLoad() after it's done
+		}
 		virtual void doInit();
 		virtual void initCB();
 		virtual void cancelLoad(exception* ex = NULL);
-		virtual void load(); //to be overridden by derived class; called before headers are written
+		virtual void load() { //to be overridden by derived class; called before headers are written
+		}
 		virtual void render(CP::StreamWriter& out);
 		virtual void flush();
-		virtual void flushCB();
-		virtual void finalize();
+		virtual void flushCB() {
+			finalize();
+		}
+		virtual void finalize() {
+			finalizeCB();
+		}
 		virtual void finalizeCB();
-		virtual ~Page();
+		virtual ~Page() {
+		}
 
 		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);

@@ -453,9 +453,6 @@ namespace CP
 		output->write(buffer, bufferPos);
 		bufferPos = 0;
 	}
-	StreamBuffer::~StreamBuffer() {
-		if (this->buffer != NULL) free(this->buffer);
-	}
 
 	StreamReader::StreamReader(Stream& input, int bufsize) :
 			input(&input), _sr(malloc(bufsize), bufsize), deletionFlag(NULL), bufSize(bufsize),
@@ -2204,30 +2201,6 @@ namespace CP
 	StringPool::~StringPool() {
 		clear();
 		if (_firstPage != NULL) free(_firstPage);
-	}
-	char* StringPool::add(int length) {
-		char* tmp = beginAdd(length);
-		endAdd(length);
-		return tmp;
-	}
-	char* StringPool::add(const char* s, int length) {
-		char* tmp = beginAdd(length);
-		memcpy(tmp, s, length);
-		endAdd(length);
-		return tmp;
-	}
-	char* StringPool::beginAdd(int length) {
-		if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
-			_addRaw(length);
-			return ((char*) (_curRawItem + 1));
-		}
-		if (_curPage == NULL || length > (_pageSize - (int) sizeof(_pageHeader) - _curIndex)) {
-			_addPage();
-		}
-		return ((char*) (_curPage + 1)) + _curIndex;
-	}
-	void StringPool::endAdd(int length) {
-		_curIndex += length;
 	}
 	void StringPool::clear() {
 		_pageHeader* h;

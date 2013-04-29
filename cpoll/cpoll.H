@@ -482,7 +482,9 @@ namespace CP
 		StreamBuffer();
 		StreamBuffer(Stream& s, int bufsize = 4096);
 		virtual void flushBuffer(int minBufferAllocation);
-		~StreamBuffer();
+		~StreamBuffer() {
+			if (this->buffer != NULL) free(this->buffer);
+		}
 	}
 	;
 	class FixedMemoryStream;
@@ -1204,9 +1206,30 @@ namespace CP
 		int _curIndex;
 		StringPool(int pageSize = 4096);
 		~StringPool();
-		char* add(int length);
-		char* beginAdd(int length);
-		char* add(const char* s, int length);
+		char* beginAdd(int length) {
+			if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
+				_addRaw(length);
+				return ((char*) (_curRawItem + 1));
+			}
+			if (_curPage == NULL || length > (_pageSize - (int) sizeof(_pageHeader) - _curIndex)) {
+				_addPage();
+			}
+			return ((char*) (_curPage + 1)) + _curIndex;
+		}
+		void endAdd(int length) {
+			_curIndex += length;
+		}
+		char* add(int length) {
+			char* tmp = beginAdd(length);
+			endAdd(length);
+			return tmp;
+		}
+		char* add(const char* s, int length) {
+			char* tmp = beginAdd(length);
+			memcpy(tmp, s, length);
+			endAdd(length);
+			return tmp;
+		}
 		char* add(String s) {
 			return add(s.data(), s.length());
 		}
@@ -1231,7 +1254,6 @@ namespace CP
 		}
 		void free(void* obj) override final {
 		}
-		void endAdd(int length);
 		void clear();
 		void _addPage();
 		void _addRaw(int len);
