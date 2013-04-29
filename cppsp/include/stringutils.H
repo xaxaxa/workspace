@@ -11,6 +11,13 @@
 #include <string>
 namespace cppsp
 {
+#ifndef __CPPSP_TOLOWER
+#define __CPPSP_TOLOWER
+	static inline char tolower(char c) {
+		if (c <= 'Z' && c >= 'A') c = c - 'A' + 'a';
+		return c;
+	}
+#endif
 	struct ci_less: std::binary_function<std::string, std::string, bool>
 	{
 		// case-independent (ci) compare_less binary function

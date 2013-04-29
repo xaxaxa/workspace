@@ -15,6 +15,10 @@ namespace cppsp
 	using namespace CP;
 	struct HTTPParser
 	{
+		static inline char tolower(char c) {
+			if (c <= 'Z' && c >= 'A') c = c - 'A' + 'a';
+			return c;
+		}
 		//s2 must be all lowercase!!!!!
 		static bool ci_equals(String s1, String s2) {
 			if (s1.length() != s2.length()) return false;

@@ -12,6 +12,13 @@
 namespace cppsp
 {
 	typedef CP::String String;
+#ifndef __CPPSP_TOLOWER
+#define __CPPSP_TOLOWER
+	static inline char tolower(char c) {
+		if (c <= 'Z' && c >= 'A') c = c - 'A' + 'a';
+		return c;
+	}
+#endif
 	static int ci_compare(String s1, String s2) {
 		if (s1.length() > s2.length()) return 1;
 		if (s1.length() < s2.length()) return -1;
