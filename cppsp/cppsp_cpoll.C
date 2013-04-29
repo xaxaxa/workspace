@@ -20,7 +20,7 @@ namespace cppsp
 		int lineBufLen = This->_parser.reqLine.length();
 		uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
 		if (tmp == NULL) return false;
-		This->method = This->sp->addString((char*) lineBuf, tmp - lineBuf);
+		This->method = {(char*) lineBuf, tmp - lineBuf};
 		tmp++;
 		if (lineBuf + lineBufLen - tmp <= 0) return false;
 		uint8_t* tmp1 = (uint8_t*) memchr(tmp, ' ', lineBuf + lineBufLen - tmp);
@@ -28,7 +28,7 @@ namespace cppsp
 		const char* path = (const char*) tmp;
 		int pathLen = tmp1 - tmp;
 		if (pathLen <= 0) return false;
-		This->path = This->sp->addString(path, pathLen);
+		This->path = {path, pathLen};
 		return true;
 	}
 	bool CPollRequest::readRequest(const Delegate<void(bool)>& cb) {

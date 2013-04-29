@@ -51,6 +51,11 @@ namespace cppsp
 		return message.c_str();
 	}
 
+	//inline-able memcpy() for copying SHORT STRINGS ONLY
+	static inline void memcpy2(void* dst, const void* src, int len) {
+		for (int i = 0; i < len; i++)
+			((char*) dst)[i] = ((const char*) src)[i];
+	}
 	struct split
 	{
 		const char* s;
@@ -88,11 +93,11 @@ namespace cppsp
 	//returns the length of the string written to buf; does NOT write null byte
 	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf) {
 		if (l2 > 0 && p2[0] == '/') {
-			memcpy(buf, p2, l2);
+			memcpy2(buf, p2, l2);
 			return l2;
 		}
 		int i = l1;
-		memcpy(buf, p1, i);
+		memcpy2(buf, p1, i);
 		if (l2 > 0) {
 			i--;
 			while (i >= 0 && buf[i] != '/')
@@ -114,7 +119,7 @@ namespace cppsp
 					//while(i>=0 && buf[i]!='/')i--;
 					buf[i] = '/';
 					i++;
-					memcpy(buf + i, s, l);
+					memcpy2(buf + i, s, l);
 					i += l;
 				}
 			}
@@ -130,7 +135,7 @@ namespace cppsp
 	//guarantees that the resulting path won't be outside of p1
 	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf) {
 		int i = l1;
-		memcpy(buf, p1, i);
+		memcpy2(buf, p1, i);
 		if (l2 > 0) {
 			bool first(true);
 			split spl(p2, l2, '/');
@@ -157,7 +162,7 @@ namespace cppsp
 						buf[i] = '/';
 						i++;
 					}
-					memcpy(buf + i, s, l);
+					memcpy2(buf + i, s, l);
 					i += l;
 				}
 			}

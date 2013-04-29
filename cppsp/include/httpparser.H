@@ -70,32 +70,36 @@ namespace cppsp
 					//line: (buf+pos, newpos-pos)
 					uint8_t* lineBuf = buf + pos;
 					int lineBufLen = newpos - pos;
-					if (lineBufLen == 0) {
-						rpos = pos = newpos + 2;
-						state = s_readingContent;
-						goto asdfg;
-					}
+
 					if (firstLine) {
 						reqLine.len = newpos - pos;
 						reqLine_i = pos;
 						firstLine = false;
 					} else {
+						if (lineBufLen == 0) {
+							rpos = pos = newpos + 2;
+							state = s_readingContent;
+							goto asdfg;
+						}
 						tmp = memchr(buf + pos, ':', newpos - pos);
-						if(tmp==NULL) {
-							hc->add( {pos,newpos-pos,-1,0});
+						if (tmp == NULL) {
+							hc->add( { pos, newpos - pos, -1, 0 });
 						} else {
 							headerContainer::item it;
-							uint8_t* tmp1 = (uint8_t*)tmp - 1;
-							while (tmp1 >= lineBuf && *tmp1 == ' ') tmp1--;
-							it.nameStart=pos;
-							it.nameLength=(int)(tmp1 - lineBuf + 1);
-							tmp1 = (uint8_t*)tmp + 1;
-							while (tmp1 < (buf+newpos) && *tmp1 == ' ') tmp1++;
-							it.valueStart=(int)(tmp1-buf);
-							it.valueLength=(int)(lineBuf + lineBufLen - tmp1);
+							uint8_t* tmp1 = (uint8_t*) tmp - 1;
+							while (tmp1 >= lineBuf && *tmp1 == ' ')
+								tmp1--;
+							it.nameStart = pos;
+							it.nameLength = (int) (tmp1 - lineBuf + 1);
+							tmp1 = (uint8_t*) tmp + 1;
+							while (tmp1 < (buf + newpos) && *tmp1 == ' ')
+								tmp1++;
+							it.valueStart = (int) (tmp1 - buf);
+							it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
 
-							if(_ctLen==0 && ci_equals( {(char*)buf+pos,it.nameLength},"content-length")) {
-								_ctLen=atoi( {(char*)tmp1,it.valueLength});
+							if (_ctLen == 0
+									&& ci_equals( { (char*) buf + pos, it.nameLength }, "content-length")) {
+								_ctLen = atoi( { (char*) tmp1, it.valueLength });
 							}
 							hc->add(it);
 						}
@@ -106,13 +110,13 @@ namespace cppsp
 				case s_readingContent:
 				{
 					asdfg: if (ms.length() - pos < _ctLen) return false;
-					content= {(char*)ms.buffer+pos,_ctLen};
+					content= {(char*)buf+pos,_ctLen};
 					pos += _ctLen;
 					rpos = pos;
 					_ctLen = 0;
 					state = s_readingHeaders;
 					firstLine = true;
-					reqLine.d = buf + reqLine_i;
+					reqLine.d = (char*) buf + reqLine_i;
 					return true;
 				}
 				default:

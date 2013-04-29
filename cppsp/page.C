@@ -32,6 +32,11 @@ namespace cppsp
 		} while (i);
 		return l;
 	}
+	//inline-able memcpy() for copying SHORT STRINGS ONLY
+	static inline void memcpy2(void* dst, const void* src, int len) {
+		for (int i = 0; i < len; i++)
+			((char*) dst)[i] = ((const char*) src)[i];
+	}
 	Page::Page() :
 			doRender(true) {
 		
@@ -142,7 +147,7 @@ namespace cppsp
 	}
 
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
-			inputStream(&inp), sp(sp), alloc(sp), headers(NULL,sp),
+			inputStream(&inp), sp(sp), alloc(sp), headers(NULL, sp),
 					queryString(less<String>(), alloc), form(less<String>(), alloc) {
 	}
 	Request::~Request() {
@@ -165,10 +170,8 @@ namespace cppsp
 					}
 				}
 				lastLen = ms.length();
-				String n { This->sp->add((char*) ms.data() + nBegin, vBegin - nBegin),
-						vBegin - nBegin };
-				String v { This->sp->add((char*) ms.data() + vBegin, lastLen - vBegin),
-						lastLen - vBegin };
+				String n { This->sp->add((char*) ms.data() + nBegin, vBegin - nBegin), vBegin - nBegin };
+				String v { This->sp->add((char*) ms.data() + vBegin, lastLen - vBegin), lastLen - vBegin };
 				This->form[n] = v;
 			}
 		} cb { this };
@@ -183,7 +186,7 @@ namespace cppsp
 		addDefaultHeaders();
 	}
 	void Response::addDefaultHeaders() {
-		headers.add(  "Content-Type", "text/html; charset=UTF-8" );
+		headers.add("Content-Type", "text/html; charset=UTF-8");
 	}
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
 		//sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
@@ -192,7 +195,7 @@ namespace cppsp
 			int x = 9 + itoa(This->statusCode, s1 + 9);
 			s1[x] = ' ';
 			x++;
-			memcpy(s1 + x, This->statusName.data(), This->statusName.length());
+			memcpy2(s1 + x, This->statusName.data(), This->statusName.length());
 			x += This->statusName.length();
 			s1[x] = '\r';
 			s1[x + 1] = '\n';
@@ -203,10 +206,10 @@ namespace cppsp
 			int l1 = (*it).name.length();
 			int l2 = (*it).value.length();
 			char* tmp = sw.beginWrite(l1 + 4 + l2);
-			memcpy(tmp, (*it).name.data(), l1);
+			memcpy2(tmp, (*it).name.data(), l1);
 			tmp[l1] = ':';
 			tmp[l1 + 1] = ' ';
-			memcpy(tmp + l1 + 2, (*it).value.data(), l2);
+			memcpy2(tmp + l1 + 2, (*it).value.data(), l2);
 			tmp[l1 + 2 + l2] = '\r';
 			tmp[l1 + 2 + l2 + 1] = '\n';
 			sw.endWrite(l1 + 4 + l2);
@@ -226,10 +229,10 @@ namespace cppsp
 				CP::StreamWriter sw(buffer);
 				auto it = this->headers.find("Content-Length");
 				if (it == this->headers.end()) {
-					char tmps[16];
-					//snprintf(tmps, 32, "%i", buffer.length());
-					itoa(buffer.length(), tmps);
-					this->headers.add("Content-Length", sp->addString(tmps));
+					char* tmps = sp->beginAdd(16);
+					int l = itoa(buffer.length(), tmps);
+					sp->endAdd(l);
+					this->headers.add("Content-Length", { tmps, l });
 				}
 				Response_doWriteHeaders(this, sw);
 			}
