@@ -2347,7 +2347,7 @@ namespace CP
 		_item* tmp = _freeList;
 		while (tmp != NULL) {
 			_item* n = tmp->nextFree;
-			free(tmp);
+			::free(tmp);
 			tmp = n;
 		}
 	}
@@ -2375,7 +2375,7 @@ namespace CP
 		if (o->nextFree != (_item*) this) throw runtime_error(
 				"MemoryPool::free(): double free or corruption");
 		if (items > maxItems) {
-			free(o);
+			::free(o);
 		} else {
 			items++;
 			o->nextFree = NULL;
