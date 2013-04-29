@@ -106,13 +106,14 @@ public:
 	const char* rootDir() override {
 		return ::rootDir.c_str();
 	}
-	void loadPage(CP::Poll& p, String path, Delegate<void(Page*, exception* ex)> cb) override {
+	void loadPage(CP::Poll& p, String path, RGC::Allocator* a,
+		Delegate<void(Page*, exception* ex)> cb) override {
 		string tmp = mapPath(path.toSTDString());
-		cppsp::loadPage(thr->mgr, p, rootDir(), { tmp.data(), (int) tmp.length() }, cb);
+		cppsp::loadPage(thr->mgr, p, rootDir(), {tmp.data(), (int) tmp.length()}, a, cb);
 	}
-	void loadPageFromFile(CP::Poll& p, String path,
+	void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a,
 			Delegate<void(Page*, exception* ex)> cb) override {
-		cppsp::loadPage(thr->mgr, p, rootDir(), path, cb);
+		cppsp::loadPage(thr->mgr, p, rootDir(), path, a, cb);
 	}
 };
 struct handler:public RGC::Object {
@@ -150,7 +151,7 @@ struct handler:public RGC::Object {
 		int l=cppsp::combinePathChroot(rootDir.data(),rootDir.length(),
 			req.path.data(),req.path.length(),tmp);
 		path=sp.addString(tmp,l);
-		cppsp::loadPage(thr.mgr,p,{rootDir.data(),(int)rootDir.length()},path,{&handler::loadCB,this});
+		cppsp::loadPage(thr.mgr,p,{rootDir.data(),(int)rootDir.length()},path,&sp,{&handler::loadCB,this});
 	}
 	
 	void loadCB(Page* p, exception* ex) {

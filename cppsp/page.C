@@ -116,12 +116,12 @@ namespace cppsp
 	void Page::loadNestedPage(string path, Delegate<void(Page*, exception* ex)> cb) {
 		this->pageCB = cb;
 		string tmp = mapRelativePath(path);
-		server->loadPage(*poll, { tmp.data(), (int) tmp.length() }, { &Page::_pageCB, this });
+		server->loadPage(*poll, { tmp.data(), (int) tmp.length() }, sp, { &Page::_pageCB, this });
 	}
 	void Page::loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb) {
 		this->pageCB = cb;
-		server->loadPageFromFile(*poll, { path.data(), (int) path.length() },
-				{ &Page::_pageCB, this });
+		server->loadPageFromFile(*poll, { path.data(), (int) path.length() }, sp, { &Page::_pageCB,
+				this });
 	}
 	
 	void Page::_pageCB(Page* p, exception* ex) {
@@ -277,14 +277,15 @@ namespace cppsp
 
 } /* namespace cppsp */
 
-void cppsp::Server::loadPage(CP::Poll& p, String path, Delegate<void(Page*, exception* ex)> cb) {
+void cppsp::Server::loadPage(CP::Poll& p, String path, RGC::Allocator* a,
+		Delegate<void(Page*, exception* ex)> cb) {
 	string tmp = mapPath(path.toSTDString());
-	cppsp::loadPage(p, rootDir(), { tmp.data(), (int) tmp.length() }, cb);
+	cppsp::loadPage(p, rootDir(), { tmp.data(), (int) tmp.length() }, a, cb);
 }
 
-void cppsp::Server::loadPageFromFile(CP::Poll& p, String path,
+void cppsp::Server::loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a,
 		Delegate<void(Page*, exception* ex)> cb) {
-	cppsp::loadPage(p, rootDir(), path, cb);
+	cppsp::loadPage(p, rootDir(), path, a, cb);
 }
 
 string cppsp::Server::mapPath(string path) {

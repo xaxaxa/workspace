@@ -204,6 +204,7 @@ namespace cppsp
 		StreamWriter sw3(ms3);
 		sw1.write("#include <cppsp/page.H>\n#include <cpoll/cpoll.H>\n");
 		sw1.write("#include <cppsp/common.H>\n#include <cppsp/stringutils.H>\n");
+		sw1.write("#include <rgc.H>\n");
 		sw1.write("using namespace cppsp;\nusing namespace CP;\n");
 
 		while (true) {
@@ -297,6 +298,9 @@ namespace cppsp
 		sw1.writeF("extern \"C\" Page* createObject(void* mem) {"
 				"if(mem==NULL) return new %s(); else return new (mem) %s();}\n", classname.c_str(),
 				classname.c_str());
+		sw1.writeF("extern \"C\" Page* createObject1(RGC::Allocator* alloc) {"
+				"%s* tmp = new (alloc->alloc(sizeof(%s))) %s(); tmp->allocator=alloc; return tmp;}\n",
+				classname.c_str(), classname.c_str(), classname.c_str());
 		sw1.flush();
 		//out.write(ms1.data(), ms1.length());
 	}
@@ -406,12 +410,20 @@ namespace cppsp
 		int stringTableLen;
 		typedef int (*getObjectSize_t)();
 		typedef Page* (*createObject_t)(void* mem);
+		typedef Page* (*createObject1_t)(RGC::Allocator* alloc);
 		int (*getObjectSize)();
-		Page* (*createObject)(void* mem);
+		createObject_t createObject;
+		createObject1_t createObject1;
 		RGC::Ref<CP::File> compile_fd;
 		MemoryStream ms;
 		//Delegate<void(loadedPage&)> compileCB;
-		vector<Delegate<void(Page*, exception* ex)> > loadCB;
+		struct _loadCB
+		{
+			RGC::Allocator* alloc;
+			Delegate<void(Page*, exception* ex)> cb;
+			void operator()(loadedPage* This, exception* ex);
+		};
+		vector<_loadCB> loadCB;
 		string path;
 		int stringTableFD;
 		pid_t compilerPID;
@@ -432,8 +444,7 @@ namespace cppsp
 				try {
 					doUnload();
 					doLoad();
-					for (int i = 0; i < (int) loadCB.size(); i++)
-					loadCB[i](doCreate(), nullptr);
+					for (int i = 0; i < (int) loadCB.size(); i++) loadCB[i](this, nullptr);
 				} catch (exception& ex) {
 					/*string msg(ex.what());
 					 msg.append("\n\n\ncompiler output:\n");
@@ -477,6 +488,7 @@ namespace cppsp
 			if(dlHandle==NULL) throw runtime_error(dlerror());
 			getObjectSize = (getObjectSize_t) checkDLError(dlsym(dlHandle, "getObjectSize"));
 			createObject = (createObject_t) checkDLError(dlsym(dlHandle, "createObject"));
+			createObject1 = (createObject1_t) checkDLError(dlsym(dlHandle, "createObject1"));
 			loaded = true;
 			//printf("loaded: dlHandle=%p; createObject=%p\n",dlHandle,(void*)createObject);
 		}
@@ -494,8 +506,8 @@ namespace cppsp
 			stringTableFD = -1;
 			//printf("unloaded\n");
 		}
-		Page* doCreate() {
-			Page* tmp = createObject(NULL);
+		Page* doCreate(RGC::Allocator* a) {
+			Page* tmp = createObject1(a);
 			checkError(tmp);
 			tmp->__stringTable = stringTable;
 			tmp->filePath = {path.data(),(int)path.length()};
@@ -511,7 +523,18 @@ namespace cppsp
 			doUnload();
 		}
 	};
-
+	inline void loadedPage::_loadCB::operator()(loadedPage* This, exception* ex) {
+		if (ex == NULL) {
+			Page* p;
+			try {
+				p = This->doCreate(alloc);
+			} catch (exception& x) {
+				cb(nullptr, &x);
+				return;
+			}
+			cb(p, nullptr);
+		} else cb(nullptr, ex);
+	}
 	class cppspManager
 	{
 	public:
@@ -519,7 +542,8 @@ namespace cppsp
 		map<String, loadedPage*> cache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
-		void loadPage(CP::Poll& p, String wd, String path, Delegate<void(Page*, exception* ex)> cb);
+		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
+				Delegate<void(Page*, exception* ex)> cb);
 		bool shouldCheck(loadedPage& p) {
 			timespec tmp1 = curTime;
 			tmp1.tv_sec -= 2;
@@ -530,7 +554,7 @@ namespace cppsp
 		}
 	};
 
-	void cppspManager::loadPage(Poll& p, String wd, String path,
+	void cppspManager::loadPage(Poll& p, String wd, String path, RGC::Allocator* a,
 			Delegate<void(Page*, exception* ex)> cb) {
 		loadedPage* lp1;
 		auto it = cache.find(path);
@@ -550,7 +574,7 @@ namespace cppsp
 			return;
 		}
 		if (c) {
-			lp.loadCB.push_back(cb);
+			lp.loadCB.push_back( { a, cb });
 			try {
 				lp.doCompile(p, wd.toSTDString(), cxxopts);
 			} catch (exception& ex) {
@@ -561,17 +585,17 @@ namespace cppsp
 		}
 		if (lp.loaded) {
 			try {
-				cb(lp.doCreate(), nullptr);
+				cb(lp.doCreate(a), nullptr);
 			} catch (exception& ex) {
 				cb(nullptr, &ex);
 			}
 			return;
 		} else if (lp.compiling) {
-			asdf: lp.loadCB.push_back(cb);
+			asdf: lp.loadCB.push_back( { a, cb });
 		} else {
 			try {
 				lp.doLoad();
-				cb(lp.doCreate(), nullptr);
+				cb(lp.doCreate(a), nullptr);
 			} catch (exception& ex) {
 				cb(nullptr, &ex);
 			}
@@ -579,8 +603,9 @@ namespace cppsp
 	}
 
 	cppspManager mgr;
-	void loadPage(Poll& p, String wd, String path, Delegate<void(Page*, exception* ex)> cb) {
-		mgr.loadPage(p, wd, path, cb);
+	void loadPage(Poll& p, String wd, String path, RGC::Allocator* a,
+			Delegate<void(Page*, exception* ex)> cb) {
+		mgr.loadPage(p, wd, path, a, cb);
 	}
 	vector<string>& CXXOpts() {
 		return mgr.cxxopts;
@@ -591,9 +616,9 @@ namespace cppsp
 	cppspManager* cppspManager_new() {
 		return new cppspManager();
 	}
-	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path,
+	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,
 			Delegate<void(Page*, exception* ex)> cb) {
-		return mgr->loadPage(p, wd, path, cb);
+		return mgr->loadPage(p, wd, path, a, cb);
 	}
 	void cppspManager_delete(cppspManager* mgr) {
 		delete mgr;
