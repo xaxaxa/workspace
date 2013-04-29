@@ -204,14 +204,11 @@ namespace cppsp
 			headersWritten = true;
 			int bufferL = buffer.length();
 			{
+				char* tmps = sp->beginAdd(16);
+				int l = itoa(buffer.length(), tmps);
+				sp->endAdd(l);
+				this->headers.add("Content-Length", { tmps, l });
 				CP::StreamWriter sw(buffer);
-				auto it = this->headers.find("Content-Length");
-				if (it == this->headers.end()) {
-					char* tmps = sp->beginAdd(16);
-					int l = itoa(buffer.length(), tmps);
-					sp->endAdd(l);
-					this->headers.add("Content-Length", { tmps, l });
-				}
 				Response_doWriteHeaders(this, sw);
 			}
 			iov[0]= {buffer.data()+bufferL, (size_t)(buffer.length()-bufferL)};
