@@ -35,6 +35,7 @@ namespace cppsp
 		int pos;
 		int rpos;
 		int _ctLen;
+		int reqLine_i;
 		bool firstLine = true;
 		HTTPParser(headerContainer* hc) :
 				hc(hc), ms(8192), pos(0), rpos(0), _ctLen(0) {
@@ -75,8 +76,9 @@ namespace cppsp
 						goto asdfg;
 					}
 					if (firstLine) {
-						reqLine= {(char*)buf+pos, newpos-pos};
-						firstLine=false;
+						reqLine.len = newpos - pos;
+						reqLine_i = pos;
+						firstLine = false;
 					} else {
 						tmp = memchr(buf + pos, ':', newpos - pos);
 						if(tmp==NULL) {
@@ -110,6 +112,7 @@ namespace cppsp
 					_ctLen = 0;
 					state = s_readingHeaders;
 					firstLine = true;
+					reqLine.d = buf + reqLine_i;
 					return true;
 				}
 				default:
