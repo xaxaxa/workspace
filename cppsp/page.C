@@ -191,7 +191,8 @@ namespace cppsp
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
 		//sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
 		{
-			char s1[32] = "HTTP/1.1 ";
+			char* s1 = sw.beginWrite(32);
+			memcpy2(s1, "HTTP/1.1 ", 9);
 			int x = 9 + itoa(This->statusCode, s1 + 9);
 			s1[x] = ' ';
 			x++;
@@ -200,7 +201,7 @@ namespace cppsp
 			s1[x] = '\r';
 			s1[x + 1] = '\n';
 			x += 2;
-			sw.write(s1, x);
+			sw.endWrite(x);
 		}
 		for (auto it = This->headers.begin(); it != This->headers.end(); it++) {
 			int l1 = (*it).name.length();
