@@ -449,7 +449,7 @@ namespace CP
 
 		//=========misc===========
 		//sync
-		virtual void close()=0;//may block
+		virtual void close()=0; //may block
 		virtual void flush()=0;
 
 		//async
@@ -1189,7 +1189,7 @@ namespace CP
 		//user must delete the MemoryStream instance after this call
 		void keepBuffer();
 	};
-	class StringPool: public RGC::Object
+	class StringPool: public virtual RGC::Object, public RGC::Allocator
 	{
 	public:
 		struct _pageHeader
@@ -1225,6 +1225,11 @@ namespace CP
 		String addString(const char* s) {
 			int l = strlen(s);
 			return {add(s, l),l};
+		}
+		void* alloc(int s) override final {
+			return add(s);
+		}
+		void free(void* obj) override final {
 		}
 		void endAdd(int length);
 		void clear();
