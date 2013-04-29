@@ -20,6 +20,7 @@
 #include "include/common.H"
 #include "include/page.H"
 #include <errno.h>
+#include <unordered_map>
 
 using namespace CP;
 using namespace std;
@@ -107,7 +108,7 @@ namespace cppsp
 			while (spl.read()) {
 				const char* s = spl.value.data();
 				int l = spl.value.length();
-				if (l == 2 && memcmp(s, "..", 2) == 0) {
+				if (l == 2 && *(const uint16_t*) s == *(const uint16_t*) "..") {
 					i--;
 					while (i >= 0 && buf[i] != '/')
 						i--;
@@ -539,7 +540,7 @@ namespace cppsp
 	{
 	public:
 		StringPool sp;
-		map<String, loadedPage*> cache;
+		unordered_map<String, loadedPage*> cache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
 		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
