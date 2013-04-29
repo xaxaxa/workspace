@@ -9,21 +9,21 @@
 #include "include/common.H"
 #include <stdexcept>
 #include <stdlib.h>
+#include <math.h>
+
 using namespace CP;
 namespace cppsp
 {
 	static inline int itoa(int i, char* b) {
 		static char const digit[] = "0123456789";
 		char* p = b;
-		if (i < 0) {
+		//negative detection is not needed for this specific use-case
+		//(writing the content-length header)
+		/*if (i < 0) {
 			*p++ = '-';
 			i = -i;
-		}
-		register int shifter = i;
-		do { //Move to where representation ends
-			++p;
-			shifter = shifter / 10;
-		} while (shifter);
+		}*/
+		p += int(log10f(i)) + 1;
 		*p = '\0';
 		int l = p - b;
 		do { //Move back, inserting digits as u go
