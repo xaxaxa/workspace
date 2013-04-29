@@ -291,6 +291,10 @@ int main(int argc, char** argv) {
 			listensock.type, listensock.protocol);
 		th[i].listensock=tmps;
 		th[i].threadid=i+1;
+		if(threads==1) {
+			thread1(&th[i]);
+			return 0;
+		}
 		if (pthread_create(&th[i].thr, NULL, thread1, &th[i]) != 0) {
 			throw runtime_error(strerror(errno));
 		}
