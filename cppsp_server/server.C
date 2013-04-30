@@ -118,6 +118,7 @@ namespace cppspServer
 			p(poll),s(s), req(this->s,&sp),resp(this->s,&sp) {
 			//printf("handler()\n");
 			poll.add(this->s);
+			s.retain();
 			if(req.readRequest({&handler::readCB,this})) readCB(true);
 		}
 		void readCB(bool success) {
@@ -182,6 +183,7 @@ namespace cppspServer
 		}
 		~handler() {
 			//printf("~handler()\n");
+			s.release();
 		}
 	};
 }
