@@ -28,6 +28,8 @@
 #include <vector>
 #include "socketd.H"
 #include <delegate.H>
+#include <unistd.h>
+
 using namespace std;
 
 namespace socketd
@@ -56,7 +58,8 @@ namespace socketd
 		int id;
 		int backlog;
 		//internal fields
-		RGC::Ref<CP::Socket> sock;
+		vector<CP::HANDLE> socks;
+		int d,t,p;
 		listen(string host, string port, int id, int backlog = 32) :
 				host(host), port(port), id(id), backlog(backlog) {
 		}
@@ -113,6 +116,9 @@ namespace socketd
 		 int maxRequestsPerProcess;
 		 int maxProcesses;*/
 		int processes; //how many processes to spawn (for load balancing)
+		//at runtime, the # of processes will be rounded up to the nearest multiple
+		//of the # of socketd threads
+
 		int ipcBufSize; //set to 0 to use system default, -1 to use global settings
 		//for attaching to a running vhost; arbitrary string; leave blank (length==0) to
 		//disable attachments
@@ -135,6 +141,7 @@ namespace socketd
 		RGC::Ref<appConnection> attachmentConn; //readonly by threads
 		//vector<int> curProcess_i;
 		int _ipcBufSize;
+		int _processes; //processes per thread
 		vector<uint8_t*> perCPUData;
 		bool hasAttachments;
 	};
@@ -154,13 +161,14 @@ namespace socketd
 		//		int curProcess;
 		//		int padding;
 		//} vhostInfo[vhosts];
-		int ipcBufSize;//<=0 to use system default
+		int ipcBufSize; //<=0 to use system default
+		int threads;
 		void run();
 
 		//internal fields
 		vector<binding*> bindings;
 		socketd() :
-				ipcBufSize(0) {
+				ipcBufSize(0), threads((int) sysconf(_SC_NPROCESSORS_CONF)) {
 		}
 	};
 

@@ -34,22 +34,21 @@
 #include <delegate.H>
 #include <set>
 #include <stdlib.h>
+#include <math.h>
 
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
-//#define SOCKETD_THREADING
-#define SOCKETD_THREADS 4
 #define SOCKETD_READBUFFER 256
 
 //maximum length of user-controlled data on the stack (for example, http header names)
 //in order to prevent stack overflow attacks
 #define SOCKETD_STACKBUFFER 256
 using namespace std;
+using namespace CP;
 //8: debug; 5: info; 3: warn; 2: err; 1: fatal
 #define SOCKETD_DEBUG(LEVEL, ...) if(LEVEL<=5)printf(__VA_ARGS__)
 //#define SOCKETD_DEBUG(...) /* __VA_ARGS__ */
 namespace socketd
 {
-	static const int nthreads = SOCKETD_THREADS;
 	static int asdf = 0;
 	//static const int rBufSize = 4096;
 	//static const int rLineBufSize = 512;
@@ -122,7 +121,7 @@ namespace socketd
 
 	int& getCurProcess(vhost* vh, socketd* This, int threadID) {
 		uint8_t* data = vh->perCPUData[threadID];
-		uint8_t* tmp = data + sizeof(appConnection*) * vh->processes;
+		uint8_t* tmp = data + sizeof(appConnection*) * vh->_processes;
 		return *(int*) tmp;
 	}
 	appConnection* getConn(vhost* vh, int threadID, int i) {
@@ -288,7 +287,7 @@ namespace socketd
 			processLine(buf, len);
 		}
 		inline int connIndex(vhost* vh) {
-			return threadID * vh->processes + processIndex;
+			return threadID * vh->_processes + processIndex;
 		}
 
 		void attachmentCB(bool b) {
@@ -323,7 +322,7 @@ namespace socketd
 				return;
 			}
 			if (processIndex < 0) {
-				processIndex = (getCurProcess(vh)++) % vh->processes;
+				processIndex = (getCurProcess(vh)++) % vh->_processes;
 			}
 			if (getConn(vh, processIndex) == NULL && vh->exepath.length() > 0) {
 				spawnApp(vh, *p, vh->exepath, threadID, processIndex);
@@ -651,48 +650,39 @@ namespace socketd
 		socketd* This;
 		socketd_execinfo* execinfo;
 		pthread_t thr;
-		int pipe[2];
 		int id;
 	};
 	struct socketd_execinfo
 	{
 		vector<socketd_thread> threads;
 	};
-	struct socketd_request
-	{
-		listen* l;
-		CP::HANDLE fd;
-	};
 	void* socketd_processorThread(void* v) {
 		socketd_thread* th = (socketd_thread*) v;
 		CP::Poll p;
-		CP::File pipe(th->pipe[0]);
-		socketd_request req;
-		printf("%i %i\n", th->id, th->pipe[0]);
-		struct
-		{
-			CP::Poll& p;
-			CP::File& pipe;
-			socketd_request& req;
-			socketd_thread* th;
-			void operator()(int r) {
-				if (r != sizeof(socketd_request)) return;
-				//printf("%i\n",th->id);
-				connectionInfo* ci = new connectionInfo(req.fd, req.l->sock->addressFamily,
-						req.l->sock->type, req.l->sock->protocol);
-				ci->threadID = th->id;
-				ci->This = th->This;
-				ci->l = req.l;
-				SOCKETD_DEBUG(9, "req.l.id = %i\n", req.l->id);
-				/*ci->s = new CP::Socket(req.fd, req.l->sock->addressFamily, req.l->sock->type,
-				 req.l->sock->protocol);*/
-				ci->p = &p;
-				//cout << "p=" << &p << endl;
-				ci->process();
-			}
-		} cb { p, pipe, req, th };
-		pipe.repeatRead(&req, sizeof(req), &cb);
-		p.add(pipe);
+		for (uint32_t i = 0; i < th->This->listens.size(); i++) {
+			auto& l = th->This->listens[i];
+			struct cb1
+			{
+				CP::Poll& poll;
+				socketd_thread* th;
+				listen& l;
+				Socket s;
+				cb1(Poll& poll, socketd_thread* th, listen& l) :
+						poll(poll), th(th), l(l), s(l.socks[th->id], l.d, l.t, l.p) {
+					s.repeatAcceptHandle(this);
+					poll.add(s);
+				}
+				void operator()(HANDLE h) {
+					connectionInfo* ci = new connectionInfo(h, l.d, l.t, l.p);
+					ci->threadID = th->id;
+					ci->This = th->This;
+					ci->l = &l;
+					SOCKETD_DEBUG(9, "req.l.id = %i\n", l.id);
+					ci->p = &poll;
+					ci->process();
+				}
+			}* cb = new cb1(p, th, l);
+		}
 		p.loop();
 		printf("%i exited\n", th->id);
 		return NULL;
@@ -712,11 +702,16 @@ namespace socketd
 		CP::Poll p;
 		//p.debug=true;
 		this->bindings.clear();
-		perCPUData = new uint8_t*[nthreads];
-		for (int i = 0; i < nthreads; i++) {
+		for (int i = 0; i < (int) vhosts.size(); i++) {
+			vhosts[i]._processes = ceil(double(vhosts[i].processes) / threads);
+			if (vhosts[i]._processes < 1) vhosts[i]._processes = 1;
+		}
+
+		perCPUData = new uint8_t*[threads];
+		for (int i = 0; i < threads; i++) {
 			int s = 0;
 			for (int ii = 0; ii < (int) vhosts.size(); ii++) {
-				s += sizeof(appConnection*) * vhosts[ii].processes;
+				s += sizeof(appConnection*) * vhosts[ii]._processes;
 				s += sizeof(int) * 2;
 			}
 			int align = 64;
@@ -727,7 +722,7 @@ namespace socketd
 			s = 0;
 			for (int ii = 0; ii < (int) vhosts.size(); ii++) {
 				vhosts[ii].perCPUData.push_back(tmp + s);
-				s += sizeof(appConnection*) * vhosts[ii].processes;
+				s += sizeof(appConnection*) * vhosts[ii]._processes;
 				s += sizeof(int) * 2;
 			}
 		}
@@ -739,18 +734,9 @@ namespace socketd
 			}
 			vhosts[i]._ipcBufSize = vhosts[i].ipcBufSize < 0 ? this->ipcBufSize : vhosts[i].ipcBufSize;
 			vhosts[i].hasAttachments = false;
-#ifdef SOCKETD_THREADING
 			//vhosts[i].conns.resize(nthreads * vhosts[i].processes);
 			//vhosts[i].curProcess.resize(nthreads);
-			vhosts[i].perCPUData.resize(nthreads);
-#else
-			//vhosts[i].conns.resize(vhosts[i].processes);
-			//vhosts[i].curProcess.resize(1);
-			vhosts[i].perCPUData.resize(1);
-#endif
-			/*for (uint32_t ii = 0; ii < vhosts[i].curProcess.size(); ii++) {
-			 vhosts[i].curProcess[ii] = 0;
-			 }*/
+			vhosts[i].perCPUData.resize(threads);
 		}
 		for (uint32_t i = 0; i < extraBindings.size(); i++) {
 			for (uint32_t ii = 0; ii < vhosts.size(); ii++) {
@@ -772,77 +758,34 @@ namespace socketd
 		 });
 		 }*/
 
-#ifdef SOCKETD_THREADING
+		SOCKETD_DEBUG(9, "bindings.size() = %i\n", bindings.size());
+		for (uint32_t i = 0; i < listens.size(); i++) {
+			auto& l = listens[i];
+			Socket tmp;
+			tmp.bind(l.host.c_str(), l.port.c_str(), AF_UNSPEC, SOCK_STREAM);
+			tmp.listen(l.backlog);
+			l.d = tmp.addressFamily;
+			l.t = tmp.type;
+			l.p = tmp.protocol;
+			l.socks.resize(threads);
+			for (int ii = 0; ii < threads; ii++) {
+				l.socks[ii] = dup(tmp.handle);
+			}
+		}
 		socketd_execinfo execinfo;
 		printf("this=%p\n", this);
-		execinfo.threads.resize(nthreads);
-		for (int i = 0; i < nthreads; i++) {
+		execinfo.threads.resize(threads);
+		for (int i = 0; i < threads; i++) {
 			socketd_thread& th = execinfo.threads[i];
 			th.This = this;
 			th.execinfo = &execinfo;
 			th.id = i;
-			if (pipe(th.pipe) < 0) {
-				throw runtime_error(strerror(errno));
-			}
 			//printf("%p %p\n",&th, &th1);
 			if (pthread_create(&th.thr, NULL, socketd_processorThread, &th) != 0) {
 				throw runtime_error(strerror(errno));
 			}
 		}
-		int curThread = 0;
-#endif
-		SOCKETD_DEBUG(9, "bindings.size() = %i\n", bindings.size());
-		for (uint32_t i = 0; i < listens.size(); i++) {
-			auto& l = listens[i];
-			if (l.sock.get() == NULL) {
-				//l.sock = RGC::newObj<CP::Socket>(l.ep->addressFamily, SOCK_STREAM);
-				l.sock = RGC::newObj<CP::Socket>();
-				l.sock->bind(l.host.c_str(), l.port.c_str(), AF_UNSPEC, SOCK_STREAM);
-				l.sock->listen(l.backlog);
-			}
-			p.add(*l.sock);
-
-#ifdef SOCKETD_THREADING
-			struct cb1
-			{
-				listen* l;
-				CP::Poll& p;
-				socketd* th;
-				socketd_execinfo& execinfo;
-				int& curThread;
-				void operator()(CP::HANDLE h) {
-					socketd_request req {l, h};
-					//printf("%i\n",curThread);
-					write(execinfo.threads[curThread].pipe[1], &req, sizeof(req));
-					curThread++;
-					if (curThread >= nthreads) curThread = 0;
-				}
-			}*cb = new cb1 {&l, p, this, execinfo, curThread};
-			l.sock->repeatAcceptHandle(cb);
-#else
-			struct cb1
-			{
-				listen& l;
-				CP::Poll& p;
-				socketd* th;
-				void operator()(CP::HANDLE h) {
-					connectionInfo* ci = new connectionInfo(h, l.sock->addressFamily, l.sock->type,
-							l.sock->protocol);
-					ci->threadID = 0;
-					ci->This = th;
-					ci->l = &l;
-					//ci->s = new CP::Socket(h, l.sock->addressFamily, l.sock->type,
-					//		l.sock->protocol);
-					ci->p = &p;
-					//cout << "p=" << &p << endl;
-					ci->process();
-				}
-			}*cb = new cb1 { l, p, this };
-			l.sock->repeatAcceptHandle(cb);
-#endif
-
-		}
-		p.loop();
-		printf("fdsjkhgfsdjh\n");
+		while (true)
+			sleep(3600);
 	}
 }

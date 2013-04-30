@@ -292,6 +292,9 @@ namespace socketd
 								} else if(mystrcmp(ct.data,prefLen,"ipcbuffersize",13)==0) {
 									if(ct.datalen-prefLen-1<=0) throw ParserException_internal(ct,"missing parameter in \"ipcbuffersize\" directive");
 									sd.ipcBufSize=atoi(string(ct.data+prefLen+1,ct.datalen-prefLen-1).c_str());
+								} else if(mystrcmp(ct.data,prefLen,"threads",7)==0) {
+									if(ct.datalen-prefLen-1<=0) throw ParserException_internal(ct,"missing parameter in \"threads\" directive");
+									sd.threads=atoi(string(ct.data+prefLen+1,ct.datalen-prefLen-1).c_str());
 								} else throw ParserException_internal(ct,"expected \"listen\" or \"ipcbuffersize\" directive, but got \""+string(ct.data,prefLen)+"\"");
 								break;
 							}
