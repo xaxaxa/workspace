@@ -522,7 +522,7 @@ namespace cppsp
 			{
 				CONCAT_TO(path.data(), path.length(), s1, ".txt");
 				if (stat(s1, &st) < 0) {
-					if (errno == ENOENT) return true;
+					if (errno == ENOENT) return 2;
 					else checkError(-1);
 				}
 			}
@@ -530,7 +530,7 @@ namespace cppsp
 			{
 				CONCAT_TO(path.data(), path.length(), s1, ".so");
 				if (stat(s1, &st) < 0) {
-					if (errno == ENOENT) return true;
+					if (errno == ENOENT) return 2;
 					else checkError(-1);
 				}
 			}
