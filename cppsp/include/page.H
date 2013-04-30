@@ -80,7 +80,7 @@ namespace cppsp
 	class Server: public RGC::Object
 	{
 	public:
-		virtual const char* rootDir()=0;
+		virtual String rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator* a,
 				Delegate<void(Page*, exception* ex)> cb);

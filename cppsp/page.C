@@ -20,9 +20,9 @@ namespace cppsp
 		//negative detection is not needed for this specific use-case
 		//(writing the content-length header)
 		/*if (i < 0) {
-			*p++ = '-';
-			i = -i;
-		}*/
+		 *p++ = '-';
+		 i = -i;
+		 }*/
 		p += int(log10f(i)) + 1;
 		*p = '\0';
 		int l = p - b;
@@ -263,7 +263,8 @@ void cppsp::Server::loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a
 }
 
 string cppsp::Server::mapPath(string path) {
-	char tmp[path.length() + strlen(rootDir())];
-	int l = cppsp::combinePathChroot(rootDir(), path.c_str(), tmp);
+	String r = rootDir();
+	char tmp[path.length() + r.length()];
+	int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
 	return string(tmp, l);
 }

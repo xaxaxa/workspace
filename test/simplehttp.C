@@ -33,6 +33,8 @@ int ci_compare(String s1, String s2) {
 }
 struct headerContainer
 {
+	//pointer-to-pointer so that the real buffer can be relocated
+	//(for example during MemoryStream reallocations due to resize)
 	uint8_t** buffer;
 	StringPool* sp;
 	struct item {
@@ -47,33 +49,143 @@ struct headerContainer
 		item items[bucketSize];
 		int length;
 	};
-	bucket* first=NULL;
-	bucket* last=NULL;
+	struct iterator
+	{
+		bucket* b;
+		int i;
+		void operator+=(int i) {
+			this->i+=i;
+			while(this->i > bucketSize && b!=NULL) {
+				b=b->next;
+				this->i-=bucketSize;
+			}
+			if(b!=NULL && this->i > b->length) b=NULL;
+		}
+		void operator++() {
+			operator+=(1);
+		}
+		bool operator==(const iterator& other) {
+			if(b==NULL && other.b==NULL) return true;
+			return b==other.b && i==other.i;
+		}
+		bool operator!=(const iterator& other) {
+			return !operator==(other);
+		}
+	};
+	bucket* _first=NULL;
+	bucket* _last=NULL;
 	headerContainer(uint8_t** buffer, StringPool* sp):buffer(buffer),sp(sp) {}
 	void add(item it) {
-		if(last==NULL || last->length>=bucketSize) addBucket();
-		last->items[last->length]=it;
-		last->length++;
+		if(_last==NULL || _last->length>=bucketSize) addBucket();
+		_last->items[_last->length]=it;
+		_last->length++;
 	}
 	void addBucket() {
 		bucket* b=(bucket*)sp->add(sizeof(bucket));
 		b->next=NULL;
 		b->length=0;
-		if(last!=NULL)last->next=b;
-		last=b;
-		if(first==NULL)first=b;
+		if(_last!=NULL)_last->next=b;
+		_last=b;
+		if(_first==NULL)_first=b;
 	}
 	String operator[](String name) {
 		char* tmp=(char*)*buffer;
-		for(bucket* b=first;b!=NULL;b=b->next) {
+		for(bucket* b=_first;b!=NULL;b=b->next) {
 			for(int i=0;i<b->length;i++)
 				if(ci_compare(name,{tmp+b->items[i].nameStart,b->items[i].nameLength})==0)
 					return {tmp+b->items[i].valueStart,b->items[i].valueLength};
 		}
 		return {(char*)nullptr,0};
 	}
+	iterator begin() {
+		return {_first,0};
+	}
+	iterator end() {
+		return {NULL,0};
+	}
 	void clear() {
-		first=last=NULL;
+		_first=_last=NULL;
+	}
+};
+//different version that uses absolute pointers instead of relative positions
+struct headerContainer2
+{
+	StringPool* sp;
+	struct item {
+		const char* name;
+		const char* value;
+		int nameLength;
+		int valueLength;
+	};
+	static const int bucketSize=8;
+	struct bucket {
+		bucket* next;
+		item items[bucketSize];
+		int length;
+	};
+	struct iterator
+	{
+		bucket* b;
+		int i;
+		void operator+=(int i) {
+			this->i+=i;
+			while(this->i > bucketSize && b!=NULL) {
+				b=b->next;
+				this->i-=bucketSize;
+			}
+			if(b!=NULL && this->i > b->length) b=NULL;
+		}
+		void operator++() {
+			operator+=(1);
+		}
+		bool operator==(const iterator& other) {
+			if(b==NULL && other.b==NULL) return true;
+			return b==other.b && i==other.i;
+		}
+		bool operator!=(const iterator& other) {
+			return !operator==(other);
+		}
+	};
+	bucket* _first=NULL;
+	bucket* _last=NULL;
+	headerContainer2(StringPool* sp):sp(sp) {}
+	void add(item it) {
+		if(_last==NULL || _last->length>=bucketSize) addBucket();
+		_last->items[_last->length]=it;
+		_last->length++;
+	}
+	void add(String name, String value) {
+		add({name.data(),value.data(),name.length(),value.length()});
+	}
+	void addCopy(String name, String value) {
+		name=sp->addString(name);
+		value=sp->addString(value);
+		add({name.data(),value.data(),name.length(),value.length()});
+	}
+	void addBucket() {
+		bucket* b=(bucket*)sp->add(sizeof(bucket));
+		b->next=NULL;
+		b->length=0;
+		if(_last!=NULL)_last->next=b;
+		_last=b;
+		if(_first==NULL)_first=b;
+	}
+	String operator[](String name) {
+		for(bucket* b=_first;b!=NULL;b=b->next) {
+			for(int i=0;i<b->length;i++)
+				if(ci_compare(name,{b->items[i].name,b->items[i].nameLength})==0)
+					return {b->items[i].value,b->items[i].valueLength};
+		}
+		return {(char*)nullptr,0};
+	}
+	iterator begin() {
+		return {_first,0};
+	}
+	iterator end() {
+		return {NULL,0};
+	}
+	void clear() {
+		_first=_last=NULL;
 	}
 };
 struct handler:public RGC::Object {
