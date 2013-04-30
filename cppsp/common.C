@@ -317,7 +317,8 @@ namespace cppsp
 		if (p == NULL) throw runtime_error(dlerror());
 		return p;
 	}
-	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid) {
+	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid,
+			string& compilecmd) {
 		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", path + ".so", path
 				+ ".C" };
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
@@ -346,6 +347,10 @@ namespace cppsp
 		if (tmp > 0) {
 			close(p[1]);
 			pid = tmp;
+			for (int i = 1; i < (int) c_opts.size(); i++) {
+				compilecmd.append(c_opts[i]);
+				compilecmd.append(" ");
+			}
 			return new CP::File(p[0]);
 		} else if (tmp == 0) {
 			close(p[0]);
@@ -472,7 +477,10 @@ namespace cppsp
 		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
 			compiling = true;
 			ms.clear();
-			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cxxopts,compilerPID));
+			string tmp;
+			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cxxopts,compilerPID,tmp));
+			tmp+=" ";
+			ms.write(tmp.data(),tmp.length());
 			p.add(*f);
 			compile_fd = f;
 			f->release();
@@ -602,15 +610,6 @@ namespace cppsp
 			}
 		}
 	}
-
-	cppspManager mgr;
-	void loadPage(Poll& p, String wd, String path, RGC::Allocator* a,
-			Delegate<void(Page*, exception* ex)> cb) {
-		mgr.loadPage(p, wd, path, a, cb);
-	}
-	vector<string>& CXXOpts() {
-		return mgr.cxxopts;
-	}
 	vector<string>& CXXOpts(cppspManager* mgr) {
 		return mgr->cxxopts;
 	}
@@ -623,9 +622,6 @@ namespace cppsp
 	}
 	void cppspManager_delete(cppspManager* mgr) {
 		delete mgr;
-	}
-	void updateTime() {
-		clock_gettime(CLOCK_MONOTONIC, &mgr.curTime);
 	}
 	void updateTime(cppspManager* mgr) {
 		clock_gettime(CLOCK_MONOTONIC, &mgr->curTime);

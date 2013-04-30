@@ -46,14 +46,11 @@ namespace cppsp
 	int combinePathChroot(const char* p1, const char* p2, char* buf);
 	String combinePath(const char* p1, const char* p2, CP::StringPool& sp);
 	String combinePathChroot(const char* p1, const char* p2, CP::StringPool& sp);
-	void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a, Delegate<void(Page*, exception* ex)> cb);
 	cppspManager* cppspManager_new();
 	void cppspManager_delete(cppspManager* mgr);
 	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,
 			Delegate<void(Page*, exception* ex)> cb);
-	vector<string>& CXXOpts();
 	vector<string>& CXXOpts(cppspManager* mgr);
-	void updateTime();
 	void updateTime(cppspManager* mgr);
 	void handleError(exception* ex, cppsp::Response& resp, String path);
 }

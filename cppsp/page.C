@@ -251,17 +251,6 @@ namespace cppsp
 
 } /* namespace cppsp */
 
-void cppsp::Server::loadPage(CP::Poll& p, String path, RGC::Allocator* a,
-		Delegate<void(Page*, exception* ex)> cb) {
-	string tmp = mapPath(path.toSTDString());
-	cppsp::loadPage(p, rootDir(), { tmp.data(), (int) tmp.length() }, a, cb);
-}
-
-void cppsp::Server::loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a,
-		Delegate<void(Page*, exception* ex)> cb) {
-	cppsp::loadPage(p, rootDir(), path, a, cb);
-}
-
 string cppsp::Server::mapPath(string path) {
 	String r = rootDir();
 	char tmp[path.length() + r.length()];

@@ -83,9 +83,9 @@ namespace cppsp
 		virtual String rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator* a,
-				Delegate<void(Page*, exception* ex)> cb);
+				Delegate<void(Page*, exception* ex)> cb)=0;
 		virtual void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a,
-				Delegate<void(Page*, exception* ex)> cb);
+				Delegate<void(Page*, exception* ex)> cb)=0;
 		//path is relative to rootDir
 		virtual string mapPath(string path);
 	};
