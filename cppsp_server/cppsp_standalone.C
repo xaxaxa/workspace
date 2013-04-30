@@ -108,13 +108,14 @@ int main(int argc, char** argv) {
 	}
 	string listen="0.0.0.0:80";
 	int threads=2;
+	vector<string> cxxopts;
 	parseArgs(argc, argv,
 			[&](char* name, const std::function<char*()>& getvalue)
 			{
 				if(strcmp(name,"r")==0) {
 					rootDir=getvalue();
 				} else if(strcmp(name,"c")==0) {
-					CXXOpts().push_back(getvalue());
+					cxxopts.push_back(getvalue());
 				} else if(strcmp(name,"l")==0) {
 					listen=getvalue();
 				} else if(strcmp(name,"t")==0) {
@@ -133,7 +134,7 @@ int main(int argc, char** argv) {
 	for(int i=0;i<threads;i++) {
 		workerThread& tmp=*(new (th+i) workerThread(dup(listensock.handle),
 			listensock.addressFamily, listensock.type, listensock.protocol));
-		CXXOpts(tmp.srv.mgr)=CXXOpts();
+		CXXOpts(tmp.srv.mgr)=cxxopts;
 		tmp.threadid=i+1;
 		if(threads==1) {
 			thread1(&tmp);
