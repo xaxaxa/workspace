@@ -348,7 +348,7 @@ namespace CP
 						int oldPos = pos;
 						pos = searchPos = (tmp - buffer) + delim1_len;
 						if (!repeat) state = 0;
-						it= { {(char*)buffer + oldPos, tmp - buffer - oldPos}};
+						it= { {(char*)buffer + oldPos, int(tmp - buffer - oldPos)}};
 						return true;
 					}
 				}
@@ -362,7 +362,7 @@ namespace CP
 						int oldPos = pos;
 						pos = searchPos = (tmp - buffer) + 1;
 						if (!repeat) state = 0;
-						it= { {(char*)buffer + oldPos, tmp - buffer - oldPos}};
+						it= { {(char*)buffer + oldPos, int(tmp - buffer - oldPos)}};
 						return true;
 					}
 				}
