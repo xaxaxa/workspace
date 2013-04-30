@@ -41,7 +41,9 @@ public:
 	}
 	void* alloc(int s) { return NULL; }
 	void free(void* ptr) {
-		destruct();
+		sock.~Socket();
+		if(allocator==NULL)free(this);
+		else allocator->free(this);
 	}
 };
 void* thread1(void* v) {
