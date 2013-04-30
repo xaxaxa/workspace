@@ -20,7 +20,7 @@ namespace cppsp
 		int lineBufLen = This->_parser.reqLine.length();
 		uint8_t* tmp = (uint8_t*) memchr(lineBuf, ' ', lineBufLen);
 		if (tmp == NULL) return false;
-		This->method = {(char*) lineBuf, tmp - lineBuf};
+		This->method = {(char*) lineBuf, int(tmp - lineBuf)};
 		tmp++;
 		if (lineBuf + lineBufLen - tmp <= 0) return false;
 		uint8_t* tmp1 = (uint8_t*) memchr(tmp, ' ', lineBuf + lineBufLen - tmp);

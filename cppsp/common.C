@@ -75,10 +75,10 @@ namespace cppsp
 			if (s == NULL) return false;
 			s = (const char*) memchr(s, delim, end - s);
 			if (s == NULL) {
-				value= {s1, end - s1};
+				value= {s1, int(end - s1)};
 				return true;
 			}
-			value= {s1, s - s1};
+			value= {s1, int(s - s1)};
 			s1 = ++s;
 			return true;
 		}
