@@ -381,36 +381,12 @@ namespace cppsp
 	memcpy(out,in,inLen);\
 	out[inLen]=0;
 
-	bool shouldCompile(String page) {
-		struct stat st;
-		{
-			TO_C_STR(page.data(), page.length(), s1);
-			checkError(stat(s1, &st));
-		}
-		timespec modif_cppsp = st.st_mtim;
-		{
-			CONCAT_TO(page.data(), page.length(), s1, ".txt");
-			if (stat(s1, &st) < 0) {
-				if (errno == ENOENT) return true;
-				else checkError(-1);
-			}
-		}
-		timespec modif_txt = st.st_mtim;
-		{
-			CONCAT_TO(page.data(), page.length(), s1, ".so");
-			if (stat(s1, &st) < 0) {
-				if (errno == ENOENT) return true;
-				else checkError(-1);
-			}
-		}
-		timespec modif_so = st.st_mtim;
-		return (tsCompare(modif_cppsp, modif_txt) == 1 || tsCompare(modif_cppsp, modif_so) == 1);
-	}
 	class loadedPage
 	{
 	public:
 		loadedPage& operator=(const loadedPage& other)=delete;
-		timespec lastCheck {0, 0};
+		timespec lastLoad {0, 0}; //CLOCK_REALTIME
+		timespec lastCheck {0, 0}; //CLOCK_MONOTONIC
 		void* dlHandle;
 		const uint8_t* stringTable;
 		int stringTableLen;
@@ -448,7 +424,7 @@ namespace cppsp
 					goto aaa;
 				}
 				try {
-					doUnload();
+					if(loaded)doUnload();
 					doLoad();
 					for (int i = 0; i < (int) loadCB.size(); i++) loadCB[i](this, nullptr);
 				} catch (exception& ex) {
@@ -475,6 +451,7 @@ namespace cppsp
 					CP::Callback(&loadedPage::readCB, this));
 		}
 		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
+			//printf("doCompile(\"%s\");\n",path.c_str());
 			compiling = true;
 			ms.clear();
 			string tmp;
@@ -487,6 +464,7 @@ namespace cppsp
 			beginRead();
 		}
 		void doLoad() {
+			//printf("doLoad(\"%s\");\n",path.c_str());
 			struct stat st;
 			checkError(stat(path.c_str(), &st));
 			stringTableLen = st.st_size;
@@ -499,9 +477,11 @@ namespace cppsp
 			createObject = (createObject_t) checkDLError(dlsym(dlHandle, "createObject"));
 			createObject1 = (createObject1_t) checkDLError(dlsym(dlHandle, "createObject1"));
 			loaded = true;
+			clock_gettime(CLOCK_REALTIME, &lastLoad);
 			//printf("loaded: dlHandle=%p; createObject=%p\n",dlHandle,(void*)createObject);
 		}
 		void doUnload() {
+			//printf("doUnload(\"%s\");\n",path.c_str());
 			loaded = false;
 			if (stringTable != NULL) munmap((void*) stringTable, stringTableLen);
 			if (stringTableFD != -1) close(stringTableFD);
@@ -530,6 +510,36 @@ namespace cppsp
 		~loadedPage() {
 			//printf("~loadedPage()\n");
 			doUnload();
+		}
+		//returns: 0: no-op; 1: should reload; 2: should recompile
+		int shouldCompile() {
+			struct stat st;
+			{
+				TO_C_STR(path.data(), path.length(), s1);
+				checkError(stat(s1, &st));
+			}
+			timespec modif_cppsp = st.st_mtim;
+			{
+				CONCAT_TO(path.data(), path.length(), s1, ".txt");
+				if (stat(s1, &st) < 0) {
+					if (errno == ENOENT) return true;
+					else checkError(-1);
+				}
+			}
+			timespec modif_txt = st.st_mtim;
+			{
+				CONCAT_TO(path.data(), path.length(), s1, ".so");
+				if (stat(s1, &st) < 0) {
+					if (errno == ENOENT) return true;
+					else checkError(-1);
+				}
+			}
+			timespec modif_so = st.st_mtim;
+			int i=0;
+			if(tsCompare(lastLoad, modif_txt)< 0 || tsCompare(lastLoad, modif_so) <0) i=1;
+			if(tsCompare(modif_cppsp, modif_txt)> 0 || tsCompare(modif_cppsp, modif_so) >0) i=2;
+			//printf("shouldCompile(\"%s\") = %i\n",path.c_str(),i);
+			return i;
 		}
 	};
 	inline void loadedPage::_loadCB::operator()(loadedPage* This, exception* ex) {
@@ -574,15 +584,19 @@ namespace cppsp
 		} else lp1 = (*it).second;
 		loadedPage& lp(*lp1);
 
-		bool c = false;
+		int c = 0;
 		if (lp.compiling) goto asdf;
 		try {
-			c = (!lp1->loaded || shouldCheck(*lp1)) && shouldCompile(path);
+			if (lp1->loaded) {
+				c = shouldCheck(*lp1) ? lp.shouldCompile() : 0;
+			} else {
+				c = lp.shouldCompile();
+			}
 		} catch (exception& ex) {
 			cb(nullptr, &ex);
 			return;
 		}
-		if (c) {
+		if (c >= 2) {
 			lp.loadCB.push_back( { a, cb });
 			try {
 				lp.doCompile(p, wd.toSTDString(), cxxopts);
@@ -593,11 +607,17 @@ namespace cppsp
 			return;
 		}
 		if (lp.loaded) {
+			Page* p;
 			try {
-				cb(lp.doCreate(a), nullptr);
+				if (c >= 1) {
+					lp.doUnload();
+					lp.doLoad();
+				}
+				p = lp.doCreate(a);
 			} catch (exception& ex) {
 				cb(nullptr, &ex);
 			}
+			cb(p, nullptr);
 			return;
 		} else if (lp.compiling) {
 			asdf: lp.loadCB.push_back( { a, cb });
