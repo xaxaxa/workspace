@@ -46,6 +46,7 @@ public:
 		else allocator->free(this);
 	}
 };
+String globalHandler{(char*)nullptr,0};
 void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
@@ -120,6 +121,8 @@ int main(int argc, char** argv) {
 					listen=getvalue();
 				} else if(strcmp(name,"t")==0) {
 					threads=atoi(getvalue());
+				} else if(strcmp(name,"h")==0) {
+					globalHandler=getvalue();
 				}
 			});
 	
@@ -134,6 +137,7 @@ int main(int argc, char** argv) {
 	for(int i=0;i<threads;i++) {
 		workerThread& tmp=*(new (th+i) workerThread(dup(listensock.handle),
 			listensock.addressFamily, listensock.type, listensock.protocol));
+		tmp.srv.globalHandler=globalHandler;
 		CXXOpts(tmp.srv.mgr)=cxxopts;
 		tmp.threadid=i+1;
 		if(threads==1) {

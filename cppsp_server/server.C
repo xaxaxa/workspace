@@ -75,7 +75,9 @@ namespace cppspServer
 	public:
 		cppspManager* mgr;
 		String root;
-		Server(String root):mgr(cppspManager_new()),root(root) {
+		String globalHandler;
+		Server(String root):mgr(cppspManager_new()),root(root),
+			globalHandler((char*)nullptr,0) {
 		}
 		~Server() {
 			cppspManager_delete(mgr);
@@ -131,9 +133,15 @@ namespace cppspServer
 			else keepAlive=true;
 			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
 			//printf("readCB()\n");
-			path.d=sp.beginAdd(req.path.length()+thr.root.length());
-			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
-				req.path.data(),req.path.length(),path.data());
+			if(thr.globalHandler.data()==nullptr) {
+				path.d=sp.beginAdd(req.path.length()+thr.root.length());
+				path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
+					req.path.data(),req.path.length(),path.data());
+			} else {
+				path.d=sp.beginAdd(thr.globalHandler.length()+thr.root.length());
+				path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
+					thr.globalHandler.data(),thr.globalHandler.length(),path.data());
+			}
 			sp.endAdd(path.len);
 			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}

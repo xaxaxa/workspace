@@ -16,6 +16,7 @@ using namespace socketd;
 using namespace CP;
 using namespace cppsp;
 string rootDir;
+String globalHandler{(char*)nullptr,0};
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
 	function<char*()> func = [&]()->char*
@@ -49,10 +50,13 @@ int main(int argc, char** argv) {
 					rootDir=getvalue();
 				} else if(strcmp(name,"c")==0) {
 					cxxopts.push_back(getvalue());
+				} else if(strcmp(name,"h")==0) {
+					globalHandler=getvalue();
 				}
 			});
 	
 	cppspServer::Server srv(rootDir.c_str());
+	srv.globalHandler=globalHandler;
 	auto& v=CXXOpts(srv.mgr);
 	v.insert(v.end(),cxxopts.begin(),cxxopts.end());
 	cxxopts.clear();
