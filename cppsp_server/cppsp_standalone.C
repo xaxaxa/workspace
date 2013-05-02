@@ -1,19 +1,14 @@
-#include <cpoll/statemachines.H>
 #include <cpoll/cpoll.H>
 #include <unistd.h>
-#include <cpoll/sendfd.H>
 #include <iostream>
-#include <socketd.H>
 #include <signal.h>
 #include <cppsp/page.H>
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
-#include <atomic_ops.h>
 #include "server.C"
 
 
 using namespace std;
-using namespace socketd;
 using namespace CP;
 using namespace cppsp;
 using namespace RGC;
@@ -101,7 +96,6 @@ void* thread1(void* v) {
 }
 CP::Socket listensock;
 int main(int argc, char** argv) {
-	cout << "started child #" << getpid() << endl;
 	{
 		char cwd[255];
 		if(getcwd(cwd,255)==NULL) throw runtime_error(strerror(errno));
@@ -123,9 +117,12 @@ int main(int argc, char** argv) {
 					threads=atoi(getvalue());
 				} else if(strcmp(name,"h")==0) {
 					globalHandler=getvalue();
+				} else {
+					printf("usage: %s [-l host:port] [-c compiler options]... [-r root] [-t threads] [-h handler]\n",argv[0]);
+					exit(1);
 				}
 			});
-	
+	printf("specify -? for help\n");
 	auto i=listen.find(':');
 	if(i==string::npos) throw runtime_error("expected \":\" in listen");
 	listensock.bind(listen.substr(0,i).c_str(),

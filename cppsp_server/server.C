@@ -1,15 +1,11 @@
-#include <cpoll/statemachines.H>
 #include <cpoll/cpoll.H>
 #include <unistd.h>
-#include <cpoll/sendfd.H>
 #include <iostream>
-#include <socketd.H>
 #include <signal.h>
 #include <cppsp/page.H>
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
 using namespace std;
-using namespace socketd;
 using namespace CP;
 using namespace cppsp;
 using namespace RGC;
