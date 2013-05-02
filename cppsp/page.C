@@ -33,7 +33,7 @@ namespace cppsp
 		return l;
 	}
 	//inline-able memcpy() for copying SHORT STRINGS ONLY
-	static inline void memcpy2(void* dst, const void* src, int len) {
+	static inline void memcpy2_1(void* dst, const void* src, int len) {
 		for (int i = 0; i < len; i++)
 			((char*) dst)[i] = ((const char*) src)[i];
 	}
@@ -169,11 +169,11 @@ namespace cppsp
 		//sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
 		{
 			char* s1 = sw.beginWrite(32);
-			memcpy2(s1, "HTTP/1.1 ", 9);
+			memcpy2_1(s1, "HTTP/1.1 ", 9);
 			int x = 9 + itoa(This->statusCode, s1 + 9);
 			s1[x] = ' ';
 			x++;
-			memcpy2(s1 + x, This->statusName.data(), This->statusName.length());
+			memcpy2_1(s1 + x, This->statusName.data(), This->statusName.length());
 			x += This->statusName.length();
 			s1[x] = '\r';
 			s1[x + 1] = '\n';
@@ -184,10 +184,10 @@ namespace cppsp
 			int l1 = (*it).name.length();
 			int l2 = (*it).value.length();
 			char* tmp = sw.beginWrite(l1 + 4 + l2);
-			memcpy2(tmp, (*it).name.data(), l1);
+			memcpy2_1(tmp, (*it).name.data(), l1);
 			tmp[l1] = ':';
 			tmp[l1 + 1] = ' ';
-			memcpy2(tmp + l1 + 2, (*it).value.data(), l2);
+			memcpy2_1(tmp + l1 + 2, (*it).value.data(), l2);
 			tmp[l1 + 2 + l2] = '\r';
 			tmp[l1 + 2 + l2 + 1] = '\n';
 			sw.endWrite(l1 + 4 + l2);
