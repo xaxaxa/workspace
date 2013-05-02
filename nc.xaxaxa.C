@@ -1,7 +1,7 @@
 #include <iostream>
 //#include <cplib/cplib.hpp>
 //#include <cplib/asyncsock.hpp>
-#include <cpoll.H>
+#include <cpoll/cpoll.H>
 #include <signal.h>
 
 //using namespace xaxaxa;
@@ -50,24 +50,11 @@ int main(int argc, char** argv)
 	ss.Close();*/
 	
 	
-	Socket* s;
-	if(listen) {
-		Socket lsock(AF_INET,SOCK_STREAM);
-		lsock.bind(IPEndPoint(IPAddress(ip), port));
-		lsock.listen(1);
-		s=lsock.accept();
-	} else {
-		s=new Socket(AF_INET,SOCK_STREAM);
-		s->connect(IPEndPoint(IPAddress(ip), port));
-	}
-	CP::Poll p;
-	p.add(*s);
-	StandardStream ss;
-	ss.addToPoll(p);
 	
 	
 	
 	
+	Socket* s=new Socket(AF_INET,SOCK_STREAM);
 	
 	struct handler {
 		Poll& p;
@@ -104,8 +91,38 @@ int main(int argc, char** argv)
 			if(r<=0) { stop(); return; }
 			read2();
 		}
-	}* hdlr=new handler(p,s,&ss);
-	hdlr->start();
+	}* hdlr;
+	
+	CP::Poll p;
+	StandardStream ss;
+	if(listen) {
+		s->bind(IPEndPoint(IPAddress(ip), port));
+		s->listen(1);
+		struct {
+			Poll& p;
+			Stream* ss;
+			void operator()(Socket* s) {
+				p.add(*s);
+				(new handler(p,s,ss))->start();
+			}
+		} cb {p,&ss};
+		s->accept(&cb);
+	} else {
+		struct {
+			Poll& p;
+			Socket* s;
+			Stream* ss;
+			void operator()(int i) {
+				if(i<0) throw runtime_error("Connection error");
+				(new handler(p,s,ss))->start();
+			}
+		} cb {p,s,&ss};
+		s->connect(IPEndPoint(IPAddress(ip), port), &cb);
+	}
+	
+	p.add(*s);
+	ss.addToPoll(p);
+	//hdlr->start();
 	/*
 	
 	char buf1[4096*16], buf2[4096*16];
