@@ -324,13 +324,12 @@ namespace cppsp
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
 		{
 			File inp(open(path.c_str(), O_RDONLY));
-			unlink((path + ".C").c_str());
-			File out_c(open((path + ".C").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
-			File out_s(open((path + ".txt").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
 			MemoryStream ms;
 			inp.readToEnd(ms);
 			ms.flush();
-
+			unlink((path + ".C").c_str());
+			File out_c(open((path + ".C").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
+			File out_s(open((path + ".txt").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
 			cppsp::doParse(NULL, (const char*) ms.data(), ms.length(), out_c, out_s, c_opts);
 		}
 
@@ -517,6 +516,7 @@ namespace cppsp
 			{
 				TO_C_STR(path.data(), path.length(), s1);
 				checkError(stat(s1, &st));
+				if(S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException("requested path is a directory or socket");
 			}
 			timespec modif_cppsp = st.st_mtim;
 			{
