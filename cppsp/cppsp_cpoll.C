@@ -28,7 +28,33 @@ namespace cppsp
 		const char* path = (const char*) tmp;
 		int pathLen = tmp1 - tmp;
 		if (pathLen <= 0) return false;
-		This->path = {path, pathLen};
+
+		const char* q = (const char*) memchr(path, '?', pathLen);
+		if (q == NULL) This->path = {path, pathLen};
+		else {
+			struct
+			{
+				CPollRequest* This;
+				MemoryStream ms;
+				void operator()(const char* name, int nameLen, const char* value, int valueLen) {
+					String n, v;
+					{
+						CP::StreamWriter sw(ms);
+						cppsp::urlDecode(name, nameLen, sw);
+						sw.flush();
+						n= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
+						ms.clear();
+						if (value != NULL) {
+							cppsp::urlDecode(value, valueLen, sw);
+						}
+					}
+					v= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
+					This->queryString[n] = v;
+				}
+			}cb {This};
+			cppsp::parseQueryString(q + 1, path + pathLen - q - 1, &cb, false);
+			This->path = {path, q - path};
+		}
 		return true;
 	}
 	bool CPollRequest::readRequest(const Delegate<void(bool)>& cb) {
