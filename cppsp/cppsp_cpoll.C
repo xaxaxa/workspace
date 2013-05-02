@@ -49,6 +49,7 @@ namespace cppsp
 						}
 					}
 					v= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
+					ms.clear();
 					This->queryString[n] = v;
 				}
 			}cb {This};
