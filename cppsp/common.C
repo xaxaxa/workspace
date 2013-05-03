@@ -21,6 +21,7 @@
 #include "include/page.H"
 #include <errno.h>
 #include <unordered_map>
+#include "split.H"
 
 using namespace CP;
 using namespace std;
@@ -57,32 +58,6 @@ namespace cppsp
 		for (int i = 0; i < len; i++)
 			((char*) dst)[i] = ((const char*) src)[i];
 	}
-	struct split
-	{
-		const char* s;
-		const char* end;
-		const char* s1;
-		String value;
-		char delim;
-		split(const char* s, int len, char delim) {
-			if (len == -1) len = strlen(s);
-			this->s = s;
-			this->s1 = s;
-			this->end = s + len;
-			this->delim = delim;
-		}
-		bool read() {
-			if (s == NULL) return false;
-			s = (const char*) memchr(s, delim, end - s);
-			if (s == NULL) {
-				value= {s1, int(end - s1)};
-				return true;
-			}
-			value= {s1, int(s - s1)};
-			s1 = ++s;
-			return true;
-		}
-	};
 	// "/"		+ "aaaaa"	=> "/aaaaa"
 	// "/asdf/"	+ "zzz"		=> "/asdf/zzz"
 	// "/asdf/"	+ "zzz/"		=> "/asdf/zzz/"
