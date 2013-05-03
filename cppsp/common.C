@@ -21,7 +21,7 @@
 #include "include/page.H"
 #include <errno.h>
 #include <unordered_map>
-#include "split.H"
+#include "include/split.H"
 
 using namespace CP;
 using namespace std;
