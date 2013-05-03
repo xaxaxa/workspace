@@ -6,22 +6,10 @@
  */
 #include <cpoll/cpoll.H>
 #include "include/stringutils.H"
+#include "include/split.H"
 using namespace CP;
 namespace cppsp
 {
-	static void split(const char* s, int len, char delim,
-			const function<void(const char*, int)>& cb) {
-		if (len == -1) len = strlen(s);
-		const char* s1 = s;
-		const char* end = s + len;
-		while (true) {
-			s = (const char*) memchr(s, delim, end - s);
-			if (s == NULL) break;
-			cb(s1, s - s1);
-			s1 = ++s;
-		}
-		cb(s1, end - s1);
-	}
 	inline char hexCharToInt(char ch) {
 		if (ch <= '9') return ch - '0';
 		else if (ch <= 'Z') return ch - 'A' + 10;
@@ -105,32 +93,37 @@ namespace cppsp
 		if (decode) {
 			MemoryStream ms;
 			StreamWriter sw(ms);
-			split(in, inLen, '&', [&](const char* s, int l) {
-				const char* _end=s+l;
-				const char* tmp=(const char*)memchr(s,'=',l);
-				if(tmp==NULL) {
-					urlDecode(s,l,sw);
+			split spl(in, inLen, '&');
+			while (spl.read()) {
+				const char* s = spl.value.d;
+				int l = spl.value.len;
+				const char* _end = s + l;
+				const char* tmp = (const char*) memchr(s, '=', l);
+				if (tmp == NULL) {
+					urlDecode(s, l, sw);
 					sw.flush();
-					cb((const char*)ms.data(),ms.length(),nullptr,0);
+					cb((const char*) ms.data(), ms.length(), nullptr, 0);
+					ms.clear();
+				} else {
+					urlDecode(s, tmp - s, sw);
+					sw.flush();
+					int i = ms.length();
+					urlDecode(tmp + 1, _end - tmp - 1, sw);
+					sw.flush();
+					cb((const char*) ms.data(), i, (const char*) (ms.data() + i), ms.length() - i);
 					ms.clear();
 				}
-				else {
-					urlDecode(s,tmp-s,sw);
-					sw.flush();
-					int i=ms.length();
-					urlDecode(tmp+1,_end-tmp-1,sw);
-					sw.flush();
-					cb((const char*)ms.data(),i,(const char*)(ms.data()+i),ms.length()-i);
-					ms.clear();
-				}
-			});
+			}
 		} else {
-			split(in, inLen, '&', [&](const char* s, int l) {
-				const char* _end=s+l;
-				const char* tmp=(const char*)memchr(s,'=',l);
-				if(tmp==NULL) cb(s,l,nullptr,0);
-				else cb(s,tmp-s,tmp+1,_end-tmp-1);
-			});
+			split spl(in, inLen, '&');
+			while (spl.read()) {
+				const char* s = spl.value.d;
+				int l = spl.value.len;
+				const char* _end = s + l;
+				const char* tmp = (const char*) memchr(s, '=', l);
+				if (tmp == NULL) cb(s, l, nullptr, 0);
+				else cb(s, tmp - s, tmp + 1, _end - tmp - 1);
+			}
 		}
 	}
 	void htmlEscape(const char* in, int inLen, CP::StreamWriter& sw) {
