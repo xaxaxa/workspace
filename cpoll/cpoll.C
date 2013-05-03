@@ -462,6 +462,7 @@ namespace CP
 	}
 	StreamReader::~StreamReader() {
 		if (deletionFlag != NULL) *deletionFlag = true;
+		free(_sr.buffer);
 	}
 	void StreamReader_checkReading1(StreamReader* This) {
 		//if (This->shouldRead) throw CPollException("StreamReader is already reading");
