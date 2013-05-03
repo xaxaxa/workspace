@@ -67,6 +67,20 @@ namespace CP
 			return std::string(d, len);
 		}
 	};
+	template<class ... T>
+	String concat(RGC::Allocator& alloc, T ... s...) {
+		int l=sizeof...(s);
+		String tmp[l];
+		tmp= {s...};
+		int size=0;
+		for(int i=0;i<l;i++) size+=tmp[i].len;
+		String r {alloc.alloc(size),0};
+		for(int i=0;i<l;i++) {
+			memcpy(r.d+r.len,tmp[i].d,tmp[i].len);
+			r.len+=tmp[i].len;
+		}
+		return r;
+	}
 #define __CPOLL_DO_ATOI(func,str) char tmp[str.len + 1];\
 														memcpy(tmp, str.d, str.len);\
 														tmp[str.len] = 0;\
