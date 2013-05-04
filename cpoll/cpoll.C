@@ -1021,6 +1021,7 @@ namespace CP
 			//cout << (int32_t)e << " " << (((event_t)e)&((event_t)events)) << endl;
 			if ((((event_t) e) & ((event_t) events)) == (event_t) e) {
 				EventHandlerData& ed = eventData[i];
+				if (ed.state == EventHandlerData::States::invalid) continue;
 				if (ed.opcb != nullptr) {
 					ed.opcb(e, ed, evtd, (confident & e) == e);
 					if (d) break;
