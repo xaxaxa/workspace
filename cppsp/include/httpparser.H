@@ -24,7 +24,6 @@
 
 #include <cpoll/cpoll.H>
 #include "headercontainer.H"
-#include "bitap.H"
 namespace cppsp
 {
 	using namespace CP;
@@ -48,10 +47,7 @@ namespace cppsp
 		MemoryStream ms;
 		String content;
 		String reqLine;
-		enum
-		{
-			s_readingHeaders = 1, s_readingContent
-		} state = s_readingHeaders;
+		Delegate<bool()> state;
 		int pos;
 		int rpos;
 		int _ctLen;
@@ -60,6 +56,7 @@ namespace cppsp
 		HTTPParser(headerContainer* hc) :
 				hc(hc), ms(8192), pos(0), rpos(0), _ctLen(0) {
 			hc->buffer = (char**) &ms.buffer;
+			state= {&HTTPParser::_process_readingHeaders,this};
 		}
 		String beginPutData(int len) {
 			if (ms.bufferSize - ms.bufferPos < len) ms.flushBuffer(len);
@@ -76,79 +73,75 @@ namespace cppsp
 			if (tmp[1] == '\n') return tmp;
 			else return (char*) memmem(tmp + 1, (char*) s + len - tmp - 1, "\r\n", 2);
 		}
+		bool _process_readingHeaders() {
+			uint8_t* buf = ms.data();
+			aaaaa: void* tmp = findCRLF(buf + rpos, ms.length() - rpos);
+			if (tmp == NULL) {
+				//minus one to catch any delimiters that might be cut off
+				//in the middle
+				if (rpos < ms.length() - 1) rpos = ms.length() - 1;
+				return false;
+			}
+			int newpos = ((uint8_t*) tmp) - buf;
+			//line: (buf+pos, newpos-pos)
+			uint8_t* lineBuf = buf + pos;
+			int lineBufLen = newpos - pos;
+
+			if (firstLine) {
+				reqLine.len = newpos - pos;
+				reqLine_i = pos;
+				firstLine = false;
+			} else {
+				if (lineBufLen == 0) {
+					rpos = pos = newpos + 2;
+					state = {&HTTPParser::_process_readingContent,this};
+					return _process_readingContent();
+				}
+				tmp = memchr(buf + pos, ':', newpos - pos);
+				if (tmp == NULL) {
+					hc->add( {pos, newpos - pos, -1, 0});
+				} else {
+					headerContainer::item it;
+					uint8_t* tmp1 = (uint8_t*) tmp - 1;
+					while (tmp1 >= lineBuf && *tmp1 == ' ')
+					tmp1--;
+					it.nameStart = pos;
+					it.nameLength = (int) (tmp1 - lineBuf + 1);
+					tmp1 = (uint8_t*) tmp + 1;
+					while (tmp1 < (buf + newpos) && *tmp1 == ' ')
+					tmp1++;
+					it.valueStart = (int) (tmp1 - buf);
+					it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
+
+					if (_ctLen == 0
+							&& ci_equals( {(char*) buf + pos, it.nameLength}, "content-length")) {
+						_ctLen = atoi( {(char*) tmp1, it.valueLength});
+					}
+					hc->add(it);
+				}
+			}
+			rpos = pos = newpos + 2;
+			goto aaaaa;
+		}
+		bool _process_readingContent() {
+			uint8_t* buf = ms.data();
+			if (ms.length() - pos < _ctLen) return false;
+			content= {(char*)buf+pos,_ctLen};
+			pos += _ctLen;
+			rpos = pos;
+			_ctLen = 0;
+			state = {&HTTPParser::_process_readingHeaders,this};;
+			firstLine = true;
+			reqLine.d = (char*) buf + reqLine_i;
+			return true;
+		}
 		//returns whether or not a complete http request was found
 		//headers will be added to *hc, and content will be set to point
 		//to any content received
 		//note: *hc may be modified even when it returns false
-		bool process() {
+		inline bool process() {
 			if (pos >= ms.length()) return false;
-			uint8_t* buf = ms.data();
-			switch (state) {
-				case s_readingHeaders:
-				{
-					aaaaa: void* tmp = findCRLF(buf + rpos, ms.length() - rpos);
-					if (tmp == NULL) {
-						//minus one to catch any delimiters that might be cut off
-						//in the middle
-						if (rpos < ms.length() - 1) rpos = ms.length() - 1;
-						return false;
-					}
-					int newpos = ((uint8_t*) tmp) - buf;
-					//line: (buf+pos, newpos-pos)
-					uint8_t* lineBuf = buf + pos;
-					int lineBufLen = newpos - pos;
-
-					if (firstLine) {
-						reqLine.len = newpos - pos;
-						reqLine_i = pos;
-						firstLine = false;
-					} else {
-						if (lineBufLen == 0) {
-							rpos = pos = newpos + 2;
-							state = s_readingContent;
-							goto asdfg;
-						}
-						tmp = memchr(buf + pos, ':', newpos - pos);
-						if (tmp == NULL) {
-							hc->add( { pos, newpos - pos, -1, 0 });
-						} else {
-							headerContainer::item it;
-							uint8_t* tmp1 = (uint8_t*) tmp - 1;
-							while (tmp1 >= lineBuf && *tmp1 == ' ')
-								tmp1--;
-							it.nameStart = pos;
-							it.nameLength = (int) (tmp1 - lineBuf + 1);
-							tmp1 = (uint8_t*) tmp + 1;
-							while (tmp1 < (buf + newpos) && *tmp1 == ' ')
-								tmp1++;
-							it.valueStart = (int) (tmp1 - buf);
-							it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
-
-							if (_ctLen == 0
-									&& ci_equals( { (char*) buf + pos, it.nameLength }, "content-length")) {
-								_ctLen = atoi( { (char*) tmp1, it.valueLength });
-							}
-							hc->add(it);
-						}
-					}
-					rpos = pos = newpos + 2;
-					goto aaaaa;
-				}
-				case s_readingContent:
-				{
-					asdfg: if (ms.length() - pos < _ctLen) return false;
-					content= {(char*)buf+pos,_ctLen};
-					pos += _ctLen;
-					rpos = pos;
-					_ctLen = 0;
-					state = s_readingHeaders;
-					firstLine = true;
-					reqLine.d = (char*) buf + reqLine_i;
-					return true;
-				}
-				default:
-					return false;
-			}
+			return state();
 		}
 		inline String getBufferData() {
 			return {(char*)ms.buffer + pos, ms.length() - pos};
@@ -166,7 +159,6 @@ namespace cppsp
 				ms.bufferPos = ms.len;
 			}
 		}
-	};
-}
+	};}
 
 #endif /* HTTPPARSER_H_ */

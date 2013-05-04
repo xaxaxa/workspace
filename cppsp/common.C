@@ -579,23 +579,22 @@ namespace cppsp
 			lp.loadCB.push_back( { a, cb });
 			return;
 		}
+		if (likely(lp1->loaded & !shouldCheck(*lp1))) {
+			xxx: Page* p;
+			try {
+				p = lp.doCreate(a);
+			} catch (exception& ex) {
+				cb(nullptr, &ex);
+			}
+			cb(p, nullptr);
+			return;
+		}
 		if (likely(lp1->loaded)) {
-			if (unlikely(shouldCheck(*lp1))) {
-				try {
-					c = lp.shouldCompile();
-					if (likely(c==0)) goto xxx;
-				} catch (exception& ex) {
-					cb(nullptr, &ex);
-					return;
-				}
-			} else {
-				xxx: Page* p;
-				try {
-					p = lp.doCreate(a);
-				} catch (exception& ex) {
-					cb(nullptr, &ex);
-				}
-				cb(p, nullptr);
+			try {
+				c = lp.shouldCompile();
+				if (likely(c==0)) goto xxx;
+			} catch (exception& ex) {
+				cb(nullptr, &ex);
 				return;
 			}
 		} else {
