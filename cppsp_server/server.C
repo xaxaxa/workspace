@@ -109,7 +109,7 @@ namespace cppspServer
 		cppsp::Response resp;
 		//Page* p;
 		//MemoryStream ms;
-		uint8_t buf[4096];
+		uint8_t* buf;
 		String path;
 		bool keepAlive;
 		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
@@ -163,7 +163,10 @@ namespace cppspServer
 		doFinish:;
 		}
 		void sockReadCB(int r) {
-			if(r<=0) destruct();
+			if(r<=0) {
+				free(buf);
+				destruct();
+			}
 		}
 		void flushCB(Response& resp) {
 			//s->shutdown(SHUT_WR);
@@ -183,7 +186,10 @@ namespace cppspServer
 				req.reset();
 				resp.reset();
 				if(req.readRequest({&handler::readCB,this})) readCB(true);
-			} else s.repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});
+			} else {
+				buf=(uint8_t*)malloc(4096);
+				s.repeatRead(buf,4096,{&handler::sockReadCB,this});
+			}
 		}
 		~handler() {
 			//printf("~handler()\n");
