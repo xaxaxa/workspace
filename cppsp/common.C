@@ -127,6 +127,7 @@ namespace cppsp
 	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf) {
 		int i = l1;
 		memcpy2(buf, p1, i);
+		static const uint16_t parentDir = *(const uint16_t*) "..";
 		if (l2 > 0) {
 			bool first(true);
 			split spl(p2, l2, '/');
@@ -137,7 +138,7 @@ namespace cppsp
 					first = false;
 					if (l == 0) continue;
 				}
-				if (l == 2 && memcmp(s, "..", 2) == 0) {
+				if (l == 2 && *(const uint16_t*) s == parentDir) {
 					i--;
 					while (i >= 0 && buf[i] != '/')
 						i--;

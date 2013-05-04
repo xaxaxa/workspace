@@ -131,7 +131,8 @@ namespace cppspServer
 			//printf("handler()\n");
 			poll.add(this->s);
 			s.retain();
-			if(req.readRequest({&handler::readCB,this})) readCB(true);
+			if(req.readRequest({thr.globalHandler.data()==nullptr?
+				&handler::readCB:&handler::readCB_hashandler, this})) readCB(true);
 		}
 		void readCB(bool success) {
 			if(!success) {
@@ -142,16 +143,26 @@ namespace cppspServer
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
 			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
-			//printf("readCB()\n");
-			if(thr.globalHandler.data()==nullptr) {
-				path.d=sp.beginAdd(req.path.length()+thr.root.length());
-				path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
-					req.path.data(),req.path.length(),path.data());
-			} else {
-				path.d=sp.beginAdd(thr.globalHandler.length()+thr.root.length());
-				path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
-					thr.globalHandler.data(),thr.globalHandler.length(),path.data());
+			//printf("readCB()\n");{
+			path.d=sp.beginAdd(req.path.length()+thr.root.length());
+			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
+				req.path.data(),req.path.length(),path.data());
+			sp.endAdd(path.len);
+			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
+		}
+		void readCB_hashandler(bool success) {
+			if(!success) {
+				destruct();
+				return;
 			}
+			auto it=req.headers.find("connection");
+			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
+			else keepAlive=true;
+			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
+			//printf("readCB()\n");
+			path.d=sp.beginAdd(thr.globalHandler.length()+thr.root.length());
+			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
+				thr.globalHandler.data(),thr.globalHandler.length(),path.data());
 			sp.endAdd(path.len);
 			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}
