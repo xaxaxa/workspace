@@ -2201,22 +2201,25 @@ namespace CP
 	}
 	StringPool::~StringPool() {
 		clear();
-		if (_firstPage != NULL) free(_firstPage);
+		if (_firstPage != NULL) {
+			::free(_firstPage);
+		}
 	}
 	void StringPool::clear() {
 		_pageHeader* h;
 		if (_firstPage != NULL) {
 			h = _firstPage->next;
+			_firstPage->next = NULL;
 			while (h != NULL) {
 				_pageHeader* n = h->next;
-				free(h);
+				::free(h);
 				h = n;
 			}
 		}
 		h = _firstRawItem;
 		while (h != NULL) {
 			_pageHeader* n = h->next;
-			free(h);
+			::free(h);
 			h = n;
 		}
 		_curPage = _firstPage;
