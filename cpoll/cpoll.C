@@ -2229,6 +2229,7 @@ namespace CP
 	void StringPool::_addPage() {
 		void* tmp = malloc(_pageSize);
 		if (tmp == NULL) throw bad_alloc();
+
 		if (_curPage != NULL) _curPage->next = (_pageHeader*) tmp;
 		_curPage = (_pageHeader*) tmp;
 		_curPage->next = NULL;
@@ -2374,7 +2375,7 @@ namespace CP
 				"attempting to allocate an object of the wrong size from a MemoryPool");
 		return alloc();
 	}
-	void MemoryPool::free(void* obj) {
+	void MemoryPool::dealloc(void* obj) {
 		_item* o = ((_item*) obj) - 1;
 		if (o->nextFree != (_item*) this) throw runtime_error(
 				"MemoryPool::free(): double free or corruption");

@@ -1252,7 +1252,7 @@ namespace CP
 		void* alloc(int s) override final {
 			return add(s);
 		}
-		void free(void* obj) override final {
+		void dealloc(void* obj) override final {
 		}
 		void clear();
 		void _addPage();
@@ -1391,7 +1391,7 @@ namespace CP
 		~MemoryPool();
 		void* alloc();
 		void* alloc(int s) override;
-		void free(void* obj) override;
+		void dealloc(void* obj) override;
 
 	};}
 static unsigned long sdbm(uint8_t* str, int len) {

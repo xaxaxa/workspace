@@ -35,10 +35,10 @@ public:
 			h.allocator=this;
 	}
 	void* alloc(int s) { return NULL; }
-	void free(void* ptr) {
+	void dealloc(void* ptr) {
 		sock.~Socket();
 		if(allocator==NULL)free(this);
-		else allocator->free(this);
+		else allocator->dealloc(this);
 	}
 };
 String globalHandler{(char*)nullptr,0};

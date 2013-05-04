@@ -73,11 +73,11 @@ namespace RGC
 	{
 	public:
 		virtual void* alloc(int s)=0;
-		virtual void free(void* obj)=0;
+		virtual void dealloc(void* obj)=0;
 		template<class T>
 		void del(T* obj) {
 			obj->~T();
-			free(obj);
+			dealloc(obj);
 		}
 	};
 	void Object::destruct() {
