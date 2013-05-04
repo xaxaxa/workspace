@@ -574,13 +574,19 @@ namespace cppsp
 		loadedPage& lp(*lp1);
 
 		int c = 0;
+		if (lp1->loaded && !shouldCheck(*lp1)) {
+			Page* p;
+			try {
+				p = lp.doCreate(a);
+			} catch (exception& ex) {
+				cb(nullptr, &ex);
+			}
+			cb(p, nullptr);
+			return;
+		}
 		if (lp.compiling) goto asdf;
 		try {
-			if (lp1->loaded) {
-				c = shouldCheck(*lp1) ? lp.shouldCompile() : 0;
-			} else {
-				c = lp.shouldCompile();
-			}
+			c = lp.shouldCompile();
 		} catch (exception& ex) {
 			cb(nullptr, &ex);
 			return;
