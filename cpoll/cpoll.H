@@ -1206,7 +1206,12 @@ namespace CP
 		int _curIndex;
 		StringPool(int pageSize = 4096);
 		~StringPool();
-		char* beginAdd(int length) {
+		char* beginAdd(int sz) {
+#ifdef STRINGPOOL_MEMORY_DIAG
+			int length = sz + sizeof(int);
+#else
+			int length = sz;
+#endif
 			if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
 				_addRaw(length);
 				return ((char*) (_curRawItem + 1));
@@ -1214,10 +1219,21 @@ namespace CP
 			if (_curPage == NULL || length > (_pageSize - (int) sizeof(_pageHeader) - _curIndex)) {
 				_addPage();
 			}
+#ifdef STRINGPOOL_MEMORY_DIAG
+			int* ptr = (int*) (((char*) (_curPage + 1)) + _curIndex);
+			*ptr = sz;
+			memset(ptr + 1, 0xff, sz);
+			return (char*) (ptr + 1);
+#else
 			return ((char*) (_curPage + 1)) + _curIndex;
+#endif
 		}
 		void endAdd(int length) {
+#ifdef STRINGPOOL_MEMORY_DIAG
+			_curIndex += length + sizeof(int);
+#else
 			_curIndex += length;
+#endif
 		}
 		char* add(int length) {
 			char* tmp = beginAdd(length);
@@ -1253,6 +1269,11 @@ namespace CP
 			return add(s);
 		}
 		void dealloc(void* obj) override final {
+#ifdef STRINGPOOL_MEMORY_DIAG
+			int* tmp = (int*) obj;
+			tmp--;
+			memset(obj, 0xFE, *tmp);
+#endif
 		}
 		void clear();
 		void _addPage();
