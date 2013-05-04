@@ -69,6 +69,13 @@ namespace cppsp
 			ms.bufferPos += len;
 			ms.flush();
 		}
+
+		static inline char* findCRLF(const void* s, int len) {
+			char* tmp = (char*) memchr(s, '\r', len);
+			if (unlikely(tmp == NULL || tmp >= ((char*) s + len))) return NULL;
+			if (tmp[1] == '\n') return tmp;
+			else return (char*) memmem(tmp + 1, (char*) s + len - tmp - 1, "\r\n", 2);
+		}
 		//returns whether or not a complete http request was found
 		//headers will be added to *hc, and content will be set to point
 		//to any content received
@@ -79,7 +86,7 @@ namespace cppsp
 			switch (state) {
 				case s_readingHeaders:
 				{
-					aaaaa: void* tmp = bitap_bitwise_search(buf + rpos, ms.length() - rpos, "\r\n", 2);
+					aaaaa: void* tmp = findCRLF(buf + rpos, ms.length() - rpos);
 					if (tmp == NULL) {
 						//minus one to catch any delimiters that might be cut off
 						//in the middle
