@@ -6,7 +6,7 @@
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
 #include "server.C"
-
+#define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
 
 using namespace std;
 using namespace CP;
@@ -66,8 +66,7 @@ void* thread1(void* v) {
 		}
 	} cb {p, thr};
 	thr->efd.repeatGetEvent(&cb);*/
-	
-	MemoryPool handlerPool(sizeof(handler1));
+	MemoryPool handlerPool(sizeof(handler1),256);
 	struct {
 		Poll& p;
 		workerThread& thr;
@@ -129,6 +128,9 @@ int main(int argc, char** argv) {
 		listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM);
 	listensock.listen(512);
 	//p.add(listensock);
+	PRINTSIZE(CP::Socket);
+	PRINTSIZE(cppspServer::handler);
+	PRINTSIZE(handler1);
 	printf("starting %i threads\n",threads);
 	workerThread* th=(workerThread*)new char[sizeof(workerThread)*threads];
 	for(int i=0;i<threads;i++) {
