@@ -574,22 +574,36 @@ namespace cppsp
 		loadedPage& lp(*lp1);
 
 		int c = 0;
-		if (lp1->loaded && !shouldCheck(*lp1)) {
-			Page* p;
-			try {
-				p = lp.doCreate(a);
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-			}
-			cb(p, nullptr);
+		if (unlikely(lp1->compiling)) {
+			lp.loadCB.push_back( { a, cb });
 			return;
 		}
-		if (lp.compiling) goto asdf;
-		try {
-			c = lp.shouldCompile();
-		} catch (exception& ex) {
-			cb(nullptr, &ex);
-			return;
+		if (likely(lp1->loaded)) {
+			if (unlikely(shouldCheck(*lp1))) {
+				try {
+					c = lp.shouldCompile();
+					if (likely(c==0)) goto xxx;
+				} catch (exception& ex) {
+					cb(nullptr, &ex);
+					return;
+				}
+			} else {
+				xxx: Page* p;
+				try {
+					p = lp.doCreate(a);
+				} catch (exception& ex) {
+					cb(nullptr, &ex);
+				}
+				cb(p, nullptr);
+				return;
+			}
+		} else {
+			try {
+				c = lp.shouldCompile();
+			} catch (exception& ex) {
+				cb(nullptr, &ex);
+				return;
+			}
 		}
 		if (c >= 2) {
 			lp.loadCB.push_back( { a, cb });
@@ -601,28 +615,14 @@ namespace cppsp
 			}
 			return;
 		}
-		if (lp.loaded) {
-			Page* p;
-			try {
-				if (c >= 1) {
-					lp.doUnload();
-					lp.doLoad();
-				}
-				p = lp.doCreate(a);
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
+		try {
+			if (c >= 1) {
+				lp.doUnload();
 			}
-			cb(p, nullptr);
-			return;
-		} else if (lp.compiling) {
-			asdf: lp.loadCB.push_back( { a, cb });
-		} else {
-			try {
-				lp.doLoad();
-				cb(lp.doCreate(a), nullptr);
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-			}
+			lp.doLoad();
+			goto xxx;
+		} catch (exception& ex) {
+			cb(nullptr, &ex);
 		}
 	}
 	vector<string>& CXXOpts(cppspManager* mgr) {
