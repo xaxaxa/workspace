@@ -92,14 +92,14 @@ namespace cppspServer
 		~Server() {
 			cppspManager_delete(mgr);
 		}
-		void loadPage(CP::Poll& p, String path, RGC::Allocator* a,
+		void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
 			Delegate<void(Page*, exception* ex)> cb) override {
 			string tmp = mapPath(path.toSTDString());
-			cppsp::loadPage(mgr, p, rootDir(), {tmp.data(), (int) tmp.length()}, a, cb);
+			cppsp::loadPage(mgr, p, rootDir(), {tmp.data(), (int) tmp.length()}, &a, cb);
 		}
-		void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a,
+		void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a,
 				Delegate<void(Page*, exception* ex)> cb) override {
-			cppsp::loadPage(mgr, p, rootDir(), path, a, cb);
+			cppsp::loadPage(mgr, p, rootDir(), path, &a, cb);
 		}
 		String rootDir() {
 			return root;

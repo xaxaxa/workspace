@@ -34,7 +34,8 @@ namespace cppsp
 	{
 	public:
 		Request(CP::Stream& inp, CP::StringPool* sp);
-		virtual ~Request() {}
+		virtual ~Request() {
+		}
 		RGC::Ref<CP::Stream> inputStream;
 		CP::StringPool* sp; //may be used to store headers, querystrings, and POST data
 		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String, String> > > StringMap;
@@ -96,12 +97,13 @@ namespace cppsp
 	public:
 		virtual String rootDir()=0;
 		//path is relative to rootDir
-		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator* a,
+		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
 				Delegate<void(Page*, exception* ex)> cb)=0;
-		virtual void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator* a,
+		virtual void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a,
 				Delegate<void(Page*, exception* ex)> cb)=0;
 		//path is relative to rootDir
 		virtual string mapPath(string path);
+		virtual String mapPath(String path, RGC::Allocator& a);
 	};
 	class Page: public RGC::Object
 	{
@@ -127,12 +129,16 @@ namespace cppsp
 		//pointer to mmap()ed address of original cppsp file
 		const uint8_t* __stringTable;
 		void __writeStringTable(int i, int len);
-		string mapPath(string path);
-		string mapRelativePath(string path);
+		String mapPath(String path);
+		String mapPath(String path, RGC::Allocator& a);
+		String mapRelativePath(String path);
+		String mapRelativePath(String path, RGC::Allocator& a);
 		//path is relative to current page
-		void loadNestedPage(string path, Delegate<void(Page*, exception* ex)> cb);
+		void loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb);
+		void loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb, RGC::Allocator& a);
 		//path is absolute
-		void loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb);
+		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb);
+		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb, RGC::Allocator& a);
 		virtual void handleRequest(Callback cb = nullptr);
 		virtual void processRequest() {
 			doInit();

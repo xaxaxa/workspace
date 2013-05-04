@@ -58,8 +58,8 @@ namespace cppsp
 	int combinePath(const char* p1, const char* p2, char* buf);
 	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf);
 	int combinePathChroot(const char* p1, const char* p2, char* buf);
-	String combinePath(const char* p1, const char* p2, CP::StringPool& sp);
-	String combinePathChroot(const char* p1, const char* p2, CP::StringPool& sp);
+	String combinePath(String p1, String p2, CP::StringPool& sp);
+	String combinePathChroot(String p1, String p2, CP::StringPool& sp);
 	cppspManager* cppspManager_new();
 	void cppspManager_delete(cppspManager* mgr);
 	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,

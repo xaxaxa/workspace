@@ -103,23 +103,37 @@ namespace cppsp
 		if (response->closed) finalizeCB();
 		else response->flush( { &Page::_flushCB, this });
 	}
-	string Page::mapPath(string path) {
-		return server->mapPath(mapRelativePath(path));
+	String Page::mapPath(String path) {
+		return server->mapPath(mapRelativePath(path), *sp);
 	}
-	string Page::mapRelativePath(string path) {
-		char tmp[request->path.length() + path.length()];
+	String Page::mapPath(String path, RGC::Allocator& a) {
+		return server->mapPath(mapRelativePath(path, a), a);
+	}
+	String Page::mapRelativePath(String path) {
+		return mapRelativePath(path, *sp);
+	}
+	String Page::mapRelativePath(String path, RGC::Allocator& a) {
+		char *tmp = (char*) a.alloc(request->path.length() + path.length());
 		int l = combinePath(request->path.data(), request->path.length(), path.data(), path.length(),
 				tmp);
-		return string(tmp, l);
+		return {tmp,l};
 	}
-	void Page::loadNestedPage(string path, Delegate<void(Page*, exception* ex)> cb) {
-		this->pageCB = cb;
-		string tmp = mapRelativePath(path);
-		server->loadPage(*poll, { tmp.data(), (int) tmp.length() }, sp, { &Page::_pageCB, this });
+	void Page::loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb) {
+		loadNestedPage(path, cb, *sp);
 	}
-	void Page::loadNestedPageFromFile(string path, Delegate<void(Page*, exception* ex)> cb) {
+	void Page::loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb,
+			RGC::Allocator& a) {
 		this->pageCB = cb;
-		server->loadPageFromFile(*poll, { path.data(), (int) path.length() }, sp, { &Page::_pageCB,
+		String tmp = mapRelativePath(path, a);
+		server->loadPage(*poll, { tmp.data(), (int) tmp.length() }, a, { &Page::_pageCB, this });
+	}
+	void Page::loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb) {
+		loadNestedPageFromFile(path, cb, *sp);
+	}
+	void Page::loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb,
+			RGC::Allocator& a) {
+		this->pageCB = cb;
+		server->loadPageFromFile(*poll, { path.data(), (int) path.length() }, a, { &Page::_pageCB,
 				this });
 	}
 	
@@ -214,7 +228,7 @@ namespace cppsp
 		if (closed) throw runtime_error("connection has already been closed by the client");
 		output.flush();
 		this->_cb = cb;
-		if (!headersWritten) {
+		if (likely(!headersWritten)) {
 			headersWritten = true;
 			int bufferL = buffer.length();
 			{
@@ -270,4 +284,10 @@ string cppsp::Server::mapPath(string path) {
 	char tmp[path.length() + r.length()];
 	int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
 	return string(tmp, l);
+}
+String cppsp::Server::mapPath(String path, RGC::Allocator& a) {
+	String r = rootDir();
+	char* tmp = (char*) a.alloc(path.length() + r.length());
+	int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
+	return {tmp, l};
 }

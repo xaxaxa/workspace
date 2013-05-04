@@ -167,15 +167,15 @@ namespace cppsp
 		return combinePathChroot(p1, strlen(p1), p2, strlen(p2), buf);
 	}
 
-	String combinePath(const char* p1, const char* p2, StringPool& sp) {
-		char* tmp = sp.beginAdd(strlen(p1) + strlen(p2));
-		int l = combinePath(p1, p2, tmp);
+	String combinePath(String p1, String p2, StringPool& sp) {
+		char* tmp = sp.beginAdd(p1.length() + p2.length());
+		int l = combinePath(p1.data(), p2.data(), tmp);
 		sp.endAdd(l);
 		return {tmp,l};
 	}
-	String combinePathChroot(const char* p1, const char* p2, StringPool& sp) {
-		char* tmp = sp.beginAdd(strlen(p1) + strlen(p2));
-		int l = combinePathChroot(p1, p2, tmp);
+	String combinePathChroot(String p1, String p2, StringPool& sp) {
+		char* tmp = sp.beginAdd(p1.length() + p2.length());
+		int l = combinePathChroot(p1.data(), p2.data(), tmp);
 		sp.endAdd(l);
 		return {tmp,l};
 	}
