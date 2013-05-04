@@ -140,6 +140,7 @@ namespace cppsp
 				ms.len -= pos;
 				rpos -= pos;
 				pos = 0;
+				ms.bufferPos = ms.len;
 			}
 		}
 	};

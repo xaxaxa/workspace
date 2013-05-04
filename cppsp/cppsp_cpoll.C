@@ -67,7 +67,7 @@ namespace cppsp
 			}
 		} else {
 			this->tmp_cb = cb;
-			//_parser.reset();
+			_parser.reset();
 			_beginRead();
 			return false;
 		}
