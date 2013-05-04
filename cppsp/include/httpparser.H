@@ -24,6 +24,7 @@
 
 #include <cpoll/cpoll.H>
 #include "headercontainer.H"
+#include "bitap.H"
 namespace cppsp
 {
 	using namespace CP;
@@ -42,6 +43,7 @@ namespace cppsp
 			}
 			return true;
 		}
+
 		headerContainer* hc;
 		MemoryStream ms;
 		String content;
@@ -77,7 +79,7 @@ namespace cppsp
 			switch (state) {
 				case s_readingHeaders:
 				{
-					aaaaa: void* tmp = memmem(buf + rpos, ms.length() - rpos, "\r\n", 2);
+					aaaaa: void* tmp = bitap_bitwise_search(buf + rpos, ms.length() - rpos, "\r\n", 2);
 					if (tmp == NULL) {
 						//minus one to catch any delimiters that might be cut off
 						//in the middle

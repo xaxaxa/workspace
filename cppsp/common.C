@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <unordered_map>
 #include "include/split.H"
+#include "include/bitap.H"
 
 using namespace CP;
 using namespace std;
@@ -200,7 +201,7 @@ namespace cppsp
 		while (true) {
 			if (s >= end) break;
 			const char* old_s = s;
-			s = (const char*) memmem(s, end - s, "<%", 2);
+			s = (const char*) bitap_bitwise_search(s, end - s, "<%", 2);
 			int st_pos0 = st_pos;
 			if (s > old_s) {
 				st_out.write(old_s, s - old_s);
@@ -214,7 +215,7 @@ namespace cppsp
 			}
 			s += 2;
 			if (s >= end) throw ParserException("reached EOF when looking past \"<%\"");
-			const char* s1 = (const char*) memmem(s, end - s, "%>", 2);
+			const char* s1 = (const char*) bitap_bitwise_search(s, end - s, "%>", 2);
 			if (s1 == NULL) throw ParserException("reached EOF when looking for matching \"%>\"");
 			switch (*s) {
 				case '!':
