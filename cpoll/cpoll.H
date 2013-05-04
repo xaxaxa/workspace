@@ -1212,21 +1212,23 @@ namespace CP
 #else
 			int length = sz;
 #endif
+			if (likely(_curPage!=NULL && length<=(_pageSize - (int) sizeof(_pageHeader) - _curIndex))) {
+				sssss:
+#ifdef STRINGPOOL_MEMORY_DIAG
+				int* ptr = (int*) (((char*) (_curPage + 1)) + _curIndex);
+				*ptr = sz;
+				memset(ptr + 1, 0xff, sz);
+				return (char*) (ptr + 1);
+#else
+				return ((char*) (_curPage + 1)) + _curIndex;
+#endif
+			}
 			if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
 				_addRaw(length);
 				return ((char*) (_curRawItem + 1));
 			}
-			if (_curPage == NULL || length > (_pageSize - (int) sizeof(_pageHeader) - _curIndex)) {
-				_addPage();
-			}
-#ifdef STRINGPOOL_MEMORY_DIAG
-			int* ptr = (int*) (((char*) (_curPage + 1)) + _curIndex);
-			*ptr = sz;
-			memset(ptr + 1, 0xff, sz);
-			return (char*) (ptr + 1);
-#else
-			return ((char*) (_curPage + 1)) + _curIndex;
-#endif
+			_addPage();
+			goto sssss;
 		}
 		void endAdd(int length) {
 #ifdef STRINGPOOL_MEMORY_DIAG
