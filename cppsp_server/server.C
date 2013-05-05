@@ -212,6 +212,7 @@ namespace cppspServer
 				resp.reset();
 				if(req.readRequest({&handler::readCB,this})) readCB(true);
 			} else {
+				s.shutdown(SHUT_WR);
 				buf=(uint8_t*)malloc(4096);
 				s.repeatRead(buf,4096,{&handler::sockReadCB,this});
 			}
