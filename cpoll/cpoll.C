@@ -984,7 +984,7 @@ namespace CP
 		asdf: bool* del = deletionFlag;
 		if (ed.cb != nullptr) ed.cb(r);
 		if (*del) return true;
-		if (ed.state == EventHandlerData::States::repeat) {
+		if (oldstate == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
 		}
@@ -1326,7 +1326,7 @@ namespace CP
 			ed.state = EventHandlerData::States::invalid;
 		}
 		if (ed.cb != nullptr) ed.cb(r);
-		success: if (ed.state == EventHandlerData::States::repeat) {
+		success: if (oldstate == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
 		}
