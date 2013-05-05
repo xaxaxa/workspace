@@ -48,6 +48,7 @@
 #include <limits>
 #include "basictypes.H"
 #include "statemachines.H"
+#include <fcntl.h>
 
 #ifndef __INCLUDED_CPOLL_H
 #define __INCLUDED_CPOLL_H
@@ -795,6 +796,14 @@ namespace CP
 		virtual Events wait(EventData& evtd);
 		virtual Events waitAndDispatch();
 		virtual void loop();
+		void setBlocking(bool b = true) {
+			int f = fcntl(handle, F_GETFL);
+			if (b && (f & O_NONBLOCK)) {
+				fcntl(handle, F_SETFL, f & ~O_NONBLOCK);
+			} else if (!b && (f & O_NONBLOCK) == 0) {
+				fcntl(handle, F_SETFL, f | O_NONBLOCK);
+			}
+		}
 		//void close();
 		~Handle();
 	};
@@ -1100,6 +1109,10 @@ namespace CP
 		template<class P> void delFromPoll(P& p) {
 			p.del(in);
 			p.del(out);
+		}
+		void setBlocking(bool b = true) {
+			in.setBlocking(b);
+			out.setBlocking(b);
 		}
 		//sync
 		virtual int32_t read(void* buf, int32_t len);
