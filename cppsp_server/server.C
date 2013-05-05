@@ -208,7 +208,7 @@ namespace cppspServer
 		}
 		void finalize() {
 			if(resp.closed) {
-				delete this; return;
+				destruct(); return;
 			}
 			if(keepAlive) {
 				req.reset();
