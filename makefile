@@ -23,6 +23,8 @@ tmp2:
 	$(CXX) tmp2.C -o tmp2 --std=c++0x -lcplib -O3
 nc.xaxaxa:
 	$(CXX) nc.xaxaxa.C -o nc.xaxaxa --std=c++0x -lcpoll -Ofast
+http_simplebench:
+	$(CXX) http_simplebench.C -o http_simplebench --std=c++0x -lcpoll -Ofast -march=native
 tcpfuck:
 	$(CXX) tcpfuck.C -o tcpfuck --std=c++0x -lcpoll
 nc.xaxaxa_install:
