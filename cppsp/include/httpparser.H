@@ -130,7 +130,7 @@ namespace cppsp
 			pos += _ctLen;
 			rpos = pos;
 			_ctLen = 0;
-			state = {&HTTPParser::_process_readingHeaders,this};;
+			state = {&HTTPParser::_process_readingHeaders,this};
 			firstLine = true;
 			reqLine.d = (char*) buf + reqLine_i;
 			return true;
@@ -152,10 +152,11 @@ namespace cppsp
 		//free up buffer space
 		void reset() {
 			if (pos > 0) {
-				if (ms.length() - pos > 0) memmove(ms.buffer, ms.buffer + pos, ms.length() - pos);
-				ms.len -= pos;
-				rpos -= pos;
-				pos = 0;
+				int shift=firstLine?pos:reqLine_i;
+				if (ms.length() - shift > 0) memmove(ms.buffer, ms.buffer + shift, ms.length() - shift);
+				ms.len -= shift;
+				rpos -= shift;
+				pos -= shift;
 				ms.bufferPos = ms.len;
 			}
 		}
