@@ -166,7 +166,8 @@ int main(int argc, char** argv) {
 	printf("starting %i threads\n",threads);
 	workerThread* th=(workerThread*)new char[sizeof(workerThread)*threads];
 	for(int i=0;i<threads;i++) {
-		workerThread& tmp=*(new (th+i) workerThread(dup(listensock.handle),
+		workerThread& tmp=*(new (th+i) workerThread(f0rk ? 
+			listensock.handle : dup(listensock.handle),
 			listensock.addressFamily, listensock.type, listensock.protocol));
 		tmp.srv.globalHandler=globalHandler;
 		CXXOpts(tmp.srv.mgr)=cxxopts;
