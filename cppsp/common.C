@@ -42,6 +42,7 @@ using namespace CP;
 using namespace std;
 namespace cppsp
 {
+	PThreadMutex dlMutex;
 	ParserException::ParserException() :
 			message(strerror(errno)), number(errno) {
 	}
@@ -454,6 +455,7 @@ namespace cppsp
 			beginRead();
 		}
 		void doLoad() {
+			ScopeLock sl(dlMutex);
 			//printf("doLoad(\"%s\");\n",path.c_str());
 			struct stat st;
 			checkError(stat(path.c_str(), &st));
@@ -476,6 +478,7 @@ namespace cppsp
 			if (stringTable != NULL) munmap((void*) stringTable, stringTableLen);
 			if (stringTableFD != -1) close(stringTableFD);
 			if (dlHandle != NULL) {
+				ScopeLock sl(dlMutex);
 				checkError(dlclose(dlHandle));
 				void* tmp=dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
 				if(tmp!=NULL) throw runtime_error("unable to unload library");
