@@ -421,19 +421,19 @@ namespace CP
 	}
 
 	StreamWriter::StreamWriter(BufferedOutput& s) :
-			outp(&s), buffer(&s) {
+			outp(&s), buffer(&s), sb(*(StreamBuffer*) nullptr) {
 
 	}
 	StreamWriter::StreamWriter(Stream& s) :
 			outp(&s), buffer(s.getBufferedOutput()),
-					sb(buffer == NULL ? StreamBuffer(s) : StreamBuffer()) {
+					sb(buffer == NULL ? *(new (_sb) StreamBuffer(s)) : *(StreamBuffer*) nullptr) {
 		if (buffer == NULL) buffer = &sb;
 	}
 	StreamWriter::StreamWriter(MemoryStream& s) :
-			outp(&s), buffer(&s) {
+			outp(&s), buffer(&s), sb(*(StreamBuffer*) nullptr) {
 	}
 	StreamWriter::StreamWriter(StringStream& s) :
-			outp(&s), buffer(&s) {
+			outp(&s), buffer(&s), sb(*(StreamBuffer*) nullptr) {
 	}
 	StreamWriter::~StreamWriter() {
 		flush();
@@ -2391,6 +2391,23 @@ namespace CP
 			_lastFree = o;
 			if (_freeList == NULL) _freeList = o;
 		}
+	}
+
+	PThreadMutex::PThreadMutex() {
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init(&attr);
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+		pthread_mutex_init(&m, &attr);
+		pthread_mutexattr_destroy(&attr);
+	}
+	PThreadMutex::~PThreadMutex() {
+		pthread_mutex_destroy(&m);
+	}
+	void PThreadMutex::lock() {
+		pthread_mutex_lock(&m);
+	}
+	void PThreadMutex::unlock() {
+		pthread_mutex_unlock(&m);
 	}
 
 }
