@@ -36,7 +36,6 @@
 #include <errno.h>
 #include <unordered_map>
 #include "include/split.H"
-#include "include/bitap.H"
 
 using namespace CP;
 using namespace std;
