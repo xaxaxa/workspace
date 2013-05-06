@@ -21,6 +21,7 @@
 #include <cppsp/common.H>
 #include "server.C"
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
+#define CPPSP_FORK
 
 using namespace std;
 using namespace CP;
@@ -34,7 +35,10 @@ struct workerThread
 {
 	cppspServer::Server srv;
 	CP::Socket listenSock;
-	pthread_t thread;
+	union {
+		pid_t pid;
+		pthread_t thread;
+	};
 	int threadid;
 	workerThread(int sock,int d,int t,int p): srv(rootDir.c_str()),
 		listenSock(sock,d,t,p) {}
@@ -116,25 +120,39 @@ int main(int argc, char** argv) {
 	}
 	string listen="0.0.0.0:80";
 	int threads=2;
+	bool f0rk=false;
 	vector<string> cxxopts;
-	parseArgs(argc, argv,
-			[&](char* name, const std::function<char*()>& getvalue)
-			{
-				if(strcmp(name,"r")==0) {
-					rootDir=getvalue();
-				} else if(strcmp(name,"c")==0) {
-					cxxopts.push_back(getvalue());
-				} else if(strcmp(name,"l")==0) {
-					listen=getvalue();
-				} else if(strcmp(name,"t")==0) {
-					threads=atoi(getvalue());
-				} else if(strcmp(name,"h")==0) {
-					globalHandler=getvalue();
-				} else {
-					printf("usage: %s [-l host:port] [-c compiler options]... [-r root] [-t threads] [-h handler]\n",argv[0]);
-					exit(1);
-				}
-			});
+	try {
+		parseArgs(argc, argv,
+				[&](char* name, const std::function<char*()>& getvalue)
+				{
+					if(strcmp(name,"r")==0) {
+						rootDir=getvalue();
+					} else if(strcmp(name,"c")==0) {
+						cxxopts.push_back(getvalue());
+					} else if(strcmp(name,"l")==0) {
+						listen=getvalue();
+					} else if(strcmp(name,"t")==0) {
+						threads=atoi(getvalue());
+					} else if(strcmp(name,"h")==0) {
+						globalHandler=getvalue();
+					} else if(strcmp(name,"f")==0) {
+						f0rk=true;
+					} else {
+						printf("usage: %s [options]...\noptions:\n"
+						"\t-l <host:port>: listen on specified host:port\n"
+						"\t-c <option>: specify a compiler option to be passed to g++\n"
+						"\t-r <root>: set root directory\n"
+						"\t-t <threads>: # of worker processes/threads to start up\n"
+						"\t-h </relative/path/to/handler.cppsp>: specify the handler to direct all requests to\n"
+						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n",argv[0]);
+						exit(1);
+					}
+				});
+	} catch(exception& ex) {
+		printf("error: %s\nspecify -? for help\n",ex.what());
+		return 1;
+	}
 	printf("specify -? for help\n");
 	auto i=listen.find(':');
 	if(i==string::npos) throw runtime_error("expected \":\" in listen");
@@ -157,9 +175,44 @@ int main(int argc, char** argv) {
 			thread1(&tmp);
 			return 0;
 		}
-		if (pthread_create(&tmp.thread, NULL, thread1, &tmp) != 0) {
-			throw runtime_error(strerror(errno));
+		if(f0rk) {
+			pid_t pid=fork();
+			if(pid==0) {
+				tmp.pid=getpid();
+				thread1(&tmp);
+				return 0;
+			} else if(pid>0) {
+				tmp.pid=pid;
+			} else {
+				perror("fork");
+				return 1;
+			}
+		} else {
+			if (pthread_create(&tmp.thread, NULL, thread1, &tmp) != 0) {
+				throw runtime_error(strerror(errno));
+			}
 		}
+	}
+	if(f0rk) {
+		static workerThread* _threads;
+		static int _threadcount;
+		struct sig_handler
+		{
+			static void a(int sig) {
+				for(int i=0;i<_threadcount;i++) {
+					kill(_threads[i].pid, 9);
+				}
+				exit(0);
+			}
+		};
+		_threads=th;
+		_threadcount=threads;
+		struct sigaction sa;
+		sa.sa_handler = &sig_handler::a;
+		sigemptyset(&sa.sa_mask);
+		sigaction(SIGINT, &sa, NULL);
+		sigaction(SIGTERM, &sa, NULL);
+		sigaction(SIGSEGV, &sa, NULL);
 	}
 	while(1)sleep(3600);
 }
@@ -167,7 +220,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 	int i = 1;
 	function<char*()> func = [&]()->char*
 	{
-		if(i+1>=argc)return NULL;
+		if(i+1>=argc)throw logic_error(string(argv[i])+" requires an argument");
 		return argv[(++i)];
 	};
 	for (; i < argc; i++) {
