@@ -308,18 +308,18 @@ namespace cppsp
 		if (p == NULL) throw runtime_error(dlerror());
 		return p;
 	}
-	CP::File* compilePage(string wd, string path, string output, const vector<string>& cxxopts,
-			pid_t& pid, string& compilecmd) {
-		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", output, path + ".C" };
+	CP::File* compilePage(string wd, string path, string cPath, string txtPath, string output,
+			const vector<string>& cxxopts, pid_t& pid, string& compilecmd) {
+		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", output, cPath };
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
 		{
 			File inp(open(path.c_str(), O_RDONLY));
 			MemoryStream ms;
 			inp.readToEnd(ms);
 			ms.flush();
-			unlink((path + ".C").c_str());
-			File out_c(open((path + ".C").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
-			File out_s(open((path + ".txt").c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
+			//unlink((path + ".C").c_str());
+			File out_c(open(cPath.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
+			File out_s(open(txtPath.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
 			cppsp::doParse(NULL, (const char*) ms.data(), ms.length(), out_c, out_s, c_opts);
 		}
 
@@ -396,6 +396,8 @@ namespace cppsp
 		};
 		vector<_loadCB> loadCB;
 		string path;
+		string cPath;
+		string txtPath;
 		string dllPath;
 		int stringTableFD;
 		pid_t compilerPID;
@@ -414,7 +416,6 @@ namespace cppsp
 					goto aaa;
 				}
 				try {
-					checkError(rename(dllPath.c_str(),(path+".so").c_str()));
 					if(loaded)doUnload();
 					doLoad();
 					for (int i = 0; i < (int) loadCB.size(); i++) loadCB[i](this, nullptr);
@@ -428,6 +429,9 @@ namespace cppsp
 				}
 				aaa:
 				loadCB.clear();
+				unlink(cPath.c_str());
+				unlink(txtPath.c_str());
+				unlink(dllPath.c_str());
 				compile_fd=nullptr;
 				//if (compileCB != nullptr) compileCB(*this);
 				return;
@@ -448,8 +452,10 @@ namespace cppsp
 			string tmp;
 			char sss[32];
 			snprintf(sss,32,"%i",rand());
-			dllPath=path+".so."+string(sss);
-			CP::File* f = (CP::File*) checkError(compilePage(wd,path,dllPath,cxxopts,compilerPID,tmp));
+			txtPath=path+"."+string(sss)+".txt";
+			dllPath=path+"."+string(sss)+".dll";
+			cPath=path+"."+string(sss)+".C";
+			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cPath,txtPath,dllPath,cxxopts,compilerPID,tmp));
 			tmp+=" ";
 			ms.write(tmp.data(),tmp.length());
 			p.add(*f);
@@ -463,10 +469,10 @@ namespace cppsp
 			struct stat st;
 			checkError(stat(path.c_str(), &st));
 			stringTableLen = st.st_size;
-			stringTableFD = checkError(open((path + ".txt").c_str(), O_RDONLY));
+			stringTableFD = checkError(open(txtPath.c_str(), O_RDONLY));
 			stringTable = (const uint8_t*) checkError(
 					mmap(NULL, stringTableLen, PROT_READ, MAP_SHARED, stringTableFD, 0));
-			dlHandle = dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY);
+			dlHandle = dlopen(dllPath.c_str(), RTLD_LOCAL | RTLD_LAZY);
 			if(dlHandle==NULL) throw runtime_error(dlerror());
 			getObjectSize = (getObjectSize_t) checkDLError(dlsym(dlHandle, "getObjectSize"));
 			createObject = (createObject_t) checkDLError(dlsym(dlHandle, "createObject"));
@@ -483,8 +489,8 @@ namespace cppsp
 			if (dlHandle != NULL) {
 				ScopeLock sl(dlMutex);
 				checkError(dlclose(dlHandle));
-				void* tmp=dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
-				if(tmp!=NULL) throw runtime_error("unable to unload library");
+				//void* tmp=dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
+				//if(tmp!=NULL) throw runtime_error("unable to unload library");
 			}
 			dlHandle = NULL;
 			stringTable = NULL;
@@ -509,6 +515,7 @@ namespace cppsp
 		}
 		//returns: 0: no-op; 1: should reload; 2: should recompile
 		int shouldCompile() {
+			if(!loaded) return 2;
 			struct stat st;
 			{
 				TO_C_STR(path.data(), path.length(), s1);
@@ -516,25 +523,26 @@ namespace cppsp
 				if(S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException("requested path is a directory or socket");
 			}
 			timespec modif_cppsp = st.st_mtim;
-			{
-				CONCAT_TO(path.data(), path.length(), s1, ".txt");
-				if (stat(s1, &st) < 0) {
-					if (errno == ENOENT) return 2;
-					else checkError(-1);
-				}
-			}
-			timespec modif_txt = st.st_mtim;
-			{
-				CONCAT_TO(path.data(), path.length(), s1, ".so");
-				if (stat(s1, &st) < 0) {
-					if (errno == ENOENT) return 2;
-					else checkError(-1);
-				}
-			}
-			timespec modif_so = st.st_mtim;
+			/*{
+			 CONCAT_TO(path.data(), path.length(), s1, ".txt");
+			 if (stat(s1, &st) < 0) {
+			 if (errno == ENOENT) return 2;
+			 else checkError(-1);
+			 }
+			 }
+			 timespec modif_txt = st.st_mtim;
+			 {
+			 CONCAT_TO(path.data(), path.length(), s1, ".so");
+			 if (stat(s1, &st) < 0) {
+			 if (errno == ENOENT) return 2;
+			 else checkError(-1);
+			 }
+			 }
+			 timespec modif_so = st.st_mtim;*/
 			int i=0;
-			if(tsCompare(lastLoad, modif_txt)< 0 || tsCompare(lastLoad, modif_so) <0) i=1;
-			if(tsCompare(modif_cppsp, modif_txt)> 0 || tsCompare(modif_cppsp, modif_so) >0) i=2;
+			if(tsCompare(lastLoad, modif_cppsp)<0) i=2;
+			//if(tsCompare(lastLoad, modif_txt)< 0 || tsCompare(lastLoad, modif_so) <0) i=1;
+			//if(tsCompare(modif_cppsp, modif_txt)> 0 || tsCompare(modif_cppsp, modif_so) >0) i=2;
 			//printf("shouldCompile(\"%s\") = %i\n",path.c_str(),i);
 			return i;
 		}
