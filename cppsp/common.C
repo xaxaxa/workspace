@@ -407,7 +407,7 @@ namespace cppsp
 			if (r <= 0) {
 				compiling = false;
 				int status=-1;
-				waitpid(compilerPID,&status,WNOHANG);
+				waitpid(compilerPID,&status,0);
 				if(status!=0) {
 					CompileException exc;
 					exc.compilerOutput=string((const char*)ms.data(),ms.length());
