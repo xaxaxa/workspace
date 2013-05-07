@@ -308,10 +308,9 @@ namespace cppsp
 		if (p == NULL) throw runtime_error(dlerror());
 		return p;
 	}
-	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid,
-			string& compilecmd) {
-		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", path + ".so", path
-				+ ".C" };
+	CP::File* compilePage(string wd, string path, string output, const vector<string>& cxxopts,
+			pid_t& pid, string& compilecmd) {
+		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", output, path + ".C" };
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
 		{
 			File inp(open(path.c_str(), O_RDONLY));
@@ -332,7 +331,7 @@ namespace cppsp
 
 		int p[2];
 		checkError(pipe(p));
-		unlink((path + ".so").c_str());
+		//unlink((path + ".so").c_str());
 		pid_t tmp = fork();
 		if (tmp > 0) {
 			close(p[1]);
@@ -397,6 +396,7 @@ namespace cppsp
 		};
 		vector<_loadCB> loadCB;
 		string path;
+		string dllPath;
 		int stringTableFD;
 		pid_t compilerPID;
 		bool loaded;
@@ -414,6 +414,7 @@ namespace cppsp
 					goto aaa;
 				}
 				try {
+					checkError(rename(dllPath.c_str(),(path+".so").c_str()));
 					if(loaded)doUnload();
 					doLoad();
 					for (int i = 0; i < (int) loadCB.size(); i++) loadCB[i](this, nullptr);
@@ -445,7 +446,10 @@ namespace cppsp
 			compiling = true;
 			ms.clear();
 			string tmp;
-			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cxxopts,compilerPID,tmp));
+			char sss[32];
+			snprintf(sss,32,"%i",rand());
+			dllPath=path+".so."+string(sss);
+			CP::File* f = (CP::File*) checkError(compilePage(wd,path,dllPath,cxxopts,compilerPID,tmp));
 			tmp+=" ";
 			ms.write(tmp.data(),tmp.length());
 			p.add(*f);
@@ -554,6 +558,10 @@ namespace cppsp
 		unordered_map<String, loadedPage*> cache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
+		int threadID;
+		cppspManager() :
+				threadID(0) {
+		}
 		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
 				Delegate<void(Page*, exception* ex)> cb);
 		bool shouldCheck(loadedPage& p) {
@@ -633,6 +641,9 @@ namespace cppsp
 	}
 	cppspManager* cppspManager_new() {
 		return new cppspManager();
+	}
+	void setThreadID(cppspManager* mgr, int tid) {
+		mgr->threadID = tid;
 	}
 	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,
 			Delegate<void(Page*, exception* ex)> cb) {
