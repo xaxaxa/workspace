@@ -52,6 +52,35 @@ namespace cppsp
 		if (ptr < end) sw.write(ptr, end - ptr);
 		E: ;
 	}
+	String urlDecode(const char* in, int inLen, StringPool& sp) {
+		char* ch = sp.beginAdd(inLen); //output size will never exceed input size
+		char* c = ch;
+		const char* end = in + inLen;
+		const char* ptr = in;
+		while (true) {
+			if (ptr >= end) goto E;
+			const char* next = (const char*) memchr(ptr, '%', end - ptr);
+			if (next == NULL) break;
+			memcpy(c, ptr, next - ptr);
+			c += (next - ptr);
+			if (next + 2 >= end) {
+				memcpy(c, next, end - next);
+				c += (end - next);
+				goto E;
+			}
+			*c = hexCharToInt(next[1]) << 4 | hexCharToInt(next[2]);
+			c++;
+			ptr = next + 3;
+		}
+		if (ptr < end) {
+			memcpy(c, ptr, end - ptr);
+			c += (end - ptr);
+		}
+		sp.endAdd(c - ch);
+		return {ch,c-ch};
+		E: ;
+		return {(char*)nullptr,0};
+	}
 	void urlEncode(const char* in, int inLen, CP::StreamWriter& sw) {
 		int last_i = 0;
 		const char* c = in;

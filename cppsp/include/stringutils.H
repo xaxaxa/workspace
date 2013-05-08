@@ -49,6 +49,7 @@ namespace cppsp
 	};
 
 	void urlDecode(const char* in, int inLen, CP::StreamWriter& sw);
+	CP::String urlDecode(const char* in, int inLen, CP::StringPool& sp);
 	void urlEncode(const char* in, int inLen, CP::StreamWriter& sw);
 	std::string urlDecode(const char* in, int inLen);
 	std::string urlEncode(const char* in, int inLen);
