@@ -446,8 +446,6 @@ namespace cppsp
 					CP::Callback(&loadedPage::readCB, this));
 		}
 		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
-			//printf("doCompile(\"%s\");\n",path.c_str());
-			compiling = true;
 			ms.clear();
 			string tmp;
 			char sss[32];
@@ -462,6 +460,7 @@ namespace cppsp
 			compile_fd = f;
 			f->release();
 			beginRead();
+			compiling = true;
 		}
 		void doLoad() {
 			ScopeLock sl(dlMutex);
