@@ -664,6 +664,8 @@ namespace cppsp
 	}
 	void handleError(exception* ex, cppsp::Response& resp, String path) {
 		resp.clear();
+		resp.statusCode = 500;
+		resp.statusName = "Internal server error";
 		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
 		//resp.writeHeaders();
 		string title = "Server error in " + path.toSTDString();
