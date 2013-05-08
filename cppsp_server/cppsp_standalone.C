@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
 		parseArgs(argc, argv,
 				[&](char* name, const std::function<char*()>& getvalue)
 				{
+					if(name==NULL) goto help;
 					if(strcmp(name,"r")==0) {
 						rootDir=getvalue();
 					} else if(strcmp(name,"c")==0) {
@@ -138,6 +139,7 @@ int main(int argc, char** argv) {
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
 					} else {
+					help:
 						printf("usage: %s [options]...\noptions:\n"
 						"\t-l <host:port>: listen on specified host:port\n"
 						"\t-c <option>: specify a compiler option to be passed to g++\n"
