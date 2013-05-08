@@ -532,13 +532,13 @@ namespace cppsp
 		}
 		//returns: 0: no-op; 1: should reload; 2: should recompile
 		int shouldCompile() {
-			if(!loaded) return 2;
 			struct stat st;
 			{
 				TO_C_STR(path.data(), path.length(), s1);
 				checkError(stat(s1, &st));
 				if(S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException("requested path is a directory or socket");
 			}
+			if(!loaded) return 2;
 			timespec modif_cppsp = st.st_mtim;
 			/*{
 			 CONCAT_TO(path.data(), path.length(), s1, ".txt");
@@ -625,21 +625,12 @@ namespace cppsp
 			cb(p, nullptr);
 			return;
 		}
-		if (likely(lp1->loaded)) {
-			try {
-				c = lp.shouldCompile();
-				if (likely(c==0)) goto xxx;
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-				return;
-			}
-		} else {
-			try {
-				c = lp.shouldCompile();
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-				return;
-			}
+		try {
+			c = lp.shouldCompile();
+			if (likely(lp1->loaded && c==0)) goto xxx;
+		} catch (exception& ex) {
+			cb(nullptr, &ex);
+			return;
 		}
 		if (c >= 2) {
 			lp.loadCB.push_back( { a, cb });
