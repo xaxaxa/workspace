@@ -78,7 +78,7 @@ struct Delegate<R(P...)>:public DelegateBase<R(P...)>
 		this->data=th;
 	}
 	Delegate(R (*func)(void*, P...)) {
-		this->func=func;
+		this->func=(void*)func;
 		this->data=NULL;
 	}
 	template<class X>Delegate(X* th) {
