@@ -39,7 +39,7 @@ namespace CP
 				d(data), len(length) {
 		}
 		String(char* data) :
-				d(data), len(strlen(data)) {
+				d(data), len(data == nullptr ? 0 : strlen(data)) {
 		}
 		String(const char* data, int length) :
 				d(const_cast<char*>(data)), len(length) {
