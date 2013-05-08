@@ -21,7 +21,6 @@
 #include <cppsp/common.H>
 #include "server.C"
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
-#define CPPSP_FORK
 
 using namespace std;
 using namespace CP;
