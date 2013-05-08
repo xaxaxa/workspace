@@ -187,6 +187,7 @@ namespace cppsp
 		string inherits = "Page";
 		string classname = (name == NULL ? "__cppsp_unnamed_page" : name);
 		int st_pos = 0;
+		int st_len = 0;
 		//int out_initlen=out.length();
 		Stream& ms1(out); //declarations outside of the class
 		MemoryStream ms2; //declarations outside of the render() function
@@ -198,26 +199,29 @@ namespace cppsp
 		sw1.write("#include <cppsp/common.H>\n#include <cppsp/stringutils.H>\n");
 		sw1.write("#include <rgc.H>\n");
 		sw1.write("using namespace cppsp;\nusing namespace CP;\n");
-
+		int line = 1;
 		while (true) {
 			if (s >= end) break;
 			const char* old_s = s;
 			s = (const char*) memmem(s, end - s, "<%", 2);
-			int st_pos0 = st_pos;
+
 			if (s > old_s) {
 				st_out.write(old_s, s - old_s);
-				st_pos += (s - old_s);
-				sw3.writeF("__writeStringTable(%i,%i);\n", st_pos0, st_pos - st_pos0);
+				st_len += (s - old_s);
 			} else if (s == NULL) {
 				st_out.write(old_s, end - old_s);
-				st_pos += (end - old_s);
-				sw3.writeF("__writeStringTable(%i,%i);\n", st_pos0, st_pos - st_pos0);
+				st_len += (end - old_s);
+
+				sw3.writeF("__writeStringTable(%i,%i);\n", st_pos, st_len - st_pos);
 				break;
 			}
+			for (const char* ch = old_s; ch < s; ch++)
+				if (*ch == '\n') line++;
 			s += 2;
 			if (s >= end) throw ParserException("reached EOF when looking past \"<%\"");
 			const char* s1 = (const char*) memmem(s, end - s, "%>", 2);
 			if (s1 == NULL) throw ParserException("reached EOF when looking for matching \"%>\"");
+
 			switch (*s) {
 				case '!':
 				{ //compiler option
@@ -255,16 +259,22 @@ namespace cppsp
 				}
 				case '#':
 				{ //declarations outside of the class
+					sw1.writeF("#line %i\n", line);
 					sw1.write(s + 1, s1 - s - 1);
 					break;
 				}
 				case '$':
 				{ //declarations outside of the render() function
+					sw2.writeF("#line %i\n", line);
 					sw2.write(s + 1, s1 - s - 1);
 					break;
 				}
 				case '=':
 				{
+					sw3.writeF("__writeStringTable(%i,%i);\n", st_pos, st_len - st_pos);
+					st_pos = st_len;
+
+					sw3.writeF("#line %i\n", line);
 					sw3.write("output.write(");
 					sw3.write(s + 1, s1 - s - 1);
 					sw3.write(");\n");
@@ -272,9 +282,16 @@ namespace cppsp
 				}
 				default:
 				{
+					sw3.writeF("__writeStringTable(%i,%i);\n", st_pos, st_len - st_pos);
+					st_pos = st_len;
+
+					sw3.writeF("#line %i\n", line);
 					sw3.write(s, s1 - s);
+					break;
 				}
 			}
+			for (const char* ch = s; ch < s1; ch++)
+				if (*ch == '\n') line++;
 			s = s1 + 2;
 		}
 		sw2.flush();
