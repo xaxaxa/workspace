@@ -430,8 +430,10 @@ namespace cppsp
 					exc.compilerOutput=string((const char*)ms.data(),ms.length());
 					for (int i = 0; i < (int) loadCB.size(); i++)
 					loadCB[i](nullptr, &exc);
+					rename(cPath.c_str(),(path+".C").c_str());
 					goto aaa;
 				}
+				unlink(cPath.c_str());
 				try {
 					if(loaded)doUnload();
 					doLoad();
@@ -446,7 +448,6 @@ namespace cppsp
 				}
 				aaa:
 				loadCB.clear();
-				unlink(cPath.c_str());
 				unlink(txtPath.c_str());
 				unlink(dllPath.c_str());
 				compile_fd=nullptr;
@@ -471,7 +472,7 @@ namespace cppsp
 			dllPath=path+"."+string(sss)+".dll";
 			cPath=path+"."+string(sss)+".C";
 			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cPath,txtPath,dllPath,cxxopts,compilerPID,tmp));
-			tmp+=" ";
+			tmp+="\n";
 			ms.write(tmp.data(),tmp.length());
 			p.add(*f);
 			compile_fd = f;
