@@ -49,21 +49,12 @@ namespace cppsp
 			struct
 			{
 				CPollRequest* This;
-				MemoryStream ms;
 				void operator()(const char* name, int nameLen, const char* value, int valueLen) {
 					String n, v;
-					{
-						CP::StreamWriter sw(ms);
-						cppsp::urlDecode(name, nameLen, sw);
-						sw.flush();
-						n= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
-						ms.clear();
-						if (value != NULL) {
-							cppsp::urlDecode(value, valueLen, sw);
-						}
-					}
-					v= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
-					ms.clear();
+					n=cppsp::urlDecode(name, nameLen, *This->sp);
+					if (value != NULL) {
+						v=cppsp::urlDecode(value, valueLen, *This->sp);
+					} else v= {(char*)nullptr,0};
 					This->queryString[n] = v;
 				}
 			}cb {This};
