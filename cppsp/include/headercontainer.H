@@ -23,6 +23,7 @@
 #define HEADERCONTAINER_H_
 #include <ctype.h>
 #include <sys/types.h>
+#include <algorithm>
 namespace cppsp
 {
 	typedef CP::String String;
@@ -51,104 +52,89 @@ namespace cppsp
 		String name;
 		String value;
 	};
+	//sorted
 	struct headerContainer
 	{
-		//pointer-to-pointer so that the real buffer can be relocated
-		//(for example during MemoryStream reallocations due to resize)
-		char** buffer;
-		CP::StringPool* sp;
+		RGC::Allocator* a;
 		struct item
 		{
-			int nameStart;
+			const char* name;
+			const char* value;
 			int nameLength;
-			int valueStart;
 			int valueLength;
+			String n() {
+				return {name,nameLength};
+			}
+			String v() {
+				return {value,valueLength};
+			}
 		};
-		static const int bucketSize = 8;
-		struct bucket
-		{
-			bucket* next;
-			item items[bucketSize];
-			int length;
-		};
-
+		static bool compareItem(const item& i1, const item& i2) {
+			return ci_compare( { i1.name, i1.nameLength }, { i2.name, i2.nameLength }) < 0;
+		}
 		struct iterator
 		{
-			headerContainer* cont;
-			bucket* b;
-			int i;
+			headerContainer* c;
+			item* i;
 			void operator+=(int i) {
 				this->i += i;
-				while (this->i > bucketSize && b != NULL) {
-					b = b->next;
-					this->i -= bucketSize;
-				}
-				if (b != NULL && this->i >= b->length) b = NULL;
+				if (this->i >= (c->items + c->length)) this->i = NULL;
 			}
 			void operator++(int) {
 				operator+=(1);
 			}
 			bool operator==(const iterator& other) {
-				if (b == NULL && other.b == NULL) return true;
-				return b == other.b && i == other.i;
+				return i == other.i;
 			}
 			bool operator!=(const iterator& other) {
 				return !operator==(other);
 			}
 			Header operator*() {
-				item& it = b->items[i];
-				return { {(*cont->buffer)+it.nameStart,it.nameLength},
-					{	(*cont->buffer)+it.valueStart,it.valueLength}};
+				item& it = *i;
+				return { {it.name,it.nameLength}, {it.value,it.valueLength}};
 			}
 			item& get() {
-				return b->items[i];
+				return *i;
 			}
 		};
-		bucket* _first = NULL;
-		bucket* _last = NULL;
-		headerContainer(char** buffer, CP::StringPool* sp) :
-				buffer(buffer), sp(sp) {
+		item* items;
+		int length;
+		headerContainer(RGC::Allocator* a) :
+				a(a), items(NULL), length(0) {
 		}
-		void add(item it) {
-			if (_last == NULL || _last->length >= bucketSize) addBucket();
-			_last->items[_last->length] = it;
-			_last->length++;
+		item* beginReplace(int length) {
+			items = (item*)a->alloc(length * sizeof(item));
+			this->length = length;
+			return items;
 		}
-		void addBucket() {
-			bucket* b = (bucket*) sp->add(sizeof(bucket));
-			b->next = NULL;
-			b->length = 0;
-			if (_last != NULL) _last->next = b;
-			_last = b;
-			if (_first == NULL) _first = b;
+		void endReplace() {
+			std::sort(items, items + length, compareItem);
 		}
 		String operator[](String name) {
-			char* tmp = (char*) *buffer;
-			for (bucket* b = _first; b != NULL; b = b->next) {
-				for (int i = 0; i < b->length; i++)
-					if (ci_compare(name, { tmp + b->items[i].nameStart, b->items[i].nameLength }) == 0) return {tmp+b->items[i].valueStart,b->items[i].valueLength};
-			}
+			item it { name.data(), NULL, name.length(), 0 };
+			item* tmp = std::lower_bound(items, items + length, it, compareItem);
+			if (tmp != NULL && ci_compare(tmp->n(), name) == 0) return tmp->v();
 			return {(char*)nullptr,0};
 		}
 		iterator find(String name) {
-			char* tmp = (char*) *buffer;
-			for (bucket* b = _first; b != NULL; b = b->next) {
-				for (int i = 0; i < b->length; i++)
-					if (ci_compare(name, { tmp + b->items[i].nameStart, b->items[i].nameLength }) == 0) return {this,b,i};
-			}
+			item it { name.data(), NULL, name.length(), 0 };
+			item* tmp = std::lower_bound(items, items + length, it, compareItem);
+			if (tmp != NULL && ci_compare(tmp->n(), name) == 0) return {this,tmp};
 			return end();
 		}
 		iterator begin() {
-			return {this,_first,0};
+			return {this,items};
 		}
 		iterator end() {
-			return {this,NULL,0};
+			return {this,NULL};
 		}
 		void clear() {
-			_first = _last = NULL;
+			items = NULL;
+			length = 0;
 		}
+
 	};
-	//different version that uses absolute pointers instead of relative positions
+	//not sorted; for response headers
 	struct headerContainer2
 	{
 		CP::StringPool* sp;
