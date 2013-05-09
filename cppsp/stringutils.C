@@ -170,27 +170,55 @@ namespace cppsp
 		}
 	}
 	void htmlEscape(const char* in, int inLen, CP::StreamWriter& sw) {
-		int last_i = 0;
-		const char* tmp;
+		int sz = 0;
 		for (int i = 0; i < inLen; i++) {
 			switch (in[i]) {
 				case '&':
-					tmp = "&amp;";
+					sz += 5;
 					break;
 				case '<':
-					tmp = "&lt;";
+					sz += 4;
 					break;
 				case '>':
-					tmp = "&gt;";
+					sz += 4;
 					break;
 				default:
-					continue;
+					sz++;
+					break;
 			}
-			if (i > last_i) sw.write(in + last_i, i - last_i);
-			last_i = i + 1;
-			sw.write(tmp);
 		}
-		if (inLen > last_i) sw.write(in + last_i, inLen - last_i);
+
+		char* data = sw.beginWrite(sz);
+		char* c = data;
+		for (int i = 0; i < inLen; i++) {
+			switch (in[i]) {
+				case '&':
+					c[0] = '&';
+					c[1] = 'a';
+					c[2] = 'm';
+					c[3] = 'p';
+					c[4] = ';';
+					c += 5;
+					break;
+				case '<':
+					c[0] = '&';
+					c[1] = 'l';
+					c[2] = 't';
+					c[3] = ';';
+					c += 4;
+					break;
+				case '>':
+					c[0] = '&';
+					c[1] = 'g';
+					c[2] = 't';
+					c[3] = ';';
+					c += 4;
+					break;
+				default:
+					*(c++) = in[i];
+			}
+		}
+		sw.endWrite(sz);
 	}
 	void htmlAttributeEscape(const char* in, int inLen, CP::StreamWriter& sw) {
 		int last_i = 0;
