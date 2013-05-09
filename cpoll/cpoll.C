@@ -437,6 +437,7 @@ namespace CP
 	}
 	StreamWriter::~StreamWriter() {
 		flush();
+		if(buffer==&sb) sb.~StreamBuffer();
 	}
 
 	StreamBuffer::StreamBuffer() {
