@@ -154,7 +154,7 @@ namespace cppsp
 	}
 
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
-			inputStream(&inp), sp(sp), alloc(sp), headers(NULL, sp),
+			inputStream(&inp), sp(sp), alloc(sp), headers(sp),
 					queryString(less<String>(), alloc), form(less<String>(), alloc) {
 	}
 	void Request::parsePost(String buf) {
