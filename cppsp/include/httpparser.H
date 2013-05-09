@@ -24,6 +24,8 @@
 
 #include <cpoll/cpoll.H>
 #include "headercontainer.H"
+
+#define CPPSP_MAXHEADERS 32
 namespace cppsp
 {
 	using namespace CP;
@@ -52,10 +54,11 @@ namespace cppsp
 		int rpos;
 		int _ctLen;
 		int reqLine_i;
+		int headerpos[CPPSP_MAXHEADERS];
+		int headercount = 0;
 		bool firstLine = true;
 		HTTPParser(headerContainer* hc) :
 				hc(hc), ms(8192), pos(0), rpos(0), _ctLen(0) {
-			hc->buffer = (char**) &ms.buffer;
 			state= {&HTTPParser::_process_readingHeaders,this};
 		}
 		String beginPutData(int len) {
@@ -93,32 +96,43 @@ namespace cppsp
 				firstLine = false;
 			} else {
 				if (lineBufLen == 0) {
+					auto* items=hc->beginReplace(headercount);
+					for(int i=0;i<headercount;i++) {
+						int pos1=headerpos[i];
+						int end=i+1<headercount?headerpos[i+1]:this->pos-2;
+						lineBuf=buf+pos1;
+						lineBufLen=end-pos1;
+						tmp = memchr(lineBuf, ':', lineBufLen);
+						if (tmp == NULL) {
+							*(items++)= {(char*)lineBuf,(char*)NULL,lineBufLen,0};
+						} else {
+							headerContainer::item it;
+							uint8_t* tmp1 = (uint8_t*) tmp - 1;
+							while (tmp1 >= lineBuf && *tmp1 == ' ')
+							tmp1--;
+							it.name = (char*)lineBuf;
+							it.nameLength = (int) (tmp1 - lineBuf + 1);
+							tmp1 = (uint8_t*) tmp + 1;
+							while (tmp1 < (buf + newpos) && *tmp1 == ' ')
+							tmp1++;
+							it.value = (char*)tmp1;
+							it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
+
+							if (_ctLen == 0
+							&& ci_equals( {(char*) lineBuf, it.nameLength}, "content-length")) {
+								_ctLen = atoi( {(char*) tmp1, it.valueLength});
+							}
+							*(items++)=it;
+						}
+					}
+					hc->endReplace();
 					rpos = pos = newpos + 2;
 					state = {&HTTPParser::_process_readingContent,this};
 					return _process_readingContent();
 				}
-				tmp = memchr(buf + pos, ':', newpos - pos);
-				if (tmp == NULL) {
-					hc->add( {pos, newpos - pos, -1, 0});
-				} else {
-					headerContainer::item it;
-					uint8_t* tmp1 = (uint8_t*) tmp - 1;
-					while (tmp1 >= lineBuf && *tmp1 == ' ')
-					tmp1--;
-					it.nameStart = pos;
-					it.nameLength = (int) (tmp1 - lineBuf + 1);
-					tmp1 = (uint8_t*) tmp + 1;
-					while (tmp1 < (buf + newpos) && *tmp1 == ' ')
-					tmp1++;
-					it.valueStart = (int) (tmp1 - buf);
-					it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
-
-					if (_ctLen == 0
-							&& ci_equals( {(char*) buf + pos, it.nameLength}, "content-length")) {
-						_ctLen = atoi( {(char*) tmp1, it.valueLength});
-					}
-					hc->add(it);
-				}
+				if(headercount>=CPPSP_MAXHEADERS) goto skipheader;
+				headerpos[headercount++]=pos;
+				skipheader:;
 			}
 			rpos = pos = newpos + 2;
 			goto aaaaa;
@@ -132,6 +146,7 @@ namespace cppsp
 			_ctLen = 0;
 			state = {&HTTPParser::_process_readingHeaders,this};
 			firstLine = true;
+			headercount=0;
 			reqLine.d = (char*) buf + reqLine_i;
 			return true;
 		}
