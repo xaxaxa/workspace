@@ -49,8 +49,14 @@ namespace cppsp
 	};
 
 	void urlDecode(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline void urlDecode(CP::String in, CP::StreamWriter& sw) {
+		urlDecode(in.data(), in.length(), sw);
+	}
 	CP::String urlDecode(const char* in, int inLen, CP::StringPool& sp);
 	void urlEncode(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline void urlEncode(CP::String in, CP::StreamWriter& sw) {
+		urlEncode(in.data(), in.length(), sw);
+	}
 	std::string urlDecode(const char* in, int inLen);
 	std::string urlEncode(const char* in, int inLen);
 	static inline std::string urlDecode(const char* in) {
@@ -70,6 +76,9 @@ namespace cppsp
 	void parseQueryString(const char* in, int inLen, queryStringCallback cb, bool decode = true);
 
 	void htmlEscape(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline void htmlEscape(CP::String in, CP::StreamWriter& sw) {
+		htmlEscape(in.data(), in.length(), sw);
+	}
 	std::string htmlEscape(const char* in, int inLen);
 	static inline std::string htmlEscape(const char* in) {
 		return htmlEscape(in, strlen(in));
@@ -79,6 +88,9 @@ namespace cppsp
 	}
 
 	void htmlAttributeEscape(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline void htmlAttributeEscape(CP::String in, CP::StreamWriter& sw) {
+		htmlAttributeEscape(in.data(), in.length(), sw);
+	}
 	std::string htmlAttributeEscape(const char* in, int inLen);
 	static inline std::string htmlAttributeEscape(const char* in) {
 		return htmlAttributeEscape(in, strlen(in));
