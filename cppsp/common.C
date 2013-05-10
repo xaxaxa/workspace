@@ -408,7 +408,10 @@ namespace cppsp
 		struct _loadCB
 		{
 			RGC::Allocator* alloc;
-			Delegate<void(Page*, exception* ex)> cb;
+			//void* parameter is either the constructed page (if doCreate is true), or
+			//the dlopen()ed handle
+			Delegate<void(void*, exception* ex)> cb;
+			bool doCreate;
 			void operator()(loadedPage* This, exception* ex);
 		};
 		vector<_loadCB> loadCB;
@@ -484,7 +487,7 @@ namespace cppsp
 			ScopeLock sl(dlMutex);
 			//printf("doLoad(\"%s\");\n",path.c_str());
 			struct stat st;
-			checkError(stat(path.c_str(), &st));
+			checkError(stat(txtPath.c_str(), &st));
 			stringTableLen = st.st_size;
 			stringTableFD = checkError(open(txtPath.c_str(), O_RDONLY));
 			stringTable = (const uint8_t*) checkError(
@@ -564,11 +567,53 @@ namespace cppsp
 			return i;
 		}
 	};
+	struct staticPage
+	{
+		String data;
+		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
+		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
+		timespec lastUse; //CLOCK_MONOTONIC
+		string path;
+		bool loaded;
+		void doLoad() {
+			struct stat st;
+			checkError(stat(path.c_str(), &st));
+			data.len = st.st_size;
+			int fd = checkError(open(path.c_str(), O_RDONLY));
+			data.d = (char*) checkError(mmap(NULL, data.len, PROT_READ, MAP_SHARED, fd, 0));
+			close(fd);
+			loaded = true;
+			clock_gettime(CLOCK_REALTIME, &lastLoad);
+		}
+		void doUnload() {
+			loaded = false;
+			if (data.d != NULL) munmap((void*) data.d, data.len);
+			data = nullptr;
+		}
+		bool shouldReload() {
+			struct stat st;
+			{
+				TO_C_STR(path.data(), path.length(), s1);
+				checkError(stat(s1, &st));
+				if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException(
+						"requested path is a directory or socket");
+			}
+			if (!loaded) return true;
+			timespec modif_cppsp = st.st_mtim;
+			return (tsCompare(lastLoad, modif_cppsp) < 0);
+		}
+		staticPage() {
+			loaded = false;
+		}
+		~staticPage() {
+			doUnload();
+		}
+	};
 	inline void loadedPage::_loadCB::operator()(loadedPage* This, exception* ex) {
 		if (ex == NULL) {
-			Page* p;
+			void* p;
 			try {
-				p = This->doCreate(alloc);
+				p = doCreate ? This->doCreate(alloc) : This->dlHandle;
 			} catch (exception& x) {
 				cb(nullptr, &x);
 				return;
@@ -581,6 +626,8 @@ namespace cppsp
 	public:
 		StringPool sp;
 		unordered_map<String, loadedPage*> cache;
+
+		unordered_map<String, staticPage*> staticCache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
 		int threadID;
@@ -589,7 +636,35 @@ namespace cppsp
 		}
 		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
 				Delegate<void(Page*, exception* ex)> cb);
+		void loadModule(CP::Poll& p, String wd, String path, Delegate<void(void*, exception* ex)> cb);
+		String loadStaticPage(String path) {
+			staticPage* lp1;
+			auto it = staticCache.find(path);
+			if (it == staticCache.end()) {
+				lp1 = new staticPage();
+				lp1->path = path.toSTDString();
+				staticCache.insert( { sp.addString(path), lp1 });
+			} else lp1 = (*it).second;
+			staticPage& lp(*lp1);
+			if (likely(lp.loaded & !shouldCheck(lp))) {
+				return lp.data;
+			}
+			bool r;
+			if (lp.shouldReload()) {
+				lp.doUnload();
+			}
+			if (!lp.loaded) lp.doLoad();
+			return lp.data;
+		}
 		bool shouldCheck(loadedPage& p) {
+			timespec tmp1 = curTime;
+			tmp1.tv_sec -= 2;
+			if (tsCompare(p.lastCheck, tmp1) < 0) {
+				p.lastCheck = curTime;
+				return true;
+			} else return false;
+		}
+		bool shouldCheck(staticPage& p) {
 			timespec tmp1 = curTime;
 			tmp1.tv_sec -= 2;
 			if (tsCompare(p.lastCheck, tmp1) < 0) {
@@ -612,7 +687,7 @@ namespace cppsp
 
 		int c = 0;
 		if (unlikely(lp1->compiling)) {
-			lp.loadCB.push_back( { a, cb });
+			lp.loadCB.push_back( { a, Delegate<void(void*, exception* ex)>(cb), true });
 			return;
 		}
 		if (likely(lp1->loaded & !shouldCheck(*lp1))) {
@@ -633,7 +708,7 @@ namespace cppsp
 			return;
 		}
 		if (c >= 2) {
-			lp.loadCB.push_back( { a, cb });
+			lp.loadCB.push_back( { a, Delegate<void(void*, exception* ex)>(cb), true });
 			try {
 				lp.doCompile(p, wd.toSTDString(), cxxopts);
 			} catch (exception& ex) {
@@ -651,6 +726,56 @@ namespace cppsp
 		} catch (exception& ex) {
 			cb(nullptr, &ex);
 		}
+	}
+	void cppspManager::loadModule(Poll& p, String wd, String path,
+			Delegate<void(void*, exception* ex)> cb) {
+		loadedPage* lp1;
+		auto it = cache.find(path);
+		if (it == cache.end()) {
+			lp1 = new loadedPage();
+			lp1->path = path.toSTDString();
+			cache.insert( { sp.addString(path), lp1 });
+		} else lp1 = (*it).second;
+		loadedPage& lp(*lp1);
+
+		int c = 0;
+		if (unlikely(lp1->compiling)) {
+			lp.loadCB.push_back( { nullptr, cb, false });
+			return;
+		}
+		if (likely(lp1->loaded & !shouldCheck(*lp1))) {
+			xxx: cb(lp1->dlHandle, nullptr);
+			return;
+		}
+		try {
+			c = lp.shouldCompile();
+			if (likely(lp1->loaded && c==0)) goto xxx;
+		} catch (exception& ex) {
+			cb(nullptr, &ex);
+			return;
+		}
+		if (c >= 2) {
+			lp.loadCB.push_back( { nullptr, cb, false });
+			try {
+				lp.doCompile(p, wd.toSTDString(), cxxopts);
+			} catch (exception& ex) {
+				lp.loadCB.resize(lp.loadCB.size() - 1);
+				cb(nullptr, &ex);
+			}
+			return;
+		}
+		try {
+			if (c >= 1) {
+				lp.doUnload();
+			}
+			lp.doLoad();
+			goto xxx;
+		} catch (exception& ex) {
+			cb(nullptr, &ex);
+		}
+	}
+	String loadStaticPage(cppspManager* mgr, String path) {
+		return mgr->loadStaticPage(path);
 	}
 	vector<string>& CXXOpts(cppspManager* mgr) {
 		return mgr->cxxopts;
