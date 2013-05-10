@@ -85,9 +85,7 @@ namespace cppspServer
 	public:
 		cppspManager* mgr;
 		String root;
-		String globalHandler;
-		Server(String root):mgr(cppspManager_new()),root(root),
-			globalHandler((char*)nullptr,0) {
+		Server(String root):mgr(cppspManager_new()),root(root) {
 		}
 		~Server() {
 			cppspManager_delete(mgr);
@@ -118,6 +116,7 @@ namespace cppspServer
 		Server& thr;
 		CP::Poll& p;
 		Socket& s;
+		Page* page;
 		StringPool sp;
 		cppsp::CPollRequest req;
 		cppsp::Response resp;
@@ -125,14 +124,14 @@ namespace cppspServer
 		//MemoryStream ms;
 		uint8_t* buf;
 		String path;
+		iovec iov[2];
 		bool keepAlive;
 		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
 			p(poll),s(s), req(this->s,&sp),resp(this->s,&sp) {
 			//printf("handler()\n");
 			poll.add(this->s);
 			s.retain();
-			if(req.readRequest({thr.globalHandler.data()==nullptr?
-				&handler::readCB:&handler::readCB_hashandler, this})) readCB(true);
+			if(req.readRequest({&handler::readCB, this})) readCB(true);
 		}
 		void readCB(bool success) {
 			if(!success) {
@@ -143,30 +142,47 @@ namespace cppspServer
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
 			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
-			//printf("readCB()\n");{
+			req.path=thr.rewritePath==nullptr?req.path:thr.rewritePath(req);
+			
 			path.d=sp.beginAdd(req.path.length()+thr.root.length());
 			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
 				req.path.data(),req.path.length(),path.data());
 			sp.endAdd(path.len);
-			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
+			if(thr.isStatic(req)) handleStatic();
+			else cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}
-		void readCB_hashandler(bool success) {
-			if(!success) {
-				destruct();
-				return;
+		static inline int itoa(int i, char* b) {
+			static char const digit[] = "0123456789";
+			char* p = b;
+			p += int(log10f(i)) + 1;
+			*p = '\0';
+			int l = p - b;
+			do { //Move back, inserting digits as u go
+				*--p = digit[i % 10];
+				i = i / 10;
+			} while (i);
+			return l;
+		}
+		void handleStatic() {
+			try {
+				String data=cppsp::loadStaticPage(thr.mgr,path);
+				int bufferL = resp.buffer.length();
+				{
+					char* tmps = sp.beginAdd(16);
+					int l = itoa(data.length(), tmps);
+					sp.endAdd(l);
+					resp.headers.add("Content-Length", { tmps, l });
+					StreamWriter sw(resp.buffer);
+					resp.serializeHeaders(sw);
+				}
+				iov[0]= {resp.buffer.data()+bufferL, (size_t)(resp.buffer.length()-bufferL)};
+				iov[1]= {data.data(), (size_t)data.length()};
+				resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
+			} catch(exception& ex) {
+				cppsp::handleError(&ex,resp,path);
+				resp.flush( { &handler::flushCB, this });
 			}
-			auto it=req.headers.find("connection");
-			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
-			else keepAlive=true;
-			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
-			//printf("readCB()\n");
-			path.d=sp.beginAdd(thr.globalHandler.length()+thr.root.length());
-			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
-				thr.globalHandler.data(),thr.globalHandler.length(),path.data());
-			sp.endAdd(path.len);
-			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}
-		
 		void loadCB(Page* p, exception* ex) {
 			//printf("loadCB()\n");
 			if(ex!=NULL) {
@@ -175,6 +191,7 @@ namespace cppspServer
 				goto doFinish;
 			}
 			{
+				this->page=p;
 				p->sp=&sp;
 				//this->p=p;
 				//p->filePath=path;
@@ -198,9 +215,13 @@ namespace cppspServer
 			//release();
 			finalize();
 		}
-		void handleRequestCB(Page& p) {
+		void writevCB(int i) {
+			finalize();
+		}
+		void handleRequestCB() {
 			sp.clear();
-			p.destruct();
+			page->destruct();
+			page=nullptr;
 			//s->shutdown(SHUT_WR);
 			//release();
 			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});

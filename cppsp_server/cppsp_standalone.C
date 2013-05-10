@@ -58,7 +58,6 @@ public:
 		else allocator->dealloc(this);
 	}
 };
-String globalHandler{(char*)nullptr,0};
 void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
@@ -134,8 +133,6 @@ int main(int argc, char** argv) {
 						listen=getvalue();
 					} else if(strcmp(name,"t")==0) {
 						threads=atoi(getvalue());
-					} else if(strcmp(name,"h")==0) {
-						globalHandler=getvalue();
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
 					} else {
@@ -145,7 +142,6 @@ int main(int argc, char** argv) {
 						"\t-c <option>: specify a compiler option to be passed to g++\n"
 						"\t-r <root>: set root directory\n"
 						"\t-t <threads>: # of worker processes/threads to start up\n"
-						"\t-h </relative/path/to/handler.cppsp>: specify the handler to direct all requests to\n"
 						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n",argv[0]);
 						exit(1);
 					}
@@ -170,7 +166,6 @@ int main(int argc, char** argv) {
 		workerThread& tmp=*(new (th+i) workerThread(f0rk ? 
 			listensock.handle : dup(listensock.handle),
 			listensock.addressFamily, listensock.type, listensock.protocol));
-		tmp.srv.globalHandler=globalHandler;
 		CXXOpts(tmp.srv.mgr)=cxxopts;
 		tmp.threadid=i+1;
 		if(threads==1) {
