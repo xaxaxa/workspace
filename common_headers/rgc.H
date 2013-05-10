@@ -18,6 +18,8 @@
 #define __RGC_H
 #include <cstddef>
 #include <utility>
+#include <stdlib.h>
+
 namespace RGC
 {
 	typedef volatile int atomic_t;
@@ -80,6 +82,16 @@ namespace RGC
 			dealloc(obj);
 		}
 	};
+	class DefaultAllocator: public Allocator
+	{
+		void* alloc(int s) override final {
+			return malloc(s);
+		}
+		void dealloc(void* obj) override final {
+			return free(obj);
+		}
+	};
+	static DefaultAllocator defaultAllocator;
 	void Object::destruct() {
 		if(allocator==NULL) delete this;
 		else allocator->del(this);
