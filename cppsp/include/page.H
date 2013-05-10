@@ -84,6 +84,7 @@ namespace cppsp
 		virtual void flush(Callback cb);
 		virtual void clear();
 		void addDefaultHeaders();
+		void serializeHeaders(CP::StreamWriter& sw);
 		template<class ... T>
 		void write(T&&... a) {
 			output.write(std::forward<T>(a)...);
@@ -95,6 +96,10 @@ namespace cppsp
 	class Server: public RGC::Object
 	{
 	public:
+		Server();
+		Delegate<String(Request&)> rewritePath;//rewritePath is called before isStatic
+		Delegate<bool(Request&)> isStatic;
+		bool defaultIsStatic(Request&);
 		virtual String rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
@@ -108,7 +113,7 @@ namespace cppsp
 	class Page: public RGC::Object
 	{
 	public:
-		typedef Delegate<void(Page&)> Callback;
+		typedef Delegate<void()> Callback;
 		Page(Request& req, Response& resp, CP::StringPool* sp);
 		RGC::Ref<Request> request;
 		RGC::Ref<Response> response;
@@ -138,7 +143,8 @@ namespace cppsp
 		void loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb, RGC::Allocator& a);
 		//path is absolute
 		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb);
-		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb, RGC::Allocator& a);
+		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb,
+				RGC::Allocator& a);
 		virtual void handleRequest(Callback cb = nullptr);
 		virtual void processRequest() {
 			doInit();

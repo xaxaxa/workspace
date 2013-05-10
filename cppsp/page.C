@@ -150,12 +150,12 @@ namespace cppsp
 		flushCB();
 	}
 	void Page::finalizeCB() {
-		if (this->cb != nullptr) cb(*this);
+		if (this->cb != nullptr) cb();
 	}
 
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
-			inputStream(&inp), sp(sp), alloc(sp), headers(sp),
-					queryString(less<String>(), alloc), form(less<String>(), alloc) {
+			inputStream(&inp), sp(sp), alloc(sp), headers(sp), queryString(less<String>(), alloc),
+					form(less<String>(), alloc) {
 	}
 	void Request::parsePost(String buf) {
 		struct
@@ -223,6 +223,9 @@ namespace cppsp
 		}
 		sw.write("\r\n", 2);
 	}
+	void Response::serializeHeaders(CP::StreamWriter& sw) {
+		Response_doWriteHeaders(this, sw);
+	}
 	void Response::flush(Callback cb) {
 		//printf("flush\n");
 		if (closed) throw runtime_error("connection has already been closed by the client");
@@ -277,6 +280,20 @@ namespace cppsp
 		sendChunked = false;
 	}
 
+	Server::Server() {
+		isStatic= {&Server::defaultIsStatic,this};
+	}
+	bool Server::defaultIsStatic(Request& req) {
+		return !(req.path.length() > 6
+				&& memcmp(req.path.data() + (req.path.length() - 6), ".cppsp", 6) == 0);
+	}
+	String Server::mapPath(String path, RGC::Allocator& a) {
+		String r = rootDir();
+		char* tmp = (char*) a.alloc(path.length() + r.length());
+		int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
+		return String(tmp, l);
+	}
+
 } /* namespace cppsp */
 
 string cppsp::Server::mapPath(string path) {
@@ -284,10 +301,4 @@ string cppsp::Server::mapPath(string path) {
 	char tmp[path.length() + r.length()];
 	int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
 	return string(tmp, l);
-}
-String cppsp::Server::mapPath(String path, RGC::Allocator& a) {
-	String r = rootDir();
-	char* tmp = (char*) a.alloc(path.length() + r.length());
-	int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
-	return {tmp, l};
 }
