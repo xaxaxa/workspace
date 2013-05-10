@@ -33,7 +33,10 @@ namespace CP
 		char* d;
 		int len;
 		String() :
-				len(0) {
+				d(nullptr), len(0) {
+		}
+		String(std::nullptr_t) :
+				d(nullptr), len(0) {
 		}
 		String(char* data, int length) :
 				d(data), len(length) {
