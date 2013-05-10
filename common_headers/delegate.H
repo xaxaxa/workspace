@@ -81,6 +81,10 @@ struct Delegate<R(P...)>:public DelegateBase<R(P...)>
 		this->func=(void*)func;
 		this->data=NULL;
 	}
+	explicit Delegate(const GenericDelegate& other) {
+		this->func=other.func;
+		this->data=other.data;
+	}
 	template<class X>Delegate(X* th) {
 		this->func=(void*)(R(*)(void*,P...))&X::operator();
 		this->data=th;
