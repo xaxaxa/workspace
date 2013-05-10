@@ -186,11 +186,11 @@ namespace cppsp
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :
 			outputStream(&out), output((CP::BufferedOutput&) buffer), sp(sp), headers(sp),
 					headersWritten(false), closed(false), sendChunked(false) {
-		statusCode = 200;
-		statusName = "OK";
 		addDefaultHeaders();
 	}
 	void Response::addDefaultHeaders() {
+		statusCode = 200;
+		statusName = "OK";
 		headers.add("Content-Type", "text/html; charset=UTF-8");
 	}
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
