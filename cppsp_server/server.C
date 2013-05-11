@@ -90,6 +90,10 @@ namespace cppspServer
 		~Server() {
 			cppspManager_delete(mgr);
 		}
+		
+		void handleStaticRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
+		void handleDynamicRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
+		
 		void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
 			Delegate<void(Page*, exception* ex)> cb) override {
 			string tmp = mapPath(path.toSTDString());
@@ -98,6 +102,22 @@ namespace cppspServer
 		void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a,
 				Delegate<void(Page*, exception* ex)> cb) override {
 			cppsp::loadPage(mgr, p, rootDir(), path, &a, cb);
+		}
+		void loadModule(CP::Poll& p, String path, 
+			Delegate<void(void*, exception* ex)> cb) override {
+			string tmp = mapPath(path.toSTDString());
+			cppsp::loadModule(mgr, p, this, rootDir(), {tmp.data(), (int) tmp.length()}, cb);
+		}
+		void loadModuleFromFile(CP::Poll& p, String path, 
+				Delegate<void(void*, exception* ex)> cb) override {
+			cppsp::loadModule(mgr, p, this, rootDir(), path, cb);
+		}
+		String loadStaticPage(String path) override {
+			string tmp = mapPath(path.toSTDString());
+			return cppsp::loadStaticPage(mgr,{tmp.data(), (int) tmp.length()});
+		}
+		String loadStaticPageFromFile(String path) override {
+			return cppsp::loadStaticPage(mgr,path);
 		}
 		String rootDir() {
 			return root;
@@ -109,6 +129,14 @@ namespace cppspServer
 			cppsp::updateTime(mgr);
 		}
 	};
+	class Request:public cppsp::CPollRequest
+	{
+	public:
+		Request(CP::Socket& s, CP::StringPool* sp) :
+			CPollRequest(s, sp) {
+		}
+		void* _handler;
+	};
 	//handles a single connection
 	//just instantiate-and-forget; it will self-destruct when connection is closed
 	struct handler:public RGC::Object {
@@ -118,7 +146,7 @@ namespace cppspServer
 		Socket& s;
 		Page* page;
 		StringPool sp;
-		cppsp::CPollRequest req;
+		Request req;
 		cppsp::Response resp;
 		//Page* p;
 		//MemoryStream ms;
@@ -129,6 +157,7 @@ namespace cppspServer
 		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
 			p(poll),s(s), req(this->s,&sp),resp(this->s,&sp) {
 			//printf("handler()\n");
+			req._handler=this;
 			poll.add(this->s);
 			s.retain();
 			if(req.readRequest({&handler::readCB, this})) readCB(true);
@@ -142,14 +171,14 @@ namespace cppspServer
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
 			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
-			req.path=thr.rewritePath==nullptr?req.path:thr.rewritePath(req);
 			
-			path.d=sp.beginAdd(req.path.length()+thr.root.length());
+			thr.handleRequest(req,resp,{&handler::finalize,this});
+		}
+		void setPath(String p) {
+			path.d=sp.beginAdd(p.length()+thr.root.length());
 			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
-				req.path.data(),req.path.length(),path.data());
+				p.data(),p.length(),path.data());
 			sp.endAdd(path.len);
-			if(thr.isStatic(req)) handleStatic();
-			else cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}
 		static inline int itoa(int i, char* b) {
 			static char const digit[] = "0123456789";
@@ -163,8 +192,9 @@ namespace cppspServer
 			} while (i);
 			return l;
 		}
-		void handleStatic() {
+		void handleStatic(String _path) {
 			try {
+				setPath(_path);
 				String data=cppsp::loadStaticPage(thr.mgr,path);
 				int bufferL = resp.buffer.length();
 				{
@@ -182,6 +212,10 @@ namespace cppspServer
 				cppsp::handleError(&ex,resp,path);
 				resp.flush( { &handler::flushCB, this });
 			}
+		}
+		void handleDynamic(String _path) {
+			setPath(_path);
+			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}
 		void loadCB(Page* p, exception* ex) {
 			//printf("loadCB()\n");
@@ -219,7 +253,6 @@ namespace cppspServer
 			finalize();
 		}
 		void handleRequestCB() {
-			sp.clear();
 			page->destruct();
 			page=nullptr;
 			//s->shutdown(SHUT_WR);
@@ -231,6 +264,7 @@ namespace cppspServer
 			if(resp.closed) {
 				destruct(); return;
 			}
+			sp.clear();
 			if(keepAlive) {
 				req.reset();
 				resp.reset();
@@ -246,4 +280,12 @@ namespace cppspServer
 			s.release();
 		}
 	};
+	void Server::handleStaticRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
+		cppspServer::Request& r=static_cast<cppspServer::Request&>(req);
+		(*(handler*)r._handler).handleStatic(path);
+	}
+	void Server::handleDynamicRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
+		cppspServer::Request& r=static_cast<cppspServer::Request&>(req);
+		(*(handler*)r._handler).handleDynamic(path);
+	}
 }

@@ -390,15 +390,18 @@ namespace cppsp
 	class loadedPage
 	{
 	public:
-		loadedPage& operator=(const loadedPage& other)=delete;
-		timespec lastLoad {0, 0}; //CLOCK_REALTIME
-		timespec lastCheck {0, 0}; //CLOCK_MONOTONIC
+		Server* srv;
+		loadedPage& operator=(const loadedPage& other) = delete;
+		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
+		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
 		void* dlHandle;
 		const uint8_t* stringTable;
 		int stringTableLen;
 		typedef int (*getObjectSize_t)();
 		typedef Page* (*createObject_t)(void* mem);
 		typedef Page* (*createObject1_t)(RGC::Allocator* alloc);
+		typedef void (*initModule_t)(Server* s);
+		typedef void (*deinitModule_t)();
 		int (*getObjectSize)();
 		createObject_t createObject;
 		createObject1_t createObject1;
@@ -426,34 +429,34 @@ namespace cppsp
 		void readCB(int r) {
 			if (r <= 0) {
 				compiling = false;
-				int status=-1;
-				waitpid(compilerPID,&status,0);
-				if(status!=0) {
+				int status = -1;
+				waitpid(compilerPID, &status, 0);
+				if (status != 0) {
 					CompileException exc;
-					exc.compilerOutput=string((const char*)ms.data(),ms.length());
+					exc.compilerOutput = string((const char*) ms.data(), ms.length());
 					for (int i = 0; i < (int) loadCB.size(); i++)
-					loadCB[i](nullptr, &exc);
-					rename(cPath.c_str(),(path+".C").c_str());
+						loadCB[i](nullptr, &exc);
+					rename(cPath.c_str(), (path + ".C").c_str());
 					goto aaa;
 				}
 				unlink(cPath.c_str());
 				try {
-					if(loaded)doUnload();
+					if (loaded) doUnload();
 					doLoad();
-					for (int i = 0; i < (int) loadCB.size(); i++) loadCB[i](this, nullptr);
+					for (int i = 0; i < (int) loadCB.size(); i++)
+						loadCB[i](this, nullptr);
 				} catch (exception& ex) {
 					/*string msg(ex.what());
 					 msg.append("\n\n\ncompiler output:\n");
 					 msg.append((const char*)ms.data(),ms.length());
 					 logic_error le(msg);*/
 					for (int i = 0; i < (int) loadCB.size(); i++)
-					loadCB[i](nullptr, &ex);
+						loadCB[i](nullptr, &ex);
 				}
-				aaa:
-				loadCB.clear();
+				aaa: loadCB.clear();
 				unlink(txtPath.c_str());
 				unlink(dllPath.c_str());
-				compile_fd=nullptr;
+				compile_fd = nullptr;
 				//if (compileCB != nullptr) compileCB(*this);
 				return;
 			}
@@ -470,13 +473,14 @@ namespace cppsp
 			ms.clear();
 			string tmp;
 			char sss[32];
-			snprintf(sss,32,"%i",rand());
-			txtPath=path+"."+string(sss)+".txt";
-			dllPath=path+"."+string(sss)+".dll";
-			cPath=path+"."+string(sss)+".C";
-			CP::File* f = (CP::File*) checkError(compilePage(wd,path,cPath,txtPath,dllPath,cxxopts,compilerPID,tmp));
-			tmp+="\n";
-			ms.write(tmp.data(),tmp.length());
+			snprintf(sss, 32, "%i", rand());
+			txtPath = path + "." + string(sss) + ".txt";
+			dllPath = path + "." + string(sss) + ".dll";
+			cPath = path + "." + string(sss) + ".C";
+			CP::File* f = (CP::File*) checkError(
+					compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
+			tmp += "\n";
+			ms.write(tmp.data(), tmp.length());
 			p.add(*f);
 			compile_fd = f;
 			f->release();
@@ -493,10 +497,15 @@ namespace cppsp
 			stringTable = (const uint8_t*) checkError(
 					mmap(NULL, stringTableLen, PROT_READ, MAP_SHARED, stringTableFD, 0));
 			dlHandle = dlopen(dllPath.c_str(), RTLD_LOCAL | RTLD_LAZY);
-			if(dlHandle==NULL) throw runtime_error(dlerror());
+			if (dlHandle == NULL) throw runtime_error(dlerror());
 			getObjectSize = (getObjectSize_t) checkDLError(dlsym(dlHandle, "getObjectSize"));
 			createObject = (createObject_t) checkDLError(dlsym(dlHandle, "createObject"));
 			createObject1 = (createObject1_t) checkDLError(dlsym(dlHandle, "createObject1"));
+			initModule_t initModule = (initModule_t) dlsym(dlHandle, "initModule");
+			if (initModule != NULL) {
+				initModule(srv);
+				fprintf(stderr, "module %s loaded\n", path.c_str());
+			}
 			loaded = true;
 			clock_gettime(CLOCK_REALTIME, &lastLoad);
 			//printf("loaded: dlHandle=%p; createObject=%p\n",dlHandle,(void*)createObject);
@@ -507,6 +516,11 @@ namespace cppsp
 			if (stringTable != NULL) munmap((void*) stringTable, stringTableLen);
 			if (stringTableFD != -1) close(stringTableFD);
 			if (dlHandle != NULL) {
+				deinitModule_t deinitModule = (deinitModule_t) dlsym(dlHandle, "deinitModule");
+				if (deinitModule != NULL) {
+					deinitModule();
+					fprintf(stderr, "module %s unloaded\n", path.c_str());
+				}
 				ScopeLock sl(dlMutex);
 				checkError(dlclose(dlHandle));
 				//void* tmp=dlopen((path + ".so").c_str(), RTLD_LOCAL | RTLD_LAZY|RTLD_NOLOAD);
@@ -524,7 +538,8 @@ namespace cppsp
 			tmp->filePath = {path.data(),(int)path.length()};
 			return tmp;
 		}
-		loadedPage():dlHandle(NULL),stringTable(NULL),stringTableFD(-1) {
+		loadedPage() :
+				dlHandle(NULL), stringTable(NULL), stringTableFD(-1) {
 			//printf("loadedPage()\n");
 			compiling = false;
 			doUnload();
@@ -539,9 +554,10 @@ namespace cppsp
 			{
 				TO_C_STR(path.data(), path.length(), s1);
 				checkError(stat(s1, &st));
-				if(S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException("requested path is a directory or socket");
+				if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException(
+						"requested path is a directory or socket");
 			}
-			if(!loaded) return 2;
+			if (!loaded) return 2;
 			timespec modif_cppsp = st.st_mtim;
 			/*{
 			 CONCAT_TO(path.data(), path.length(), s1, ".txt");
@@ -559,8 +575,8 @@ namespace cppsp
 			 }
 			 }
 			 timespec modif_so = st.st_mtim;*/
-			int i=0;
-			if(tsCompare(lastLoad, modif_cppsp)<0) i=2;
+			int i = 0;
+			if (tsCompare(lastLoad, modif_cppsp) < 0) i = 2;
 			//if(tsCompare(lastLoad, modif_txt)< 0 || tsCompare(lastLoad, modif_so) <0) i=1;
 			//if(tsCompare(modif_cppsp, modif_txt)> 0 || tsCompare(modif_cppsp, modif_so) >0) i=2;
 			//printf("shouldCompile(\"%s\") = %i\n",path.c_str(),i);
@@ -636,7 +652,8 @@ namespace cppsp
 		}
 		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
 				Delegate<void(Page*, exception* ex)> cb);
-		void loadModule(CP::Poll& p, String wd, String path, Delegate<void(void*, exception* ex)> cb);
+		void loadModule(CP::Poll& p, Server* srv, String wd, String path,
+				Delegate<void(void*, exception* ex)> cb);
 		String loadStaticPage(String path) {
 			staticPage* lp1;
 			auto it = staticCache.find(path);
@@ -649,7 +666,6 @@ namespace cppsp
 			if (likely(lp.loaded & !shouldCheck(lp))) {
 				return lp.data;
 			}
-			bool r;
 			if (lp.shouldReload()) {
 				lp.doUnload();
 			}
@@ -727,12 +743,13 @@ namespace cppsp
 			cb(nullptr, &ex);
 		}
 	}
-	void cppspManager::loadModule(Poll& p, String wd, String path,
+	void cppspManager::loadModule(Poll& p, Server* srv, String wd, String path,
 			Delegate<void(void*, exception* ex)> cb) {
 		loadedPage* lp1;
 		auto it = cache.find(path);
 		if (it == cache.end()) {
 			lp1 = new loadedPage();
+			lp1->srv = srv;
 			lp1->path = path.toSTDString();
 			cache.insert( { sp.addString(path), lp1 });
 		} else lp1 = (*it).second;
@@ -796,6 +813,12 @@ namespace cppsp
 	void updateTime(cppspManager* mgr) {
 		clock_gettime(CLOCK_MONOTONIC, &mgr->curTime);
 	}
+	
+	void loadModule(cppspManager* mgr, CP::Poll& p, Server* srv, String wd, String path,
+			Delegate<void(void*, exception* ex)> cb) {
+		mgr->loadModule(p, srv, wd, path, cb);
+	}
+	
 	void handleError(exception* ex, cppsp::Response& resp, String path) {
 		resp.clear();
 		resp.statusCode = 500;

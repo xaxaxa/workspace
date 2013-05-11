@@ -281,11 +281,13 @@ namespace cppsp
 	}
 
 	Server::Server() {
-		isStatic= {&Server::defaultIsStatic,this};
+		handleRequest.attach( { &Server::defaultHandleRequest, this });
 	}
-	bool Server::defaultIsStatic(Request& req) {
-		return !(req.path.length() > 6
-				&& memcmp(req.path.data() + (req.path.length() - 6), ".cppsp", 6) == 0);
+	void Server::defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
+		if (req.path.length() > 6
+				&& memcmp(req.path.data() + (req.path.length() - 6), ".cppsp", 6) == 0) handleDynamicRequest(
+				req.path, req, resp, cb);
+		else handleStaticRequest(req.path, req, resp, cb);
 	}
 	String Server::mapPath(String path, RGC::Allocator& a) {
 		String r = rootDir();

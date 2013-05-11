@@ -1,0 +1,41 @@
+<%#
+//cppsp module to enable directory listing
+
+#include <sys/stat.h>
+#define TO_C_STR(in,inLen,out) char out[inLen+1];\
+		memcpy(out,in,inLen);\
+		out[inLen]=0;
+DelegateChain<void(Request&, Response&, Delegate<void()>)>::item* it;
+Server* server;
+void handleRequest(void*, Request& req, Response& resp, Delegate<void()> cb) {
+	struct stat st;
+	String s=server->mapPath(req.path,*req.sp);
+	TO_C_STR(s.data(),s.length(),tmp);
+	if(::stat(tmp,&st)>=0 && S_ISDIR(st.st_mode)) {
+		server->handleDynamicRequest("/dir_list.cppsm",req,resp,cb);
+		return;
+	}
+	(*it->prev)(req,resp,cb);
+}
+extern "C" void initModule(Server* s) {
+	server=s;
+	it=s->handleRequest.attach(&handleRequest);
+}
+%>
+<html>
+<head>
+	<title>Index of <% htmlEscape(request->path,output); %></title>
+</head>
+<table border="1">
+<%
+
+auto tmp=[&](const char* name) {
+	%>
+	<tr>
+		<td><% htmlEscape(name,output); %></td>
+	</tr>
+	<%
+};
+listDirectory(server->mapPath("/").c_str(), &tmp);
+%>
+</table>

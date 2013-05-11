@@ -64,7 +64,7 @@ namespace cppsp
 	void cppspManager_delete(cppspManager* mgr);
 	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,
 			Delegate<void(Page*, exception* ex)> cb);
-	void loadModule(cppspManager* mgr, CP::Poll& p, String wd, String path,
+	void loadModule(cppspManager* mgr, CP::Poll& p, Server* srv, String wd, String path,
 			Delegate<void(void*, exception* ex)> cb);
 	String loadStaticPage(cppspManager* mgr, String path);
 	vector<string>& CXXOpts(cppspManager* mgr);

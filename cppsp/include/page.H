@@ -97,15 +97,25 @@ namespace cppsp
 	{
 	public:
 		Server();
-		Delegate<String(Request&)> rewritePath;//rewritePath is called before isStatic
-		Delegate<bool(Request&)> isStatic;
-		bool defaultIsStatic(Request&);
+		DelegateChain<void(Request&, Response&, Delegate<void()>)> handleRequest;
+		virtual void handleStaticRequest(String path, Request& req, Response& resp,
+				Delegate<void()> cb)=0;
+		virtual void handleDynamicRequest(String path, Request& req, Response& resp,
+				Delegate<void()> cb)=0;
+		void defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb);
 		virtual String rootDir()=0;
 		//path is relative to rootDir
 		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
 				Delegate<void(Page*, exception* ex)> cb)=0;
+		//path is absolute
 		virtual void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a,
 				Delegate<void(Page*, exception* ex)> cb)=0;
+
+		virtual void loadModule(CP::Poll& p, String path, Delegate<void(void*, exception* ex)> cb)=0;
+		virtual void loadModuleFromFile(CP::Poll& p, String path,
+				Delegate<void(void*, exception* ex)> cb)=0;
+		virtual String loadStaticPage(String path)=0;
+		virtual String loadStaticPageFromFile(String path)=0;
 		//path is relative to rootDir
 		virtual string mapPath(string path);
 		virtual String mapPath(String path, RGC::Allocator& a);

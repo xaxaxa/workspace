@@ -33,6 +33,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 struct workerThread
 {
 	cppspServer::Server srv;
+	vector<const char*> modules;
 	CP::Socket listenSock;
 	union {
 		pid_t pid;
@@ -106,6 +107,23 @@ void* thread1(void* v) {
 	} cb1 {srv};
 	t.setCallback(&cb1);
 	p.add(t);
+	
+	struct {
+		const char* s;
+		void operator()(void*,exception* ex) {
+			if(ex!=NULL) {
+				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
+				cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
+				if (ce != NULL) {
+					printf("%s\n",ce->compilerOutput.c_str());
+				}
+			}
+		}
+	} moduleCB[thr.modules.size()];
+	for(int ii=0;ii<(int)thr.modules.size();ii++) {
+		moduleCB[ii].s=thr.modules[ii];
+		thr.srv.loadModule(p,thr.modules[ii],&moduleCB[ii]);
+	}
 	p.loop();
 	return NULL;
 }
@@ -120,6 +138,7 @@ int main(int argc, char** argv) {
 	int threads=2;
 	bool f0rk=false;
 	vector<string> cxxopts;
+	vector<const char*> modules;
 	try {
 		parseArgs(argc, argv,
 				[&](char* name, const std::function<char*()>& getvalue)
@@ -133,6 +152,8 @@ int main(int argc, char** argv) {
 						listen=getvalue();
 					} else if(strcmp(name,"t")==0) {
 						threads=atoi(getvalue());
+					} else if(strcmp(name,"m")==0) {
+						modules.push_back(getvalue());
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
 					} else {
@@ -140,7 +161,8 @@ int main(int argc, char** argv) {
 						printf("usage: %s [options]...\noptions:\n"
 						"\t-l <host:port>: listen on specified host:port\n"
 						"\t-c <option>: specify a compiler option to be passed to g++\n"
-						"\t-r <root>: set root directory\n"
+						"\t-m <path>: load a cppsp module (path is relative to root)\n"
+						"\t-r <root>: set root directory (must be absolute)\n"
 						"\t-t <threads>: # of worker processes/threads to start up\n"
 						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n",argv[0]);
 						exit(1);
@@ -167,6 +189,7 @@ int main(int argc, char** argv) {
 			listensock.handle : dup(listensock.handle),
 			listensock.addressFamily, listensock.type, listensock.protocol));
 		CXXOpts(tmp.srv.mgr)=cxxopts;
+		tmp.modules=modules;
 		tmp.threadid=i+1;
 		if(threads==1) {
 			thread1(&tmp);
