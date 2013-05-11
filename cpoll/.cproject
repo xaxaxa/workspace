@@ -62,8 +62,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.317623061.290209944" name="all.C" rcbsApplicability="disable" resourcePath="all.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1483916567">
+						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1483916567" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599"/>
+					</fileInfo>
 					<sourceEntries>
-						<entry excluding="rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -122,8 +125,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1045629552.1047610922" name="all.C" rcbsApplicability="disable" resourcePath="all.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.958761479">
+						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.958761479" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465"/>
+					</fileInfo>
 					<sourceEntries>
-						<entry excluding="rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

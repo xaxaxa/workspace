@@ -61,6 +61,12 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.so.debug.7250834.1620118181" name="all.C" rcbsApplicability="disable" resourcePath="all.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.58597657.630235954">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.58597657.630235954" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.58597657"/>
+					</fileInfo>
+					<sourceEntries>
+						<entry excluding="all.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -125,6 +131,12 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.so.release.1921876389.206141837" name="all.C" rcbsApplicability="disable" resourcePath="all.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.so.release.1956103788.164323810">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.release.1956103788.164323810" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.release.1956103788"/>
+					</fileInfo>
+					<sourceEntries>
+						<entry excluding="all.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -149,5 +161,12 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/cppsp"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/cppsp"/>
+		</configuration>
+	</storageModule>
 </cproject>
