@@ -28,7 +28,6 @@ using namespace socketd;
 using namespace CP;
 using namespace cppsp;
 string rootDir;
-String globalHandler{(char*)nullptr,0};
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
 	function<char*()> func = [&]()->char*
@@ -55,6 +54,7 @@ int main(int argc, char** argv) {
 	}
 	CP::Poll p;
 	vector<string> cxxopts;
+	vector<const char*> modules;
 	parseArgs(argc, argv,
 			[&](char* name, const std::function<char*()>& getvalue)
 			{
@@ -62,13 +62,12 @@ int main(int argc, char** argv) {
 					rootDir=getvalue();
 				} else if(strcmp(name,"c")==0) {
 					cxxopts.push_back(getvalue());
-				} else if(strcmp(name,"h")==0) {
-					globalHandler=getvalue();
+				} else if(strcmp(name,"m")==0) {
+					modules.push_back(getvalue());
 				}
 			});
 	
 	cppspServer::Server srv(rootDir.c_str());
-	srv.globalHandler=globalHandler;
 	auto& v=CXXOpts(srv.mgr);
 	v.insert(v.end(),cxxopts.begin(),cxxopts.end());
 	cxxopts.clear();
@@ -87,5 +86,25 @@ int main(int argc, char** argv) {
 		}
 	} cb {p, mp, srv};
 	socketd_client cl(p, &cb);
+	
+	
+	struct {
+		const char* s;
+		void operator()(void*,exception* ex) {
+			if(ex!=NULL) {
+				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
+				cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
+				if (ce != NULL) {
+					printf("%s\n",ce->compilerOutput.c_str());
+				}
+			}
+		}
+	} moduleCB[modules.size()];
+	for(int ii=0;ii<(int)modules.size();ii++) {
+		moduleCB[ii].s=modules[ii];
+		srv.loadModule(p,modules[ii],&moduleCB[ii]);
+	}
+	
+	
 	p.loop();
 }
