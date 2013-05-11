@@ -54,8 +54,8 @@ namespace socketd
 	//static const int rLineBufSize = 512;
 	void spawnApp(vhost* vh, CP::Poll& p, string exepath, int threadID, int i);
 	bool comparePath(const char* conf, int confLen, const char* path, int pathLen) {
-		SOCKETD_DEBUG(10,
-				"comparePath: conf=%s; path=%s\n", string(conf,confLen).c_str(), string(path,pathLen).c_str());
+		SOCKETD_DEBUG(10, "comparePath: conf=%s; path=%s\n", string(conf, confLen).c_str(),
+				string(path, pathLen).c_str());
 		//cout << string(path, pathLen) << endl;
 		if (confLen == pathLen && memcmp(conf, path, confLen) == 0) {
 			/*cout << "matched (exact): " << string(path, pathLen) << " against " << string(conf, confLen)
@@ -220,6 +220,7 @@ namespace socketd
 			//uint8_t* lineBuf = ((uint8_t*) sr) + CP::streamReader_getSize() + rBufSize;
 			uint8_t* lineBuf = buf;
 			int lineBufLen = len;
+			SOCKETD_DEBUG(10, "got line: %s\n", string((const char*)lineBuf, lineBufLen).c_str());
 			//printf("got line: ");
 			//fflush(stdout);
 			//write(1, lineBuf, lineBufLen);
@@ -240,7 +241,7 @@ namespace socketd
 				pos = 1;
 				httpPath = path;
 				httpPathLength = pathLen;
-				SOCKETD_DEBUG(10, "got httpPath: %s\n", string(httpPath,httpPathLength).c_str());
+				SOCKETD_DEBUG(10, "got httpPath: %s\n", string(httpPath, httpPathLength).c_str());
 				checkMatch();
 				return;
 			}
@@ -260,7 +261,7 @@ namespace socketd
 				if (tmp >= end) goto fail;
 				httpHost = (const char*) tmp;
 				httpHostLength = end - tmp;
-				SOCKETD_DEBUG(10, "got httpHost: %s\n", string(httpHost,httpHostLength).c_str());
+				SOCKETD_DEBUG(10, "got httpHost: %s\n", string(httpHost, httpHostLength).c_str());
 				pos = 2;
 				checkMatch();
 				return;
@@ -292,8 +293,8 @@ namespace socketd
 
 		void attachmentCB(bool b) {
 			if (b) {
-				SOCKETD_DEBUG(8,
-						"received acknownedgement for connection %p (with attachment)\n", this);
+				SOCKETD_DEBUG(8, "received acknownedgement for connection %p (with attachment)\n",
+						this);
 				delete this;
 			} else {
 				do_transfer(tmp_vh);
@@ -392,8 +393,8 @@ namespace socketd
 		if (reading) return;
 		CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
 		auto tmp = sr->beginPutData(SOCKETD_READBUFFER);
-		SOCKETD_DEBUG(9,
-				"attempting to read %i bytes of data from client socket\n", SOCKETD_READBUFFER);
+		SOCKETD_DEBUG(9, "attempting to read %i bytes of data from client socket\n",
+				SOCKETD_READBUFFER);
 		reading = true;
 		s.read(tmp, SOCKETD_READBUFFER, CP::Callback(&connectionInfo::socketReadCB, this));
 	}
