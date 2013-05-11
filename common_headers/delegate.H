@@ -97,5 +97,48 @@ struct Delegate<R(P...)>:public DelegateBase<R(P...)>
 		return func;
 	}
 };
+template<class R, class... P> static Delegate<R(P...)> nullDelegate() {
+	struct {
+		R operator()(P... p...) {
+			return R();
+		}
+	} tmp;
+	return &tmp;
+}
 
+template<class SIGNATURE> class DelegateChain;
+template<class R, class ... P>
+class DelegateChain<R(P...)>
+{
+public:
+	struct item
+	{
+		Delegate<R(P...)> func;
+		item* prev;
+		item* next;
+		template<class ... P2>
+		inline R operator()(P2 && ...p) const {
+			func(std::forward<P2>(p)...);
+		}
+	};
+	item* last = NULL;
+	DelegateChain() {
+
+	}
+	item* attach(Delegate<R(P...)> func) {
+		item* it = new item { func, last, NULL };
+		if (last != NULL) last->next = it;
+		last = it;
+		return it;
+	}
+	void detach(item* it) {
+		if (it->next != NULL) it->next->prev = it->prev;
+		if (it->prev != NULL) it->prev->next = it->next;
+		if (last == it) last = it->prev;
+		delete it;
+	}
+	inline R operator()(P... p) const {
+		if (last != NULL) (*last)(std::forward<P>(p)...);
+	}
+};
 #endif
