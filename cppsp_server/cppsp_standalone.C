@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
 			pid_t pid=fork();
 			if(pid==0) {
 				tmp.pid=getpid();
+				srand(int(tmp.pid)^(int)time(NULL));
 				thread1(&tmp);
 				return 0;
 			} else if(pid>0) {
