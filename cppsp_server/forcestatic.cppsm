@@ -8,6 +8,9 @@ void handleRequest(void*, Request& req, Response& resp, Delegate<void()> cb) {
 }
 extern "C" void initModule(Server* s) {
 	server=s;
-	s->handleRequest.attach(&handleRequest);
+	it=s->handleRequest.attach(&handleRequest);
+}
+extern "C" void deinitModule() {
+	server->handleRequest.detach(it);
 }
 %>
