@@ -402,7 +402,10 @@ namespace socketd
 
 		//0: none; 1: reqLine; 2: headers
 		//int readTo = 0;
-		if (pos < readTo) return;
+		if (pos < readTo) {
+			startRead();
+			return;
+		}
 		SOCKETD_DEBUG(9, "bindings.size() = %i\n", This->bindings.size());
 
 		for (uint32_t i = 0; i < This->bindings.size(); i++) {
