@@ -311,7 +311,7 @@ int shutdown(int sockfd, int how) {
 			return 0;
 		}
 	}
-	prev_shutdown(sockfd,how);
+	return prev_shutdown(sockfd,how);
 }
 int close(int fd) {
 	if(prev_close==NULL) {
@@ -322,7 +322,7 @@ int close(int fd) {
 		if(fds.count(fd)>0)
 			fds.erase(fd);
 	}
-	prev_close(fd);
+	return prev_close(fd);
 }
 int dup2(int oldfd, int newfd) {
 	if(prev_dup2==NULL) {
@@ -335,7 +335,7 @@ int dup2(int oldfd, int newfd) {
 		else if(fds.count(newfd)>0)
 			fds.erase(newfd);
 	}
-	prev_dup2(oldfd,newfd);
+	return prev_dup2(oldfd,newfd);
 }
 int dup3(int oldfd, int newfd, int flags) {
 	if(prev_dup3==NULL) {
@@ -348,7 +348,7 @@ int dup3(int oldfd, int newfd, int flags) {
 		else if(fds.count(newfd)>0)
 			fds.erase(newfd);
 	}
-	prev_dup3(oldfd,newfd,flags);
+	return prev_dup3(oldfd,newfd,flags);
 }
 
 

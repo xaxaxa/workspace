@@ -785,6 +785,7 @@ namespace socketd
 		socketd_execinfo execinfo;
 		printf("this=%p\n", this);
 		execinfo.threads.resize(threads);
+		SOCKETD_DEBUG(3, "starting %i threads\n", threads);
 		for (int i = 0; i < threads; i++) {
 			socketd_thread& th = execinfo.threads[i];
 			th.This = this;
