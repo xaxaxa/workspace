@@ -147,7 +147,7 @@ namespace socketd
 		appConnection* tmpptr;
 		bool* deletionFlag;
 		//CP::streamReader* sr;
-		char _sr[sizeof(CP::persistentStreamReader)];
+		char _sr[sizeof(CP::newPersistentStreamReader)];
 
 		//int lineBufLen;
 		const char* httpPath;
@@ -193,12 +193,16 @@ namespace socketd
 		void startSocketRead();
 		void socketReadCB(int r) {
 			SOCKETD_DEBUG(9, "got %i bytes of data from client socket\n", r);
-			CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
-			bool d(false);
-			deletionFlag = &d;
-			sr->endPutData(r);
-			if (d) return;
-			deletionFlag = NULL;
+			CP::newPersistentStreamReader* sr = (CP::newPersistentStreamReader*) _sr;
+			if (r > 0) {
+				bool d(false);
+				deletionFlag = &d;
+				sr->endPutData(r);
+				newPersistentStreamReader::item it;
+				if (sr->process(it)) readCB((uint8_t*) it.data.data(), it.data.length());
+				if (d) return;
+				deletionFlag = NULL;
+			}
 
 			reading = false;
 			if (shouldDelete) {
@@ -207,11 +211,9 @@ namespace socketd
 			}
 			if (cancelread) return;
 			if (r <= 0) {
-				uint8_t* buf;
-				int len;
-				std::tie(buf, len) = sr->getBufferData();
+				String s = sr->getBufferData();
 				sr->clearBuffer();
-				readCB(buf, len);
+				readCB((uint8_t*) s.data(), s.length());
 				return;
 			}
 			startSocketRead();
@@ -220,7 +222,7 @@ namespace socketd
 			//uint8_t* lineBuf = ((uint8_t*) sr) + CP::streamReader_getSize() + rBufSize;
 			uint8_t* lineBuf = buf;
 			int lineBufLen = len;
-			SOCKETD_DEBUG(10, "got line: %s\n", string((const char*)lineBuf, lineBufLen).c_str());
+			SOCKETD_DEBUG(10, "got line: %s\n", string((const char* )lineBuf, lineBufLen).c_str());
 			//printf("got line: ");
 			//fflush(stdout);
 			//write(1, lineBuf, lineBufLen);
@@ -315,7 +317,7 @@ namespace socketd
 		//transfer socket to application
 		void do_transfer(vhost* vh) {
 			//cout << "do_transfer" << endl;
-			SOCKETD_DEBUG(8, "do_transfer\n");
+			SOCKETD_DEBUG(8, "do_transfer (%p)\n", this);
 			retry: if ((++tries) > 3) {
 				SOCKETD_DEBUG(3, "exceeded 3 tries for connection %p\n", this);
 				if (reading) shouldDelete = true;
@@ -331,8 +333,10 @@ namespace socketd
 			uint8_t* buf;
 			int bufLen;
 			if (streamReaderInit) {
-				CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
-				std::tie(buf, bufLen) = sr->getHistory();
+				CP::newPersistentStreamReader* sr = (CP::newPersistentStreamReader*) _sr;
+				String s = sr->getHistory();
+				buf = (uint8_t*) s.data();
+				bufLen = s.length();
 			} else {
 				buf = NULL;
 				bufLen = 0;
@@ -380,23 +384,23 @@ namespace socketd
 		}
 
 		~connectionInfo() {
-			SOCKETD_DEBUG(9, "~connectionInfo\n");
+			SOCKETD_DEBUG(9, "~connectionInfo (%p)\n", this);
 			//s.release();
 			if (streamReaderInit) {
-				CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
-				sr->~persistentStreamReader();
+				CP::newPersistentStreamReader* sr = (CP::newPersistentStreamReader*) _sr;
+				sr->~newPersistentStreamReader();
 			}
 			if (deletionFlag != NULL) *deletionFlag = true;
 		}
 	};
 	void connectionInfo::startSocketRead() {
 		if (reading) return;
-		CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
+		CP::newPersistentStreamReader* sr = (CP::newPersistentStreamReader*) _sr;
 		auto tmp = sr->beginPutData(SOCKETD_READBUFFER);
 		SOCKETD_DEBUG(9, "attempting to read %i bytes of data from client socket\n",
 				SOCKETD_READBUFFER);
 		reading = true;
-		s.read(tmp, SOCKETD_READBUFFER, CP::Callback(&connectionInfo::socketReadCB, this));
+		s.read(tmp.data(), SOCKETD_READBUFFER, CP::Callback(&connectionInfo::socketReadCB, this));
 	}
 	void connectionInfo::checkMatch() {
 		//figure out what needs to be read to decide which binding to use
@@ -445,14 +449,12 @@ namespace socketd
 		if (readTo > pos) {
 			if (pos == 0) {
 				//initialize streamReader
-				CP::persistentStreamReader* sr;
-				sr = new (_sr) CP::persistentStreamReader();
+				CP::newPersistentStreamReader* sr;
+				sr = new (_sr) CP::newPersistentStreamReader(SOCKETD_READBUFFER);
 				streamReaderInit = true;
 				//if (sr == NULL) goto fail;
 				//CP::streamReader_init(sr, rBufSize);
 				firstLine = true;
-				//sr->output = [this](uint8_t* buf, int len) {readCB(buf,len);};
-				sr->output = Delegate<void(uint8_t*, int)>(&connectionInfo::readCB, this);
 				reading = false;
 				p->add(s);
 			}
@@ -463,10 +465,14 @@ namespace socketd
 		else delete this;
 	}
 	void connectionInfo::startRead() {
-		CP::persistentStreamReader* sr = (CP::persistentStreamReader*) _sr;
+		CP::newPersistentStreamReader* sr = (CP::newPersistentStreamReader*) _sr;
 		sr->readUntilString("\r\n", 2);
-		cancelread = false;
-		startSocketRead();
+		newPersistentStreamReader::item it;
+		if (sr->process(it)) readCB((uint8_t*) it.data.data(), it.data.length());
+		else {
+			cancelread = false;
+			startSocketRead();
+		}
 	}
 	appConnection::appConnection() {
 	}
@@ -693,7 +699,7 @@ namespace socketd
 	}
 	void socketd::run() {
 		PRINTSIZE(CP::Socket);
-		PRINTSIZE(CP::persistentStreamReader);
+		PRINTSIZE(CP::newPersistentStreamReader);
 		PRINTSIZE(connectionInfo);
 //ignore SIGCHLD
 		struct sigaction sa;
