@@ -282,9 +282,9 @@ namespace CP
 	class Stream: virtual public RGC::Object
 	{
 	public:
-		Stream()=default;
-		Stream(const Stream& other)=delete;
-		Stream& operator=(const Stream& other)=delete;
+		Stream() = default;
+		Stream(const Stream& other) = delete;
+		Stream& operator=(const Stream& other) = delete;
 		union
 		{
 			struct
@@ -293,7 +293,7 @@ namespace CP
 				BufferedOutput* out;
 				int bufSize;
 				int br;
-			}_readToEnd;
+			} _readToEnd;
 			struct
 			{
 				DelegateBase<void(int)> cb;
@@ -301,14 +301,14 @@ namespace CP
 				int len;
 				int bufSize;
 				int br;
-			}_readChunked;
+			} _readChunked;
 			struct
 			{
 				DelegateBase<void(int)> cb;
 				iovec* iov;
 				int iovcnt;
 				int i, br;
-			}_readvAll;
+			} _readvAll;
 		};
 		union
 		{
@@ -318,13 +318,13 @@ namespace CP
 				iovec* iov;
 				int iovcnt;
 				int i, br;
-			}_writevAll;
+			} _writevAll;
 		};
 		void _readvCB(int r);
 		void _writevCB(int r);
 
 		//sync
-		virtual int32_t read(void* buf, int32_t len)=0;//required
+		virtual int32_t read(void* buf, int32_t len)=0; //required
 		virtual int32_t readv(iovec* iov, int iovcnt) { //optional
 			if (iovcnt <= 0) return 0;
 			return read(iov[0].iov_base, iov[0].iov_len);
@@ -453,7 +453,7 @@ namespace CP
 
 		//=========misc===========
 		//sync
-		virtual void close()=0;//may block
+		virtual void close()=0; //may block
 		virtual void flush()=0;
 
 		//async
@@ -482,8 +482,8 @@ namespace CP
 	class StreamBuffer: public BufferedOutput
 	{
 	public:
-		StreamBuffer(const StreamBuffer& other)=delete;
-		StreamBuffer& operator=(const StreamBuffer& other)=delete;
+		StreamBuffer(const StreamBuffer& other) = delete;
+		StreamBuffer& operator=(const StreamBuffer& other) = delete;
 		RGC::Ref<Stream> output;
 		StreamBuffer();
 		StreamBuffer(Stream& s, int bufsize = 4096);
@@ -503,8 +503,8 @@ namespace CP
 	class StreamWriter: public RGC::Object
 	{
 	public:
-		StreamWriter(const StreamWriter& other)=delete;
-		StreamWriter& operator=(const StreamWriter& other)=delete;
+		StreamWriter(const StreamWriter& other) = delete;
+		StreamWriter& operator=(const StreamWriter& other) = delete;
 		RGC::Ref<Object> outp;
 		BufferedOutput* buffer;
 		char _sb[sizeof(StreamBuffer)];
@@ -573,13 +573,13 @@ namespace CP
 		}
 		template<class ... P> void writeF(const char* fmt, P&&... p) {
 			int minSpace = 0;
-			if(minSpace + 1 > buffer->bufferSize - buffer->bufferPos) {
-				redo:
-				buffer->flushBuffer(minSpace+1);
+			if (minSpace + 1 > buffer->bufferSize - buffer->bufferPos) {
+				redo: buffer->flushBuffer(minSpace + 1);
 			}
-			minSpace = snprintf((char*) buffer->buffer + buffer->bufferPos, buffer->bufferSize - buffer->bufferPos, fmt, std::forward<P>(p)...);
-			if(minSpace + 1 > buffer->bufferSize - buffer->bufferPos) goto redo;
-			buffer->bufferPos+=minSpace;
+			minSpace = snprintf((char*) buffer->buffer + buffer->bufferPos,
+					buffer->bufferSize - buffer->bufferPos, fmt, std::forward<P>(p)...);
+			if (minSpace + 1 > buffer->bufferSize - buffer->bufferPos) goto redo;
+			buffer->bufferPos += minSpace;
 		}
 		void flush() {
 			buffer->flushBuffer(0);
@@ -784,8 +784,8 @@ namespace CP
 	class Handle: virtual public RGC::Object
 	{
 	public:
-		Handle(const Handle& other)=delete;
-		Handle& operator=(const Handle& other)=delete;
+		Handle(const Handle& other) = delete;
+		Handle& operator=(const Handle& other) = delete;
 		//void* __private;
 		HANDLE handle;
 		bool _supportsEPoll;
@@ -1109,8 +1109,8 @@ namespace CP
 	class StandardStream: public Stream
 	{
 	public:
-		StandardStream(const StandardStream& other)=delete;
-		StandardStream& operator=(const StandardStream& other)=delete;
+		StandardStream(const StandardStream& other) = delete;
+		StandardStream& operator=(const StandardStream& other) = delete;
 		CP::File in, out;
 		StandardStream();
 		template<class P> void addToPoll(P& p) {
@@ -1141,7 +1141,7 @@ namespace CP
 
 		//=========misc===========
 		//sync
-		virtual void close();//may block
+		virtual void close(); //may block
 		virtual void flush();
 
 		//async
@@ -1152,8 +1152,8 @@ namespace CP
 	class FixedMemoryStream: public Stream, public BufferedOutput, public MemoryBuffer
 	{
 	public:
-		FixedMemoryStream(const FixedMemoryStream& other)=delete;
-		FixedMemoryStream& operator=(const FixedMemoryStream& other)=delete;
+		FixedMemoryStream(const FixedMemoryStream& other) = delete;
+		FixedMemoryStream& operator=(const FixedMemoryStream& other) = delete;
 		//uint8_t* data;
 		//int len, pos;
 		int len;
@@ -1220,8 +1220,8 @@ namespace CP
 	class StringPool: public virtual RGC::Object, public RGC::Allocator
 	{
 	public:
-		StringPool(const StringPool& other)=delete;
-		StringPool& operator=(const StringPool& other)=delete;
+		StringPool(const StringPool& other) = delete;
+		StringPool& operator=(const StringPool& other) = delete;
 		struct _pageHeader
 		{
 			_pageHeader* next;
@@ -1236,12 +1236,14 @@ namespace CP
 		~StringPool();
 		char* beginAdd(int sz) {
 #ifdef STRINGPOOL_MEMORY_DIAG
-			int length = sz + sizeof(int);
+			int length = sz + sizeof(int) + 1;
 #else
-			int length = sz;
+			int length = sz + 1;
 #endif
 			if (likely(_curPage!=NULL && length<=(_pageSize - (int) sizeof(_pageHeader) - _curIndex))) {
 				sssss:
+				//insert null byte at the end
+				*(((char*) (_curPage + 1)) + _curIndex + sz - 1) = 0;
 #ifdef STRINGPOOL_MEMORY_DIAG
 				int* ptr = (int*) (((char*) (_curPage + 1)) + _curIndex);
 				*ptr = sz;
@@ -1381,8 +1383,8 @@ namespace CP
 	class StringStream: public Stream, public BufferedOutput, public MemoryBuffer
 	{
 	public:
-		StringStream(const StringStream& other)=delete;
-		StringStream& operator=(const StringStream& other)=delete;
+		StringStream(const StringStream& other) = delete;
+		StringStream& operator=(const StringStream& other) = delete;
 		//uint8_t* data;
 		//int len, pos;
 		string _str;
@@ -1440,12 +1442,13 @@ namespace CP
 		int size;
 		int items;
 		int maxItems;
-		MemoryPool(int size, int maxItems = 1024); MemoryPool(const MemoryPool& other)=delete;
+		MemoryPool(int size, int maxItems = 1024);
+		MemoryPool(const MemoryPool& other) = delete;
 		~MemoryPool();
 		void* alloc();
 		void* alloc(int s) override;
 		void dealloc(void* obj) override;
-		MemoryPool& operator=(const MemoryPool& other)=delete;
+		MemoryPool& operator=(const MemoryPool& other) = delete;
 	};
 	//all mutexes are assumed to be recursive
 	class Mutex
@@ -1462,7 +1465,7 @@ namespace CP
 				mutex(&m) {
 			m.lock();
 		}
-		ScopeLock(const ScopeLock& l)=delete;
+		ScopeLock(const ScopeLock& l) = delete;
 		void earlyUnlock() {
 			if (mutex != nullptr) mutex->unlock();
 			mutex = nullptr;
@@ -1470,7 +1473,7 @@ namespace CP
 		~ScopeLock() {
 			if (mutex != nullptr) mutex->unlock();
 		}
-		ScopeLock& operator=(const ScopeLock& other)=delete;
+		ScopeLock& operator=(const ScopeLock& other) = delete;
 	};
 	class PThreadMutex: public Mutex
 	{
