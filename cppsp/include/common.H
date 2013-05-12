@@ -28,6 +28,7 @@ using namespace std;
 typedef CP::String String;
 namespace cppsp
 {
+	extern const char* gxx;
 	class ParserException: public std::exception
 	{
 	public:

@@ -42,6 +42,7 @@ using namespace std;
 namespace cppsp
 {
 	PThreadMutex dlMutex;
+	const char* gxx = "g++";
 	ParserException::ParserException() :
 			message(strerror(errno)), number(errno) {
 	}
@@ -327,7 +328,7 @@ namespace cppsp
 	}
 	CP::File* compilePage(string wd, string path, string cPath, string txtPath, string output,
 			const vector<string>& cxxopts, pid_t& pid, string& compilecmd) {
-		vector<string> c_opts { "g++", "g++", "--std=c++0x", "--shared", "-o", output, cPath };
+		vector<string> c_opts { gxx, gxx, "--std=c++0x", "--shared", "-o", output, cPath };
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
 		{
 			File inp(open(path.c_str(), O_RDONLY));

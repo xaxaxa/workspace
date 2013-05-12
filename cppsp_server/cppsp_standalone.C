@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
 		rootDir=cwd;
 	}
 	string listen="0.0.0.0:80";
-	int threads=2;
+	int threads=(int)sysconf(_SC_NPROCESSORS_CONF);
 	bool f0rk=false;
 	vector<string> cxxopts;
 	vector<const char*> modules;
@@ -153,6 +153,8 @@ int main(int argc, char** argv) {
 						rootDir=getvalue();
 					} else if(strcmp(name,"c")==0) {
 						cxxopts.push_back(getvalue());
+					} else if(strcmp(name,"g")==0) {
+						cppsp::gxx=getvalue();
 					} else if(strcmp(name,"l")==0) {
 						listen=getvalue();
 					} else if(strcmp(name,"t")==0) {
@@ -164,11 +166,12 @@ int main(int argc, char** argv) {
 					} else {
 					help:
 						printf("usage: %s [options]...\noptions:\n"
-						"\t-l <host:port>: listen on specified host:port\n"
+						"\t-l <host:port>: listen on specified host:port (default: 0.0.0.0:80)\n"
+						"\t-g <option>: specify the C++ compiler (default: g++)\n"
 						"\t-c <option>: specify a compiler option to be passed to g++\n"
 						"\t-m <path>: load a cppsp module (path is relative to root)\n"
-						"\t-r <root>: set root directory (must be absolute)\n"
-						"\t-t <threads>: # of worker processes/threads to start up\n"
+						"\t-r <root>: set root directory (must be absolute) (default: $(pwd))\n"
+						"\t-t <threads>: # of worker processes/threads to start up (default: sysconf(_SC_NPROCESSORS_CONF))\n"
 						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n",argv[0]);
 						exit(1);
 					}
