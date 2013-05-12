@@ -66,7 +66,10 @@ namespace cppsp
 		CP::StreamWriter output;
 		Callback _cb;
 		CP::StringPool* sp;
-		headerContainer2 headers;
+		//headerContainer2 headers;
+		CP::PoolAllocator<std::pair<const String, String> > alloc;
+		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String, String> > > StringMap;
+		StringMap headers;
 		String statusName;
 		iovec iov[2];
 		int statusCode;
