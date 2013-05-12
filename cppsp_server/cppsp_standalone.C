@@ -88,14 +88,19 @@ void* thread1(void* v) {
 		Poll& p;
 		workerThread& thr;
 		MemoryPool& handlerPool;
+		int reqn;
 		void operator()(HANDLE sock) {
 			//printf("thread %i: accepted socket: %p (%i)\n",thr->threadid,sock,sock->handle);
 			handler1* hdlr=new (handlerPool.alloc())
 				handler1(thr.srv,p,sock,thr.listenSock.addressFamily,
 					thr.listenSock.type,thr.listenSock.protocol);
 			hdlr->allocator=&handlerPool;
+			if(++reqn>10) {
+				reqn=0;
+				sched_yield();
+			}
 		}
-	} cb {p, thr, handlerPool};
+	} cb {p, thr, handlerPool, 0};
 	thr.listenSock.repeatAcceptHandle(&cb);
 	p.add(thr.listenSock);
 	Timer t((uint64_t)2000);
