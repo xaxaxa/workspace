@@ -101,7 +101,7 @@ void* thread1(void* v) {
 			}
 		}
 	} cb {p, thr, handlerPool, 0};
-	thr.listenSock.repeatAcceptHandle(&cb);
+	
 	p.add(thr.listenSock);
 	Timer t((uint64_t)2000);
 	struct {
@@ -113,8 +113,20 @@ void* thread1(void* v) {
 	t.setCallback(&cb1);
 	p.add(t);
 	
+	int modsLeft;
+	struct {
+		int& modsLeft;
+		workerThread& thr;
+		Delegate<void(HANDLE)> cb;
+		void operator()() {
+			if(--modsLeft == 0) {
+				thr.listenSock.repeatAcceptHandle(cb);
+			}
+		}
+	} afterModuleLoad {modsLeft,thr,&cb};
 	struct {
 		const char* s;
+		Delegate<void()> afterModuleLoad;
 		void operator()(void*,exception* ex) {
 			if(ex!=NULL) {
 				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
@@ -123,12 +135,16 @@ void* thread1(void* v) {
 					printf("%s\n",ce->compilerOutput.c_str());
 				}
 			}
+			afterModuleLoad();
 		}
 	} moduleCB[thr.modules.size()];
+	modsLeft=thr.modules.size();
 	for(int ii=0;ii<(int)thr.modules.size();ii++) {
 		moduleCB[ii].s=thr.modules[ii];
+		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
 		thr.srv.loadModule(p,thr.modules[ii],&moduleCB[ii]);
 	}
+	if(thr.modules.size()==0) thr.listenSock.repeatAcceptHandle(&cb);
 	p.loop();
 	return NULL;
 }
