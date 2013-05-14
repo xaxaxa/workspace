@@ -449,8 +449,16 @@ namespace CP
 	}
 	void StreamBuffer::flushBuffer(int minBufferAllocation) {
 		if (bufferPos <= 0) return;
-		if (minBufferAllocation > bufferSize) throw overflow_error(
-				"write operation would overflow StreamBuffer. try increasing the buffer size of your StreamBuffer instance.");
+		if (minBufferAllocation > bufferSize) {
+			int bs = bufferSize;
+			do {
+				bs *= 2;
+			} while (minBufferAllocation > bs);
+			void* newbuffer = realloc(buffer, bs);
+			if (newbuffer == NULL) throw bad_alloc();
+			buffer = (uint8_t*) newbuffer;
+			bufferSize = bs;
+		}
 		output->write(buffer, bufferPos);
 		bufferPos = 0;
 	}
