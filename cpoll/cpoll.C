@@ -437,7 +437,7 @@ namespace CP
 	}
 	StreamWriter::~StreamWriter() {
 		flush();
-		if(buffer==&sb) sb.~StreamBuffer();
+		if (buffer == &sb) sb.~StreamBuffer();
 	}
 
 	StreamBuffer::StreamBuffer() {
@@ -988,9 +988,9 @@ namespace CP
 		//an error or hang-up condition
 		if ((r <= 0 && op != Operations::none) /*|| evtd.error || evtd.hungUp*/) {
 			//invalidate the current event listener
-			ed.state = EventHandlerData::States::invalid;
+			asdf: ed.state = EventHandlerData::States::invalid;
 		}
-		asdf: bool* del = deletionFlag;
+		bool* del = deletionFlag;
 		if (ed.cb != nullptr) ed.cb(r);
 		if (*del) return true;
 		if (oldstate == EventHandlerData::States::repeat) {
