@@ -500,7 +500,7 @@ namespace socketd
 		virtual void shutDown() {
 			if (!down) {
 				down = true;
-				unixsock->close(nullptr);
+				unixsock->close();
 				kill(pid, 15);
 			}
 		}
