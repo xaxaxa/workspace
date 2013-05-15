@@ -161,22 +161,12 @@ namespace cppsp
 		struct
 		{
 			Request* This;
-			MemoryStream ms;
 			void operator()(const char* name, int nameLen, const char* value, int valueLen) {
-				int nBegin, vBegin, lastLen;
-				{
-					nBegin = ms.length();
-					CP::StreamWriter sw(ms);
-					cppsp::urlDecode(name, nameLen, sw);
-					sw.flush();
-					vBegin = ms.length();
-					if (value != NULL) {
-						cppsp::urlDecode(value, valueLen, sw);
-					}
-				}
-				lastLen = ms.length();
-				String n { This->sp->add((char*) ms.data() + nBegin, vBegin - nBegin), vBegin - nBegin };
-				String v { This->sp->add((char*) ms.data() + vBegin, lastLen - vBegin), lastLen - vBegin };
+				String n, v;
+				n = cppsp::urlDecode(name, nameLen, *This->sp);
+				if (value != NULL) {
+					v = cppsp::urlDecode(value, valueLen, *This->sp);
+				} else v= {(char*)nullptr,0};
 				This->form[n] = v;
 			}
 		} cb { this };
