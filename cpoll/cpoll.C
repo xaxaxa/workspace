@@ -1881,14 +1881,12 @@ namespace CP
 			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
 				if (curEvents[i].data.ptr == (void*) &h) curEvents[i].data.ptr = NULL;
 			}
-			//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
-			//XXX: see previous comment about EPOLL_CTL_DEL
-			epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
-
-			//h.release();
-			//tmp_deleted.insert(&h);
-			//has_deleted = true;
-			active--;
+			if (h.handle >= 0) {
+				//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
+				//XXX: see previous comment about EPOLL_CTL_DEL
+				epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
+				active--;
+			}
 		}
 		h.onEventsChange = nullptr;
 		h.onClose = nullptr;
