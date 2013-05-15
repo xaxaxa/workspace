@@ -47,6 +47,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 }
 int main(int argc, char** argv) {
 	cout << "started child #" << getpid() << endl;
+	srand(int(getpid())^(int)time(NULL));
 	{
 		char cwd[255];
 		if(getcwd(cwd,255)==NULL) throw runtime_error(strerror(errno));
@@ -108,6 +109,7 @@ int main(int argc, char** argv) {
 					printf("%s\n",ce->compilerOutput.c_str());
 				}
 			}
+			afterModuleLoad();
 		}
 	} moduleCB[modules.size()];
 	modsLeft=modules.size();
