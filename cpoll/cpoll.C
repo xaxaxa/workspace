@@ -993,7 +993,7 @@ namespace CP
 		bool* del = deletionFlag;
 		if (ed.cb != nullptr) ed.cb(r);
 		if (*del) return true;
-		if (oldstate == EventHandlerData::States::repeat) {
+		if (ed.state == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
 		}
