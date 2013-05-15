@@ -1243,7 +1243,7 @@ namespace CP
 			if (likely(_curPage!=NULL && length<=(_pageSize - (int) sizeof(_pageHeader) - _curIndex))) {
 				sssss:
 				//insert null byte at the end
-				*(((char*) (_curPage + 1)) + _curIndex + sz - 1) = 0;
+				*(((char*) (_curPage + 1)) + _curIndex + sz) = 0;
 #ifdef STRINGPOOL_MEMORY_DIAG
 				int* ptr = (int*) (((char*) (_curPage + 1)) + _curIndex);
 				*ptr = sz;
