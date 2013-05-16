@@ -452,6 +452,10 @@ namespace cppsp
 			ms.flush();
 			beginRead();
 		}
+		void deleteTmpfiles() {
+			unlink(txtPath.c_str());
+			unlink(dllPath.c_str());
+		}
 		void afterCompile(bool success) {
 			if (!success) {
 				CompileException exc;
@@ -459,11 +463,13 @@ namespace cppsp
 				for (int i = 0; i < (int) loadCB.size(); i++)
 					loadCB[i](nullptr, &exc);
 				rename(cPath.c_str(), (path + ".C").c_str());
-				goto aaa;
+				deleteTmpfiles();
+				return;
 			}
 			try {
 				if (loaded) doUnload();
 				doLoad();
+				deleteTmpfiles();
 				auto tmpcb = loadCB;
 				loadCB.clear();
 				for (int i = 0; i < (int) tmpcb.size(); i++)
@@ -474,8 +480,6 @@ namespace cppsp
 				for (int i = 0; i < (int) tmpcb.size(); i++)
 					tmpcb[i](nullptr, &ex);
 			}
-			aaa: unlink(txtPath.c_str());
-			unlink(dllPath.c_str());
 		}
 		void beginRead() {
 			if (ms.bufferSize - ms.bufferPos < 4096) ms.flushBuffer(4096);
@@ -519,8 +523,7 @@ namespace cppsp
 				return;
 			}
 
-			do_comp: unlink(txtPath.c_str());
-			unlink(dllPath.c_str());
+			do_comp: deleteTmpfiles();
 			CP::File* f = (CP::File*) checkError(
 					compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
 			tmp += "\n";
