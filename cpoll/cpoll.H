@@ -1262,9 +1262,9 @@ namespace CP
 		}
 		void endAdd(int length) {
 #ifdef STRINGPOOL_MEMORY_DIAG
-			_curIndex += length + sizeof(int);
+			_curIndex += length + sizeof(int) + 1;
 #else
-			_curIndex += length;
+			_curIndex += length + 1;
 #endif
 		}
 		char* add(int length) {
