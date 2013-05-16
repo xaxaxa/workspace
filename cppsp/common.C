@@ -432,31 +432,18 @@ namespace cppsp
 				compiling = false;
 				int status = -1;
 				waitpid(compilerPID, &status, 0);
-				if (status != 0) {
-					CompileException exc;
-					exc.compilerOutput = string((const char*) ms.data(), ms.length());
-					for (int i = 0; i < (int) loadCB.size(); i++)
-						loadCB[i](nullptr, &exc);
-					rename(cPath.c_str(), (path + ".C").c_str());
-					goto aaa;
-				}
 				unlink(cPath.c_str());
-				try {
-					if (loaded) doUnload();
-					doLoad();
-					for (int i = 0; i < (int) loadCB.size(); i++)
-						loadCB[i](this, nullptr);
-				} catch (exception& ex) {
-					/*string msg(ex.what());
-					 msg.append("\n\n\ncompiler output:\n");
-					 msg.append((const char*)ms.data(),ms.length());
-					 logic_error le(msg);*/
-					for (int i = 0; i < (int) loadCB.size(); i++)
-						loadCB[i](nullptr, &ex);
+
+				//keep a copy of the compiled page
+				if (status == 0) {
+					string dll1 = dllPath + ".1";
+					link(dllPath.c_str(), dll1.c_str());
+					rename(dll1.c_str(), (path + ".so").c_str());
+					string txt1 = txtPath + ".1";
+					link(txtPath.c_str(), txt1.c_str());
+					rename(txt1.c_str(), (path + ".txt").c_str());
 				}
-				aaa: loadCB.clear();
-				unlink(txtPath.c_str());
-				unlink(dllPath.c_str());
+				afterCompile(status == 0);
 				compile_fd = nullptr;
 				//if (compileCB != nullptr) compileCB(*this);
 				return;
@@ -464,6 +451,31 @@ namespace cppsp
 			ms.bufferPos += r;
 			ms.flush();
 			beginRead();
+		}
+		void afterCompile(bool success) {
+			if (!success) {
+				CompileException exc;
+				exc.compilerOutput = string((const char*) ms.data(), ms.length());
+				for (int i = 0; i < (int) loadCB.size(); i++)
+					loadCB[i](nullptr, &exc);
+				rename(cPath.c_str(), (path + ".C").c_str());
+				goto aaa;
+			}
+			try {
+				if (loaded) doUnload();
+				doLoad();
+				auto tmpcb = loadCB;
+				loadCB.clear();
+				for (int i = 0; i < (int) tmpcb.size(); i++)
+					tmpcb[i](this, nullptr);
+			} catch (exception& ex) {
+				auto tmpcb = loadCB;
+				loadCB.clear();
+				for (int i = 0; i < (int) tmpcb.size(); i++)
+					tmpcb[i](nullptr, &ex);
+			}
+			aaa: unlink(txtPath.c_str());
+			unlink(dllPath.c_str());
 		}
 		void beginRead() {
 			if (ms.bufferSize - ms.bufferPos < 4096) ms.flushBuffer(4096);
@@ -478,6 +490,37 @@ namespace cppsp
 			txtPath = path + "." + string(sss) + ".txt";
 			dllPath = path + "." + string(sss) + ".dll";
 			cPath = path + "." + string(sss) + ".C";
+
+			//check if a precompiled page exists; if it exists and is newer than
+			//the .cppsp, then simply hardlink to it
+			timespec modif_txt, modif_so, modif_cppsp;
+			struct stat st;
+			{
+				TO_C_STR(path.data(), path.length(), s1);
+				if (stat(s1, &st) < 0) goto do_comp;
+				modif_cppsp = st.st_mtim;
+			}
+			{
+				CONCAT_TO(path.data(), path.length(), s1, ".txt");
+				if (stat(s1, &st) < 0) goto do_comp;
+				modif_txt = st.st_mtim;
+			}
+			{
+				CONCAT_TO(path.data(), path.length(), s1, ".so");
+				if (stat(s1, &st) < 0) goto do_comp;
+				modif_so = st.st_mtim;
+			}
+			if (tsCompare(modif_cppsp, modif_txt) <= 0 && tsCompare(modif_cppsp, modif_so) <= 0) {
+				string txt1 = path + ".txt";
+				string dll1 = path + ".so";
+				if (link(txt1.c_str(), txtPath.c_str()) < 0) goto do_comp;
+				if (link(dll1.c_str(), dllPath.c_str()) < 0) goto do_comp;
+				afterCompile(true);
+				return;
+			}
+
+			do_comp: unlink(txtPath.c_str());
+			unlink(dllPath.c_str());
 			CP::File* f = (CP::File*) checkError(
 					compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
 			tmp += "\n";
