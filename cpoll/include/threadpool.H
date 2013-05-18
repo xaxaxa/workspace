@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <vector>
 #include <unistd.h>
+#include <errno.h>
 #include "cpoll.H"
 using namespace std;
 namespace CP
@@ -81,8 +82,7 @@ namespace CP
 			IDLETHREAD* tmp = new IDLETHREAD();
 			if (pthread_create(&tmp->thread, NULL, idleThread, (void*) tmp) == 0) return tmp;
 			else {
-				delete tmp;
-				return NULL;
+				throw runtime_error(strerror(errno));
 			}
 		}
 		IDLETHREAD* get() {
@@ -90,14 +90,13 @@ namespace CP
 			{
 				ScopeLock l(mutex);
 				threadcount = threads.size();
+				if (threadcount > 0) {
+					IDLETHREAD* t = threads[threads.size() - 1];
+					threads.resize(threads.size() - 1);
+					return t;
+				}
 			}
-			if (threadcount <= 0) return create();
-			else {
-				ScopeLock l(mutex);
-				IDLETHREAD* t = threads[threads.size() - 1];
-				threads.resize(threads.size() - 1);
-				return t;
-			}
+			return create();
 		}
 		void put(IDLETHREAD* t) {
 			bool b;
