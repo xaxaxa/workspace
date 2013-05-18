@@ -1,5 +1,5 @@
 PKG_CONFIG=`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0`
-FLAGS=-I../include/ -L../lib/
+FLAGS=-I../include/ -L../lib/ -g3 --std=c++0x -lcpoll
 all: jackfft jackfftc converters
 jackfft:
 	g++ -g3 -Ofast -pthread jackfft.C -o jackfft --std=c++0x -lrt -lcplib -ljack -lfftw3 $(FLAGS) $(PKG_CONFIG)

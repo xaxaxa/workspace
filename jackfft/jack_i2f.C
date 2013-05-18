@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <cpoll/cpoll.H>
 
 using namespace std;
 vector<jack_port_t *> inputs;
@@ -114,13 +115,19 @@ int main (int argc, char *argv[])
 	*/
 	printf ("engine sample rate: %u\n", srate=jack_get_sample_rate (client));
 
+	CP::StringPool sp;
 	/* create ports */
 	int i;
 	for(i=0;i<CHANNELS;i++)
 	{
-		inputs.push_back(jack_port_register (client, CONCAT("input_"<<i).c_str(), 
+		CP::MemoryStream ss;
+		CP::StreamWriter sw(ss);
+		sw.writeF("input_%i", i); sw.flush();
+		inputs.push_back(jack_port_register (client, sp.addString(ss.String()).data(), 
 						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
-		outputs.push_back(jack_port_register (client, CONCAT("output_"<<i).c_str(), 
+		ss.clear();
+		sw.writeF("output_%i", i); sw.flush();
+		outputs.push_back(jack_port_register (client, sp.addString(ss.String()).data(), 
 						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
 	}
 	/* tell the JACK server that we are ready to roll */
