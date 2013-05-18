@@ -460,8 +460,10 @@ namespace cppsp
 			if (!success) {
 				CompileException exc;
 				exc.compilerOutput = string((const char*) ms.data(), ms.length());
-				for (int i = 0; i < (int) loadCB.size(); i++)
-					loadCB[i](nullptr, &exc);
+				auto tmpcb = loadCB;
+				loadCB.clear();
+				for (int i = 0; i < (int) tmpcb.size(); i++)
+					tmpcb[i](nullptr, &exc);
 				rename(cPath.c_str(), (path + ".C").c_str());
 				deleteTmpfiles();
 				return;
