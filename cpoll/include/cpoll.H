@@ -567,21 +567,21 @@ namespace CP
 			buffer->bufferPos++;
 		}
 		void write(int8_t i) {
-			//snprintf() writes a null byte, so gotta reserve 4 bytes of buffer space
-			if (unlikely(buffer->bufferSize - buffer->bufferPos < 4)) buffer->flushBuffer(4);
-			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 4, "%hhi", i);
+			//snprintf() writes a null byte and possibly a negative sign, so gotta reserve 5 bytes of buffer space
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 5)) buffer->flushBuffer(5);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 5, "%hhi", i);
 		}
 		void write(int16_t i) {
-			if (unlikely(buffer->bufferSize - buffer->bufferPos < 6)) buffer->flushBuffer(6);
-			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 6, "%hi", i);
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 7)) buffer->flushBuffer(7);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 7, "%hi", i);
 		}
 		void write(int32_t i) {
-			if (unlikely(buffer->bufferSize - buffer->bufferPos < 11)) buffer->flushBuffer(11);
-			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 11, "%i", i);
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 12)) buffer->flushBuffer(12);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 12, "%i", i);
 		}
 		void write(int64_t i) {
-			if (unlikely(buffer->bufferSize - buffer->bufferPos < 21)) buffer->flushBuffer(21);
-			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 21, "%lli", i);
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 22)) buffer->flushBuffer(22);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 22, "%lli", i);
 		}
 		void write(uint8_t i) {
 			if (unlikely(buffer->bufferSize - buffer->bufferPos < 4)) buffer->flushBuffer(4);
