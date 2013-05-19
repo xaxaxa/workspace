@@ -1184,7 +1184,6 @@ namespace CP
 		//if(handle<0)throw runtime_error("asdf");
 		if (onClose != nullptr) onClose(*this);
 		::close(handle);
-		handle = -1;
 		deinit();
 	}
 	void File::flush() {
