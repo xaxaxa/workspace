@@ -113,13 +113,13 @@ namespace cppsp
 		String operator[](String name) {
 			item it { name.data(), NULL, name.length(), 0 };
 			item* tmp = std::lower_bound(items, items + length, it, compareItem);
-			if (tmp != NULL && ci_compare(tmp->n(), name) == 0) return tmp->v();
+			if (tmp != NULL && (tmp - items) < length && ci_compare(tmp->n(), name) == 0) return tmp->v();
 			return {(char*)nullptr,0};
 		}
 		iterator find(String name) {
 			item it { name.data(), NULL, name.length(), 0 };
 			item* tmp = std::lower_bound(items, items + length, it, compareItem);
-			if (tmp != NULL && ci_compare(tmp->n(), name) == 0) return {this,tmp};
+			if (tmp != NULL && (tmp - items) < length && ci_compare(tmp->n(), name) == 0) return {this,tmp};
 			return end();
 		}
 		iterator begin() {
