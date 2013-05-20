@@ -1540,7 +1540,7 @@ namespace CP
 				pbuf(NULL) {
 		}
 		Buffer(refc_t* orig, void* buf, int length) :
-				pbuf(orig), String((char*) buf, length) {
+				String((char*) buf, length), pbuf(orig) {
 			__inc();
 		}
 		inline void release() {
