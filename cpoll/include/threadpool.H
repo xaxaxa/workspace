@@ -68,19 +68,22 @@ namespace CP
 		vector<IDLETHREAD*> threads;
 		PThreadMutex mutex;
 		int32_t max;
+		pthread_attr_t _attr;
 		ThreadPool(int32_t max = 8) :
 				max(max) {
-
+			pthread_attr_init(&_attr);
+			pthread_attr_setdetachstate(&_attr, PTHREAD_CREATE_DETACHED);
 		}
 		~ThreadPool() {
 			for (size_t i = 0; i < threads.size(); i++) {
 				threads[i]->op = IDLETHREAD::kill;
 				threads[i]->signal();
 			}
+			pthread_attr_destroy(&_attr);
 		}
 		IDLETHREAD* create() {
 			IDLETHREAD* tmp = new IDLETHREAD();
-			if (pthread_create(&tmp->thread, NULL, idleThread, (void*) tmp) == 0) return tmp;
+			if (pthread_create(&tmp->thread, &_attr, idleThread, (void*) tmp) == 0) return tmp;
 			else {
 				throw runtime_error(strerror(errno));
 			}
