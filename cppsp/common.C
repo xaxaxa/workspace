@@ -432,10 +432,10 @@ namespace cppsp
 				compiling = false;
 				int status = -1;
 				waitpid(compilerPID, &status, 0);
-				unlink(cPath.c_str());
 
 				//keep a copy of the compiled page
 				if (status == 0) {
+					unlink(cPath.c_str());
 					string dll1 = dllPath + ".1";
 					link(dllPath.c_str(), dll1.c_str());
 					rename(dll1.c_str(), (path + ".so").c_str());
@@ -458,30 +458,32 @@ namespace cppsp
 		}
 		void afterCompile(bool success) {
 			if (!success) {
+				rename(cPath.c_str(), (path + ".C").c_str());
+				deleteTmpfiles();
 				CompileException exc;
 				exc.compilerOutput = string((const char*) ms.data(), ms.length());
 				auto tmpcb = loadCB;
 				loadCB.clear();
 				for (int i = 0; i < (int) tmpcb.size(); i++)
 					tmpcb[i](nullptr, &exc);
-				rename(cPath.c_str(), (path + ".C").c_str());
-				deleteTmpfiles();
 				return;
 			}
 			try {
 				if (loaded) doUnload();
 				doLoad();
+			} catch (exception& ex) {
 				deleteTmpfiles();
 				auto tmpcb = loadCB;
 				loadCB.clear();
 				for (int i = 0; i < (int) tmpcb.size(); i++)
-					tmpcb[i](this, nullptr);
-			} catch (exception& ex) {
-				auto tmpcb = loadCB;
-				loadCB.clear();
-				for (int i = 0; i < (int) tmpcb.size(); i++)
 					tmpcb[i](nullptr, &ex);
+				return;
 			}
+			deleteTmpfiles();
+			auto tmpcb = loadCB;
+			loadCB.clear();
+			for (int i = 0; i < (int) tmpcb.size(); i++)
+				tmpcb[i](this, nullptr);
 		}
 		void beginRead() {
 			if (ms.bufferSize - ms.bufferPos < 4096) ms.flushBuffer(4096);
@@ -489,7 +491,6 @@ namespace cppsp
 					CP::Callback(&loadedPage::readCB, this));
 		}
 		void doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
-			ms.clear();
 			string tmp;
 			char sss[32];
 			snprintf(sss, 32, "%i", rand());
@@ -526,8 +527,15 @@ namespace cppsp
 			}
 
 			do_comp: deleteTmpfiles();
-			CP::File* f = (CP::File*) checkError(
-					compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
+			CP::File* f;
+			ms.clear();
+			try {
+				f = (CP::File*) checkError(
+						compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
+			} catch (...) {
+				deleteTmpfiles();
+				throw;
+			}
 			tmp += "\n";
 			ms.write(tmp.data(), tmp.length());
 			p.add(*f);
