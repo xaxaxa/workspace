@@ -19,8 +19,13 @@
 #include <cppsp/page.H>
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
+#include <assert.h>
 #include "server.C"
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
+#ifndef SO_REUSEPORT
+#define SO_REUSEPORT	15
+#endif
+#define CPPSP_LISTEN_BACKLOG 256
 
 using namespace std;
 using namespace CP;
@@ -34,14 +39,14 @@ struct workerThread
 {
 	cppspServer::Server srv;
 	vector<const char*> modules;
-	CP::Socket listenSock;
+	Ref<CP::Socket> listenSock;
 	union {
 		pid_t pid;
 		pthread_t thread;
 	};
 	int threadid;
-	workerThread(int sock,int d,int t,int p): srv(rootDir.c_str()),
-		listenSock(sock,d,t,p) {}
+	workerThread(Socket& sock): srv(rootDir.c_str()),
+		listenSock(sock) {}
 };
 class handler1: public RGC::Allocator
 {
@@ -92,8 +97,8 @@ void* thread1(void* v) {
 		void operator()(HANDLE sock) {
 			//printf("thread %i: accepted socket: %p (%i)\n",thr->threadid,sock,sock->handle);
 			handler1* hdlr=new (handlerPool.alloc())
-				handler1(thr.srv,p,sock,thr.listenSock.addressFamily,
-					thr.listenSock.type,thr.listenSock.protocol);
+				handler1(thr.srv,p,sock,thr.listenSock->addressFamily,
+					thr.listenSock->type,thr.listenSock->protocol);
 			hdlr->allocator=&handlerPool;
 			if(++reqn>10) {
 				reqn=0;
@@ -102,7 +107,7 @@ void* thread1(void* v) {
 		}
 	} cb {p, thr, handlerPool, 0};
 	
-	p.add(thr.listenSock);
+	p.add(*thr.listenSock);
 	Timer t((uint64_t)2000);
 	struct {
 		cppspServer::Server& srv;
@@ -120,7 +125,7 @@ void* thread1(void* v) {
 		Delegate<void(HANDLE)> cb;
 		void operator()() {
 			if(--modsLeft == 0) {
-				thr.listenSock.repeatAcceptHandle(cb);
+				thr.listenSock->repeatAcceptHandle(cb);
 			}
 		}
 	} afterModuleLoad {modsLeft,thr,&cb};
@@ -144,7 +149,7 @@ void* thread1(void* v) {
 		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
 		thr.srv.loadModule(p,thr.modules[ii],&moduleCB[ii]);
 	}
-	if(thr.modules.size()==0) thr.listenSock.repeatAcceptHandle(&cb);
+	if(thr.modules.size()==0) thr.listenSock->repeatAcceptHandle(&cb);
 	p.loop();
 	return NULL;
 }
@@ -199,9 +204,26 @@ int main(int argc, char** argv) {
 	printf("specify -? for help\n");
 	auto i=listen.find(':');
 	if(i==string::npos) throw runtime_error("expected \":\" in listen");
+	
+	bool reuseport=false;
+	EndPoint* ep=NULL;
+	struct {
+		bool& reuseport;
+		void operator()(int s) {
+			int optval = 1;
+			reuseport=(setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))==0);
+		}
+	} initsock {reuseport};
 	listensock.bind(listen.substr(0,i).c_str(),
-		listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM);
-	listensock.listen(512);
+		listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM,0,0,&initsock);
+	if(reuseport) {
+		printf("\x1B[1;1;1musing SO_REUSEPORT\x1B[0;0;0m\n");
+		ep=listensock.getLocalEndPoint();
+	} else {
+		printf("\x1B[41;1;33mNOT using SO_REUSEPORT\x1B[0;0;0m\n");
+		listensock.listen(CPPSP_LISTEN_BACKLOG);
+	}
+	
 	//p.add(listensock);
 	PRINTSIZE(CP::Socket);
 	PRINTSIZE(cppspServer::handler);
@@ -209,9 +231,19 @@ int main(int argc, char** argv) {
 	printf("starting %i threads\n",threads);
 	workerThread* th=(workerThread*)new char[sizeof(workerThread)*threads];
 	for(int i=0;i<threads;i++) {
-		workerThread& tmp=*(new (th+i) workerThread(f0rk ? 
-			listensock.handle : dup(listensock.handle),
-			listensock.addressFamily, listensock.type, listensock.protocol));
+		Socket* newsock;
+		if(reuseport) {
+			newsock=new Socket(listensock.addressFamily, listensock.type, listensock.protocol);
+			int optval = 1;
+			assert(setsockopt(newsock->handle, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))==0);
+			newsock->bind(*ep);
+			newsock->listen(CPPSP_LISTEN_BACKLOG);
+		} else {
+			newsock=new Socket(f0rk ? listensock.handle : dup(listensock.handle),
+				listensock.addressFamily, listensock.type, listensock.protocol);
+		}
+		workerThread& tmp=*(new (th+i) workerThread(*newsock));
+		newsock->release();
 		CXXOpts(tmp.srv.mgr)=cxxopts;
 		tmp.modules=modules;
 		tmp.threadid=i+1;
