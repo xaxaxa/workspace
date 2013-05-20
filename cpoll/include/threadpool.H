@@ -17,11 +17,11 @@
 using namespace std;
 namespace CP
 {
+	class ThreadPool;
 	struct IDLETHREAD
 	{
+		ThreadPool* tp;
 		Delegate<void()> func;
-		Delegate<void(IDLETHREAD*)> cb;
-		timespec lastPut { 0, 0 }; //CLOCK_MONOTONIC
 		pthread_t thread;
 		int32_t efd;
 		enum
@@ -39,32 +39,12 @@ namespace CP
 			eventfd_write(efd, i);
 		}
 	};
-	void* idleThread(void* v) {
-		while (true) {
-			{
-				eventfd_t i;
-				eventfd_read(((IDLETHREAD*) v)->efd, &i);
-			}
-			switch (((IDLETHREAD*) v)->op) {
-				case IDLETHREAD::invoke:
-					try {
-						((IDLETHREAD*) v)->func();
-					} catch (...) {
-					}
-					((IDLETHREAD*) v)->cb((IDLETHREAD*) v);
-					break;
-				case IDLETHREAD::kill:
-					delete (IDLETHREAD*) v;
-					return NULL;
-				default:
-					break;
-			}
-		}
-	}
+	void* idleThread(void* v);
 
 	class ThreadPool: public RGC::Object
 	{
 	public:
+		Delegate<void()> afterStart, beforeExit;
 		vector<IDLETHREAD*> threads;
 		PThreadMutex mutex;
 		int32_t max;
@@ -83,6 +63,7 @@ namespace CP
 		}
 		IDLETHREAD* create() {
 			IDLETHREAD* tmp = new IDLETHREAD();
+			tmp->tp = this;
 			if (pthread_create(&tmp->thread, &_attr, idleThread, (void*) tmp) == 0) return tmp;
 			else {
 				throw runtime_error(strerror(errno));
@@ -114,12 +95,36 @@ namespace CP
 		}
 		void invoke(const Delegate<void()>& func) {
 			IDLETHREAD* t = get();
-			t->cb = {&ThreadPool::put,this};
 			t->func = func;
 			t->op = IDLETHREAD::invoke;
 			t->signal();
 		}
 	};
+	void* idleThread(void* v) {
+		IDLETHREAD* thr = (IDLETHREAD*) v;
+		if (thr->tp->afterStart != nullptr) thr->tp->afterStart();
+		while (true) {
+			{
+				eventfd_t i;
+				eventfd_read(thr->efd, &i);
+			}
+			switch (thr->op) {
+				case IDLETHREAD::invoke:
+					try {
+						thr->func();
+					} catch (...) {
+					}
+					thr->tp->put(thr);
+					break;
+				case IDLETHREAD::kill:
+					if (thr->tp->beforeExit != nullptr) thr->tp->beforeExit();
+					delete thr;
+					return NULL;
+				default:
+					break;
+			}
+		}
+	}
 }
 
 #endif /* THREADPOOL_H_ */
