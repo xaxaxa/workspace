@@ -972,8 +972,12 @@ namespace CP
 				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 		void bind(const sockaddr *addr, int32_t addr_size);
 		void bind(const EndPoint &ep);
+		//initsock is called right after creating the socket; you can use it to set socket options
+		//such as SO_REUSEPORT that need to be set before binding
 		void bind(const char* hostname, const char* port, int32_t family = AF_UNSPEC,
-				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
+				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0,
+				Callback initsock = nullptr);
+
 
 		int32_t shutdown(int32_t how);
 		void shutdown(int32_t how, const Callback& cb);

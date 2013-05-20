@@ -1353,7 +1353,7 @@ namespace CP
 		bind((sockaddr*) tmp, size);
 	}
 	void Socket::bind(const char* hostname, const char* port, int32_t family, int32_t socktype,
-			int32_t proto, int32_t flags) {
+			int32_t proto, int32_t flags, Callback initsock) {
 		//XXX
 		if (handle != -1) throw CPollException(
 				"Socket::bind(string, ...) creates a socket, but the socket is already initialized");
@@ -1364,6 +1364,7 @@ namespace CP
 			if (_f < 0) continue;
 			int32_t tmp12345 = 1;
 			setsockopt(_f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
+			if (initsock != nullptr) initsock(_f);
 			int size = hosts[i]->getSockAddrSize();
 			uint8_t tmp[size];
 			hosts[i]->getSockAddr((sockaddr*) tmp);
