@@ -164,6 +164,11 @@ namespace cppsp
 		inline String getHistory(bool includeUnprocessed = true) {
 			return {(char*)ms.buffer, includeUnprocessed ? ms.length() : pos};
 		}
+		void skip(int length) {
+			pos+=length;
+			if(rpos<pos)rpos=pos;
+		}
+
 		//free up buffer space
 		void reset() {
 			if (pos > 0) {
@@ -175,6 +180,75 @@ namespace cppsp
 				ms.bufferPos = ms.len;
 			}
 		}
-	};}
+	};
+	class HTTPStream: public CP::Stream
+	{
+	public:
+		HTTPParser* parser;
+		Stream* stream;
+		int32_t tryFixRead(void* buf, int32_t len) {
+			int& bufPos = parser->pos;
+			int bufLen = parser->ms.length();
+			if (bufPos >= bufLen) return -1;
+			int32_t l = len > (bufLen - bufPos) ? (bufLen - bufPos) : len;
+			if (l <= 0) return 0;
+			memcpy(buf, parser->ms.buffer + bufPos, l);
+			bufPos += l;
+			if (parser->rpos < bufPos) parser->rpos = bufPos;
+			return l;
+		}
+		int32_t read(void* buf, int32_t len) {
+			int32_t r;
+			if ((r = tryFixRead(buf, len)) == -1) return stream->read(buf, len);
+			else return r;
+		}
+		int32_t write(const void* buf, int32_t len) {
+			stream->write(buf, len);
+		}
+		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false) {
+			int32_t r;
+			if ((r = tryFixRead(buf, len)) == -1) stream->read(buf, len, cb, repeat);
+			else {
+				cb(r);
+				if (repeat && r > 0) stream->read(buf, len, cb, true);
+			}
+		}
+		void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false) override {
+			stream->write(buf, len, cb, repeat);
+		}
+		//sync
+		void close() override {
+		}
+		void flush() override {
+			stream->flush();
+		}
+
+		//async
+		void close(const Callback& cb) override {
+		}
+		void flush(const Callback& cb) override {
+			stream->flush(cb);
+		}
+		void cancelRead() override {
+			stream->cancelRead();
+		}
+		void cancelWrite() override {
+			stream->cancelWrite();
+		}
+		int32_t readBuffer(void*& buf, int32_t maxlen) override {
+			int& bufPos = parser->pos;
+			int bufLen = parser->ms.length();
+			if (bufPos >= bufLen) return 0;
+			if (bufLen - bufPos < maxlen) maxlen = bufLen - bufPos;
+			buf = parser->ms.buffer + bufPos;
+			return maxlen;
+		}
+		void freeBuffer(void* buf, int32_t len) override {
+			int& bufPos = parser->pos;
+			bufPos += len;
+			if (parser->rpos < bufPos) parser->rpos = bufPos;
+		}
+	};
+}
 
 #endif /* HTTPPARSER_H_ */

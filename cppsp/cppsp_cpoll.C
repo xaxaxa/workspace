@@ -28,6 +28,10 @@ namespace cppsp
 	//static int CPollRequest::bufSize=4096;
 	CPollRequest::CPollRequest(CP::Socket& s, CP::StringPool* sp) :
 			Request(s, sp), _parser(&headers), s(s) {
+		_stream.parser = &_parser;
+		_stream.stream = &s;
+		_stream.stream->retain();
+		this->inputStream = &_stream;
 	}
 	bool CPollRequest_parseReqLine(CPollRequest* This) {
 		uint8_t* lineBuf = (uint8_t*) This->_parser.reqLine.data();
@@ -94,5 +98,6 @@ namespace cppsp
 		}
 	}
 	CPollRequest::~CPollRequest() {
+		_stream.stream->release();
 	}
 }

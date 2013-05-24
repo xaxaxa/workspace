@@ -33,6 +33,7 @@ namespace cppsp
 	{
 	public:
 		HTTPParser _parser;
+		HTTPStream _stream;
 		RGC::Ref<CP::Socket> s;
 		Delegate<void(bool)> tmp_cb;
 		int _headers_begin;
@@ -44,9 +45,6 @@ namespace cppsp
 		void readPost(Delegate<void(Request&)> cb) override {
 			parsePost(_parser.content);
 			cb(*this);
-		}
-		virtual String getBufferedData() override {
-			return _parser.getBufferData();
 		}
 		void _beginRead();
 		void _readCB(int i);
