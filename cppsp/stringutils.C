@@ -249,6 +249,18 @@ namespace cppsp
 		}
 		if (inLen > last_i) sw.write(in + last_i, inLen - last_i);
 	}
-
+	int ci_compare(String s1, String s2) {
+		if (s1.length() > s2.length()) return 1;
+		if (s1.length() < s2.length()) return -1;
+		if (s1.length() == 0) return 0;
+		char a, b;
+		for (int i = 0; i < s1.length(); i++) {
+			a = tolower(s1.data()[i]);
+			b = tolower(s2.data()[i]);
+			if (a < b) return -1;
+			if (a > b) return 1;
+		}
+		return 0;
+	}
 }
 

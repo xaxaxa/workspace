@@ -82,12 +82,6 @@ namespace cppsp
 		/**
 		 internal method do not use.
 		 */
-		virtual String getBufferedData() {
-			return {(char*)nullptr,0};
-		}
-		/**
-		 internal method do not use.
-		 */
 		virtual void reset();
 	};
 	/**
@@ -162,7 +156,7 @@ namespace cppsp
 		 */
 		virtual void flush(Callback cb);
 		/**
-		 internal method do not use.
+		 clear buffered output
 		 */
 		virtual void clear();
 		/**

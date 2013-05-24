@@ -165,6 +165,7 @@ int main(int argc, char** argv) {
 	bool f0rk=false;
 	vector<string> cxxopts;
 	vector<const char*> modules;
+	bool reuseport=true;
 	try {
 		parseArgs(argc, argv,
 				[&](char* name, const std::function<char*()>& getvalue)
@@ -184,6 +185,8 @@ int main(int argc, char** argv) {
 						modules.push_back(getvalue());
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
+					} else if(strcmp(name,"s")==0) {
+						reuseport=false;
 					} else {
 					help:
 						printf("usage: %s [options]...\noptions:\n"
@@ -205,7 +208,6 @@ int main(int argc, char** argv) {
 	auto i=listen.find(':');
 	if(i==string::npos) throw runtime_error("expected \":\" in listen");
 	
-	bool reuseport=false;
 	EndPoint* ep=NULL;
 	struct {
 		bool& reuseport;
@@ -214,8 +216,12 @@ int main(int argc, char** argv) {
 			reuseport=(setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))==0);
 		}
 	} initsock {reuseport};
-	listensock.bind(listen.substr(0,i).c_str(),
-		listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM,0,0,&initsock);
+	if(reuseport)
+		listensock.bind(listen.substr(0,i).c_str(),
+			listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM,0,0,&initsock);
+	else
+		listensock.bind(listen.substr(0,i).c_str(),
+			listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM);
 	if(reuseport) {
 		printf("\x1B[1;1;1musing SO_REUSEPORT\x1B[0;0;0m\n");
 		ep=listensock.getLocalEndPoint();
@@ -260,6 +266,7 @@ int main(int argc, char** argv) {
 				return 0;
 			} else if(pid>0) {
 				tmp.pid=pid;
+				//delete newsock;
 			} else {
 				perror("fork");
 				return 1;

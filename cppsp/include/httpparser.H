@@ -29,7 +29,7 @@
 namespace cppsp
 {
 	using namespace CP;
-	struct HTTPParser
+	struct HTTPParser: public virtual RGC::Object
 	{
 		static inline char tolower(char c) {
 			if (c <= 'Z' && c >= 'A') c = c - 'A' + 'a';
@@ -108,18 +108,16 @@ namespace cppsp
 						} else {
 							headerContainer::item it;
 							uint8_t* tmp1 = (uint8_t*) tmp - 1;
-							while (tmp1 >= lineBuf && *tmp1 == ' ')
-							tmp1--;
+							while (tmp1 >= lineBuf && *tmp1 == ' ') tmp1--;
 							it.name = (char*)lineBuf;
 							it.nameLength = (int) (tmp1 - lineBuf + 1);
 							tmp1 = (uint8_t*) tmp + 1;
-							while (tmp1 < (buf + newpos) && *tmp1 == ' ')
-							tmp1++;
+							while (tmp1 < (buf + newpos) && *tmp1 == ' ') tmp1++;
 							it.value = (char*)tmp1;
 							it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
 
 							if (_ctLen == 0
-							&& ci_equals( {(char*) lineBuf, it.nameLength}, "content-length")) {
+									&& ci_equals( {(char*) lineBuf, it.nameLength}, "content-length")) {
 								_ctLen = atoi( {(char*) tmp1, it.valueLength});
 							}
 							*(items++)=it;

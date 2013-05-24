@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <algorithm>
+#include "stringutils.H"
 namespace cppsp
 {
 	typedef CP::String String;
@@ -34,19 +35,6 @@ namespace cppsp
 		return c;
 	}
 #endif
-	static int ci_compare(String s1, String s2) {
-		if (s1.length() > s2.length()) return 1;
-		if (s1.length() < s2.length()) return -1;
-		if (s1.length() == 0) return 0;
-		char a, b;
-		for (int i = 0; i < s1.length(); i++) {
-			a = tolower(s1.data()[i]);
-			b = tolower(s2.data()[i]);
-			if (a < b) return -1;
-			if (a > b) return 1;
-		}
-		return 0;
-	}
 	struct Header
 	{
 		String name;
@@ -103,7 +91,7 @@ namespace cppsp
 				a(a), items(NULL), length(0) {
 		}
 		item* beginReplace(int length) {
-			items = (item*)a->alloc(length * sizeof(item));
+			items = (item*) a->alloc(length * sizeof(item));
 			this->length = length;
 			return items;
 		}
@@ -221,6 +209,14 @@ namespace cppsp
 					if (ci_compare(name, { b->items[i].name, b->items[i].nameLength }) == 0) return {b,i};
 			}
 			return end();
+		}
+		void set(String name, String value) {
+			iterator it = find(name);
+			if (it == end()) add(name, value);
+			else {
+				it.get().value = value.data();
+				it.get().valueLength = value.length();
+			}
 		}
 		iterator begin() {
 			return {_first,0};

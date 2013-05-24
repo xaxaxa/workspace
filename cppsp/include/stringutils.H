@@ -98,6 +98,8 @@ namespace cppsp
 	static inline std::string htmlAttributeEscape(std::string in) {
 		return htmlAttributeEscape(in.data(), in.length());
 	}
+
+	int ci_compare(CP::String s1, CP::String s2);
 }
 
 #endif /* URLPARSER_H_ */
