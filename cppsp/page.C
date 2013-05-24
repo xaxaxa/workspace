@@ -37,7 +37,7 @@ namespace cppsp
 		 *p++ = '-';
 		 i = -i;
 		 }*/
-		p += int(log10f(i)) + 1;
+		p += (i==0?0:int(log10f(i))) + 1;
 		*p = '\0';
 		int l = p - b;
 		do { //Move back, inserting digits as u go
