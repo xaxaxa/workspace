@@ -99,7 +99,7 @@ namespace cppsp
 					auto* items=hc->beginReplace(headercount);
 					for(int i=0;i<headercount;i++) {
 						int pos1=headerpos[i];
-						int end=i+1<headercount?headerpos[i+1]:this->pos-2;
+						int end=(i+1<headercount?headerpos[i+1]:this->pos)-2;
 						lineBuf=buf+pos1;
 						lineBufLen=end-pos1;
 						tmp = memchr(lineBuf, ':', lineBufLen);
