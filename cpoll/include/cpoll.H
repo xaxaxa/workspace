@@ -21,11 +21,9 @@
 /*
  * TODO:
  * 
- * * add support for eventfd()
- * * automatic AIO + eventfd for file async IO
+ * * move readAll and writeAll implementation to Stream
+ * * automatic AIO for file async IO
  * * socket connect()
- * * timerfd() ?
- * * signalfd() ?
  * * verify that all system call return values are checked
  * * verify that all code paths that may encounter exceptions
  *   	release their resources (memory etc) properly when 
@@ -120,6 +118,20 @@ namespace CP
 		~CancelException() throw ();
 		const char* what() const throw ();
 	};
+	static inline uint64_t ntohll(uint64_t value) {
+		// The answer is 42
+		static const int32_t num = 42;
+
+		// Check the endianness
+		if (*reinterpret_cast<const char*>(&num) == num) {
+			const uint32_t high_part = htonl(static_cast<uint32_t>(value >> 32));
+			const uint32_t low_part = htonl(static_cast<uint32_t>(value & 0xFFFFFFFFLL));
+
+			return (static_cast<uint64_t>(low_part) << 32) | high_part;
+		} else {
+			return value;
+		}
+	}
 
 	//==============================================================
 	//==============================================================
@@ -508,14 +520,14 @@ namespace CP
 
 		//only for streams with a read buffer; other streams should just return 0
 		//calling this function should "consume" that buffer, but should not perform
-		//further reading operations; this function should NOT block
+		//further reading operations; this function should NOT block.
 		//returns length of buffer; address of buffer is put in buf
 		//if maxlen==-1, consume entire contiguous buffer
 		virtual int32_t readBuffer(void*& buf, int32_t maxlen) {
 			return 0;
 		}
 		inline String readBuffer(int32_t maxlen) {
-			void* tmp;
+			void* tmp = NULL;
 			int32_t l = readBuffer(tmp, maxlen);
 			return {(char*)tmp,l};
 		}
@@ -994,7 +1006,6 @@ namespace CP
 				int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0,
 				Callback initsock = nullptr);
 
-
 		int32_t shutdown(int32_t how);
 		void shutdown(int32_t how, const Callback& cb);
 		void listen(int32_t backlog = 8);
@@ -1271,6 +1282,18 @@ namespace CP
 		virtual void flushBuffer(int minBufferAllocation);
 		//user must delete the MemoryStream instance after this call
 		void keepBuffer();
+
+		//allocates space in the buffer after the current position
+		CP::String beginAppend(int minLen) {
+			ensureCapacity(bufferPos + minLen);
+			return {(char*)buffer+bufferPos,bufferSize-bufferPos};
+		}
+		void endAppend(int len) {
+			if (bufferPos + len > bufferSize) throw overflow_error(
+					"invalid length parameter to MemoryStream::endAppend()");
+			bufferPos += len;
+			if (bufferPos > this->len) this->len = bufferPos;
+		}
 	};
 	class StringPool: public virtual RGC::Object, public RGC::Allocator
 	{
@@ -1482,6 +1505,18 @@ namespace CP
 		inline virtual int length() const final {
 			return len;
 		}
+		CP::String beginAppend(int minLen) {
+			_str.reserve(bufferPos + minLen);
+			_str.resize(_str.capacity());
+			this->buffer = (uint8_t*) _str.data();
+			return {(char*)buffer+bufferPos,bufferSize-bufferPos};
+		}
+		void endAppend(int len) {
+			if (bufferPos + len > bufferSize) throw overflow_error(
+					"invalid length parameter to MemoryStream::endAppend()");
+			bufferPos += len;
+			if (bufferPos > this->len) this->len = bufferPos;
+		}
 	};
 	void listDirectory(const char* path, Delegate<void(const char*)> cb);
 
@@ -1590,23 +1625,12 @@ namespace CP
 			if (pbuf != NULL) __dec_autofree();
 		}
 		inline Buffer subBuffer(int index, int length) const {
-			if (index < 0 || index + length > this->len) throw range_error(
+			if (index < 0 || index + length > this->len || length < 0) throw range_error(
 					"Buffer::subBuffer() out of range");
 			return Buffer(pbuf, d + index, length);
 		}
-		inline Buffer SubBuffer(int index) const {
+		inline Buffer subBuffer(int index) const {
 			return subBuffer(index, len - index);
-		}
-		inline void clip(int index, int length) {
-			if (index < 0 || index + length > this->len) throw range_error(
-					"Buffer::clip() out of range");
-			d += index;
-			len = length;
-		}
-		inline void clip(int index) {
-			if (index < 0 || index > this->len) throw range_error("Buffer::clip() out of range");
-			d += index;
-			len -= index;
 		}
 	};
 }

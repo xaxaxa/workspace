@@ -1675,7 +1675,8 @@ namespace CP
 			bool d(false);
 			this->deletionFlag = &d;
 			int i;
-			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp)) cb((int) tmp);
+			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp) && cb != nullptr) cb(
+					(int) tmp);
 			else if (i < 0 && isWouldBlock()) {
 				this->deletionFlag = NULL;
 				dispatching = false;
