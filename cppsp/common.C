@@ -890,7 +890,7 @@ namespace cppsp
 		cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
 		if (ce != NULL) {
 			resp.output.write("<pre style=\"color: #000; background: #ffc; padding: 8px;\">");
-			resp.output.write(ce->compilerOutput);
+			htmlEscape(String(ce->compilerOutput), resp.output);
 			resp.output.write("</pre>");
 		}
 		resp.output.writeF("</body></html>");
