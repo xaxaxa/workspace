@@ -323,6 +323,13 @@ namespace CP
 			This->_readvAll.cb(This->_readvAll.br);
 		}
 	}
+	static inline void Stream_beginReadAll(Stream* This) {
+		if (This->_readAll.i < This->_readAll.len) This->read(This->_readAll.buf + This->_readAll.i,
+				This->_readAll.len - This->_readAll.i, { &Stream::_readAllCB, This });
+		else {
+			This->_readAll.cb(This->_readAll.i);
+		}
+	}
 	void Stream::_readvCB(int r) {
 		if (r <= 0) {
 			_readvAll.cb(_readvAll.br);
@@ -342,12 +349,28 @@ namespace CP
 		}
 		Stream_beginReadv(this);
 	}
+	void Stream::_readAllCB(int r) {
+		if (r <= 0) {
+			_readAll.cb(_readAll.i);
+			return;
+		}
+		_readAll.i += r;
+		Stream_beginReadAll(this);
+	}
 	static inline void Stream_beginWritev(Stream* This) {
 		if (This->_writevAll.i < This->_writevAll.iovcnt) This->writev(
 				This->_writevAll.iov + This->_writevAll.i, This->_writevAll.iovcnt - This->_writevAll.i,
 				{ &Stream::_writevCB, This });
 		else {
 			This->_writevAll.cb(This->_writevAll.br);
+		}
+	}
+	static inline void Stream_beginWriteAll(Stream* This) {
+		if (This->_writeAll.i < This->_writeAll.len) This->write(
+				This->_writeAll.buf + This->_writeAll.i, This->_writeAll.len - This->_writeAll.i, {
+						&Stream::_writeAllCB, This });
+		else {
+			This->_writeAll.cb(This->_writeAll.i);
 		}
 	}
 	void Stream::_writevCB(int r) {
@@ -368,6 +391,14 @@ namespace CP
 			}
 		}
 		Stream_beginWritev(this);
+	}
+	void Stream::_writeAllCB(int r) {
+		if (r <= 0) {
+			_writeAll.cb(_writeAll.i);
+			return;
+		}
+		_writeAll.i += r;
+		Stream_beginWriteAll(this);
 	}
 
 	int Stream::readToEnd(BufferedOutput& out, int32_t bufSize) {
@@ -415,9 +446,17 @@ namespace CP
 		_readvAll= {cb,iov,iovcnt,0,0};
 		Stream_beginReadv(this);
 	}
+	void Stream::readAll(void* buf, int32_t len, const Callback& cb) {
+		_readAll= {cb,(uint8_t*)buf,len,0};
+		Stream_beginReadAll(this);
+	}
 	void Stream::writevAll(iovec* iov, int iovcnt, const Callback& cb) {
 		_writevAll= {cb,iov,iovcnt,0,0};
 		Stream_beginWritev(this);
+	}
+	void Stream::writeAll(const void* buf, int32_t len, const Callback& cb) {
+		_writeAll= {cb,(const uint8_t*)buf,len,0};
+		Stream_beginWriteAll(this);
 	}
 
 	StreamWriter::StreamWriter(BufferedOutput& s) :

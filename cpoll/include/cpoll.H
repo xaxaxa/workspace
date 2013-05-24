@@ -309,6 +309,13 @@ namespace CP
 				int iovcnt;
 				int i, br;
 			} _readvAll;
+			struct
+			{
+				DelegateBase<void(int)> cb;
+				uint8_t* buf;
+				int len;
+				int i;
+			} _readAll;
 		};
 		union
 		{
@@ -319,9 +326,18 @@ namespace CP
 				int iovcnt;
 				int i, br;
 			} _writevAll;
+			struct
+			{
+				DelegateBase<void(int)> cb;
+				const uint8_t* buf;
+				int len;
+				int i;
+			} _writeAll;
 		};
 		void _readvCB(int r);
+		void _readAllCB(int r);
 		void _writevCB(int r);
+		void _writeAllCB(int r);
 
 		//sync
 		virtual int32_t read(void* buf, int32_t len)=0; //required
@@ -443,7 +459,7 @@ namespace CP
 		inline void repeatReadv(iovec* iov, int iovcnt, const Callback& cb) {
 			readv(iov, iovcnt, cb, true);
 		}
-		virtual void readAll(void* buf, int32_t len, const Callback& cb)=0;
+		virtual void readAll(void* buf, int32_t len, const Callback& cb);
 		void readAll(String buf, const Callback& cb) {
 			return readAll(buf.data(), buf.length(), cb);
 		}
@@ -472,7 +488,7 @@ namespace CP
 		inline void repeatWritev(iovec* iov, int iovcnt, const Callback& cb) {
 			writev(iov, iovcnt, cb, true);
 		}
-		virtual void writeAll(const void* buf, int32_t len, const Callback& cb)=0;
+		virtual void writeAll(const void* buf, int32_t len, const Callback& cb);
 		void writeAll(String buf, const Callback& cb) {
 			return writeAll(buf.data(), buf.length(), cb);
 		}
