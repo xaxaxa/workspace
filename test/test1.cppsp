@@ -85,6 +85,19 @@ void timercb(int count) {
 				<td><%=getgid()%></td>
 			</tr>
 		</table>
+		headers:
+		<table border="1">
+		<%
+		for(auto it=request->headers.begin();it!=request->headers.end();it++) {
+			%>
+			<tr>
+				<td><%htmlEscape((*it).name,output);%></td>
+				<td><%htmlEscape((*it).value,output);%></td>
+			</tr>
+			<%
+		}
+		%>
+		</table>
 		<form method="post" action="1.cppsp?a=1111111&b=222222">
 			<input type="text" name="input1" /><br />
 			<input type="text" name="input2" />
