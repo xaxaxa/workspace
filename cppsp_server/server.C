@@ -119,8 +119,11 @@ namespace cppspServer
 		String loadStaticPageFromFile(String path) override {
 			return cppsp::loadStaticPage(mgr,path);
 		}
-		String rootDir() {
+		String rootDir() override {
 			return root;
+		}
+		cppspManager* manager() override {
+			return mgr;
 		}
 		//this function needs to be called periodically to check for file modifications
 		//otherwise auto re-compile will not work

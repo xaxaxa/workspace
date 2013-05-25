@@ -29,6 +29,7 @@
 using namespace std;
 namespace cppsp
 {
+	class cppspManager;
 	typedef CP::String String;
 	/**
 	 Represents an HTTP request and contains data from the request such as HTTP headers, querystrings, and HTTP POST data.
@@ -250,6 +251,12 @@ namespace cppsp
 		 Given a path relative to the server root, returns the absolute path. The returned string is allocated from "a".
 		 */
 		virtual String mapPath(String path, RGC::Allocator& a);
+		/**
+		 Returns the cppspManager instance for this Server instance; may be NULL if the underlying server does not use cppspManager.
+		 */
+		virtual cppspManager* manager() {
+			return NULL;
+		}
 	};
 	/**
 	 Base class for all cppsp pages.
