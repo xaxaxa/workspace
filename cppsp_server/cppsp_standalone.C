@@ -20,8 +20,11 @@
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
 #include <assert.h>
+#include <sys/syscall.h>	//SYS_gettid
 #include "server.C"
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
+#define printerr(x, ...) fprintf(stderr, "\x1B[41;1;33m" x "\x1B[0;0;0m\n", ##__VA_ARGS__)
+#define printinfo(x, ...) fprintf(stderr, "\x1B[1;1;1m" x "\x1B[0;0;0m\n", ##__VA_ARGS__)
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT	15
 #endif
@@ -45,8 +48,9 @@ struct workerThread
 		pthread_t thread;
 	};
 	int threadid;
+	int cpu;	//id of cpu to pin to, or -1
 	workerThread(Socket& sock): srv(rootDir.c_str()),
-		listenSock(sock) {}
+		listenSock(sock),cpu(-1){}
 };
 class handler1: public RGC::Allocator
 {
@@ -64,11 +68,18 @@ public:
 		else allocator->dealloc(this);
 	}
 };
+void pinToCPU(int cpu) {
+	cpu_set_t s;
+	CPU_ZERO(&s);
+	CPU_SET(cpu,&s);
+	if(sched_setaffinity((pid_t)syscall(SYS_gettid),sizeof(s),&s)!=0)
+		perror("sched_setaffinity");
+}
 void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
 	Poll p;
-	
+	if(thr.cpu>=0) pinToCPU(thr.cpu);
 	/*
 	p.add(thr->efd);
 	struct {
@@ -153,6 +164,7 @@ void* thread1(void* v) {
 	p.loop();
 	return NULL;
 }
+
 CP::Socket listensock;
 int main(int argc, char** argv) {
 	{
@@ -161,11 +173,12 @@ int main(int argc, char** argv) {
 		rootDir=cwd;
 	}
 	string listen="0.0.0.0:80";
-	int threads=(int)sysconf(_SC_NPROCESSORS_CONF);
+	int threads=-1;
 	bool f0rk=false;
 	vector<string> cxxopts;
 	vector<const char*> modules;
-	bool reuseport=true;
+	bool reusePort=true;
+	bool setAffinity=false;
 	try {
 		parseArgs(argc, argv,
 				[&](char* name, const std::function<char*()>& getvalue)
@@ -186,47 +199,58 @@ int main(int argc, char** argv) {
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
 					} else if(strcmp(name,"s")==0) {
-						reuseport=false;
+						reusePort=false;
+					} else if(strcmp(name,"a")==0) {
+						setAffinity=true;
 					} else {
 					help:
-						printf("usage: %s [options]...\noptions:\n"
+						fprintf(stderr,"usage: %s [options]...\noptions:\n"
 						"\t-l <host:port>: listen on specified host:port (default: 0.0.0.0:80)\n"
 						"\t-g <option>: specify the C++ compiler (default: g++)\n"
 						"\t-c <option>: specify a compiler option to be passed to g++\n"
 						"\t-m <path>: load a cppsp module (path is relative to root)\n"
 						"\t-r <root>: set root directory (must be absolute) (default: $(pwd))\n"
 						"\t-t <threads>: # of worker processes/threads to start up (default: sysconf(_SC_NPROCESSORS_CONF))\n"
-						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n",argv[0]);
+						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n"
+						"\t-a: automatically set cpu affinity for the created worker threads/processes\n",argv[0]);
 						exit(1);
 					}
 				});
 	} catch(exception& ex) {
-		printf("error: %s\nspecify -? for help\n",ex.what());
+		printerr("error: %s\nspecify -? for help",ex.what());
 		return 1;
 	}
-	printf("specify -? for help\n");
+	printinfo("specify -? for help");
 	auto i=listen.find(':');
 	if(i==string::npos) throw runtime_error("expected \":\" in listen");
 	
+	int cpus=(int)sysconf(_SC_NPROCESSORS_CONF);
+	if(threads<0)threads=cpus;
+	if(setAffinity) {
+		if(threads > cpus && (threads%(int)sysconf(_SC_NPROCESSORS_CONF) != 0)) {
+			printerr("warning: cpu affinity is to be set; thread count larger than and not divisible by cpu count");
+		}
+	}
+	
 	EndPoint* ep=NULL;
 	struct {
-		bool& reuseport;
+		bool& reusePort;
 		void operator()(int s) {
 			int optval = 1;
-			reuseport=(setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))==0);
+			reusePort=(setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))==0);
 		}
-	} initsock {reuseport};
-	if(reuseport)
+	} initsock {reusePort};
+	if(reusePort)
 		listensock.bind(listen.substr(0,i).c_str(),
 			listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM,0,0,&initsock);
 	else
 		listensock.bind(listen.substr(0,i).c_str(),
 			listen.substr(i + 1, listen.length() - i - 1).c_str(), AF_UNSPEC, SOCK_STREAM);
-	if(reuseport) {
-		printf("\x1B[1;1;1musing SO_REUSEPORT\x1B[0;0;0m\n");
+	if(reusePort) {
+		printinfo("using SO_REUSEPORT");
 		ep=listensock.getLocalEndPoint();
 	} else {
-		printf("\x1B[41;1;33mNOT using SO_REUSEPORT\x1B[0;0;0m\n");
+		printerr("NOT using SO_REUSEPORT");
 		listensock.listen(CPPSP_LISTEN_BACKLOG);
 	}
 	
@@ -234,11 +258,13 @@ int main(int argc, char** argv) {
 	PRINTSIZE(CP::Socket);
 	PRINTSIZE(cppspServer::handler);
 	PRINTSIZE(handler1);
-	printf("starting %i threads\n",threads);
+	if(f0rk) printinfo("starting %i processes",threads);
+	else printinfo("starting %i threads",threads);
 	workerThread* th=(workerThread*)new char[sizeof(workerThread)*threads];
 	for(int i=0;i<threads;i++) {
+		int cpu=i%cpus;
 		Socket* newsock;
-		if(reuseport) {
+		if(reusePort) {
 			newsock=new Socket(listensock.addressFamily, listensock.type, listensock.protocol);
 			int optval = 1;
 			assert(setsockopt(newsock->handle, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval))==0);
@@ -249,6 +275,7 @@ int main(int argc, char** argv) {
 				listensock.addressFamily, listensock.type, listensock.protocol);
 		}
 		workerThread& tmp=*(new (th+i) workerThread(*newsock));
+		tmp.cpu=(setAffinity?cpu:-1);
 		newsock->release();
 		CXXOpts(tmp.srv.mgr)=cxxopts;
 		tmp.modules=modules;
