@@ -1,7 +1,7 @@
 #include <iostream>
 //#include <cplib/cplib.hpp>
 //#include <cplib/asyncsock.hpp>
-#include <cpoll.H>
+#include <cpoll/cpoll.H>
 #include <signal.h>
 
 //name is wrong; it does bitshift not bitflip

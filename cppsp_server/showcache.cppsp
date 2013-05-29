@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>show cache</title>
+</head>
+<body>
+	<%
+	cppspManager* cm=server->manager();
+	if(cm==NULL) throw runtime_error("server->manager() = NULL");
+	%>
+	cache: <br />
+	<table>
+		<tr>
+			<td>Path</td>
+			<td>Load time</td>
+		</tr>
+		<%
+		for(auto it=cm->cache.begin();it!=cm->cache.end();it++) {
+			char buffer[256];
+			tm time1;
+			localtime_r(&(*it).second->lastLoad.tv_sec,&time1);
+			strftime(buffer, sizeof(buffer), "%F %r", &time1);
+			%>
+			<tr>
+				<td><%htmlEscape((*it).first,output);%></td>
+				<td><%htmlEscape(buffer,output);%></td>
+			</tr>
+			<%
+		}
+		%>
+	</table>
+</body>
+</html>
+
