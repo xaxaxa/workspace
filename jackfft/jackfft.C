@@ -64,6 +64,8 @@ EQControl* c_eq2;
 EQControl* c2;
 Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
+bool do_mux=false;
+double v_mux=0.5;
 
 template<class t> inline double complex_to_real(const t& x)
 {
@@ -200,14 +202,16 @@ int process(jack_nframes_t length, void *arg)
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
-	/*for(size_t i=0; i<length; i++)
-	{
-		double avg=0;
-		for(register unsigned int ii=0;ii<CHANNELS;ii++)
-			avg+=((double)out_samples[ii][i])/CHANNELS;
-		for(register unsigned int ii=0;ii<CHANNELS;ii++)
-			out_samples[ii][i]=avg+(out_samples[ii][i]-avg)*3;
-	}*/
+	if(do_mux)
+		for(size_t i=0; i<length; i++)
+		{
+			double avg=0;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				avg+=((double)out_samples[ii][i]);
+			avg/=CHANNELS;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				out_samples[ii][i]=2*(avg*(1.-v_mux)+(out_samples[ii][i]-avg)*v_mux);
+		}
 	for(size_t i = 0; i < inputs.size(); i++)
 	{
 		if(filt[i] != NULL)goto asdfghjkl;
@@ -536,6 +540,9 @@ void setFilterParams(FFTFilter<jack_default_audio_sample_t>& f)
 		efd.Write(BufferRef(&tmp_i,sizeof(tmp_i)));
 	};*/
 }
+#define TOKEN_TO_STRING(TOK) # TOK
+#define JACKFFT_GETWIDGET(x) b->get_widget(TOKEN_TO_STRING(x), x)
+
 int main(int argc, char *argv[])
 {
 	memset(&last_refreshed, 0, sizeof(last_refreshed));
@@ -557,39 +564,6 @@ int main(int argc, char *argv[])
 		setFilterParams(*trololo);
 		filt[i] = trololo;
 	}
-	/*CircularQueue<int> q(2,3);
-	auto tmp=q.BeginAppend();
-	q.GetPointer(tmp)=123;
-	(&q.GetPointer(tmp))[1]=1234;
-	(&q.GetPointer(tmp))[2]=12345;
-	q.EndAppend(tmp);
-	tmp=q.BeginAppend();
-	q.GetPointer(tmp)=456;
-	(&q.GetPointer(tmp))[1]=4567;
-	(&q.GetPointer(tmp))[2]=45678;
-	q.EndAppend(tmp);
-	while((tmp=q.BeginDequeue())>=0)
-	{
-		cout << (&q.GetPointer(tmp))[0] << endl;
-		cout << (&q.GetPointer(tmp))[1] << endl;
-		cout << (&q.GetPointer(tmp))[2] << endl << "-----" << endl;
-		q.EndDequeue(tmp);
-	}
-	tmp=q.BeginAppend();
-	q.GetPointer(tmp)=789;
-	(&q.GetPointer(tmp))[1]=7890;
-	(&q.GetPointer(tmp))[2]=78901;
-	q.EndAppend(tmp);
-
-	while((tmp=q.BeginDequeue())>=0)
-	{
-		cout << (&q.GetPointer(tmp))[0] << endl;
-		cout << (&q.GetPointer(tmp))[1] << endl;
-		cout << (&q.GetPointer(tmp))[2] << endl << "-----" << endl;
-		q.EndDequeue(tmp);
-	}
-
-	return 0;*/
 
 	jack_client_t *client;
 	jack_set_error_function(error);
@@ -615,12 +589,42 @@ int main(int argc, char *argv[])
 	Gtk::Main kit(argc, argv);
 
 	b = Gtk::Builder::create_from_file("main2.ui");
-	Gtk::Window* w;
-	//Gtk::Grid* g;
-	//Gtk::EventBox* eb;
-
-	Gtk::Button* bt;
-	b->get_widget("window1", w);
+	
+	Gtk::Window* window1;
+	Gtk::Button* b_save;
+	Gtk::Button* b_saveas;
+	Gtk::Button* b_open;
+	Gtk::Button* b_revert;
+	Gtk::Button* b_apply;
+	Gtk::Button* b_params;
+	Gtk::Button* b_shift;
+	Gtk::CheckButton* c_pitchshift;
+	Gtk::CheckButton* c_spectrum;
+	Gtk::CheckButton* c_spectrum2;
+	Gtk::CheckButton* c_mux;
+	Gtk::Label* label8;
+	Gtk::FileChooserDialog* filechooserdialog1;
+	Gtk::Viewport* viewport1;
+	Gtk::Viewport* viewport2;
+	Gtk::Scale* s_mux;
+	
+	//get controls
+	JACKFFT_GETWIDGET(window1); JACKFFT_GETWIDGET(b_save); JACKFFT_GETWIDGET(b_saveas);
+	JACKFFT_GETWIDGET(b_open); JACKFFT_GETWIDGET(b_revert); JACKFFT_GETWIDGET(b_apply);
+	JACKFFT_GETWIDGET(c_pitchshift); JACKFFT_GETWIDGET(label8); JACKFFT_GETWIDGET(b_params);
+	JACKFFT_GETWIDGET(b_shift); JACKFFT_GETWIDGET(filechooserdialog1); JACKFFT_GETWIDGET(viewport1);
+	JACKFFT_GETWIDGET(viewport2); JACKFFT_GETWIDGET(c_spectrum); JACKFFT_GETWIDGET(c_spectrum2);
+	JACKFFT_GETWIDGET(s_mux); JACKFFT_GETWIDGET(c_mux);
+	
+	//initialize controls
+	b_save->signal_clicked().connect(&save);
+	b_saveas->signal_clicked().connect(&saveas);
+	b_open->signal_clicked().connect(&loadfile);
+	b_revert->signal_clicked().connect(&load);
+	b_apply->signal_clicked().connect(&apply_pitchshift);
+	c_pitchshift->signal_toggled().connect(&apply_pitchshift);
+	
+	
 	c = new EQControl(EQ_POINTS);
 	
 	c->Change += EQControl::ChangeDelegate(&on_change, c);
@@ -634,27 +638,9 @@ int main(int argc, char *argv[])
 	//UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
 
 
-	b->get_widget("b_save", bt);
-	bt->signal_clicked().connect(&save);
-	b->get_widget("b_saveas", bt);
-	bt->signal_clicked().connect(&saveas);
-	b->get_widget("b_open", bt);
-	bt->signal_clicked().connect(&loadfile);
-	b->get_widget("b_revert", bt);
-	bt->signal_clicked().connect(&load);
-	b->get_widget("b_apply", bt);
-	bt->signal_clicked().connect(&apply_pitchshift);
-	Gtk::CheckButton* cb;
-	b->get_widget("c_pitchshift", cb);
-	cb->signal_toggled().connect(&apply_pitchshift);
+	apply_label_workaround(label8);
 
-
-	Gtk::Label* lb;
-	b->get_widget("label8", lb);
-	apply_label_workaround(lb);
-
-	b->get_widget("b_params", bt);
-	bt->signal_clicked().connect([]()
+	b_params->signal_clicked().connect([]()
 	{
 		Gtk::Window* w1;
 		Gtk::Dialog* d;
@@ -695,8 +681,7 @@ hhhhh:
 		d->hide();
 	});
 
-	b->get_widget("b_shift", bt);
-	bt->signal_clicked().connect([]()
+	b_shift->signal_clicked().connect([]()
 	{
 		Gtk::Window* w1;
 		Gtk::Dialog* d;
@@ -717,30 +702,26 @@ hhhhh:
 	hhhhh:
 		d->hide();
 	});
-	Gtk::FileChooserDialog* d;
-	b->get_widget("filechooserdialog1", d);
 	//d->signal_response().connect(&on_response);
-	d->add_button(Stock::CANCEL, RESPONSE_CANCEL);
-	Gtk::Viewport* v;
-	b->get_widget("viewport1", v);
-	v->add(*c);
+	filechooserdialog1->add_button(Stock::CANCEL, RESPONSE_CANCEL);
+	viewport1->add(*c);
 
 	//c->set_hexpand(true);
 	//c->set_vexpand(true);
 	c->show();
 	
 #ifdef CEPSTRUM
-	b->get_widget("vp_eq2", v);
-	v->add(*c_eq2);
+	Gtk::Viewport* vp_eq2;
+	b->get_widget("vp_eq2", vp_eq2);
+	vp_eq2->add(*c_eq2);
 	c_eq2->show();
 #endif
 	
 
-	b->get_widget("viewport2", v);
 	//if(display_spectrum)
 	//{
 	c2 = new EQControl(EQ_POINTS);
-	v->add(*c2);
+	viewport2->add(*c2);
 	c2->show();
 	c2->MouseMove += EQControl::MouseDelegate(&on_mousemove, c2);
 	/*}
@@ -751,47 +732,46 @@ hhhhh:
 		t1->remove(*v);
 	}*/
 
-	b->get_widget("c_spectrum", cb);
-	cb->set_active(display_spectrum);
-	v->set_visible(display_spectrum);
-	cb->signal_toggled().connect([cb]()
+	c_spectrum->set_active(display_spectrum);
+	viewport2->set_visible(display_spectrum);
+	c_spectrum->signal_toggled().connect([c_spectrum]()
 	{
-		display_spectrum = cb->get_active();
+		Gtk::Window* w1;
+		Gtk::Viewport* v;
+		b->get_widget("window1", w1);
+		b->get_widget("viewport1", v);
+		
+		gint ww,wh; w1->get_size(ww,wh);
+		if(display_spectrum && !c_spectrum->get_active()) {
+			w1->resize(ww,wh-v->get_allocation().get_height());
+		} else if(!display_spectrum && c_spectrum->get_active()) {
+			w1->resize(ww,wh+v->get_allocation().get_height());
+		}
+		display_spectrum = c_spectrum->get_active();
 		Gtk::Viewport* vp;
 		b->get_widget("viewport2", vp);
 		vp->set_visible(display_spectrum);
 	});
 	
-	b->get_widget("c_spectrum2", cb);
-	cb->set_active(spectrum2);
-	cb->signal_toggled().connect([cb]()
+	c_spectrum2->set_active(spectrum2);
+	c_spectrum2->signal_toggled().connect([c_spectrum2]()
 	{
-		spectrum2 = cb->get_active();
+		spectrum2 = c_spectrum2->get_active();
 	});
-
-	//b->get_widget("grid1",g);
-	//b->get_widget("eventbox1",eb);
-
-
-	/*eb->signal_motion_notify_event().connect(sigc::ptr_fun(&on_motion_notify));
-	pb=new Gtk::ProgressBar[freqs];
-	for(UInt i=0;i<freqs;i++)
-	{
-		Gtk::ProgressBar* p=pb+i;
-		//pb=new Gtk::ProgressBar();
-		//p->set_text(CONCAT((i*srate/2/freqs)).c_str());
-		//p->set_show_text(true);
-		p->set_orientation(Gtk::ORIENTATION_VERTICAL);
-		p->set_inverted(true);
-		p->set_vexpand(true);
-		p->set_size_request(10,-1);
-		p->set_fraction(0.5);
-		g->attach(*p,i,0,1,1);
-		p->show();
-		//if(i==0)pb_size=p->get_allocation().get_width();
-	}*/
+	
+	c_mux->set_active(do_mux);
+	Gtk::Adjustment adj_mux(v_mux,0,1,0.05);
+	s_mux->set_adjustment(adj_mux);
+	
+	auto update_mux=[&]() {
+		do_mux=c_mux->get_active();
+		v_mux=adj_mux.get_value();
+	};
+	
+	s_mux->signal_value_changed().connect(update_mux);
+	c_mux->signal_toggled().connect(update_mux);
+	
 	load();
-
 	if(jack_activate(client)) {
 		fprintf(stderr, "cannot activate client");
 		return 1;
@@ -802,7 +782,7 @@ hhhhh:
 	
 	pthread_t thr;
 	pthread_create(&thr,NULL,&thread1,NULL);
-	kit.run(*w);
+	kit.run(*window1);
 
 	jack_client_close(client);
 	return 0;
