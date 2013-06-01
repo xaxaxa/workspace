@@ -1,0 +1,42 @@
+#!/bin/bash
+P="$(pwd)"
+cat <<EOF
+server.modules = (
+	"mod_access",
+	"mod_alias",
+	"mod_compress",
+	"mod_redirect",
+	"mod_rewrite",
+	"mod_cgi"
+)
+cgi.assign = ( ".cgi" => "" )
+mimetype.assign   = ( ".png"  => "image/png",
+                      ".jpg"  => "image/jpeg",
+                      ".jpeg" => "image/jpeg",
+                      ".htm" => "text/html",
+                      ".mp3" => "audio/mp3",
+                      ".oga" => "audio/ogg",
+                      ".html" => "text/html",
+                      ".css" => "text/css",
+                      ".txt"  => "text/plain" )
+server.max-keep-alive-requests = 0
+server.port = 12680
+server.document-root        = "$P"
+server.pid-file             = "$P/lighttpd.pid"
+server.username             = "lighttpd"
+server.groupname            = "lighttpd"
+
+index-file.names            = ( "index.php", "index.html",
+                                "index.htm", "default.htm",
+                               " index.lighttpd.html" )
+
+url.access-deny             = ( "~", ".inc" )
+
+dir-listing.encoding        = "utf-8"
+server.dir-listing          = "enable"
+
+#compress.cache-dir          = "/var/cache/lighttpd/compress/"
+compress.filetype           = ( "application/x-javascript", "text/css", "text/html", "text/plain" )
+
+EOF
+

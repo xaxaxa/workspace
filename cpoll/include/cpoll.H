@@ -968,6 +968,7 @@ namespace CP
 		void cancelRecv() {
 			cancelRead();
 		}
+		//may not be available on certain platforms (windows)
 		void waitForEvent(Events event, const Callback& cb, bool repeat = false);
 	};
 	class Socket: public File

@@ -45,6 +45,7 @@ httptest: httptest.C
 	g++ httptest.C -o httptest -g3 -I../include -L../lib --std=c++0x -lcpoll -ldl -lcurl
 simplehttp: simplehttp.C
 	g++ simplehttp.C -o simplehttp --std=c++0x -g3 -I../include -L../lib -lcpoll -ldl -Wno-pmf-conversions
-
+streamtest:
+	g++ streamtest.C -o streamtest --std=c++0x -g3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 
 

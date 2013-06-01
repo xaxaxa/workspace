@@ -23,13 +23,13 @@ int main(int argc, char **argv)
 	curl::instance inst;
 	curl::newInstance(&inst,&p);
 	int total=0;
-	curl::transferInfo* t=curl::addTransfer(&inst,"http://ipip.kr",
+	curl::transferInfo* t=curl::addTransfer(&inst,argv[1],
 		[&](const void* data, int len, int state)
 	{
 		cout << len << endl;
 		total+=len;
-		//if(data!=NULL && len>0)
-		//	write(1,data,len);
+		if(data!=NULL && len>0)
+			write(1,data,len);
 		return true;
 	});
 	curl::beginTransfer(&inst, t);
