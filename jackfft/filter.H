@@ -20,7 +20,6 @@
  *
  *
  */
-
 #include <cplib/cplib.hpp>
 
 #define __MIN(a,b) (((a)<(b))?(a):(b))
@@ -29,8 +28,8 @@ namespace xaxaxa
 	template<class NUMTYPE> class Filter
 	{
 	public:
-		virtual void Process(NUMTYPE* data, UInt length)=0;
-		virtual void Process(const NUMTYPE* in, NUMTYPE* out, UInt length)
+		virtual void Process(NUMTYPE* data, int length)=0;
+		virtual void Process(const NUMTYPE* in, NUMTYPE* out, int length)
 		{
 			memcpy(out, in, length*sizeof(NUMTYPE));
 			Process(out, length);
@@ -45,18 +44,18 @@ namespace xaxaxa
 	template<class NUMTYPE> class BufferedFilter: public Filter<NUMTYPE>
 	{
 	public:
-		virtual void PutData(const NUMTYPE* data, UInt length)=0;
-		virtual UInt GetData(NUMTYPE* out, UInt length)=0;
-		virtual void Process(NUMTYPE* data, UInt length)
+		virtual void PutData(const NUMTYPE* data, int length)=0;
+		virtual int GetData(NUMTYPE* out, int length)=0;
+		virtual void Process(NUMTYPE* data, int length)
 		{
 			PutData(data,length);
-			UInt tmp=GetData(data,length);
+			int tmp=GetData(data,length);
 			if(tmp<length) WARN(2,"buffer underflow: wanted " << length << " samples, but got " << tmp);
 		}
-		virtual void Process(const NUMTYPE* in, NUMTYPE* out, UInt length)
+		virtual void Process(const NUMTYPE* in, NUMTYPE* out, int length)
 		{
 			PutData(in,length);
-			UInt tmp=GetData(out,length);
+			int tmp=GetData(out,length);
 			if(tmp<length) WARN(2,"buffer underflow: wanted " << length << " samples, but got " << tmp);
 		}
 		BufferedFilter()
@@ -70,19 +69,19 @@ namespace xaxaxa
 	{
 	public:
 		NUMTYPE* InBuffer;
-		UInt BufferSize, OutBuffers;
-		UInt InBufferLength;
+		int BufferSize, OutBuffers;
+		int InBufferLength;
 		CircularQueue<NUMTYPE> OutBuffer;
 
 		//process exactly 1 buffer
 		virtual void DoProcess(const NUMTYPE* in, NUMTYPE* out)=0;
 
-		inline void __warn(UInt length)
+		inline void __warn(int length)
 		{
 			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; OutBuffers = " << OutBuffers << "; inputlength = " << length);
 			return;
 		}
-		virtual void PutData(const NUMTYPE* data, UInt length)
+		virtual void PutData(const NUMTYPE* data, int length)
 		{
 			asdf: if (InBufferLength <= 0 && length >= BufferSize)
 			{ //input buffer is empty and the input data length is larger than BufferSize;
@@ -123,10 +122,10 @@ namespace xaxaxa
 			goto zxcv;
 		}
 		Int outbuffer_index;
-		UInt outbuffer_pos;
-		virtual UInt GetData(NUMTYPE* out, UInt length)
+		int outbuffer_pos;
+		virtual int GetData(NUMTYPE* out, int length)
 		{
-			UInt br = 0;
+			int br = 0;
 			while (length > 0)
 			{
 				if (outbuffer_index < 0)
@@ -152,7 +151,7 @@ namespace xaxaxa
 			}
 			return br;
 		}
-		BufferedFilterHelper(UInt buffersize, UInt outbuffers) :
+		BufferedFilterHelper(int buffersize, int outbuffers) :
 				InBuffer(NULL), BufferSize(buffersize), OutBuffers(outbuffers),
 						OutBuffer(outbuffers, buffersize), outbuffer_index(-1), outbuffer_pos(0)
 		{
@@ -171,10 +170,10 @@ namespace xaxaxa
 	public:
 		CircularQueue<FLOATTYPE> InBuffer, OutBuffer;
 		Int curBuffer_in, nextBuffer_in, curBuffer_out, nextBuffer_out;
-		UInt BufferSize, OutBuffers, InBuffers;
+		int BufferSize, OutBuffers, InBuffers;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
 
-		inline UInt PeriodSize()
+		inline int PeriodSize()
 		{
 			return BufferSize;
 		}
@@ -188,10 +187,10 @@ namespace xaxaxa
 			delete[] tmpbuffer;
 		}
 
-		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
+		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, int offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
 		virtual void DoProcess() = 0;
 		virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2,
-				UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n)
+				int offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n)
 		{
 			auto l = BufferSize - offset;
 			if (l > 0)
@@ -205,7 +204,7 @@ namespace xaxaxa
 			if (l > 0)
 			{
 				//memcpy(out1 + offset, tmpdouble, l * sizeof(double));
-				for (UInt i = 0; i < l; i++)
+				for (int i = 0; i < l; i++)
 				{
 					FLOATTYPE fade = (FLOATTYPE) abs((Int) i - half) / (FLOATTYPE) half;
 					//if(fade>1.0)cout << "fade="<<fade<<endl;
@@ -217,7 +216,7 @@ namespace xaxaxa
 			if (offset > 0)
 			{
 				//memcpy(out2, tmpdouble + l, offset * sizeof(double));
-				for (UInt i = l; i < this->BufferSize; i++)
+				for (int i = l; i < this->BufferSize; i++)
 				{
 					FLOATTYPE fade = (FLOATTYPE) abs((Int) i - half) / (FLOATTYPE) half;
 					out2[i - l] = (out2[i - l] * (coeff_o/*+(fade*coeff_n)*/))
@@ -227,8 +226,8 @@ namespace xaxaxa
 		}
 
 		Int outbuffer_index, inbuffer_index;
-		UInt outbuffer_pos, inbuffer_pos;
-		UInt overlapcount;
+		int outbuffer_pos, inbuffer_pos;
+		int overlapcount;
 		void proc()
 		{
 			//while((curBuffer_in = InBuffer.BeginDequeue()) >= 0)
@@ -255,9 +254,9 @@ namespace xaxaxa
 			out2 = &OutBuffer.GetPointer(nextBuffer_out);
 			memset(out2, 0, BufferSize * sizeof(FLOATTYPE));
 			FLOATTYPE coeff = 1.0 / overlapcount;
-			for (UInt i = 0; i < overlapcount; i++)
+			for (int i = 0; i < overlapcount; i++)
 			{
-				UInt offset = BufferSize / overlapcount * i;
+				int offset = BufferSize / overlapcount * i;
 				DoProcess(in1, in2, out1, out2, offset, 1.0, coeff);
 			}
 			//memcpy(out1, in1, sizeof(FLOATTYPE)*BufferSize);
@@ -269,12 +268,12 @@ namespace xaxaxa
 			nextBuffer_out = -1;
 			goto asdf;
 		}
-		inline void __warn(UInt length)
+		inline void __warn(int length)
 		{
 			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffer.Length() << "/" << InBuffers << "; inputlength = " << length);
 			return;
 		}
-		virtual void PutData(const NUMTYPE* data, UInt length)
+		virtual void PutData(const NUMTYPE* data, int length)
 		{
 			while (length > 0)
 			{
@@ -290,7 +289,7 @@ namespace xaxaxa
 				auto l = __MIN(length, BufferSize - inbuffer_pos);
 				//memcpy(&InBuffer.GetPointer(inbuffer_index) + inbuffer_pos, data, l * sizeof(NUMTYPE));
 				FLOATTYPE* dst = &InBuffer.GetPointer(inbuffer_index) + inbuffer_pos;
-				for (UInt i = 0; i < l; i++)
+				for (int i = 0; i < l; i++)
 					dst[i] = (FLOATTYPE) data[i];
 				inbuffer_pos += l;
 				if (inbuffer_pos >= BufferSize)
@@ -305,9 +304,9 @@ namespace xaxaxa
 				length -= l;
 			}
 		}
-		virtual UInt GetData(NUMTYPE* out, UInt length)
+		virtual int GetData(NUMTYPE* out, int length)
 		{
-			UInt br = 0;
+			int br = 0;
 			while (length > 0)
 			{
 				if (outbuffer_index < 0)
@@ -319,7 +318,7 @@ namespace xaxaxa
 				auto l = __MIN(length, BufferSize - outbuffer_pos);
 				//memcpy(out, &OutBuffer.GetPointer(outbuffer_index) + outbuffer_pos, l * sizeof(NUMTYPE));
 				FLOATTYPE* src = &OutBuffer.GetPointer(outbuffer_index) + outbuffer_pos;
-				for (UInt i = 0; i < l; i++)
+				for (int i = 0; i < l; i++)
 					out[i] = (NUMTYPE) src[i];
 
 				outbuffer_pos += l;
@@ -335,7 +334,7 @@ namespace xaxaxa
 			}
 			return br;
 		}
-		OverlappedFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount) :
+		OverlappedFilter(int buffersize, int inbuffers, int outbuffers, int overlapcount) :
 				InBuffer(inbuffers, buffersize), OutBuffer(outbuffers, buffersize),
 						curBuffer_in(-1), nextBuffer_in(-1), curBuffer_out(-1), nextBuffer_out(-1),
 						BufferSize(buffersize), OutBuffers(outbuffers), InBuffers(inbuffers),
@@ -354,18 +353,18 @@ namespace xaxaxa
 	{
 	public:
 		CircularQueue<FLOATTYPE> InBuffer, OutBuffer;
-		UInt *InBufferPtrs, *OutBufferPtrs;
+		int *InBufferPtrs, *OutBufferPtrs;
 		Int curBuffer_in, nextBuffer_in, curBuffer_out, nextBuffer_out;
-		UInt BufferSize, OutBuffers, InBuffers;
+		int BufferSize, OutBuffers, InBuffers;
 		Int outbuffer_index, inbuffer_index;
-		UInt outbuffer_pos, inbuffer_pos;
-		UInt overlapcount;
+		int outbuffer_pos, inbuffer_pos;
+		int overlapcount;
 		Int BuffersPerPeriod;
 		Int padding1, padding2;
 		function<void()> proc;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
 		bool didprocess;
-		inline UInt PeriodSize()
+		inline int PeriodSize()
 		{
 			return BufferSize*(BuffersPerPeriod+padding1+padding2);
 		}
@@ -379,7 +378,7 @@ namespace xaxaxa
 			delete[] tmpbuffer;
 		}
 
-		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
+		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, int offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
 		virtual void DoProcess() = 0;
 		virtual void DoProcess(FLOATTYPE coeff_o, FLOATTYPE coeff_n)
 		{
@@ -443,7 +442,7 @@ trolled:
 			//return;
 			Int skip=this->BuffersPerPeriod/this->overlapcount;
 			if(skip<1)skip=1;
-			UInt overlapcount=this->BuffersPerPeriod/skip;
+			int overlapcount=this->BuffersPerPeriod/skip;
 			Int BuffersPerPeriod=this->BuffersPerPeriod+padding1+padding2;
 			//WARN(3,"asdf0");
 		asdf:
@@ -466,7 +465,7 @@ trolled:
 			//WARN(3,"asdf2");
 			FLOATTYPE coeff = 1.0 / overlapcount;
 
-			//UInt offset = BufferSize / overlapcount * i;
+			//int offset = BufferSize / overlapcount * i;
 			DoProcess(1.0, coeff);
 			//memcpy(out1, in1, sizeof(FLOATTYPE)*BufferSize);
 			for(Int i=0;i<skip;i++)
@@ -478,12 +477,12 @@ trolled:
 			}
 			goto asdf;
 		}
-		inline void __warn(UInt length)
+		inline void __warn(int length)
 		{
 			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffer.Length() << "/" << InBuffers << "; length = " << length);
 			return;
 		}
-		virtual void PutData(const NUMTYPE* data, UInt length)
+		virtual void PutData(const NUMTYPE* data, int length)
 		{
 			while (length > 0)
 			{
@@ -500,7 +499,7 @@ trolled:
 				auto l = __MIN(length, BufferSize - inbuffer_pos);
 				//memcpy(&InBuffer.GetPointer(inbuffer_index) + inbuffer_pos, data, l * sizeof(NUMTYPE));
 				FLOATTYPE* dst = &InBuffer.GetPointer(inbuffer_index) + inbuffer_pos;
-				for (UInt i = 0; i < l; i++)
+				for (int i = 0; i < l; i++)
 					dst[i] = (FLOATTYPE) data[i];
 				inbuffer_pos += l;
 				if (inbuffer_pos >= BufferSize)
@@ -516,9 +515,9 @@ trolled:
 				length -= l;
 			}
 		}
-		virtual UInt GetData(NUMTYPE* out, UInt length)
+		virtual int GetData(NUMTYPE* out, int length)
 		{
-			UInt br = 0;
+			int br = 0;
 			while (length > 0)
 			{
 				if (outbuffer_index < 0)
@@ -530,7 +529,7 @@ trolled:
 				auto l = __MIN(length, BufferSize - outbuffer_pos);
 				//memcpy(out, &OutBuffer.GetPointer(outbuffer_index) + outbuffer_pos, l * sizeof(NUMTYPE));
 				FLOATTYPE* src = &OutBuffer.GetPointer(outbuffer_index) + outbuffer_pos;
-				for (UInt i = 0; i < l; i++)
+				for (int i = 0; i < l; i++)
 					out[i] = (NUMTYPE) src[i];
 
 				outbuffer_pos += l;
@@ -546,8 +545,8 @@ trolled:
 			}
 			return br;
 		}
-		OverlappedFilter2(UInt buffersize, UInt inbuffers, UInt outbuffers,
-				UInt overlapcount, Int BuffersPerPeriod, Int padding1=0, Int padding2=0) :
+		OverlappedFilter2(int buffersize, int inbuffers, int outbuffers,
+				int overlapcount, Int BuffersPerPeriod, Int padding1=0, Int padding2=0) :
 		InBuffer(inbuffers, buffersize), OutBuffer(outbuffers, buffersize),
 		curBuffer_in(0), nextBuffer_in(0), curBuffer_out(0), nextBuffer_out(0),
 		BufferSize(buffersize), OutBuffers(outbuffers), InBuffers(inbuffers),
@@ -559,7 +558,7 @@ trolled:
 			proc=[this](){this->doProc();};
 			alloc_buffer();
 			BuffersPerPeriod+=padding1+padding2;
-			InBufferPtrs = new UInt[(BuffersPerPeriod+1)+(this->BuffersPerPeriod+1)];
+			InBufferPtrs = new int[(BuffersPerPeriod+1)+(this->BuffersPerPeriod+1)];
 			OutBufferPtrs = InBufferPtrs+(BuffersPerPeriod+1);
 		}
 		~OverlappedFilter2()
@@ -572,16 +571,16 @@ trolled:
 	{
 	public:
 		CircularQueue<FLOATTYPE> InBuffer, OutBuffer;
-		UInt *InBufferPtrs;
+		int *InBufferPtrs;
 		Int curBuffer_in, nextBuffer_in;
-		UInt BufferSize, OutBuffers, InBuffers;
+		int BufferSize, OutBuffers, InBuffers;
 		Int outbuffer_index, inbuffer_index;
-		UInt outbuffer_pos, inbuffer_pos;
-		UInt overlapcount;
+		int outbuffer_pos, inbuffer_pos;
+		int overlapcount;
 		Int BuffersPerPeriod;
 		//out[n] = coeff_o*out[n] + coeff_n*f(out[n])
 
-		inline UInt PeriodSize()
+		inline int PeriodSize()
 		{
 			return BufferSize*BuffersPerPeriod;
 		}
@@ -595,7 +594,7 @@ trolled:
 			delete[] tmpbuffer;
 		}
 
-		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, UInt offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
+		//virtual void DoProcess(FLOATTYPE* in1, FLOATTYPE* in2, FLOATTYPE* out1, FLOATTYPE* out2, int offset, FLOATTYPE coeff_o, FLOATTYPE coeff_n) = 0;
 		virtual void DoProcess() = 0;
 		void DoProcess1()
 		{
@@ -614,7 +613,7 @@ trolled:
 		{
 			Int skip=BuffersPerPeriod/this->overlapcount;
 			if(skip<1)skip=1;
-			UInt overlapcount=BuffersPerPeriod/skip;
+			int overlapcount=BuffersPerPeriod/skip;
 			//WARN(3,"asdf0");
 		asdf:
 			Int tmp;
@@ -634,12 +633,12 @@ trolled:
 			}
 			goto asdf;
 		}
-		inline void __warn(UInt length)
+		inline void __warn(int length)
 		{
 			WARN(1, "filter buffer overflow: BufferSize = " << BufferSize << "; InBuffers = " << InBuffer.Length() << "/" << InBuffers << "; length = " << length);
 			return;
 		}
-		virtual void PutData(const NUMTYPE* data, UInt length)
+		virtual void PutData(const NUMTYPE* data, int length)
 		{
 			while (length > 0)
 			{
@@ -655,7 +654,7 @@ trolled:
 				auto l = __MIN(length, BufferSize - inbuffer_pos);
 				//memcpy(&InBuffer.GetPointer(inbuffer_index) + inbuffer_pos, data, l * sizeof(NUMTYPE));
 				FLOATTYPE* dst = &InBuffer.GetPointer(inbuffer_index) + inbuffer_pos;
-				for (UInt i = 0; i < l; i++)
+				for (int i = 0; i < l; i++)
 					dst[i] = (FLOATTYPE) data[i];
 				inbuffer_pos += l;
 				if (inbuffer_pos >= BufferSize)
@@ -670,7 +669,7 @@ trolled:
 				length -= l;
 			}
 		}
-		virtual UInt OutputSize()=0;
+		virtual int OutputSize()=0;
 		virtual bool GetData(NUMTYPE* out)
 		{
 			auto tmp = OutBuffer.BeginDequeue();
@@ -680,8 +679,8 @@ trolled:
 			OutBuffer.EndDequeue(tmp);
 			return true;
 		}
-		OverlappedFilter3(UInt buffersize_in, UInt buffersize_out, UInt inbuffers, UInt outbuffers,
-				UInt overlapcount, UInt BuffersPerPeriod) :
+		OverlappedFilter3(int buffersize_in, int buffersize_out, int inbuffers, int outbuffers,
+				int overlapcount, int BuffersPerPeriod) :
 		InBuffer(inbuffers, buffersize_in), OutBuffer(outbuffers, buffersize_out),
 		curBuffer_in(0), nextBuffer_in(0),
 		BufferSize(buffersize_in), OutBuffers(outbuffers), InBuffers(inbuffers),
@@ -690,7 +689,7 @@ trolled:
 		{
 			//InBuffer = (NUMTYPE*)malloc(sizeof(NUMTYPE)*BufferSize);
 			alloc_buffer();
-			InBufferPtrs = new UInt[(BuffersPerPeriod+1)];
+			InBufferPtrs = new int[(BuffersPerPeriod+1)];
 		}
 		~OverlappedFilter3()
 		{
@@ -702,15 +701,15 @@ trolled:
 	{
 	public:
 		NUMTYPE* data;
-		UInt length;
-		UInt size;
-		FilterBuffer(NUMTYPE* buf, UInt size):data(buf),length(0),size(size)
+		int length;
+		int size;
+		FilterBuffer(NUMTYPE* buf, int size):data(buf),length(0),size(size)
 		{
 
 		}
-		UInt Append(NUMTYPE* data, UInt length)
+		int Append(NUMTYPE* data, int length)
 		{
-			UInt length2=size-this->length;
+			int length2=size-this->length;
 			if(length2<length)length=length2;
 			if(length<=0)return 0;
 			memcpy(this->data+this->length,data,length*sizeof(NUMTYPE));
@@ -722,11 +721,11 @@ trolled:
 		public:
 			FilterBuffer<NUMTYPE>& buf;
 			NUMTYPE* data;
-			UInt length;
-			AppendData(FilterBuffer<NUMTYPE>& buf, NUMTYPE* data, UInt length)
+			int length;
+			AppendData(FilterBuffer<NUMTYPE>& buf, NUMTYPE* data, int length)
 				:buf(buf), data(data), length(length)
 			{
-				UInt tmp=buf.Append(data, length);
+				int tmp=buf.Append(data, length);
 				this->data+=tmp;
 				this->length-=tmp;
 			}
@@ -751,7 +750,7 @@ trolled:
 	public:
 		CircularQueue<NUMTYPE> OutBuffer;
 		Int BufferSize,index,pos,index2,pos2;
-		FilterBuffer2(UInt size,UInt buffers):OutBuffer(buffers,size),BufferSize(size),index(-1),pos(0),
+		FilterBuffer2(int size,int buffers):OutBuffer(buffers,size),BufferSize(size),index(-1),pos(0),
 			index2(-1),pos2(0)
 		{
 			//alt_buffer=new NUMTYPE[length];
@@ -788,10 +787,10 @@ trolled:
 			}
 		}
 		//Int outbuffer_index;
-		//UInt outbuffer_pos;
+		//int outbuffer_pos;
 		virtual bool GetData(NUMTYPE* out, Int length)
 		{
-			UInt br = 0;
+			int br = 0;
 			//cerr << "OutBuffer.Length()=" <<OutBuffer.Length()<<endl;
 			Int data_avail=0;
 			if(index2>=0)
