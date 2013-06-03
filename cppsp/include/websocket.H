@@ -9,11 +9,12 @@ namespace cppsp
 		struct ws_header1
 		{
 			//char flags:8;
-			bool fin :1;
+			unsigned int opcode :4;
 			bool rsv1 :1;
 			bool rsv2 :1;
 			bool rsv3 :1;
-			unsigned int opcode :4;
+			bool fin :1;
+
 			unsigned int payload_len :7;
 			bool mask :1;
 		}__attribute__((packed));
@@ -54,18 +55,22 @@ namespace cppsp
 		}
 
 		inline void unmask(String data, uint32_t key) {
-			uint32_t* d = (uint32_t*) data.data();
-			int len = data.length() / sizeof(*d);
-			for (int i = 0; i < len; i++) {
-				d[i] ^= key;
+			/*uint32_t* d = (uint32_t*) data.data();
+			 int len = data.length() / sizeof(*d);
+			 for (int i = 0; i < len; i++) {
+			 d[i] ^= key;
+			 }
+			 uint8_t* tmp = (uint8_t*) (d + len);
+			 uint8_t* tmp1 = (uint8_t*) &key;
+			 int leftover = data.length() % sizeof(*d);
+			 if (leftover > 0) tmp[0] ^= tmp1[0];
+			 if (leftover > 1) tmp[1] ^= tmp1[1];
+			 if (leftover > 2) tmp[2] ^= tmp1[2];
+			 if (leftover > 3) tmp[3] ^= tmp1[3];*/
+			uint8_t* k = (uint8_t*) &key;
+			for (int i = 0; i < data.length(); i++) {
+				data.d[i] = data.d[i] ^ k[i % sizeof(key)];
 			}
-			uint8_t* tmp = (uint8_t*) (d + len);
-			uint8_t* tmp1 = (uint8_t*) &key;
-			int leftover = data.length() % sizeof(*d);
-			if (leftover > 0) tmp[0] ^= tmp1[0];
-			if (leftover > 1) tmp[1] ^= tmp1[1];
-			if (leftover > 2) tmp[2] ^= tmp1[2];
-			if (leftover > 3) tmp[3] ^= tmp1[3];
 		}
 		bool process(WSFrame& out) {
 			char* data = (char*) ms.data() + pos;
@@ -103,13 +108,13 @@ namespace cppsp
 					break;
 			}
 			//printf("payloadLen = %lli\n", payloadLen);
-			if (len < (minLen + payloadLen)) return false;
+			if (len < int(minLen + payloadLen)) return false;
 			char* payload = data + minLen;
 			out.data= {payload,(int)payloadLen};
 			out.fin = h1->fin;
 			out.opcode = h1->opcode;
 			pos += minLen + (int) payloadLen;
-			if (h1->mask) unmask( { payload, payloadLen },
+			if (h1->mask) unmask( { payload, (int) payloadLen },
 					((ws_footer1*) ((char*) (h1 + 1) + pLen2))->masking_key);
 			return true;
 		}
@@ -164,7 +169,7 @@ namespace cppsp
 		 Complete the insertion of a chunk.
 		 */
 		void endInsert(int len) {
-			printf("endInsert: len=%i\n",len);
+			//printf("endInsert: len=%i\n",len);
 			int tmp = ms().length();
 			ms().endAppend(len + sizeof(queueItem));
 			if (_append) {
@@ -196,7 +201,7 @@ namespace cppsp
 			ms().endAppend(sizeof(iovec) * _count);
 
 			for (int i = _first; i >= 0; i = _item(i).next) {
-				iov[iovcnt++]= {_item(i).data,_item(i).len};
+				iov[iovcnt++]= {_item(i).data,(size_t)_item(i).len};
 				//printf("id=%i iovcnt=%i len=%i\n",i,iovcnt,_item(i).len);
 			}
 			use_ms2 = !use_ms2;
@@ -216,4 +221,10 @@ namespace cppsp
 			}
 		}
 	};
+	String ws_beginWriteFrame(FrameWriter& fw, int len);
+	void ws_endWriteFrame(FrameWriter& fw, String buf, int opcode);
+	struct Page;
+	struct Request;
+	void ws_init(Page& p, CP::Callback cb);
+	bool ws_iswebsocket(const cppsp::Request& req);
 }

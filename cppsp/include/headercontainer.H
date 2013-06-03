@@ -98,7 +98,7 @@ namespace cppsp
 		void endReplace() {
 			std::sort(items, items + length, compareItem);
 		}
-		String operator[](String name) {
+		String operator[](String name) const {
 			item it { name.data(), NULL, name.length(), 0 };
 			item* tmp = std::lower_bound(items, items + length, it, compareItem);
 			if (tmp != NULL && (tmp - items) < length && ci_compare(tmp->n(), name) == 0) return tmp->v();

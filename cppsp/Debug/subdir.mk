@@ -7,19 +7,22 @@ C_UPPER_SRCS += \
 ../common.C \
 ../cppsp_cpoll.C \
 ../page.C \
-../stringutils.C 
+../stringutils.C \
+../websocket.C 
 
 OBJS += \
 ./common.o \
 ./cppsp_cpoll.o \
 ./page.o \
-./stringutils.o 
+./stringutils.o \
+./websocket.o 
 
 C_UPPER_DEPS += \
 ./common.d \
 ./cppsp_cpoll.d \
 ./page.d \
-./stringutils.d 
+./stringutils.d \
+./websocket.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
