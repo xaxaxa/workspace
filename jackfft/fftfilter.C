@@ -44,8 +44,8 @@ namespace xaxaxa
 		{
 			Data=(double*)fftw_malloc(sizeof(double)*size);
 			Data_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
-			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, 0); //FFTW_UNALIGNED
-			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, 0);
+			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, FFTW_ESTIMATE); //FFTW_UNALIGNED
+			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, FFTW_ESTIMATE);
 		}
 		void Forward()
 		{
@@ -75,8 +75,8 @@ namespace xaxaxa
 		{
 			Data=(double*)fftw_malloc(sizeof(double)*size);
 			Data_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
-			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, 0); //FFTW_UNALIGNED
-			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, 0);
+			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, FFTW_ESTIMATE); //FFTW_UNALIGNED
+			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, FFTW_ESTIMATE);
 		}
 		void Forward(double* data, int length)
 		{
