@@ -201,7 +201,7 @@ namespace cppsp
 			else return r;
 		}
 		int32_t write(const void* buf, int32_t len) {
-			stream->write(buf, len);
+			return stream->write(buf, len);
 		}
 		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false) {
 			int32_t r;
