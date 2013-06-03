@@ -32,6 +32,8 @@
  * 
  * 
  * */
+#ifndef __INCLUDED_CPOLL_H
+#define __INCLUDED_CPOLL_H
 #include <string>
 #include <exception>
 #include <poll.h>
@@ -47,9 +49,14 @@
 #include "basictypes.H"
 #include "statemachines.H"
 #include <fcntl.h>
+#include <math.h>
 
-#ifndef __INCLUDED_CPOLL_H
-#define __INCLUDED_CPOLL_H
+#ifndef WARNLEVEL
+#define WARNLEVEL 5
+#endif
+#ifndef WARN
+#define WARN(LEVEL,MSG) if(LEVEL<=WARNLEVEL){if(LEVEL<=1)cerr << "\x1B[41;1;33m"; else if(LEVEL<=2)cerr << "\x1B[1;1;1m"; cerr << MSG << "\x1B[0;0;0m" << endl;}
+#endif
 /*
  * CPoll: low level c++ wrapper for poll() and epoll(); can be implemented on
  * other OS's using mechanisms such as overlapped I/O(windows), but currently
@@ -1305,6 +1312,12 @@ namespace CP
 		{
 			_pageHeader* next;
 		};
+		struct state
+		{
+			_pageHeader* _curPage;
+			_pageHeader* _curRawItem;
+			int _curIndex;
+		};
 		_pageHeader* _firstPage;
 		_pageHeader* _curPage;
 		_pageHeader* _firstRawItem;
@@ -1387,6 +1400,34 @@ namespace CP
 #endif
 		}
 		void clear();
+		state saveState() {
+			return {_curPage,_curRawItem,_curIndex};
+		}
+		//deallocate all blocks allocated after s was saved
+		void restoreState(state s) {
+			_pageHeader* h;
+			if (s._curPage != NULL) {
+				h = s._curPage->next;
+				s._curPage->next = NULL;
+				while (h != NULL) {
+					_pageHeader* n = h->next;
+					::free(h);
+					h = n;
+				}
+			}
+			if (s._curRawItem != NULL) {
+				h = s._curRawItem->next;
+				s._curRawItem->next = NULL;
+				while (h != NULL) {
+					_pageHeader* n = h->next;
+					::free(h);
+					h = n;
+				}
+			}
+			_curPage = s._curPage;
+			_curRawItem = s._curRawItem;
+			_curIndex = s._curIndex;
+		}
 		void _addPage();
 		void _addRaw(int len);
 	};
@@ -1632,6 +1673,93 @@ namespace CP
 		}
 		inline Buffer subBuffer(int index) const {
 			return subBuffer(index, len - index);
+		}
+	};
+	class BitArray
+	{
+	public:
+		uint32_t* data;
+		int length;
+		BitArray(int l) :
+				length(l) {
+			data = new uint32_t[(int) ceil(length / 32)];
+		}
+		~BitArray() {
+			delete[] data;
+		}
+		inline bool get(int i) { //WARNING: no runtime check
+			__uint32_t tmp = data[i / 32];
+			return (tmp & ((int) 1 << (i % 32))) != 0;
+		}
+		inline void set(int i, bool b) {
+			int tmp1 = i / 32;
+			__uint32_t tmp = data[tmp1];
+			if (b) data[tmp1] = tmp | ((int) 1 << (i % 32));
+			else data[tmp1] = tmp & (~((int) 1 << (i % 32)));
+		}
+	};
+	template<class T> class CircularQueue: public RGC::Object
+	{
+	public:
+		T* array;
+		BitArray b;
+		int size;
+		int objsize;
+		int __wrap;
+		int s1, s2, e1, e2;
+		CircularQueue(int size, int objsize = 1) :
+				b(size), size(size), objsize(objsize), __wrap(size * 2), s1(0), s2(0), e1(0), e2(0) {
+			array = new T[size * objsize];
+		}
+		~CircularQueue() {
+			delete[] array;
+		}
+		inline int __getlength(int i1, int i2, int wrap) {
+			return (i2 < i1 ? i2 + wrap : i2) - i1;
+		}
+		inline T& getPointer(int i) {
+			i %= size;
+			if (i >= size || i < 0) throw out_of_range("CircularQueue::getPointer() out of range");
+			return array[i * objsize]; //__intwrap(i,size);
+		}
+		inline bool canAppend() {
+			return __getlength(s1, e2, __wrap) < size;
+		}
+		int beginAppend() {
+			if (__getlength(s1, e2, __wrap) >= size) return -1;
+			int tmp = e2++;
+			e2 %= __wrap;
+			b.set(tmp % size, true);
+			return tmp;
+		}
+		void endAppend(int i) {
+			if (i == e1) {
+				do {
+					e1++;
+					e1 %= __wrap;
+				} while (__getlength(e1, e2, __wrap) > 0 && !(b.get(e1 % size)));
+			} else b.set(i % size, false);
+		}
+		inline int length() {
+			return __getlength(s2, e1, __wrap);
+		}
+		inline bool canDequeue() {
+			return __getlength(s2, e1, __wrap) > 0;
+		}
+		int beginDequeue() {
+			if (__getlength(s2, e1, __wrap) <= 0) return -1;
+			int tmp = s2++;
+			s2 %= __wrap;
+			b.set(tmp % size, true);
+			return tmp;
+		}
+		void endDequeue(int i) {
+			if (i == s1) {
+				do {
+					s1++;
+					s1 %= __wrap;
+				} while (__getlength(s1, s2, __wrap) > 0 && !(b.get(s1 % size)));
+			} else b.set(i % size, false);
 		}
 	};
 }

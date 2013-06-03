@@ -57,6 +57,9 @@ namespace CP
 		String(const char* data, int length) :
 				d(const_cast<char*>(data)), len(length) {
 		}
+		String(const void* data, int length) :
+				d((char*) (data)), len(length) {
+		}
 		String(const char* data) :
 				d(const_cast<char*>(data)), len(strlen(data)) {
 		}
@@ -118,6 +121,17 @@ namespace CP
 			d += index;
 			len -= index;
 		}
+		inline int indexOf(String s, int i = 0) {
+			void* tmp = memmem(d + i, len - i, s.d, s.len);
+			return tmp == NULL ? -1 : (((char*) tmp) - d);
+		}
+		inline int indexOf(char c, int i = 0) {
+			void* tmp = memchr(d + i, c, len - i);
+			return tmp == NULL ? -1 : (((char*) tmp) - d);
+		}
+		inline char& operator[](int i) {
+			return d[i];
+		}
 	};
 	template<class ... T>
 	String concat(RGC::Allocator& alloc, T ... s...) {
@@ -145,6 +159,10 @@ namespace CP
 	static long long atoll(String s) {
 		__CPOLL_DO_ATOI(::atoll, s);
 	}
+	static double atof(String s) {
+		__CPOLL_DO_ATOI(::atof, s);
+	}
+
 	/*
 	 static long long atoq(String s) {
 	 __CPOLL_DO_ATOI(::atoq, s);
