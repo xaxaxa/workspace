@@ -83,7 +83,7 @@ namespace cppsp
 	}
 	void CPollRequest::_beginRead() {
 		String b = _parser.beginPutData(4096);
-		inputStream->read(b.data(), b.length(), { &CPollRequest::_readCB, this });
+		_stream.stream->read(b.data(), b.length(), { &CPollRequest::_readCB, this });
 	}
 	void CPollRequest::_readCB(int i) {
 		if (i <= 0) {
