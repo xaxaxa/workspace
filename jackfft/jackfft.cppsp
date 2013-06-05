@@ -395,6 +395,13 @@ void handleFrame(WebSocketParser::WSFrame f) {
 			sp->restoreState(st);
 			break;
 		}
+		case 'p':
+		{
+			i++;
+			if(i>=d.length()) break;
+			//if(d[i]=='e') 
+			break;
+		}
 	}
 }
 void do_end() {
@@ -651,7 +658,9 @@ void do_end() {
 			<input type="button" onclick="doSend('w '+document.getElementById('t_fn').value);" value="Save" />
 		</div>
 		<div style="position:absolute; left:0px; right:0px; bottom:0px; height:28px;" class="panel">
-			<button type="button" onclick="toggle(this);">Pitch shift</button>
+			<input type="button" onclick="toggle(this); update_pitchshift(); doSend('p '+this._active?'e':'d');" value="Pitch shift" />
+			<input type="text" id="t_p" style="width: 35px;" value="0" />
+			<input type="button" onclick="update_pitchshift();" value="apply" />
 		</div>
 	</div>
 <script>
@@ -666,6 +675,9 @@ for(int i=0;i<EQ_POINTS;i++) {
 %>];
 function doSend(s) {
 	websocket.send(s);
+}
+function update_pitchshift() {
+	doSend("p "+document.getElementById("t_p").value);
 }
 eq.onChange=function(i1,i2) {
 	//format: u STARTINDEX DATA[STARTINDEX] DATA[STARTINDEX+1] ...
