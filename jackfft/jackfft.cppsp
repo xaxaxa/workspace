@@ -62,21 +62,19 @@ inline double scale_freq_r(double x)
 	x=log2(x)/10;
 	return x<0?-x:x;
 }
-double scale_value(double x)
-{
-	//return x*x;
-	double tmp = x - 1.0;
-	if(tmp<0)
-		return 1.0/(-tmp*19.0+1.0);
-	else return tmp*19.0+1.0;
-}
-double scale_value_r(double x)
-{
-	if(x>1.0)x=(x-1.0)/19.0;
-	else x=(-((1/x)-1.0)/19.0);
 
-	if(std::isnan(x))return 1.0;
-	else return x+1.0;
+//graph to coefficient
+//x: [0.0,2.0]
+static const int graph_range=7.;
+inline double scale_value(double x)
+{
+	double tmp = x - 1.;
+	tmp *= graph_range;
+	return pow(2, tmp);
+}
+inline double scale_value_r(double x)
+{
+	return log2(x) / graph_range + 1.;
 }
 struct stdoutCapture
 {
@@ -163,6 +161,22 @@ void save(CP::Stream& fs)
 		buf.val = scale_value(getPoint(i) * 2.0);
 		//cout << buf.val << endl;
 		fs.write(b);
+	}
+}
+bool pitchshift_enable=false;
+string pitchshift_value="0";
+void apply_pitchshift(xaxaxa::FFTFilter<jack_default_audio_sample_t>** filt2=NULL)
+{
+	double asdf = 1.;
+	if(pitchshift_enable)
+	{
+		asdf = strtod(pitchshift_value.c_str(), NULL);
+		asdf=pow(2,asdf/7.d);
+	}
+	if(filt2==NULL)filt2=(xaxaxa::FFTFilter<jack_default_audio_sample_t>**)filt;
+	for(int i = 0; i < (int)inputs.size(); i++) {
+		if(filt2[i] == NULL) continue;
+		filt2[i]->freq_scale = asdf;
 	}
 }
 jack_client_t *client=NULL;
@@ -399,7 +413,12 @@ void handleFrame(WebSocketParser::WSFrame f) {
 		{
 			i++;
 			if(i>=d.length()) break;
-			//if(d[i]=='e') 
+			if(d[i]=='e') pitchshift_enable=true;
+			else if(d[i]=='d') pitchshift_enable=false;
+			else {
+				pitchshift_value=d.subString(i).toSTDString();
+			}
+			apply_pitchshift();
 			break;
 		}
 	}
@@ -616,7 +635,7 @@ void do_end() {
 		background: #fff;
 		border: solid 1px #BCBCBC;
 		padding: 0px 8px;
-		margin: 2px 1px;
+		margin: 2px 2px 2px 0px;
 		min-width: 32px;
 		text-align: center;
 		height: 24px;
@@ -631,12 +650,12 @@ void do_end() {
 	input:hover {
 		border-color: #3333ff;
 	}
-	button._active {
+	input._active {
 		background: #000000;
 		color: #ffff99;
 		border-color: #3333ff;
 	}
-	.panel button:active,.btn:active
+	.panel input[type="button"]:active,.btn:active
 	{
 		background: #dfdfdf;
 		border-color: #3333ff;
@@ -658,12 +677,17 @@ void do_end() {
 			<input type="button" onclick="doSend('w '+document.getElementById('t_fn').value);" value="Save" />
 		</div>
 		<div style="position:absolute; left:0px; right:0px; bottom:0px; height:28px;" class="panel">
-			<input type="button" onclick="toggle(this); update_pitchshift(); doSend('p '+this._active?'e':'d');" value="Pitch shift" />
-			<input type="text" id="t_p" style="width: 35px;" value="0" />
+			<input type="button" id="b_p" onclick="toggle(this); update_pitchshift(); doSend('p '+(this._active?'e':'d'));" value="Pitch shift" />
+			<input type="text" id="t_p" style="width: 35px;" value="<%=pitchshift_value%>" />
 			<input type="button" onclick="update_pitchshift();" value="apply" />
 		</div>
 	</div>
 <script>
+<%
+if(pitchshift_enable) {
+	%>toggle(document.getElementById("b_p"));<%
+}
+%>
 var EQ_POINTS=<%=EQ_POINTS%>;
 websocket = new WebSocket("ws://"+window.location.host+window.location.pathname);
 eq=new EQControl(document.getElementById("c1"),EQ_POINTS);
