@@ -173,10 +173,11 @@ int main(int argc, char** argv) {
 		rootDir=cwd;
 	}
 	string listen="0.0.0.0:80";
+	string tmpDir;
 	int threads=-1;
-	bool f0rk=false;
 	vector<string> cxxopts;
 	vector<const char*> modules;
+	bool f0rk=false;
 	bool reusePort=true;
 	bool setAffinity=false;
 	try {
@@ -202,6 +203,8 @@ int main(int argc, char** argv) {
 						reusePort=false;
 					} else if(strcmp(name,"a")==0) {
 						setAffinity=true;
+					} else if(strcmp(name,"b")==0) {
+						tmpDir=getvalue();
 					} else {
 					help:
 						fprintf(stderr,"usage: %s [options]...\noptions:\n"
@@ -212,7 +215,8 @@ int main(int argc, char** argv) {
 						"\t-r <root>: set root directory (must be absolute) (default: $(pwd))\n"
 						"\t-t <threads>: # of worker processes/threads to start up (default: sysconf(_SC_NPROCESSORS_CONF))\n"
 						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n"
-						"\t-a: automatically set cpu affinity for the created worker threads/processes\n",argv[0]);
+						"\t-a: automatically set cpu affinity for the created worker threads/processes\n"
+						"\t-b <path>: the directory in which temporary binaries are stored\n",argv[0]);
 						exit(1);
 					}
 				});
@@ -278,6 +282,7 @@ int main(int argc, char** argv) {
 		tmp.cpu=(setAffinity?cpu:-1);
 		newsock->release();
 		CXXOpts(tmp.srv.mgr)=cxxopts;
+		tmp.srv.mgr->tmpDir=tmpDir;
 		tmp.modules=modules;
 		tmp.threadid=i+1;
 		if(threads==1) {

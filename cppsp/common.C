@@ -35,6 +35,7 @@
 #include "include/page.H"
 #include <errno.h>
 #include "include/split.H"
+#include <libgen.h>
 
 using namespace CP;
 using namespace std;
@@ -389,6 +390,18 @@ namespace cppsp
 	static inline void pageErr_isDir() {
 		throw ParserException("requested path is a directory or socket");
 	}
+	static inline void replace(String s, char f, char t) {
+		for (int i = 0; i < s.length(); i++)
+			if (s[i] == f) s[i] = t;
+	}
+	//path for persistent binaries
+	static inline string loadedPage_getBinPath(loadedPage* This) {
+		if (This->tmpDir.length() == 0) return This->path;
+		string path1(This->path.data(), This->path.length()); //make sure it's a copy
+		String path1_(path1);
+		replace(path1_, '/', '_');
+		return This->tmpDir + "/" + path1;
+	}
 	void loadedPage::readCB(int r) {
 		if (r <= 0) {
 			compiling = false;
@@ -400,10 +413,12 @@ namespace cppsp
 				unlink(cPath.c_str());
 				string dll1 = dllPath + ".1";
 				link(dllPath.c_str(), dll1.c_str());
-				rename(dll1.c_str(), (path + ".so").c_str());
 				string txt1 = txtPath + ".1";
 				link(txtPath.c_str(), txt1.c_str());
-				rename(txt1.c_str(), (path + ".txt").c_str());
+
+				string binPath = loadedPage_getBinPath(this);
+				rename(dll1.c_str(), (binPath + ".so").c_str());
+				rename(txt1.c_str(), (binPath + ".txt").c_str());
 			}
 			afterCompile(status == 0);
 			compile_fd = nullptr;
@@ -420,7 +435,7 @@ namespace cppsp
 	}
 	void loadedPage::afterCompile(bool success) {
 		if (!success) {
-			rename(cPath.c_str(), (path + ".C").c_str());
+			rename(cPath.c_str(), (loadedPage_getBinPath(this) + ".C").c_str());
 			deleteTmpfiles();
 			CompileException exc;
 			exc.compilerOutput = string((const char*) ms.data(), ms.length());
@@ -456,44 +471,57 @@ namespace cppsp
 		string tmp;
 		char sss[32];
 		snprintf(sss, 32, "%i", rand());
-		txtPath = path + "." + string(sss) + ".txt";
-		dllPath = path + "." + string(sss) + ".dll";
-		cPath = path + "." + string(sss) + ".C";
+		string sss_(sss);
+		if (tmpDir.length() == 0) {
+			txtPath = path + "." + sss_ + ".txt";
+			dllPath = path + "." + sss_ + ".dll";
+			cPath = path + "." + sss_ + ".C";
+		} else {
+			string path1 = string(path.data(), path.length());
+			string p = basename((char*) path1.c_str());
+			txtPath = tmpDir + "/" + p + "." + sss_ + ".txt";
+			dllPath = tmpDir + "/" + p + "." + sss_ + ".dll";
+			cPath = tmpDir + "/" + p + "." + sss_ + ".C";
+		}
 
 		//check if a precompiled page exists; if it exists and is newer than
 		//the .cppsp, then simply hardlink to it
 		timespec modif_txt, modif_so, modif_cppsp;
+
+		string binPath = loadedPage_getBinPath(this);
+		string txt1 = binPath + ".txt";
+		string dll1 = binPath + ".so";
 		struct stat st;
 		{
 			TO_C_STR(path.data(), path.length(), s1);
 			if (stat(s1, &st) < 0) goto do_comp;
 			modif_cppsp = st.st_mtim;
 		}
-		{
-			CONCAT_TO(path.data(), path.length(), s1, ".txt");
-			if (stat(s1, &st) < 0) goto do_comp;
-			modif_txt = st.st_mtim;
-		}
-		{
-			CONCAT_TO(path.data(), path.length(), s1, ".so");
-			if (stat(s1, &st) < 0) goto do_comp;
-			modif_so = st.st_mtim;
-		}
+		if (stat(txt1.c_str(), &st) < 0) goto do_comp;
+		modif_txt = st.st_mtim;
+		if (stat(dll1.c_str(), &st) < 0) goto do_comp;
+		modif_so = st.st_mtim;
 		if (tsCompare(modif_cppsp, modif_txt) <= 0 && tsCompare(modif_cppsp, modif_so) <= 0) {
-			string txt1 = path + ".txt";
-			string dll1 = path + ".so";
 			if (link(txt1.c_str(), txtPath.c_str()) < 0) goto do_comp;
 			if (link(dll1.c_str(), dllPath.c_str()) < 0) goto do_comp;
 			afterCompile(true);
 			return;
 		}
-
 		do_comp: deleteTmpfiles();
 		CP::File* f;
 		ms.clear();
 		try {
-			f = (CP::File*) checkError(
-					compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
+			if (this->tmpDir.length() == 0) {
+				f = (CP::File*) checkError(
+						compilePage(wd, path, cPath, txtPath, dllPath, cxxopts, compilerPID, tmp));
+			} else {
+				auto opts = cxxopts;
+				opts.push_back("-iquote");
+				string path1(path.data(), path.length());
+				opts.push_back(dirname((char*) path1.c_str()));
+				f = (CP::File*) checkError(
+						compilePage(wd, path, cPath, txtPath, dllPath, opts, compilerPID, tmp));
+			}
 		} catch (...) {
 			deleteTmpfiles();
 			throw;
@@ -705,6 +733,7 @@ namespace cppsp
 				return;
 			}
 			lp1 = new loadedPage();
+			lp1->tmpDir = this->tmpDir;
 			lp1->path = path.toSTDString();
 			cache.insert( { sp.addString(path), lp1 });
 		} else lp1 = (*it).second;
@@ -764,6 +793,7 @@ namespace cppsp
 				return;
 			}
 			lp1 = new loadedPage();
+			lp1->tmpDir = this->tmpDir;
 			lp1->srv = srv;
 			lp1->path = path.toSTDString();
 			cache.insert( { sp.addString(path), lp1 });

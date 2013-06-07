@@ -85,6 +85,7 @@ namespace cppsp
 			void operator()(loadedPage* This, exception* ex);
 		};
 		vector<_loadCB> loadCB;
+		string tmpDir;
 		string path;
 		string cPath;
 		string txtPath;
@@ -135,6 +136,7 @@ namespace cppsp
 		unordered_map<String, staticPage*> staticCache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
+		string tmpDir;
 		int threadID;
 		cppspManager();
 		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
