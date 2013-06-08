@@ -235,7 +235,7 @@ void doSave(String fn) {
 	CP::File fs(open(fn1,O_RDWR|O_CREAT|O_TRUNC,0666));
 	save(fs);
 }
-extern "C" void initModule(Server* s) {
+extern "C" void initModule(ModuleParams& p) {
 	for(int i=0;i<EQ_POINTS;i++) eqData[i]=0.5;
 	for(int i=0;i<CHANNELS;i++)
 	{
@@ -507,7 +507,7 @@ void do_end() {
 			//gc.closePath();
 		};
 		
-		this.handleMouseMove=function(ev)
+		this._handleMouseMove=function(ev)
 		{
 			var e=ev?ev:event;
 			var data=this.data;
@@ -566,7 +566,6 @@ void do_end() {
 			return true;
 		}
 		canvas.__EQControl=this;
-		canvas.onmousemove=function(ev){this.__EQControl.handleMouseMove(ev);};
 		canvas.ontouchmove=function(event){
 			if (event.targetTouches.length >= 1) {
 				var ev=new Object();
@@ -590,15 +589,22 @@ void do_end() {
 			eq.d=false;
 			event.preventDefault();
 		};
+		var __EQControl=this;
 		this.canvas.onmousedown=function() {
 			this.__EQControl.d=true;
 			this.__EQControl.last_i=-1;
+			document.addEventListener("mousemove", __EQControl.handleMouseMove, false);
+			document.addEventListener("mouseup", __EQControl.handleMouseUp, false);
 			return true;
 		}
-		this.canvas.onmouseup=function() {
-			this.__EQControl.d=false;
-			return true;
-		}
+		this.handleMouseUp=function() {
+			document.removeEventListener("mousemove", __EQControl.handleMouseMove, false);
+			document.removeEventListener("mouseup", __EQControl.handleMouseUp, false);
+			__EQControl.d=false;
+		};
+		this.handleMouseMove=function(ev) {
+			__EQControl._handleMouseMove(ev);
+		};
 		this.refresh=function(x1,x2) {
 			this.doDraw(this.canvas.getContext("2d"),x1,x2);
 		};
@@ -626,7 +632,9 @@ void do_end() {
 		-webkit-user-select: none;
 		-khtml-user-select: none;
 		-moz-user-select: none;
+		
 	}
+	body,input,td {color: #000;}
 	.panel {
 		padding: 0px 0px;
 	}
