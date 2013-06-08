@@ -398,6 +398,12 @@ namespace cppsp
 		void _flushCB(Response& r);
 		void _pageCB(Page* p, exception* ex);
 	};
-
+	//the ModuleParams struct itself (passed in to modules at initialization time) is not
+	//guaranteed to exist after initModule() returns
+	struct ModuleParams
+	{
+		Server* server;	//guaranteed to exist until after deinitModule() returns
+		String filePath;	//guaranteed to exist until after deinitModule() returns
+	};
 } /* namespace cppsp */
 #endif /* PAGE_H_ */

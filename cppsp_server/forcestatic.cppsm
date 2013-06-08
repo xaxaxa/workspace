@@ -6,9 +6,9 @@ Server* server;
 void handleRequest(void*, Request& req, Response& resp, Delegate<void()> cb) {
 	server->handleStaticRequest(req.path,req,resp,cb);
 }
-extern "C" void initModule(Server* s) {
-	server=s;
-	it=s->handleRequest.attach(&handleRequest);
+extern "C" void initModule(ModuleParams& p) {
+	server=p.server;
+	it=server->handleRequest.attach(&handleRequest);
 }
 extern "C" void deinitModule() {
 	server->handleRequest.detach(it);

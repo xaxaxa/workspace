@@ -67,7 +67,7 @@ namespace cppsp
 		typedef int (*getObjectSize_t)();
 		typedef Page* (*createObject_t)(void* mem);
 		typedef Page* (*createObject1_t)(RGC::Allocator* alloc);
-		typedef void (*initModule_t)(Server* s);
+		typedef void (*initModule_t)(ModuleParams& p);
 		typedef void (*deinitModule_t)();
 		int (*getObjectSize)();
 		createObject_t createObject;

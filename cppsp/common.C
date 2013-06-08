@@ -550,7 +550,10 @@ namespace cppsp
 		createObject1 = (createObject1_t) checkDLError(dlsym(dlHandle, "createObject1"));
 		initModule_t initModule = (initModule_t) dlsym(dlHandle, "initModule");
 		if (initModule != NULL) {
-			initModule(srv);
+			ModuleParams p;
+			p.server = srv;
+			p.filePath = this->path;
+			initModule(p);
 			fprintf(stderr, "module %s loaded\n", path.c_str());
 		}
 		loaded = true;
