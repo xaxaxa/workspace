@@ -590,7 +590,8 @@ void do_end() {
 			event.preventDefault();
 		};
 		var __EQControl=this;
-		this.canvas.onmousedown=function() {
+		this.canvas.onmousedown=function(ev) {
+			if(ev.button!=0) return;
 			this.__EQControl.d=true;
 			this.__EQControl.last_i=-1;
 			document.addEventListener("mousemove", __EQControl.handleMouseMove, false);
@@ -625,8 +626,6 @@ void do_end() {
 	<style>
 	body
 	{
-		font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
-		font-size: 10px;
 		padding: 0px;
 		margin: 0px;
 		-webkit-user-select: none;
@@ -634,7 +633,11 @@ void do_end() {
 		-moz-user-select: none;
 		
 	}
-	body,input,td {color: #000;}
+	body,input,td {
+		color: #000;
+		font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+		font-size: 11px;
+	}
 	.panel {
 		padding: 0px 0px;
 	}
@@ -643,13 +646,13 @@ void do_end() {
 		background: #fff;
 		border: solid 1px #BCBCBC;
 		padding: 0px 8px;
-		margin: 2px 2px 2px 0px;
+		margin: 1px 0px;
 		min-width: 32px;
 		text-align: center;
-		height: 24px;
+		height: 22px;
 	}
 	.panel input[type="text"] {
-		height:22px;
+		height:20px;
 	}
 	.panel input[type="text"] {
 		text-align: left;
@@ -673,18 +676,18 @@ void do_end() {
 	</style>
 </head>
 <body style="overflow:hidden;" onselectstart="return false;">
-	<div style="position:absolute; top: 4px; right: 8px; bottom: 4px; left: 8px;">
-		<div style="position:absolute; top:0px; left:0px; right:0px; bottom:56px;">
+	<div style="position:absolute; top: 0px; right: 0px; bottom: 0px; left: 0px;">
+		<div style="position:absolute; top:0px; left:0px; right:0px; bottom:52px;">
 			<canvas id="c1" style="width: 100%; height: 100%;"></canvas>
 		</div>
-		<div style="position:absolute; left:0px; right:0px; bottom:28px; height:28px;" class="panel">
+		<div style="position:absolute; left:2px; right:2px; bottom:26px; height:24px;" class="panel">
 			<input type="button" onclick="doSend('s ');" value="Start" />
 			<input type="button" onclick="doSend('e ');" value="Stop" />
 			<input type="text" id="t_fn" style="width: 85px;" value="default.jfft" />
 			<input type="button" onclick="doSend('r '+document.getElementById('t_fn').value);" value="Load" />
 			<input type="button" onclick="doSend('w '+document.getElementById('t_fn').value);" value="Save" />
 		</div>
-		<div style="position:absolute; left:0px; right:0px; bottom:0px; height:28px;" class="panel">
+		<div style="position:absolute; left:2px; right:2px; bottom:0px; height:26px;" class="panel">
 			<input type="button" id="b_p" onclick="toggle(this); update_pitchshift(); doSend('p '+(this._active?'e':'d'));" value="Pitch shift" />
 			<input type="text" id="t_p" style="width: 35px;" value="<%=pitchshift_value%>" />
 			<input type="button" onclick="update_pitchshift();" value="apply" />

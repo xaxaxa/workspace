@@ -30,6 +30,9 @@
 		.windowbutton, .windowbutton_a {
 			border: solid 1px #bcbcbc;
 			background: #fff;
+			font-family: Trebuchet MS, Tahoma;
+			font-size: 13px;
+			font-weight: bold;
 		}
 		.windowbutton_a {
 			background: #025;
@@ -40,10 +43,10 @@
 	<script src="a1/wnd_2.js"></script>
 	<script src="a1/taskbar.js"></script>
 </head>
-<body style="overflow:hidden" onselectstart="return false;">
+<body style="overflow:hidden; margin:0px;" onselectstart="return false;">
 
 <div style="position:absolute; bottom:28px; left:0px; right:0px; top:0px; overflow: hidden;" id="di"></div>
-<div id="tb" style="z-index:1000;position:fixed; bottom:0px; left:0px; right:0px; height:28px; overflow:hidden; border-top: #d0d0d0 1px solid; background-color: #d4d0c8;"></div>
+<div id="tb" style="z-index:999;position:fixed; bottom:0px; left:0px; right:0px; height:28px; overflow:hidden; border-top: #d0d0d0 1px solid; background-color: #d4d0c8;"></div>
 
 
 <div id="page"></div>
@@ -110,6 +113,7 @@ var setupScroll = window.onload = function() {
 		w.div_content.appendChild(ifr);
 		w.setTitle(title);
 		w.show();
+		w.activate();
 	}
 	//new wnd2_helper(window);
 	taskbar_init(document.getElementById("tb"),window);
