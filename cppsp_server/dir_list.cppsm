@@ -7,18 +7,21 @@
 		out[inLen]=0;
 DelegateChain<void(Request&, Response&, Delegate<void()>)>::item* it;
 Server* server;
+String filePath;
 void handleRequest(void*, Request& req, Response& resp, Delegate<void()> cb) {
 	struct stat st;
 	String s=server->mapPath(req.path,*req.sp);
 	TO_C_STR(s.data(),s.length(),tmp);
 	if(::stat(tmp,&st)>=0 && S_ISDIR(st.st_mode)) {
-		server->handleDynamicRequest("/dir_list.cppsm",req,resp,cb);
+		//redirect to self
+		server->handleDynamicRequestFromFile(filePath,req,resp,cb);
 		return;
 	}
 	(*it->prev)(req,resp,cb);
 }
 extern "C" void initModule(ModuleParams& p) {
 	server=p.server;
+	filePath=p.filePath;
 	it=server->handleRequest.attach(&handleRequest);
 }
 extern "C" void deinitModule() {

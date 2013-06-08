@@ -200,12 +200,26 @@ namespace cppsp
 		/**
 		 Load static file from "path" and serve it to the specified response. path is relative to server root.
 		 */
-		virtual void handleStaticRequest(String path, Request& req, Response& resp,
+		void handleStaticRequest(String path, Request& req, Response& resp,
+				Delegate<void()> cb) {
+			return handleStaticRequestFromFile(mapPath(path, *req.sp), req, resp, cb);
+		}
+		/**
+		 Load static file from "path" and serve it to the specified response. path is absolute.
+		 */
+		virtual void handleStaticRequestFromFile(String path, Request& req, Response& resp,
 				Delegate<void()> cb)=0;
 		/**
 		 Load dynamic page from "path" and serve it to the specified response. path is relative to server root.
 		 */
-		virtual void handleDynamicRequest(String path, Request& req, Response& resp,
+		void handleDynamicRequest(String path, Request& req, Response& resp,
+				Delegate<void()> cb) {
+			return handleDynamicRequestFromFile(mapPath(path, *req.sp), req, resp, cb);
+		}
+		/**
+		 Load dynamic page from "path" and serve it to the specified response. path is absolute.
+		 */
+		virtual void handleDynamicRequestFromFile(String path, Request& req, Response& resp,
 				Delegate<void()> cb)=0;
 		/**
 		 default request router.

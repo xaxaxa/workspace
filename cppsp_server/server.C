@@ -91,8 +91,8 @@ namespace cppspServer
 			cppspManager_delete(mgr);
 		}
 		
-		void handleStaticRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
-		void handleDynamicRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
+		void handleStaticRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
+		void handleDynamicRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
 		
 		void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
 			Delegate<void(Page*, exception* ex)> cb) override {
@@ -197,7 +197,7 @@ namespace cppspServer
 		}
 		void handleStatic(String _path) {
 			try {
-				setPath(_path);
+				path=_path;
 				String data=cppsp::loadStaticPage(thr.mgr,path);
 				int bufferL = resp.buffer.length();
 				{
@@ -217,7 +217,7 @@ namespace cppspServer
 			}
 		}
 		void handleDynamic(String _path) {
-			setPath(_path);
+			path=_path;
 			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
 		}
 		void loadCB(Page* p, exception* ex) {
@@ -283,11 +283,11 @@ namespace cppspServer
 			s.release();
 		}
 	};
-	void Server::handleStaticRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
+	void Server::handleStaticRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
 		cppspServer::Request& r=static_cast<cppspServer::Request&>(req);
 		(*(handler*)r._handler).handleStatic(path);
 	}
-	void Server::handleDynamicRequest(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
+	void Server::handleDynamicRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
 		cppspServer::Request& r=static_cast<cppspServer::Request&>(req);
 		(*(handler*)r._handler).handleDynamic(path);
 	}
