@@ -24,30 +24,39 @@ using namespace std;
 xaxaxa::Filter<jack_default_audio_sample_t>* filt[CHANNELS];
 #define EQ_POINTS 10000
 double eqData[EQ_POINTS];
+bool do_mux=false;
+double v_mux=0.5;
+
 inline double getPoint(double pos);
 
 int process (jack_nframes_t length, void *arg)
 {
+	jack_default_audio_sample_t* in_samples[inputs.size()];
+	jack_default_audio_sample_t* out_samples[inputs.size()];
+	for(size_t i = 0; i < inputs.size(); i++)
+	{
+		in_samples[i]=(jack_default_audio_sample_t *)
+			jack_port_get_buffer(inputs[i], length);
+		out_samples[i]=(jack_default_audio_sample_t *)
+			jack_port_get_buffer(outputs[i], length);
+	}
 	for(size_t i=0;i<inputs.size();i++)
 	{
-		jack_default_audio_sample_t *out =
-					(jack_default_audio_sample_t *)
-					jack_port_get_buffer (outputs[i], length);
-		jack_default_audio_sample_t *in =
-					(jack_default_audio_sample_t *)
-					jack_port_get_buffer (inputs[i], length);
-
+		jack_default_audio_sample_t *out = out_samples[i];
+		jack_default_audio_sample_t *in = in_samples[i];
 		filt[i]->Process(in, out, length);
 	}
+	if(do_mux)
+		for(size_t i=0; i<length; i++)
+		{
+			double avg=0;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				avg+=((double)out_samples[ii][i]);
+			avg/=CHANNELS;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				out_samples[ii][i]=2*(avg*(1.-v_mux)+(out_samples[ii][i]-avg)*v_mux);
+		}
 	return 0;
-}
-void error (const char *desc)
-{
-	fprintf (stderr, "JACK error: %s\n", desc);
-}
-void jack_shutdown (void *arg)
-{
-	exit (1);
 }
 inline double scale_freq(double x)
 {
@@ -180,6 +189,12 @@ void apply_pitchshift(xaxaxa::FFTFilter<jack_default_audio_sample_t>** filt2=NUL
 	}
 }
 jack_client_t *client=NULL;
+void error (const char *desc) {
+	fprintf (stderr, "JACK error: %s\n", desc);
+}
+void jack_shutdown (void *arg) {
+	client=NULL;
+}
 void start() {
 	if(client!=NULL)return;
 	
@@ -249,8 +264,12 @@ extern "C" void initModule(ModuleParams& p) {
 	
 	//start();
 }
+list<EventFD> _clients;
 extern "C" void deinitModule() {
-	//stop();
+	stop();
+	for(auto it=_clients.begin();it!=_clients.end();it++) {
+		(*it).sendEvent();
+	}
 }
 inline double getPoint(double pos)
 {
@@ -297,6 +316,7 @@ void on_change(int i1, int i2)
 
 WebSocketParser wsp;
 FrameWriter w;
+list<EventFD>::iterator stopEvent_it;
 void doInit() {
 	if(ws_iswebsocket(*request)) {
 		//switch to websocket mode
@@ -305,7 +325,14 @@ void doInit() {
 }
 void ws_headersWritten(int l) {
 	w.output=response->outputStream;
+	_clients.emplace_back(0,0);
+	stopEvent_it=_clients.end();
+	stopEvent_it--;
+	(*_clients.rbegin()).getEvent({&p::stopEventCB,this});
 	ws_readFrame();
+}
+void stopEventCB(eventfd_t) {
+	do_end1();
 }
 void ws_readFrame() {
 	request->inputStream->read(wsp.beginPutData(4096),{&p::ws_readFrame1,this});
@@ -410,7 +437,7 @@ void handleFrame(WebSocketParser::WSFrame f) {
 			break;
 		}
 		case 'p':
-		{
+		{	//change pitchshift params
 			i++;
 			if(i>=d.length()) break;
 			if(d[i]=='e') pitchshift_enable=true;
@@ -421,13 +448,27 @@ void handleFrame(WebSocketParser::WSFrame f) {
 			apply_pitchshift();
 			break;
 		}
+		case 'x':
+		{	//change multiplexer params
+			i++;
+			if(i>=d.length()) break;
+			if(d[i]=='e') do_mux=true;
+			else if(d[i]=='d') do_mux=false;
+			else {
+				v_mux=atof(d.subString(i));
+			}
+			break;
+		}
 	}
 }
 void do_end() {
+	_clients.erase(stopEvent_it);
+	do_end1();
+}
+void do_end1() {
 	response->closed=true;
 	finalize();
 }
-
 %>
 <html>
 <head>
@@ -574,7 +615,7 @@ void do_end() {
 				ev.clientX=touch.pageX;
 				ev.clientY=touch.pageY;
 				var eq=this.__EQControl;
-				eq.handleMouseMove(ev);
+				eq._handleMouseMove(ev);
 				event.preventDefault();
 			}
 		};
@@ -617,6 +658,82 @@ void do_end() {
 			this.refresh();
 		};
 	}
+	function HScale(div) {
+		this.div=div;
+		div.onselectstart=function(){return false;};
+		div.unselectable="on";
+		this.inner=document.createElement("div");
+		div.appendChild(this.inner);
+		if(div.style.position!="absolute")div.style.position="relative";
+		this.inner.style.cssText="position:absolute; top:0px;left:0px;bottom:0px;padding:0px;margin:0px;";
+		this.inner.setAttribute("class","hscale_i");
+		this.value=this.range=0;
+		this.updateWidth=function() {
+			var w;
+			if(this.range==0)w=0;
+			else {
+				w=this.value*this.div.clientWidth/this.range;
+			}
+			this.inner.style.width=w+"px";
+		}
+		this.setRange=function(x) {
+			this.range=x;
+			this.updateWidth();
+		};
+		this.setValue=function(x) {
+			if(x>this.range)x=this.range;
+			if(x<0)x=0;
+			this.value=x;
+			this.updateWidth();
+			if(this.onChange)this.onChange(x);
+		};
+		this.updateWidth();
+		
+		this._handleMouseMove=function(ev)
+		{
+			var e=ev?ev:event;
+			var r=this.div.getBoundingClientRect();
+			var eX=e.clientX-(r.left+this.div.clientLeft);
+			this.setValue(eX*this.range/this.div.clientWidth);
+		}
+		
+		var __HScale=this;
+		this.handleSelectStart=function(){return false;};
+		this.div.onmousedown=function(ev) {
+			if(ev.button!=0) return;
+			__HScale._handleMouseMove(ev);
+			document.addEventListener("mousemove", __HScale.handleMouseMove, false);
+			document.addEventListener("mouseup", __HScale.handleMouseUp, false);
+			document.body.addEventListener("selectstart", __HScale.handleSelectStart, false);
+			return true;
+		}
+		this.handleMouseUp=function() {
+			document.removeEventListener("mousemove", __HScale.handleMouseMove, false);
+			document.removeEventListener("mouseup", __HScale.handleMouseUp, false);
+			document.body.removeEventListener("selectstart", __HScale.handleSelectStart, false);
+		};
+		this.handleMouseMove=function(ev) {
+			__HScale._handleMouseMove(ev);
+		};
+		
+		div.ontouchmove=function(event){
+			if (event.targetTouches.length >= 1) {
+				var ev=new Object();
+				var touch = event.targetTouches[0];
+				ev.clientX=touch.pageX;
+				ev.clientY=touch.pageY;
+				__HScale._handleMouseMove(ev);
+				event.preventDefault();
+			}
+		};
+		div.ontouchstart=function(event) {
+			var ev=new Object();
+			var touch = event.targetTouches[0];
+			ev.clientX=touch.pageX;
+			ev.clientY=touch.pageY;
+			__HScale._handleMouseMove(ev);
+		};
+	}
 	function toggle(e) {
 		if(e._active)e._active=false;
 		else e._active=true;
@@ -640,18 +757,34 @@ void do_end() {
 	}
 	.panel {
 		padding: 0px 0px;
+		display: table-cell;
+		vertical-align:middle;
+		-moz-user-select: -moz-none;
+	   -khtml-user-select: none;
+	   -webkit-user-select: none;
+	}
+	.selectable {
+		-moz-user-select: -moz-auto;
+		-khtml-user-select: auto;
+		-webkit-user-select: auto;
+	}
+	.panel>* {
+		display: inline-block;
+		vertical-align: middle;
 	}
 	.panel button,.panel input,.btn {
-		display: inline-block;
 		background: #fff;
 		border: solid 1px #BCBCBC;
-		padding: 0px 8px;
+		padding: 0px 4px;
 		margin: 1px 0px;
 		min-width: 32px;
 		text-align: center;
 		height: 22px;
 	}
 	.panel input[type="text"] {
+		height:20px;
+	}
+	.panel .hscale {
 		height:20px;
 	}
 	.panel input[type="text"] {
@@ -672,10 +805,15 @@ void do_end() {
 		border-color: #3333ff;
 		color: #3333ff;
 	}
-	
+	.hscale {
+		border: solid 1px #999999;
+	}
+	.hscale_i {
+		background: #0000ff;
+	}
 	</style>
 </head>
-<body style="overflow:hidden;" onselectstart="return false;">
+<body style="overflow:hidden;">
 	<div style="position:absolute; top: 0px; right: 0px; bottom: 0px; left: 0px;">
 		<div style="position:absolute; top:0px; left:0px; right:0px; bottom:52px;">
 			<canvas id="c1" style="width: 100%; height: 100%;"></canvas>
@@ -686,11 +824,14 @@ void do_end() {
 			<input type="text" id="t_fn" style="width: 85px;" value="default.jfft" />
 			<input type="button" onclick="doSend('r '+document.getElementById('t_fn').value);" value="Load" />
 			<input type="button" onclick="doSend('w '+document.getElementById('t_fn').value);" value="Save" />
+			<span id="s_freq">f: 0 Hz</span>
 		</div>
 		<div style="position:absolute; left:2px; right:2px; bottom:0px; height:26px;" class="panel">
 			<input type="button" id="b_p" onclick="toggle(this); update_pitchshift(); doSend('p '+(this._active?'e':'d'));" value="Pitch shift" />
 			<input type="text" id="t_p" style="width: 35px;" value="<%=pitchshift_value%>" />
 			<input type="button" onclick="update_pitchshift();" value="apply" />
+			<input type="button" id="b_mux" onclick="toggle(this); update_mux(); doSend('x '+(this._active?'e':'d'));" value="Multiplexer" />
+			<span id="hs_mux" style="width:50px;" class="hscale"></span>
 		</div>
 	</div>
 <script>
@@ -698,22 +839,37 @@ void do_end() {
 if(pitchshift_enable) {
 	%>toggle(document.getElementById("b_p"));<%
 }
+if(do_mux) {
+	%>toggle(document.getElementById("b_mux"));<%
+}
 %>
 var EQ_POINTS=<%=EQ_POINTS%>;
 websocket = new WebSocket("ws://"+window.location.host+window.location.pathname);
-eq=new EQControl(document.getElementById("c1"),EQ_POINTS);
+
+
+//initialize controls
+var eq=new EQControl(document.getElementById("c1"),EQ_POINTS);
 eq.data=[<%
 for(int i=0;i<EQ_POINTS;i++) {
 	if(i!=0) output.writeF(",%lf",eqData[i]);
 	else output.writeF("%lf",eqData[i]);
 }
 %>];
+var hs_mux=new HScale(document.getElementById("hs_mux"));
+hs_mux.setRange(1);
+hs_mux.setValue(<%=v_mux%>);
+
+
 function doSend(s) {
 	websocket.send(s);
 }
 function update_pitchshift() {
 	doSend("p "+document.getElementById("t_p").value);
 }
+function update_mux() {
+	doSend("x "+hs_mux.value);
+}
+hs_mux.onChange=update_mux;
 eq.onChange=function(i1,i2) {
 	//format: u STARTINDEX DATA[STARTINDEX] DATA[STARTINDEX+1] ...
 	var s="u "+i1;
@@ -722,6 +878,26 @@ eq.onChange=function(i1,i2) {
 	}
 	doSend(s);
 };
+
+function scale_freq(x)
+{
+	x=Math.pow(2,x*10);
+	x=x-1;
+	if(x<0)return 0;
+	return x/1024;
+}
+function scale_freq_r(x)
+{
+	x=x*1024+1;
+	x=Math.log2(x)/10;
+	return x<0?-x:x;
+}
+eq.canvas.addEventListener("mousemove",function(ev) {
+	var e=ev?ev:event;
+	var r=this.getBoundingClientRect();
+	var eX=e.clientX-(r.left+this.clientLeft);
+	document.getElementById("s_freq").textContent="f: "+parseInt(scale_freq(eX/this.clientWidth)*<%=srate/2%>)+" Hz";
+},false);
 
 document.body.onmouseup=function(){eq.d=false;};
 
