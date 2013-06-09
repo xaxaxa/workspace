@@ -749,9 +749,9 @@ function wnd2(x,y,w,h,wnd,p,cb,title,controlbox)
 					this.td_content=this.d.createElement("td");
 						this.td_content.colSpan=this.param.controlbox.length+1;
 						this.td_content.vAlign="top";
-						this.td_content.style.position="relative";
+						//this.td_content.style.position="relative";
 							this.div_content=this.d.createElement("div");
-								this.div_content.style.cssText="position:absolute;top: 0px; left:0px; right:0px; bottom:0px";
+								this.div_content.style.cssText="position:absolute;top: 21px; left:1px; right:1px; bottom:1px";
 								//this.div_content.innerHTML="<button style=\"position:absolute; bottom: 0px;\"></button>";
 							this.td_content.appendChild(this.div_content);
 						//this.td_content.innerHTML=" ";
