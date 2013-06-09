@@ -1,4 +1,4 @@
-<!DOCTYPE html><%!-lrt%><%!-ljack%><%!-lfftw3%><%@ class p %><%#
+<!DOCTYPE html><%!-lrt%><%!-ljack%><%!-lfftw3%><%@ class p inherits sssss %><%#
 
 #include <iostream>
 #include <jack/jack.h>
@@ -10,7 +10,11 @@
 #include <math.h>
 #include "fftfilter.C"
 #include <cppsp/websocket.H>
-
+class sssss: public Page
+{
+public:
+	virtual void terminate()=0;
+};
 using namespace std;
 vector<jack_port_t *> inputs;
 vector<jack_port_t *> outputs;
@@ -264,11 +268,12 @@ extern "C" void initModule(ModuleParams& p) {
 	
 	//start();
 }
-list<EventFD> _clients;
+list<sssss*> _clients;
 extern "C" void deinitModule() {
 	stop();
 	for(auto it=_clients.begin();it!=_clients.end();it++) {
-		(*it).sendEvent();
+		(*it)->terminate();
+		printf("signaling client %p\n",(*it));
 	}
 }
 inline double getPoint(double pos)
@@ -316,7 +321,7 @@ void on_change(int i1, int i2)
 
 WebSocketParser wsp;
 FrameWriter w;
-list<EventFD>::iterator stopEvent_it;
+list<sssss*>::iterator stopEvent_it;
 void doInit() {
 	if(ws_iswebsocket(*request)) {
 		//switch to websocket mode
@@ -325,14 +330,11 @@ void doInit() {
 }
 void ws_headersWritten(int l) {
 	w.output=response->outputStream;
-	_clients.emplace_back(0,0);
+	_clients.push_back(this);
 	stopEvent_it=_clients.end();
 	stopEvent_it--;
-	(*_clients.rbegin()).getEvent({&p::stopEventCB,this});
+	
 	ws_readFrame();
-}
-void stopEventCB(eventfd_t) {
-	do_end1();
 }
 void ws_readFrame() {
 	request->inputStream->read(wsp.beginPutData(4096),{&p::ws_readFrame1,this});
@@ -463,6 +465,10 @@ void handleFrame(WebSocketParser::WSFrame f) {
 }
 void do_end() {
 	_clients.erase(stopEvent_it);
+	do_end1();
+}
+void terminate() {
+	printf("closing websocket connection due to module unload\n");
 	do_end1();
 }
 void do_end1() {
