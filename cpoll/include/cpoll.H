@@ -634,6 +634,14 @@ namespace CP
 			if (unlikely(buffer->bufferSize - buffer->bufferPos < 21)) buffer->flushBuffer(21);
 			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 21, "%llu", i);
 		}
+		void write(float i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 50)) buffer->flushBuffer(50);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 50, "%f", i);
+		}
+		void write(double i) {
+			if (unlikely(buffer->bufferSize - buffer->bufferPos < 100)) buffer->flushBuffer(100);
+			buffer->bufferPos += snprintf((char*) buffer->buffer + buffer->bufferPos, 100, "%lf", i);
+		}
 		char* beginWrite(int len) {
 			if (unlikely(buffer->bufferSize - buffer->bufferPos < len)) buffer->flushBuffer(len);
 			return (char*) buffer->buffer + buffer->bufferPos;
