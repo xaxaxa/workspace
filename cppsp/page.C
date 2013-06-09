@@ -37,7 +37,7 @@ namespace cppsp
 		 *p++ = '-';
 		 i = -i;
 		 }*/
-		p += (i==0?0:int(log10f(i))) + 1;
+		p += (i == 0 ? 0 : int(log10f(i))) + 1;
 		*p = '\0';
 		int l = p - b;
 		do { //Move back, inserting digits as u go
@@ -280,6 +280,7 @@ namespace cppsp
 				req.path, req, resp, cb);
 		else handleStaticRequest(req.path, req, resp, cb);
 	}
+
 	String Server::mapPath(String path, RGC::Allocator& a) {
 		String r = rootDir();
 		char* tmp = (char*) a.alloc(path.length() + r.length());
