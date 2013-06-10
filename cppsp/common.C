@@ -185,7 +185,7 @@ namespace cppsp
 			vector<string>& c_opts) {
 		const char* s = in;
 		const char* end = s + inLen;
-		string inherits = "Page";
+		string inherits = "public Page";
 		string classname = (name == NULL ? "__cppsp_unnamed_page" : name);
 		int st_pos = 0;
 		int st_len = 0;
@@ -297,7 +297,7 @@ namespace cppsp
 		}
 		sw2.flush();
 		sw3.flush();
-		sw1.writeF("class %s: public %s {\npublic:\n", classname.c_str(), inherits.c_str());
+		sw1.writeF("class %s: %s {\npublic:\n", classname.c_str(), inherits.c_str());
 		sw1.write(ms2.data(), ms2.length());
 		//the name of the StreamWriter parameter should always be "output" -- this is part of
 		//the cppsp API and should not ever be changed; users can rely on its name being "output".
