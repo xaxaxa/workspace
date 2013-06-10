@@ -232,7 +232,7 @@ namespace cppsp
 				case '@':
 				{ //cppsp options
 					int nextopt = 0;
-					split spl(s + 1, s1 - s - 1, ' ');
+					optionParser spl(s + 1, s1 - s - 1);
 					while (spl.read()) {
 						const char* s1 = spl.value.data();
 						int l1 = spl.value.length();
