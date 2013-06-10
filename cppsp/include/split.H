@@ -28,29 +28,62 @@ namespace cppsp
 	{
 		const char* s;
 		const char* end;
-		const char* s1;
 		CP::String value;
 		char delim;
 		split(const char* s, int len, char delim) {
 			if (len == -1) len = strlen(s);
 			this->s = s;
-			this->s1 = s;
 			this->end = s + len;
 			this->delim = delim;
 		}
 		bool read() {
-			if (s == nullptr) return false;
+			if (s == nullptr || s == end) return false;
+			const char* s1 = s;
 			s = (const char*) memchr(s, delim, end - s);
 			if (s == nullptr) {
 				value= {s1, int(end - s1)};
 				return true;
 			}
 			value= {s1, int(s - s1)};
-			s1 = ++s;
+			++s;
+			return true;
+		}
+	};
+	//like split, but allows options containing the delimiter to be enclosed in quotes
+	struct optionParser
+	{
+		const char* s;
+		const char* end;
+		CP::String value;
+		char delim;
+		optionParser(const char* s, int len, char delim = ' ') {
+			if (len == -1) len = strlen(s);
+			this->s = s;
+			this->end = s + len;
+			this->delim = delim;
+		}
+		bool read() {
+			if (s == nullptr || s == end) return false;
+			const char* s1 = s;
+			if (*s == '"') {
+				s = (const char*) memchr(s + 1, '"', end - s - 1);
+				if (s == nullptr) throw invalid_argument("unterminated quote");
+				value= {s1+1,int(s-s1)-1};
+				//skip delimiter if present
+				if ((++s) < end && *s == delim) s++;
+				return true;
+			} else {
+				s = (const char*) memchr(s, delim, end - s);
+				if (s == nullptr) {
+					value= {s1, int(end - s1)};
+					return true;
+				}
+				value= {s1, int(s - s1)};
+				++s;
+			}
 			return true;
 		}
 	};
 }
-
 
 #endif /* SPLIT_H_ */
