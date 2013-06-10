@@ -1,4 +1,4 @@
-<!DOCTYPE html><%!-lrt%><%!-ljack%><%!-lfftw3%><%@ class p inherits sssss %><%#
+<!DOCTYPE html><%!-lrt%><%!-ljack%><%!-lfftw3%><%@ class p inherits "public Page, public sssss" %><%#
 
 #include <iostream>
 #include <jack/jack.h>
@@ -10,7 +10,7 @@
 #include <math.h>
 #include "fftfilter.C"
 #include <cppsp/websocket.H>
-class sssss: public Page
+class sssss
 {
 public:
 	virtual void terminate()=0;
@@ -375,7 +375,7 @@ void handleFrame(WebSocketParser::WSFrame f) {
 	if(i!=1) return;
 	switch(d[0]) {
 		case 'u':
-		{	//update
+		{	//update coefficients
 			int i1=d.indexOf(' ',i+1);
 			if(i1<0) break;
 			int ind=atoi(d.subString(i+1,i1-(i+1)));
@@ -391,6 +391,14 @@ void handleFrame(WebSocketParser::WSFrame f) {
 				i1=i2+1;
 			}
 			on_change(_ind,ind+1);
+			//broadcast the change to every other client
+			for(auto it=_clients.begin();it!=_clients.end();it++) {
+				p* tmp=(p*)*it;
+				if(tmp!=this) {
+					tmp->ws_writeFrame(d);
+					tmp->w.flush();
+				}
+			}
 			break;
 		}
 		case 's':
@@ -768,6 +776,7 @@ void do_end1() {
 		-moz-user-select: -moz-none;
 	   -khtml-user-select: none;
 	   -webkit-user-select: none;
+	   overflow:hidden;
 	}
 	.selectable {
 		-moz-user-select: -moz-auto;
