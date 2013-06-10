@@ -838,6 +838,7 @@ void do_end1() {
 			<input type="button" onclick="update_pitchshift();" value="apply" />
 			<input type="button" id="b_mux" onclick="toggle(this); update_mux(); doSend('x '+(this._active?'e':'d'));" value="Multiplexer" />
 			<span id="hs_mux" style="width:50px;" class="hscale"></span>
+			<input type="button" onclick="var s=window.prompt('multiply each coefficient by 2^x; x:',0);if(s!=null)scaleValues(parseFloat(s));" value="Shift..." />
 		</div>
 	</div>
 <script>
@@ -852,7 +853,31 @@ if(do_mux) {
 var EQ_POINTS=<%=EQ_POINTS%>;
 websocket = new WebSocket("ws://"+window.location.host+window.location.pathname);
 
-
+function scale_freq(x)
+{
+	x=Math.pow(2,x*10);
+	x=x-1;
+	if(x<0)return 0;
+	return x/1024;
+}
+function scale_freq_r(x)
+{
+	x=x*1024+1;
+	x=Math.log2(x)/10;
+	return x<0?-x:x;
+}
+var graph_range=7.;
+function scale_value(x)
+{
+	var tmp = x - 1.;
+	tmp *= graph_range;
+	return Math.pow(2, tmp);
+}
+var __log_2=Math.log(2);
+function scale_value_r(x)
+{
+	return (Math.log(x)/__log_2) / graph_range + 1;
+}
 //initialize controls
 var eq=new EQControl(document.getElementById("c1"),EQ_POINTS);
 eq.data=[<%
@@ -875,6 +900,15 @@ function update_pitchshift() {
 function update_mux() {
 	doSend("x "+hs_mux.value);
 }
+function scaleValues(x) {
+	var s="u 0";
+	for(var i=0;i<EQ_POINTS;i++) {
+		eq.data[i]=scale_value_r(scale_value(eq.data[i])*Math.pow(2,x));
+		s+=" "+eq.data[i];
+	}
+	eq.refresh();
+	doSend(s);
+}
 hs_mux.onChange=update_mux;
 eq.onChange=function(i1,i2) {
 	//format: u STARTINDEX DATA[STARTINDEX] DATA[STARTINDEX+1] ...
@@ -885,19 +919,7 @@ eq.onChange=function(i1,i2) {
 	doSend(s);
 };
 
-function scale_freq(x)
-{
-	x=Math.pow(2,x*10);
-	x=x-1;
-	if(x<0)return 0;
-	return x/1024;
-}
-function scale_freq_r(x)
-{
-	x=x*1024+1;
-	x=Math.log2(x)/10;
-	return x<0?-x:x;
-}
+
 eq.canvas.addEventListener("mousemove",function(ev) {
 	var e=ev?ev:event;
 	var r=this.getBoundingClientRect();
