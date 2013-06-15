@@ -96,6 +96,7 @@ struct BenchmarkResultGroup
 								//{max deviation of each thread vs the average (among threads) in that run}
 								//for each run
 	string unit;
+	int threads;
 	void computeStats() {
 		avgTime=avgTimeCPU=0;
 		avgValue=maxDeviation=maxThreadDeviation=0;
@@ -176,6 +177,7 @@ public:
 		if(destroyThreads!=nullptr)destroyThreads();
 		rg.computeStats();
 		rg.unit=unit;
+		rg.threads=r.threads;
 		return rg;
 	}
 	void run(Delegate<void(BenchmarkThread&)> target, string name) {
@@ -188,6 +190,7 @@ public:
 		for(auto it=results.begin();it!=results.end();it++) {
 			auto& tmp=(*it).second;
 			printf("%s:\n",(*it).first.c_str());
+			printf("\tthreads:	%i\n",(int)tmp.threads);
 			printf("\truns:		%i\n",(int)tmp.results.size());
 			printf("\tavgValue:	%lf %s\n",tmp.avgValue,tmp.unit.c_str());
 			printf("\tavgTime:	%lli\n",(long long int)tmp.avgTime);
