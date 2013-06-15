@@ -76,6 +76,10 @@ namespace RGC
 	public:
 		virtual void* alloc(int s)=0;
 		virtual void dealloc(void* obj)=0;
+		template<class T, class... A>
+		T* New(A&&... a) {
+			return new (alloc(sizeof(T))) T(std::forward<A>(a)...);
+		}
 		template<class T>
 		void del(T* obj) {
 			obj->~T();

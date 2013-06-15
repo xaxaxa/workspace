@@ -136,7 +136,6 @@ namespace cppsp
 	public:
 		MemoryStream ms1, ms2;
 		Ref<Stream> output;
-		vector<String> queue;
 		struct queueItem
 		{
 			int next; //is actually a pointer, but relative to the base of the array (MemoryStream)
