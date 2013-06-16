@@ -18,12 +18,24 @@ int64_t operator-(const timespec& t1, const timespec& t2) {
 	return timespec_to_ns(&t1)-timespec_to_ns(&t2);
 }
 
-class Benchmark;
+class BenchmarkRunner;
 class BenchmarkThread;
+class Benchmark
+{
+public:
+	virtual void prepareThreads(int threads) {}
+	virtual void destroyThreads() {}
+	virtual double valueFunc(int64_t time,int64_t timeCPU,void* miscData)=0;
+	virtual string unit()=0;
+	virtual void doRun(BenchmarkThread& t)=0;
+	inline void operator()(BenchmarkThread& t) {
+		return doRun(t);
+	}
+};
 struct BenchmarkRun
 {
-	Benchmark* benchmark;
-	Delegate<void(BenchmarkThread&)> target;
+	BenchmarkRunner* runner;
+	Benchmark* target;
 	int threads;
 };
 class BenchmarkThread
@@ -115,7 +127,8 @@ struct BenchmarkResultGroup
 		}
 	}
 };
-class Benchmark
+
+class BenchmarkRunner
 {
 public:
 	int threads=-1;
@@ -123,18 +136,14 @@ public:
 	map<string,BenchmarkResultGroup> results;
 	static void* _doRun(void* v) {
 		BenchmarkThread* t=(BenchmarkThread*)v;
-		t->run->target(*t);
+		(*t->run->target)(*t);
 		return NULL;
 	}
-	Delegate<void(int)> prepareThreads;
-	Delegate<void()> destroyThreads;
-	Delegate<double(int64_t time,int64_t timeCPU,void* miscData)> valueFunc;	//required
-	string unit;
-	BenchmarkRun prepare(Delegate<void(BenchmarkThread&)> target) {
+	BenchmarkRun prepare(Benchmark& target) {
 		int t=threads;
 		if(t<=0) t=(int)sysconf(_SC_NPROCESSORS_ONLN);
 		if(t<=0) t=1;
-		return {this,target,t};
+		return {this,&target,t};
 	}
 	BenchmarkResult doRun(const BenchmarkRun& r) {
 		int t=r.threads;
@@ -145,10 +154,10 @@ public:
 			bt[i].init();
 		}
 		if(t==1) {
-			r.target(bt[0]);
+			(*r.target)(bt[0]);
 		} else {
 			for(int i=0;i<t;i++)
-				if (pthread_create(&bt[i].thread, NULL, Benchmark::_doRun, &bt[i]) != 0) {
+				if (pthread_create(&bt[i].thread, NULL, BenchmarkRunner::_doRun, &bt[i]) != 0) {
 					throw runtime_error(strerror(errno));
 				}
 			for(int i=0;i<t;i++)
@@ -159,28 +168,28 @@ public:
 		for(int i=0;i<t;i++) {
 			res.threads[i].time=bt[i].endTime-bt[i].beginTime;
 			res.threads[i].timeCPU=bt[i].endTimeCPU-bt[i].beginTimeCPU;
-			res.threads[i].value=valueFunc(res.threads[i].time,
+			res.threads[i].value=r.target->valueFunc(res.threads[i].time,
 				res.threads[i].timeCPU, bt[i].miscData);
 			res.threads[i].miscData=bt[i].miscData;
 		}
 		res.computeStats();
 		return res;
 	}
-	BenchmarkResultGroup doRun(Delegate<void(BenchmarkThread&)> target, int runs) {
+	BenchmarkResultGroup doRun(Benchmark& target, int runs) {
 		BenchmarkRun r=prepare(target);
 		BenchmarkResultGroup rg;
 		rg.results.resize(runs);
-		if(prepareThreads!=nullptr)prepareThreads(r.threads);
+		target.prepareThreads(r.threads);
 		for(int i=0;i<runs;i++) {
 			rg.results[i]=doRun(r);
 		}
-		if(destroyThreads!=nullptr)destroyThreads();
+		target.destroyThreads();
 		rg.computeStats();
-		rg.unit=unit;
+		rg.unit=target.unit();
 		rg.threads=r.threads;
 		return rg;
 	}
-	void run(Delegate<void(BenchmarkThread&)> target, string name) {
+	void run(Benchmark& target, string name) {
 		int r=runs;
 		if(r==-1)r=20;
 		results.insert({name,doRun(target,r)});
@@ -192,11 +201,12 @@ public:
 			printf("%s:\n",(*it).first.c_str());
 			printf("\tthreads:	%i\n",(int)tmp.threads);
 			printf("\truns:		%i\n",(int)tmp.results.size());
-			printf("\tavgValue:	%lf %s\n",tmp.avgValue,tmp.unit.c_str());
-			printf("\tavgTime:	%lli\n",(long long int)tmp.avgTime);
-			printf("\tavgCPUTime:	%lli\n",(long long int)tmp.avgTimeCPU);
-			printf("\tmaxDeviation:	%lf%%\n",tmp.maxDeviation*100);
-			printf("\tmaxThreadDev:	%lf%%\n",tmp.maxThreadDeviation*100);
+			printf("\tvaluePerCore:	%.2lf %s\n",tmp.avgValue,tmp.unit.c_str());
+			printf("\tvalueTotal:	%.2lf %s\n",tmp.avgValue*tmp.threads,tmp.unit.c_str());
+			printf("\tavgTime:	%.2lf ms\n",double(tmp.avgTime)/1000000);
+			printf("\tavgCPUTime:	%.2lf ms\n",double(tmp.avgTimeCPU)/1000000);
+			printf("\tmaxDeviation:	%.2lf%%\n",tmp.maxDeviation*100);
+			printf("\tmaxThreadDev:	%.2lf%%\n",tmp.maxThreadDeviation*100);
 		}
 	}
 };

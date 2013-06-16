@@ -2,11 +2,11 @@
 #include <fftw3.h>
 #include <math.h>
 #include "benchmark.H"
-class FFTBench
+class FFTBench: public Benchmark
 {
 public:
 	int fftsize;
-	int iters,runs;
+	int iters;
 	struct threadData
 	{
 		double* data;
@@ -14,7 +14,9 @@ public:
 		fftw_plan p;
 	};
 	vector<threadData> threads;
-	void prepareThreads(int t) {
+	
+	FFTBench(int fftsize, int iters):fftsize(fftsize),iters(iters) {}
+	void prepareThreads(int t) override {
 		threads.resize(t);
 		for(int i=0;i<t;i++) {
 			threads[i].data=(double*)fftw_malloc(fftsize*sizeof(double));
@@ -23,14 +25,14 @@ public:
 				threads[i].data_c, FFTW_PATIENT|FFTW_PRESERVE_INPUT);
 		}
 	}
-	void destroyThreads() {
+	void destroyThreads() override {
 		for(int i=0;i<(int)threads.size();i++) {
 			fftw_free(threads[i].data);
 			fftw_free(threads[i].data_c);
 			fftw_destroy_plan(threads[i].p);
 		}
 	}
-	void target(BenchmarkThread& th) {
+	void doRun(BenchmarkThread& th) override {
 		auto& d=threads[th.threadIndex];
 		double freq=1./2000;	//periods per sample
 		for(int i=0;i<fftsize;i++) {
@@ -41,16 +43,11 @@ public:
 			fftw_execute(d.p);
 		th.endTiming();
 	}
-	double valueFunc(int64_t t, int64_t tCPU, void* v) {
+	double valueFunc(int64_t t, int64_t tCPU, void* v) override {
 		return double(iters)/tCPU*1000000000;
 	}
-	void run(Benchmark& b) {
-		b.runs=runs;
-		b.prepareThreads={&FFTBench::prepareThreads,this};
-		b.destroyThreads={&FFTBench::destroyThreads,this};
-		b.valueFunc={&FFTBench::valueFunc,this};
-		b.unit="FFTs/s";
-		b.run({&FFTBench::target,this},"FFT");
+	string unit() {
+		return "FFTs/s";
 	}
 };
 int main(int argc, char** argv) {
@@ -58,9 +55,10 @@ int main(int argc, char** argv) {
 		printf("usage: %s fftsize iterations runs\n",argv[0]);
 		return 1;
 	}
-	FFTBench fftb{atoi(argv[1]),atoi(argv[2]),atoi(argv[3])};
-	Benchmark b;
-	fftb.run(b);
-	b.displayResults();
+	FFTBench fftb(atoi(argv[1]),atoi(argv[2]));
+	BenchmarkRunner br;
+	br.runs=atoi(argv[3]);
+	br.run(fftb,"FFT");
+	br.displayResults();
 }
 
