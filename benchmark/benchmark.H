@@ -204,14 +204,17 @@ public:
 	void runTest_concurrencyAnalysis(const char* name,Benchmark& target) {
 		printf("concurrency analysis for benchmark '%s':\n",name);
 		printf("   values are in %s\n",target.unit().c_str());
-		printf("   threads      value        perCore  maxDev  maxTDev\n");
+		printf("   threads      value        perCore  maxDev  maxTDev singleCoreRatio\n");
 		double maxDev=0,maxTDev=0;
+		double sc=0;
 		for(int i=1;i<=_threads();i++) {
 			BenchmarkResultGroup rg=doRun(target,i,_runs());
 			auto& tmp=rg;
-			printf("   %3i  %13.2lf  %13.2lf  %6.2lf   %6.2lf\n",
+			
+			if(i==1) sc=tmp.avgValue;
+			printf("   %3i  %13.2lf  %13.2lf  %6.2lf   %6.2lf %15.2f\n",
 				i,tmp.avgValue*tmp.threads,tmp.avgValue,tmp.maxDeviation*100,
-				tmp.maxThreadDeviation*100);
+				tmp.maxThreadDeviation*100,tmp.avgValue/sc*100);
 			if(tmp.maxDeviation>maxDev)maxDev=tmp.maxDeviation;
 			if(tmp.maxThreadDeviation>maxTDev)maxTDev=tmp.maxThreadDeviation;
 		}
