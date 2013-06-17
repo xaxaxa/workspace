@@ -22,7 +22,7 @@ public:
 			threads[i].data=(double*)fftw_malloc(fftsize*sizeof(double));
 			threads[i].data_c=(fftw_complex*)fftw_malloc(fftsize*sizeof(fftw_complex));
 			threads[i].p = fftw_plan_dft_r2c_1d(fftsize, threads[i].data,
-				threads[i].data_c, FFTW_PATIENT|FFTW_PRESERVE_INPUT);
+				threads[i].data_c, FFTW_MEASURE|FFTW_PRESERVE_INPUT);
 		}
 	}
 	void destroyThreads() override {
@@ -46,7 +46,7 @@ public:
 	double valueFunc(int64_t t, int64_t tCPU, void* v) override {
 		return double(iters)/tCPU*1000000000;
 	}
-	string unit() {
+	string unit() override {
 		return "FFTs/s";
 	}
 };
@@ -58,7 +58,6 @@ int main(int argc, char** argv) {
 	FFTBench fftb(atoi(argv[1]),atoi(argv[2]));
 	BenchmarkRunner br;
 	br.runs=atoi(argv[3]);
-	br.run(fftb,"FFT");
-	br.displayResults();
+	br.runDefaultTests(fftb,"FFT");
 }
 
