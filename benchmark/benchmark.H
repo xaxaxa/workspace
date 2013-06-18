@@ -212,7 +212,7 @@ public:
 			auto& tmp=rg;
 			
 			if(i==1) sc=tmp.avgValue;
-			printf("   %3i  %13.2lf  %13.2lf  %6.2lf   %6.2lf %15.2f\n",
+			printf("   %3i  %13.2lf  %13.2lf  %6.2lf   %6.2lf %13.2f %%\n",
 				i,tmp.avgValue*tmp.threads,tmp.avgValue,tmp.maxDeviation*100,
 				tmp.maxThreadDeviation*100,tmp.avgValue/sc*100);
 			if(tmp.maxDeviation>maxDev)maxDev=tmp.maxDeviation;
