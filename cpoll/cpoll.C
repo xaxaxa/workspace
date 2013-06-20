@@ -682,36 +682,37 @@ namespace CP
 		_sr.skip(len);
 	}
 
+	//returns whether or not you should continue reading from input (if async==false), or
+	//whether or not it had continued the async read (if async)
 	bool StreamReader::_loop(bool async) {
 		newStreamReader::item it;
 		bool delFlag = false;
 		deletionFlag = &delFlag;
+		bool r = true;
 		while (_sr.process(it)) {
 			if (out_s != NULL) {
 				out_s->write(it.data.data(), it.data.length());
 				tmp_i += it.data.length();
-			} else tmp.append(it.data.data(), it.data.length());
-			if (it.delimReached) {
-				if (out_s == NULL) {
-					if (cb == nullptr) goto skipRead;
-					bool* delFlag = deletionFlag;
-					cb(tmp);
-					if (*delFlag) goto skipRead;
-					tmp.clear();
-				} else {
-					if (cb_s == nullptr) goto skipRead;
-					cb_s(tmp_i);
+				if (it.delimReached) {
+					r = false;
+					if (cb_s != nullptr) cb_s(tmp_i);
+					goto ret;
 				}
-				return false;
+			} else {
+				tmp.append(it.data.data(), it.data.length());
+				if (it.delimReached) {
+					r = false;
+					if (cb != nullptr) {
+						cb(tmp);
+						tmp.clear();
+					}
+					goto ret;
+				}
 			}
 		}
-		if (async) {
-			_beginRead();
-			deletionFlag = NULL;
-			return true;
-		}
-		skipRead: if (!delFlag) deletionFlag = NULL;
-		return false;
+		if (async) _beginRead();
+		ret: if (!delFlag) deletionFlag = NULL;
+		return r;
 	}
 	void StreamReader::_beginRead() {
 		String buf = _sr.beginPutData();
@@ -721,11 +722,12 @@ namespace CP
 	void StreamReader::_doSyncRead() {
 		while (_loop(false)) {
 			String buf = _sr.beginPutData();
-			//if (get < 1 > (buf) <= 0) return;
 			int r = input->read(buf.data(), buf.length());
 			if (r <= 0) {
 				String tmp = _sr.getBufferData();
+
 				if (out_s == NULL) {
+					if (cb == nullptr) return;
 					string tmps = tmp.toSTDString();
 					eof = true;
 					_sr.reset();
@@ -734,7 +736,7 @@ namespace CP
 					out_s->write(tmp.data(), tmp.length());
 					tmp_i += tmp.length();
 					_sr.reset();
-					cb_s(tmp_i);
+					if (cb_s != nullptr) cb_s(tmp_i);
 				}
 				return;
 			} else {
@@ -2073,6 +2075,10 @@ namespace CP
 	StandardStream::StandardStream() :
 			in(0), out(1) {
 	}
+	StandardStream::~StandardStream() {
+		in.deinit();
+		out.deinit();
+	}
 	int32_t StandardStream::read(void* buf, int32_t len) {
 		return in.read(buf, len);
 	}
@@ -2458,3 +2464,4 @@ namespace CP
 	}
 
 }
+

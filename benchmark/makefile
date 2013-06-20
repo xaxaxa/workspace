@@ -1,6 +1,6 @@
 
 CFLAGS := 
-CFLAGS1=-L`pwd`/../lib -I`pwd`/../include $(CFLAGS)
+CFLAGS1=-L`pwd`/../lib -I`pwd`/../include -lrt $(CFLAGS)
 CC := gcc $(CFLAGS1)
 CXX := g++ $(CFLAGS1)
 all: fftbench

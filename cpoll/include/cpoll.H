@@ -1195,6 +1195,7 @@ namespace CP
 		StandardStream& operator=(const StandardStream& other) = delete;
 		CP::File in, out;
 		StandardStream();
+		~StandardStream();
 		template<class P> void addToPoll(P& p) {
 			p.add(in);
 			p.add(out);
