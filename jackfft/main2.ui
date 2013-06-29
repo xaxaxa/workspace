@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.18"/>
   <!-- interface-naming-policy project-wide -->
@@ -265,6 +265,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="padding">2</property>
                 <property name="position">0</property>
               </packing>
@@ -279,6 +280,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
               </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="padding">2</property>
                 <property name="position">1</property>
               </packing>
@@ -441,7 +443,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
     <child>
       <object class="GtkTable" id="table1">
         <property name="visible">True</property>
-        <property name="n_rows">5</property>
+        <property name="n_rows">6</property>
         <child>
           <object class="GtkViewport" id="viewport1">
             <property name="visible">True</property>
@@ -680,7 +682,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
         <child>
           <object class="GtkTable" id="table5">
             <property name="visible">True</property>
-            <property name="n_columns">5</property>
+            <property name="n_columns">7</property>
             <child>
               <object class="GtkLabel" id="label12">
                 <property name="visible">True</property>
@@ -740,11 +742,51 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
             <child>
               <placeholder/>
             </child>
+            <child>
+              <object class="GtkLabel" id="label15">
+                <property name="visible">True</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">spectrogram:</property>
+              </object>
+              <packing>
+                <property name="left_attach">4</property>
+                <property name="right_attach">5</property>
+                <property name="x_options">GTK_FILL</property>
+                <property name="x_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="c_spectrogram">
+                <property name="label" translatable="yes">show</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">5</property>
+                <property name="right_attach">6</property>
+                <property name="x_options"/>
+                <property name="x_padding">2</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="top_attach">2</property>
             <property name="bottom_attach">3</property>
             <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkViewport" id="viewport4">
+            <property name="resize_mode">queue</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="top_attach">5</property>
+            <property name="bottom_attach">6</property>
           </packing>
         </child>
       </object>

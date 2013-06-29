@@ -34,6 +34,7 @@
 #include <gtkmm.h>
 #include <gdk/gdk.h>
 #include "eqcontrol.C"
+#include "histcontrol.C"
 #include <cplib/cplib.hpp>
 #include <math.h>
 
@@ -48,6 +49,7 @@ vector<jack_port_t *> outputs;
 double cur_index = 0;
 int srate;
 bool display_spectrum = false;
+bool display_spectrogram = false;
 bool spectrum2=false;
 
 using namespace xaxaxa;
@@ -58,10 +60,12 @@ FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
 FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
 struct timespec last_refreshed;
 #define EQ_POINTS 10000
-#define SPECTRUM2_POINTS 64
+#define SPECTRUM2_POINTS 32
+#define SPECTROGRAM_LEN 1000
 EQControl* c;
 EQControl* c_eq2;
 EQControl* c2;
+HistoryControl* c3;
 Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
 bool do_mux=false;
@@ -224,7 +228,7 @@ int process(jack_nframes_t length, void *arg)
 	filt2 = NULL;
 asdfghjkl:
 	FFTFilter<jack_default_audio_sample_t>* trololo = ((FFTFilter<jack_default_audio_sample_t>*)filt[0]);
-	if(display_spectrum && trololo->didprocess)
+	if((display_spectrum || display_spectrogram) && trololo->didprocess)
 	{
 		trololo->didprocess = false;
 		Long tmp_i=1;
@@ -249,7 +253,7 @@ void* thread1(void* v)
 		if(!b)continue;*/
 		struct timespec t;
 		clock_gettime(CLOCK_MONOTONIC, &t);
-		if(get_nsec(last_refreshed) + (60 * 1000000) < get_nsec(t))
+		if(get_nsec(last_refreshed) + (10 * 1000000) < get_nsec(t))
 		{
 			last_refreshed = t;
 			//refresh
@@ -266,6 +270,7 @@ void* thread1(void* v)
 				if(c2->datalen!=eqpoints) {
 					gdk_threads_enter();
 					c2->resize(eqpoints);
+					c3->resize(SPECTROGRAM_LEN,eqpoints);
 					gdk_threads_leave();
 				}
 				
@@ -281,8 +286,11 @@ void* thread1(void* v)
 					}
 				//
 			}
+			for(int i=0;i<3;i++)
+				c3->addFrames(c2->data,1);
 			gdk_threads_enter();
-			c2->do_draw();
+			if(display_spectrum)c2->queue_draw();
+			if(display_spectrogram)c3->queue_draw();
 			gdk_threads_leave();
 		}
 	}
@@ -552,6 +560,7 @@ int main(int argc, char *argv[])
 	{
 		string tmp(argv[i]);
 		if(tmp == "-s")display_spectrum = true;
+		if(tmp == "-S")display_spectrogram = true;
 	}
 	Util.ChDir(Util.GetDirFromPath(Util.GetProgramPath()));
 	//goto aaaaa;
@@ -602,12 +611,14 @@ int main(int argc, char *argv[])
 	Gtk::Button* b_shift;
 	Gtk::CheckButton* c_pitchshift;
 	Gtk::CheckButton* c_spectrum;
+	Gtk::CheckButton* c_spectrogram;
 	Gtk::CheckButton* c_spectrum2;
 	Gtk::CheckButton* c_mux;
 	Gtk::Label* label8;
 	Gtk::FileChooserDialog* filechooserdialog1;
 	Gtk::Viewport* viewport1;
 	Gtk::Viewport* viewport2;
+	Gtk::Viewport* viewport4;
 	Gtk::Scale* s_mux;
 	
 	//get controls
@@ -616,7 +627,8 @@ int main(int argc, char *argv[])
 	JACKFFT_GETWIDGET(c_pitchshift); JACKFFT_GETWIDGET(label8); JACKFFT_GETWIDGET(b_params);
 	JACKFFT_GETWIDGET(b_shift); JACKFFT_GETWIDGET(filechooserdialog1); JACKFFT_GETWIDGET(viewport1);
 	JACKFFT_GETWIDGET(viewport2); JACKFFT_GETWIDGET(c_spectrum); JACKFFT_GETWIDGET(c_spectrum2);
-	JACKFFT_GETWIDGET(s_mux); JACKFFT_GETWIDGET(c_mux);
+	JACKFFT_GETWIDGET(s_mux); JACKFFT_GETWIDGET(c_mux); JACKFFT_GETWIDGET(viewport4);
+	JACKFFT_GETWIDGET(c_spectrogram);
 	
 	//initialize controls
 	b_save->signal_clicked().connect(&save);
@@ -726,6 +738,10 @@ hhhhh:
 	viewport2->add(*c2);
 	c2->show();
 	c2->MouseMove += EQControl::MouseDelegate(&on_mousemove, c2);
+	
+	c3 = new HistoryControl(SPECTROGRAM_LEN,EQ_POINTS);
+	c3->show();
+	viewport4->add(*c3);
 	/*}
 	else
 	{
@@ -735,7 +751,9 @@ hhhhh:
 	}*/
 
 	c_spectrum->set_active(display_spectrum);
+	c_spectrogram->set_active(display_spectrogram);
 	viewport2->set_visible(display_spectrum);
+	viewport4->set_visible(display_spectrogram);
 	c_spectrum->signal_toggled().connect([c_spectrum]()
 	{
 		Gtk::Window* w1;
@@ -754,6 +772,24 @@ hhhhh:
 		b->get_widget("viewport2", vp);
 		vp->set_visible(display_spectrum);
 	});
+	c_spectrogram->signal_toggled().connect([c_spectrogram]()
+	{
+		Gtk::Window* w1;
+		Gtk::Viewport* v;
+		b->get_widget("window1", w1);
+		b->get_widget("viewport1", v);
+		
+		gint ww,wh; w1->get_size(ww,wh);
+		if(display_spectrogram && !c_spectrogram->get_active()) {
+			w1->resize(ww,wh-v->get_allocation().get_height());
+		} else if(!display_spectrogram && c_spectrogram->get_active()) {
+			w1->resize(ww,wh+v->get_allocation().get_height());
+		}
+		display_spectrogram = c_spectrogram->get_active();
+		Gtk::Viewport* vp;
+		b->get_widget("viewport4", vp);
+		vp->set_visible(display_spectrogram);
+	});
 	
 	c_spectrum2->set_active(spectrum2);
 	c_spectrum2->signal_toggled().connect([c_spectrum2]()
@@ -762,7 +798,7 @@ hhhhh:
 	});
 	
 	c_mux->set_active(do_mux);
-	Gtk::Adjustment adj_mux(v_mux,0,1,0.05);
+	Gtk::Adjustment adj_mux(v_mux,0,1,0.01);
 	s_mux->set_adjustment(adj_mux);
 	
 	auto update_mux=[&]() {
