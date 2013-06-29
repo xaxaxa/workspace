@@ -268,14 +268,16 @@ void* thread1(void* v)
 					c2->resize(eqpoints);
 					gdk_threads_leave();
 				}
+				
+				fftw_complex* data=fftf->lastSpectrum;
 				if(spectrum2) {
-					asdasdasd(c2->data, fftf->tmpcomplex, complexsize, c2->datalen, 1.d/100/inputs.size());
+					asdasdasd(c2->data, data, complexsize, c2->datalen, 1.d/inputs.size()/complexsize * 100);
 				}
 				else
 					for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
 					{
 						UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
-						c2->data[i] += (complex_to_real(((FFTFilter<jack_default_audio_sample_t>*)filt[ii])->tmpcomplex[complex_index])) / 100 / inputs.size();
+						c2->data[i] += complex_to_real(data[complex_index]) / complexsize / inputs.size() * 100;
 					}
 				//
 			}

@@ -107,6 +107,7 @@ namespace xaxaxa
 		//fftw_plan p1, p2;
 		//double* tmpdouble;
 		fftw_complex* tmpcomplex;
+		fftw_complex* lastSpectrum;
 		//fftw_complex* tmpcomplex2;
 		double* coefficients;
 		double* coefficients2;
@@ -146,6 +147,7 @@ namespace xaxaxa
 				coefficients2[i] = 1.0;
 #endif
 			tmpcomplex=fft.Data_c;
+			lastSpectrum=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*l);
 			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
 
 			//tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
@@ -163,6 +165,7 @@ namespace xaxaxa
 			//fftw_free(tmpdouble);*/
 			//fftw_free(tmpcomplex);
 			//fftw_free(tmpcomplex2);
+			fftw_free(lastSpectrum);
 			delete[] coefficients;
 #ifdef CEPSTRUM
 			delete[] coefficients2;
@@ -184,6 +187,7 @@ namespace xaxaxa
 			//fftw_execute(p1);
 			//cout << this->PeriodSize() << endl;
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
+			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(fftw_complex));
 #ifdef CEPSTRUM
 			for(UInt i=0;i<complexsize;i++) {
 				auto sine=fft.Data_c[i][1];
