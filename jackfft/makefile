@@ -3,6 +3,8 @@ FLAGS=-I../include/ -L../lib/ -g3 --std=c++0x -lcpoll
 all: jackfft jackfftc converters
 jackfft:
 	g++ -g3 -Ofast -pthread jackfft.C -o jackfft --std=c++0x -lrt -lcplib -ljack -lfftw3 $(FLAGS) $(PKG_CONFIG)
+ctrltest:
+	g++ -g3 -Ofast -pthread ctrltest.C -o ctrltest --std=c++0x -lrt -lcplib $(FLAGS) $(PKG_CONFIG)
 jackfftc:
 	g++ -g3 -Ofast -pthread jackfftc.C -o jackfftc --std=c++0x -lrt -lcplib -ljack -lfftw3 $(FLAGS)
 freqrecord:
