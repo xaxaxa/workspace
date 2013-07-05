@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.317623061">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.317623061" moduleId="org.eclipse.cdt.core.settings" name="Debug">
@@ -62,11 +60,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.317623061.290209944" name="all.C" rcbsApplicability="disable" resourcePath="all.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1483916567">
-						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1483916567" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.317623061.1849719517" name="http.C" rcbsApplicability="disable" resourcePath="http.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1000013721">
+						<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1000013721" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599"/>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="http.C|all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -125,11 +123,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1045629552.1047610922" name="all.C" rcbsApplicability="disable" resourcePath="all.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.958761479">
-						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.958761479" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1045629552.149991274" name="http.C" rcbsApplicability="disable" resourcePath="http.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.79508858">
+						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.79508858" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465"/>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="http.C|all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
