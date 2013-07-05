@@ -24,13 +24,15 @@
 #include <rgc.H>
 #include <map>
 #include <cpoll/cpoll.H>
+#include <string>
 #include "stringutils.H"
 #include "headercontainer.H"
 using namespace std;
+using CP::String;
+using CP::AsyncValue;
 namespace cppsp
 {
 	class cppspManager;
-	typedef CP::String String;
 	/**
 	 Represents an HTTP request and contains data from the request such as HTTP headers, querystrings, and HTTP POST data.
 	 */
@@ -186,12 +188,19 @@ namespace cppsp
 	};
 	class Page;
 	/**
+	 Represents a request handler callback.
+	 */
+	typedef Delegate<void(Request&, Response&, Delegate<void()> cb)> Handler;
+	typedef Delegate<void(Handler, exception*)> HandlerCB;
+	/**
 	 Represents a cppsp web server instance.
 	 */
 	class Server: public RGC::Object
 	{
 	public:
+		timespec curTime { 0, 0 };
 		Server();
+
 		/**
 		 The handle request callback. It is called for every request right after reading in all the request data and instantiating the Request and Response objects.
 		 You can override the behavior of the web server by attaching (from within a cppsp module). See the example .cppsm modules in /www (included with the cppsp source).
@@ -200,31 +209,79 @@ namespace cppsp
 		/**
 		 Load static file from "path" and serve it to the specified response. path is relative to server root.
 		 */
-		void handleStaticRequest(String path, Request& req, Response& resp,
-				Delegate<void()> cb) {
+		void handleStaticRequest(String path, Request& req, Response& resp, Delegate<void()> cb) {
 			return handleStaticRequestFromFile(mapPath(path, *req.sp), req, resp, cb);
 		}
 		/**
 		 Load static file from "path" and serve it to the specified response. path is absolute.
 		 */
 		virtual void handleStaticRequestFromFile(String path, Request& req, Response& resp,
-				Delegate<void()> cb)=0;
+				Delegate<void()> cb);
 		/**
 		 Load dynamic page from "path" and serve it to the specified response. path is relative to server root.
 		 */
-		void handleDynamicRequest(String path, Request& req, Response& resp,
-				Delegate<void()> cb) {
+		void handleDynamicRequest(String path, Request& req, Response& resp, Delegate<void()> cb) {
 			return handleDynamicRequestFromFile(mapPath(path, *req.sp), req, resp, cb);
 		}
 		/**
 		 Load dynamic page from "path" and serve it to the specified response. path is absolute.
 		 */
 		virtual void handleDynamicRequestFromFile(String path, Request& req, Response& resp,
-				Delegate<void()> cb)=0;
+				Delegate<void()> cb);
 		/**
-		 default request router.
+		 Default request handler. Calls "routeRequest" to obtain the handler for the specific uri, and caches the
+		 routing decision.
 		 */
 		void defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb);
+
+		/*
+		 Called by the default request handler to translate a request uri to a handler delegate.
+		 The purpose of attaching a request router instead of a request handler directly to "handleRequest" is so that
+		 the routing decision can be cached.
+		 @returns a handler delegate that will be used to process requests destined for that uri. If the return value is undefined, it means the request is being completed asynchornously.
+		 */
+		DelegateChain<AsyncValue<Handler>(String path)> routeRequest;
+
+		/**
+		 Load static file from "path". path is relative to server root.
+		 */
+		AsyncValue<Handler> routeStaticRequest(String path) {
+			return routeStaticRequestFromFile(mapPath(path.toSTDString()));
+		}
+		/**
+		 Load static file from "path". path is absolute.
+		 */
+		virtual AsyncValue<Handler> routeStaticRequestFromFile(String path) {
+			throw logic_error("routeStaticRequestFromFile() not implemented");
+		}
+		/**
+		 Load dynamic page from "path". path is relative to server root.
+		 */
+		AsyncValue<Handler> routeDynamicRequest(String path) {
+			return routeDynamicRequestFromFile(mapPath(path.toSTDString()));
+		}
+		/**
+		 Load dynamic page from "path". path is absolute.
+		 */
+		virtual AsyncValue<Handler> routeDynamicRequestFromFile(String path) {
+			throw logic_error("routeDynamicRequestFromFile() not implemented");
+		}
+		/**
+		 Default request router.
+		 */
+		AsyncValue<Handler> defaultRouteRequest(String path);
+		struct RouteCacheEntry
+		{
+			Handler handler;
+			string path;
+			timespec lastUpdate; //CLOCK_MONOTONIC
+		};
+		map<String, RouteCacheEntry*> routeCache;
+		/**
+		 Time (in seconds) to cache routing decisions for.
+		 */
+		int routeCacheDuration = 2;
+
 		/**
 		 Returns absolute path of server root directory.
 		 */
@@ -232,23 +289,20 @@ namespace cppsp
 		/**
 		 Load and instantiate dynamic page from "path". path is relative to server root.
 		 */
-		virtual void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
-				Delegate<void(Page*, exception* ex)> cb)=0;
+		virtual AsyncValue<Page*> loadPage(CP::Poll& p, String path, RGC::Allocator& a)=0;
 		/**
 		 Load and instantiate dynamic page from "path". path is absolute.
 		 */
-		virtual void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a,
-				Delegate<void(Page*, exception* ex)> cb)=0;
+		virtual AsyncValue<Page*> loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a)=0;
 
 		/**
 		 Load cppsp module from "path". path is relative to server root.
 		 */
-		virtual void loadModule(CP::Poll& p, String path, Delegate<void(void*, exception* ex)> cb)=0;
+		virtual AsyncValue<void*> loadModule(CP::Poll& p, String path)=0;
 		/**
 		 Load cppsp module from "path". path is absolute.
 		 */
-		virtual void loadModuleFromFile(CP::Poll& p, String path,
-				Delegate<void(void*, exception* ex)> cb)=0;
+		virtual AsyncValue<void*> loadModuleFromFile(CP::Poll& p, String path)=0;
 		/**
 		 Load static page from "path". path is relative to server root.
 		 */
@@ -271,6 +325,33 @@ namespace cppsp
 		virtual cppspManager* manager() {
 			return NULL;
 		}
+		virtual void updateTime();
+	};
+	//cppspManager based Server
+	class DefaultServer: public Server
+	{
+	public:
+		cppspManager* mgr;
+		string root;
+		DefaultServer(string root);
+		~DefaultServer();
+
+		AsyncValue<Page*> loadPage(CP::Poll& p, String path, RGC::Allocator& a) override;
+		AsyncValue<Page*> loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a) override;
+		AsyncValue<void*> loadModule(CP::Poll& p, String path);
+		AsyncValue<void*> loadModuleFromFile(CP::Poll& p, String path) override;
+		String loadStaticPage(String path) override;
+		String loadStaticPageFromFile(String path);
+		String rootDir() override {
+			return root;
+		}
+		cppspManager* manager() override {
+			return mgr;
+		}
+		//this function needs to be called periodically to check for file modifications
+		//otherwise auto re-compile will not work
+		//generally call it every 2 seconds
+		void updateTime() override;
 	};
 	/**
 	 Base class for all cppsp pages.
@@ -288,10 +369,6 @@ namespace cppsp
 		 Object representing the HTTP response.
 		 */
 		RGC::Ref<Response> response;
-		/**
-		 internal field do not use.
-		 */
-		Delegate<void(Page*, exception* ex)> pageCB;
 		/**
 		 Poll instance for the current thread. Can be used for asynchronous I/O, timers, etc.
 		 */
@@ -347,20 +424,19 @@ namespace cppsp
 		/**
 		 Load and instantiate dynamic page from "path". path is relative to the current page.
 		 */
-		void loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb);
+		AsyncValue<Page*> loadNestedPage(String path);
 		/**
 		 Load and instantiate dynamic page from "path". path is relative to the current page. Returned Page object is allocated from "a".
 		 */
-		void loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb, RGC::Allocator& a);
+		AsyncValue<Page*> loadNestedPage(String path, RGC::Allocator& a);
 		/**
 		 Load and instantiate dynamic page from "path". path is absolute.
 		 */
-		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb);
+		AsyncValue<Page*> loadNestedPageFromFile(String path);
 		/**
 		 Load and instantiate dynamic page from "path". path is absolute. Returned Page object is allocated from "a".
 		 */
-		void loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb,
-				RGC::Allocator& a);
+		AsyncValue<Page*> loadNestedPageFromFile(String path, RGC::Allocator& a);
 		/**
 		 Called by the web server immediately after instantiating the current page. The page calls "cb" when it is done processing, to signal the web server that it can clean up the StringPool and all request-related data. The object pointed to by fields "request" and "response" may be recycled.
 		 */
@@ -396,7 +472,7 @@ namespace cppsp
 			finalize();
 		}
 		/**
-		 Called after flush() is done. See init() for a description of the request life-cycle.
+		 Called by flushCB. See init() for a description of the request life-cycle.
 		 */
 		virtual void finalize() {
 			finalizeCB();
@@ -410,14 +486,13 @@ namespace cppsp
 
 		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
-		void _pageCB(Page* p, exception* ex);
 	};
 	//the ModuleParams struct itself (passed in to modules at initialization time) is not
 	//guaranteed to exist after initModule() returns
 	struct ModuleParams
 	{
-		Server* server;	//guaranteed to exist until after deinitModule() returns
-		String filePath;	//guaranteed to exist until after deinitModule() returns
+		Server* server; //guaranteed to exist until after deinitModule() returns
+		String filePath; //guaranteed to exist until after deinitModule() returns
 	};
 } /* namespace cppsp */
 #endif /* PAGE_H_ */

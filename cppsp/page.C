@@ -26,6 +26,7 @@
 #include <math.h>
 
 using namespace CP;
+using namespace std;
 namespace cppsp
 {
 	static inline int itoa(int i, char* b) {
@@ -74,8 +75,8 @@ namespace cppsp
 	void Page::doInit() {
 		doReadPost = false;
 		init();
-		if (doReadPost && request->method.compare("POST") == 0) request->readPost( {
-				&Page::_readPOSTCB, this });
+		if (doReadPost && request->method.compare("POST") == 0)
+			request->readPost( { &Page::_readPOSTCB, this });
 		else initCB();
 	}
 	void Page::initCB() {
@@ -100,7 +101,8 @@ namespace cppsp
 		initCB();
 	}
 	void Page::flush() {
-		if (response->closed) finalizeCB();
+		if (response->closed)
+			finalizeCB();
 		else response->flush( { &Page::_flushCB, this });
 	}
 	String Page::mapPath(String path) {
@@ -118,33 +120,48 @@ namespace cppsp
 				tmp);
 		return {tmp,l};
 	}
-	void Page::loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb) {
-		loadNestedPage(path, cb, *sp);
+	static void _setupPage(Page* t, Page* p) {
+		p->request = t->request;
+		p->response = t->response;
+		p->poll = t->poll;
+		p->server = t->server;
 	}
-	void Page::loadNestedPage(String path, Delegate<void(Page*, exception* ex)> cb,
-			RGC::Allocator& a) {
-		this->pageCB = cb;
-		String tmp = mapRelativePath(path, a);
-		server->loadPage(*poll, { tmp.data(), (int) tmp.length() }, a, { &Page::_pageCB, this });
-	}
-	void Page::loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb) {
-		loadNestedPageFromFile(path, cb, *sp);
-	}
-	void Page::loadNestedPageFromFile(String path, Delegate<void(Page*, exception* ex)> cb,
-			RGC::Allocator& a) {
-		this->pageCB = cb;
-		server->loadPageFromFile(*poll, { path.data(), (int) path.length() }, a, { &Page::_pageCB,
-				this });
-	}
-	
-	void Page::_pageCB(Page* p, exception* ex) {
-		if (p != NULL) {
-			p->request = request;
-			p->response = response;
-			p->poll = poll;
-			p->server = server;
+	struct lpState
+	{
+		Page* t;
+		Delegate<void(Page*, exception*)> cb;
+		void operator()(Page* p, exception* ex) {
+			if (p != NULL) _setupPage(t, p);
+			delete this;
+			cb(p, ex);
 		}
-		pageCB(p, ex);
+	};
+	AsyncValue<Page*> Page::loadNestedPage(String path) {
+		return loadNestedPage(path, *sp);
+	}
+	AsyncValue<Page*> Page::loadNestedPage(String path, RGC::Allocator& a) {
+		String tmp = mapRelativePath(path, a);
+		auto tmpv = server->loadPage(*poll, tmp, a);
+		if (tmpv) {
+			_setupPage(this, tmpv());
+			return tmpv();
+		}
+		auto* st = new lpState { this };
+		tmpv.wait(st);
+		return Future<Page*>(&st->cb);
+	}
+	AsyncValue<Page*> Page::loadNestedPageFromFile(String path) {
+		return loadNestedPageFromFile(path, *sp);
+	}
+	AsyncValue<Page*> Page::loadNestedPageFromFile(String path, RGC::Allocator& a) {
+		auto tmpv = server->loadPageFromFile(*poll, path, a);
+		if (tmpv) {
+			_setupPage(this, tmpv());
+			return tmpv();
+		}
+		auto* st = new lpState { this };
+		tmpv.wait(st);
+		return Future<Page*>(&st->cb);
 	}
 	void Page::_flushCB(Response& r) {
 		flushCB();
@@ -188,11 +205,11 @@ namespace cppsp
 		//sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
 		{
 			char* s1 = sw.beginWrite(32);
-			memcpy2_1(s1, "HTTP/1.1 ", 9);
+			memcpy(s1, "HTTP/1.1 ", 9);
 			int x = 9 + itoa(This->statusCode, s1 + 9);
 			s1[x] = ' ';
 			x++;
-			memcpy2_1(s1 + x, This->statusName.data(), This->statusName.length());
+			memcpy(s1 + x, This->statusName.data(), This->statusName.length());
 			x += This->statusName.length();
 			s1[x] = '\r';
 			s1[x + 1] = '\n';
@@ -203,10 +220,10 @@ namespace cppsp
 			int l1 = (*it).first.length();
 			int l2 = (*it).second.length();
 			char* tmp = sw.beginWrite(l1 + 4 + l2);
-			memcpy2_1(tmp, (*it).first.data(), l1);
+			memcpy(tmp, (*it).first.data(), l1);
 			tmp[l1] = ':';
 			tmp[l1 + 1] = ' ';
-			memcpy2_1(tmp + l1 + 2, (*it).second.data(), l2);
+			memcpy(tmp + l1 + 2, (*it).second.data(), l2);
 			tmp[l1 + 2 + l2] = '\r';
 			tmp[l1 + 2 + l2 + 1] = '\n';
 			sw.endWrite(l1 + 4 + l2);
@@ -273,19 +290,169 @@ namespace cppsp
 
 	Server::Server() {
 		handleRequest.attach( { &Server::defaultHandleRequest, this });
+		routeRequest.attach( { &Server::defaultRouteRequest, this });
+	}
+	struct requestHandlerState
+	{
+		Server* s;
+		Request* req;
+		Response* resp;
+		Delegate<void()> cb;
+		String path;
+		void operator()(Handler h, exception* ex) {
+			if (h != nullptr) {
+				try {
+					if (unlikely(s!=nullptr)) {
+						auto it = s->routeCache.find(path);
+						if (it == s->routeCache.end()) {
+							Server::RouteCacheEntry* ce = new Server::RouteCacheEntry { h,
+									path.toSTDString(), s->curTime };
+							s->routeCache.insert( { ce->path, ce });
+						} else {
+							(*it).second->handler = h;
+							(*it).second->lastUpdate = s->curTime;
+						}
+					}
+					h(*req, *resp, cb);
+					resp->sp->dealloc(this);
+				} catch (exception& ex1) {
+					handleError(&ex1, *resp, req->path);
+					goto sss;
+				}
+			} else {
+				handleError(ex, *resp, req->path);
+				sss: resp->flush( { &requestHandlerState::flushCB, this });
+			}
+		}
+		void flushCB(Response&) {
+			cb();
+			resp->sp->dealloc(this);
+		}
+	};
+	void Server::handleStaticRequestFromFile(String path, Request& req, Response& resp,
+			Delegate<void()> cb) {
+		auto h = routeStaticRequestFromFile(path);
+		if (h)
+			h()(req, resp, cb);
+		else {
+			h.wait(
+					resp.sp->New<requestHandlerState>(requestHandlerState { nullptr, &req, &resp, cb }));
+		}
+	}
+	void Server::handleDynamicRequestFromFile(String path, Request& req, Response& resp,
+			Delegate<void()> cb) {
+		auto h = routeDynamicRequestFromFile(path);
+		if (h)
+			h()(req, resp, cb);
+		else {
+			h.wait(
+					resp.sp->New<requestHandlerState>(requestHandlerState { nullptr, &req, &resp, cb }));
+		}
 	}
 	void Server::defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
-		if (req.path.length() > 6
-				&& memcmp(req.path.data() + (req.path.length() - 6), ".cppsp", 6) == 0) handleDynamicRequest(
-				req.path, req, resp, cb);
-		else handleStaticRequest(req.path, req, resp, cb);
+		auto it = routeCache.find(req.path);
+		timespec tmp1 = curTime;
+		tmp1.tv_sec -= routeCacheDuration;
+		if (likely(it != routeCache.end() && tsCompare((*it).second->lastUpdate, tmp1) > 0)) {
+			(*it).second->handler(req, resp, cb);
+			return;
+		}
+		//printf("re-routing %s\n", req.path.toSTDString().c_str());
+		auto* st = resp.sp->New<requestHandlerState>(
+				requestHandlerState { this, &req, &resp, cb, req.path });
+		auto h = routeRequest(req.path);
+		if (h)
+			(*st)(h(), nullptr);
+		else h.wait(st);
 	}
-
+	AsyncValue<Handler> Server::defaultRouteRequest(String path) {
+		if (path.length() > 6 && memcmp(path.data() + (path.length() - 6), ".cppsp", 6) == 0)
+			return routeDynamicRequest(path);
+		else return routeStaticRequest(path);
+	}
 	String Server::mapPath(String path, RGC::Allocator& a) {
 		String r = rootDir();
 		char* tmp = (char*) a.alloc(path.length() + r.length());
 		int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
 		return String(tmp, l);
+	}
+	void Server::updateTime() {
+		clock_gettime(CLOCK_MONOTONIC, &curTime);
+	}
+
+	DefaultServer::DefaultServer(string root) :
+			mgr(new cppspManager()), root(root) {
+
+	}
+	DefaultServer::~DefaultServer() {
+		delete mgr;
+	}
+	struct pageLoaderState
+	{
+		RGC::Allocator* a;
+		Delegate<void(Page*, exception* ex)> cb;
+		void operator()(loadedPage* lp, exception* ex) {
+			if (lp == nullptr) {
+				cb(nullptr, ex);
+			} else {
+				Page* p;
+				try {
+					p = lp->doCreate(a);
+				} catch (exception& ex) {
+					cb(nullptr, &ex);
+					goto ret;
+				}
+				cb(p, nullptr);
+			}
+			ret: a->del(this);
+		}
+	};
+	AsyncValue<Page*> DefaultServer::loadPage(CP::Poll& p, String path, RGC::Allocator& a) {
+		auto tmp = mgr->loadPage(p, rootDir(), mapPath(path.toSTDString()));
+		if (tmp) return tmp()->doCreate(&a);
+		auto* st = a.New<pageLoaderState>(pageLoaderState { &a });
+		tmp.wait(st);
+		return Future<Page*>(&st->cb);
+	}
+	AsyncValue<Page*> DefaultServer::loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a) {
+		auto tmp = mgr->loadPage(p, rootDir(), path);
+		if (tmp) return tmp()->doCreate(&a);
+		auto* st = a.New<pageLoaderState>(pageLoaderState { &a });
+		tmp.wait(st);
+		return Future<Page*>(&st->cb);
+	}
+	struct moduleLoaderState
+	{
+		Delegate<void(void*, exception* ex)> cb;
+		void operator()(loadedPage* lp, exception* ex) {
+			cb(lp == nullptr ? nullptr : lp->dlHandle, ex);
+			delete this;
+		}
+	};
+	AsyncValue<void*> DefaultServer::loadModule(CP::Poll& p, String path) {
+		auto tmp = mgr->loadPage(p, rootDir(), mapPath(path.toSTDString()));
+		if (tmp) return tmp()->dlHandle;
+		auto* st = new moduleLoaderState();
+		tmp.wait(st);
+		return Future<void*>(&st->cb);
+	}
+	AsyncValue<void*> DefaultServer::loadModuleFromFile(CP::Poll& p, String path) {
+		auto tmp = mgr->loadPage(p, rootDir(), path);
+		if (tmp) return tmp()->dlHandle;
+		auto* st = new moduleLoaderState();
+		tmp.wait(st);
+		return Future<void*>(&st->cb);
+	}
+	String DefaultServer::loadStaticPage(String path) {
+		return mgr->loadStaticPage(mapPath(path.toSTDString()))->data;
+	}
+	String DefaultServer::loadStaticPageFromFile(String path) {
+		return mgr->loadStaticPage(path)->data;
+	}
+	
+	void DefaultServer::updateTime() {
+		Server::updateTime();
+		mgr->curTime = curTime;
 	}
 
 } /* namespace cppsp */

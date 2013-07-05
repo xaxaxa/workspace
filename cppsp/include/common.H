@@ -25,8 +25,10 @@
 #include <vector>
 #include <unordered_map>
 #include "page.H"
+#include "stringutils.H"
 using namespace std;
-typedef CP::String String;
+using CP::AsyncValue;
+using CP::Future;
 namespace cppsp
 {
 	extern const char* gxx;
@@ -51,13 +53,14 @@ namespace cppsp
 		~CompileException() throw ();
 		const char* what() const throw ();
 	};
+	class cppspManager;
 	/**
 	 Internal API.
 	 */
 	class loadedPage
 	{
 	public:
-		Server* srv;
+		cppspManager* manager;
 		loadedPage& operator=(const loadedPage& other) = delete;
 		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
 		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
@@ -77,12 +80,7 @@ namespace cppsp
 		//Delegate<void(loadedPage&)> compileCB;
 		struct _loadCB
 		{
-			RGC::Allocator* alloc;
-			//void* parameter is either the constructed page (if doCreate is true), or
-			//the dlopen()ed handle
-			Delegate<void(void*, exception* ex)> cb;
-			bool doCreate;
-			void operator()(loadedPage* This, exception* ex);
+			Delegate<void(loadedPage*, exception* ex)> cb;
 		};
 		vector<_loadCB> loadCB;
 		string tmpDir;
@@ -130,23 +128,32 @@ namespace cppsp
 	class cppspManager
 	{
 	public:
-		CP::StringPool sp;
+		/**
+		 Server instance that is passed to initModule() of all modules
+		 */
+		Server* srv;
 		unordered_map<String, loadedPage*> cache;
-
 		unordered_map<String, staticPage*> staticCache;
 		vector<string> cxxopts;
 		timespec curTime { 0, 0 };
 		string tmpDir;
 		int threadID;
 		cppspManager();
-		void loadPage(CP::Poll& p, String wd, String path, RGC::Allocator* a,
-				Delegate<void(Page*, exception* ex)> cb);
-		void loadModule(CP::Poll& p, Server* srv, String wd, String path,
-				Delegate<void(void*, exception* ex)> cb);
-		String loadStaticPage(String path);
+		AsyncValue<loadedPage*> loadPage(CP::Poll& p, String wd, String path);
+		/**
+		 Delete old cache entries.
+		 @param minAge the minimum age (in seconds since the entry was last accessed) for an entry to be deleted
+		 @unmaintained_api
+		 */
+		void cleanCache(int minAge);
+		staticPage* loadStaticPage(String path);
 		bool shouldCheck(loadedPage& p);
 		bool shouldCheck(staticPage& p);
+		void updateTime() {
+			clock_gettime(CLOCK_MONOTONIC, &curTime);
+		}
 	};
+	int tsCompare(struct timespec time1, struct timespec time2);
 
 	/**
 	 Internal function. Parses a .cppsp page.
@@ -160,77 +167,7 @@ namespace cppsp
 	 @unmaintained_api
 	 */
 	CP::File* compilePage(string wd, string path, const vector<string>& cxxopts, pid_t& pid);
-	/**
-	 Combine two paths. Result is stored in buf. Does not write a null byte.
-	 The memory block pointed to by buf must be at least l1 + l2 bytes.
-	 @return the length of the string written to buf
-	 */
-	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf);
-	/**
-	 Combine two paths. Result is stored in buf. Does not write a null byte.
-	 The memory block pointed to by buf must be at least strlen(p1) + strlen(p2) bytes.
-	 @return the length of the string written to buf
-	 */
-	int combinePath(const char* p1, const char* p2, char* buf);
-	/**
-	 Combine two paths securely. The resulting path is guaranteed to be under p1. (The user can not use ".." to leave the root directory)
-	 The memory block pointed to by buf must be at least l1 + l2 bytes.
-	 @return the length of the string written to buf
-	 */
-	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf);
-	/**
-	 Combine two paths securely. The resulting path is guaranteed to be under p1. (The user can not use ".." to leave the root directory)
-	 The memory block pointed to by buf must be at least strlen(p1) + strlen(p2) bytes.
-	 @return the length of the string written to buf
-	 */
-	int combinePathChroot(const char* p1, const char* p2, char* buf);
-	/**
-	 Combine two paths. Result is allocated from sp.
-	 @return the resulting path
-	 */
-	String combinePath(String p1, String p2, CP::StringPool& sp);
-	/**
-	 Combine two paths securely. The resulting path is guaranteed to be under p1. (The user can not use ".." to leave the root directory)
-	 @return the resulting path
-	 */
-	String combinePathChroot(String p1, String p2, CP::StringPool& sp);
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	cppspManager* cppspManager_new();
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	void cppspManager_delete(cppspManager* mgr);
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,
-			Delegate<void(Page*, exception* ex)> cb);
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	void loadModule(cppspManager* mgr, CP::Poll& p, Server* srv, String wd, String path,
-			Delegate<void(void*, exception* ex)> cb);
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	String loadStaticPage(cppspManager* mgr, String path);
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	vector<string>& CXXOpts(cppspManager* mgr);
-	/**
-	 Internal function.
-	 @unmaintained_api
-	 */
-	void updateTime(cppspManager* mgr);
+
 	/**
 	 Internal function.
 	 @unmaintained_api

@@ -69,117 +69,6 @@ namespace cppsp
 		return message.c_str();
 	}
 
-	//inline-able memcpy() for copying SHORT STRINGS ONLY
-	static inline void memcpy2(void* dst, const void* src, int len) {
-		for (int i = 0; i < len; i++)
-			((char*) dst)[i] = ((const char*) src)[i];
-	}
-	// "/"		+ "aaaaa"	=> "/aaaaa"
-	// "/asdf/"	+ "zzz"		=> "/asdf/zzz"
-	// "/asdf/"	+ "zzz/"		=> "/asdf/zzz/"
-	// "/asdf"	+ "zzz"		=> "/zzz"
-	// "/asdf/"	+ "../zzz"	=> "/zzz"
-	// "/asdf/"	+ "a/../x"	=> "/asdf/x"
-	// "/asdf/"	+ "/zzz"		=> "/zzz"
-	//the size of buf should be at least strlen(p1)+strlen(p2)
-	//returns the length of the string written to buf; does NOT write null byte
-	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf) {
-		if (l2 > 0 && p2[0] == '/') {
-			memcpy2(buf, p2, l2);
-			return l2;
-		}
-		int i = l1;
-		memcpy2(buf, p1, i);
-		if (l2 > 0) {
-			i--;
-			while (i >= 0 && buf[i] != '/')
-				i--;
-			if (i < 0) i = 0;
-			split spl(p2, l2, '/');
-			while (spl.read()) {
-				const char* s = spl.value.data();
-				int l = spl.value.length();
-				if (l == 2 && *(const uint16_t*) s == *(const uint16_t*) "..") {
-					i--;
-					while (i >= 0 && buf[i] != '/')
-						i--;
-					if (i < 0) i = 0;
-				} else if (l == 1 && *s == '.') {
-					buf[i] = '/';
-					i++;
-				} else {
-					//while(i>=0 && buf[i]!='/')i--;
-					buf[i] = '/';
-					i++;
-					memcpy2(buf + i, s, l);
-					i += l;
-				}
-			}
-			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
-		}
-		if (i < 0) i = 0;
-		return i;
-	}
-	int combinePath(const char* p1, const char* p2, char* buf) {
-		return combinePath(p1, strlen(p1), p2, strlen(p2), buf);
-	}
-	//p1 is the "root" directory
-	//guarantees that the resulting path won't be outside of p1
-	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf) {
-		int i = l1;
-		memcpy2(buf, p1, i);
-		static const uint16_t parentDir = *(const uint16_t*) "..";
-		if (l2 > 0) {
-			bool first(true);
-			split spl(p2, l2, '/');
-			while (spl.read()) {
-				const char* s = spl.value.data();
-				int l = spl.value.length();
-				if (first) {
-					first = false;
-					if (l == 0) continue;
-				}
-				if (l == 2 && *(const uint16_t*) s == parentDir) {
-					i--;
-					while (i >= 0 && buf[i] != '/')
-						i--;
-					if (i < l1) i = l1;
-				} else if (l == 1 && *s == '.') {
-					if (!(i > 0 && buf[i - 1] == '/')) {
-						buf[i] = '/';
-						i++;
-					}
-				} else {
-					//while(i>=0 && buf[i]!='/')i--;
-					if (!(i > 0 && buf[i - 1] == '/')) {
-						buf[i] = '/';
-						i++;
-					}
-					memcpy2(buf + i, s, l);
-					i += l;
-				}
-			}
-			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
-		}
-		if (i < l1) i = l1;
-		return i;
-	}
-	int combinePathChroot(const char* p1, const char* p2, char* buf) {
-		return combinePathChroot(p1, strlen(p1), p2, strlen(p2), buf);
-	}
-
-	String combinePath(String p1, String p2, StringPool& sp) {
-		char* tmp = sp.beginAdd(p1.length() + p2.length());
-		int l = combinePath(p1.data(), p2.data(), tmp);
-		sp.endAdd(l);
-		return {tmp,l};
-	}
-	String combinePathChroot(String p1, String p2, StringPool& sp) {
-		char* tmp = sp.beginAdd(p1.length() + p2.length());
-		int l = combinePathChroot(p1.data(), p2.data(), tmp);
-		sp.endAdd(l);
-		return {tmp,l};
-	}
 	//parses a cppsp page and generates code (to out) and string table (to st_out)
 	void doParse(const char* name, const char* in, int inLen, Stream& out, Stream& st_out,
 			vector<string>& c_opts) {
@@ -239,7 +128,8 @@ namespace cppsp
 						switch (nextopt) {
 							case 0:
 							{
-								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0) nextopt = 1;
+								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0)
+									nextopt = 1;
 								else if (l1 == 5 && memcmp(s1, "class", 5) == 0) nextopt = 2;
 								continue;
 							}
@@ -373,10 +263,14 @@ namespace cppsp
 		return NULL;
 	}
 	int tsCompare(struct timespec time1, struct timespec time2) {
-		if (time1.tv_sec < time2.tv_sec) return (-1); /* Less than. */
-		else if (time1.tv_sec > time2.tv_sec) return (1); /* Greater than. */
-		else if (time1.tv_nsec < time2.tv_nsec) return (-1); /* Less than. */
-		else if (time1.tv_nsec > time2.tv_nsec) return (1); /* Greater than. */
+		if (time1.tv_sec < time2.tv_sec)
+			return (-1); /* Less than. */
+		else if (time1.tv_sec > time2.tv_sec)
+			return (1); /* Greater than. */
+		else if (time1.tv_nsec < time2.tv_nsec)
+			return (-1); /* Less than. */
+		else if (time1.tv_nsec > time2.tv_nsec)
+			return (1); /* Greater than. */
 		else return (0); /* Equal. */
 	}
 
@@ -442,7 +336,7 @@ namespace cppsp
 			auto tmpcb = loadCB;
 			loadCB.clear();
 			for (int i = 0; i < (int) tmpcb.size(); i++)
-				tmpcb[i](nullptr, &exc);
+				if (tmpcb[i].cb) tmpcb[i].cb(nullptr, &exc);
 			return;
 		}
 		try {
@@ -453,14 +347,14 @@ namespace cppsp
 			auto tmpcb = loadCB;
 			loadCB.clear();
 			for (int i = 0; i < (int) tmpcb.size(); i++)
-				tmpcb[i](nullptr, &ex);
+				if (tmpcb[i].cb) tmpcb[i].cb(nullptr, &ex);
 			return;
 		}
 		deleteTmpfiles();
 		auto tmpcb = loadCB;
 		loadCB.clear();
 		for (int i = 0; i < (int) tmpcb.size(); i++)
-			tmpcb[i](this, nullptr);
+			if (tmpcb[i].cb) tmpcb[i].cb(this, nullptr);
 	}
 	void loadedPage::beginRead() {
 		if (ms.bufferSize - ms.bufferPos < 4096) ms.flushBuffer(4096);
@@ -551,7 +445,7 @@ namespace cppsp
 		initModule_t initModule = (initModule_t) dlsym(dlHandle, "initModule");
 		if (initModule != NULL) {
 			ModuleParams p;
-			p.server = srv;
+			p.server = manager->srv;
 			p.filePath = this->path;
 			initModule(p);
 			fprintf(stderr, "module %s loaded\n", path.c_str());
@@ -651,8 +545,8 @@ namespace cppsp
 		{
 			TO_C_STR(path.data(), path.length(), s1);
 			checkError(stat(s1, &st));
-			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException(
-					"requested path is a directory or socket");
+			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode))
+				throw ParserException("requested path is a directory or socket");
 		}
 		if (!loaded) return true;
 		timespec modif_cppsp = st.st_mtim;
@@ -664,20 +558,6 @@ namespace cppsp
 	staticPage::~staticPage() {
 		doUnload();
 	}
-
-	inline void loadedPage::_loadCB::operator()(loadedPage* This, exception* ex) {
-		if (ex == NULL) {
-			void* p;
-			try {
-				p = doCreate ? This->doCreate(alloc) : This->dlHandle;
-			} catch (exception& x) {
-				cb(nullptr, &x);
-				return;
-			}
-			cb(p, nullptr);
-		} else cb(nullptr, ex);
-	}
-
 	static inline void precheckPage(String path) {
 		struct stat st;
 		TO_C_STR(path.data(), path.length(), s1);
@@ -687,24 +567,24 @@ namespace cppsp
 	cppspManager::cppspManager() :
 			threadID(0) {
 	}
-	String cppspManager::loadStaticPage(String path) {
+	staticPage* cppspManager::loadStaticPage(String path) {
 		staticPage* lp1;
 		auto it = staticCache.find(path);
 		if (it == staticCache.end()) {
 			precheckPage(path);
 			lp1 = new staticPage();
 			lp1->path = path.toSTDString();
-			staticCache.insert( { sp.addString(path), lp1 });
+			staticCache.insert( { lp1->path, lp1 });
 		} else lp1 = (*it).second;
 		staticPage& lp(*lp1);
 		if (likely(lp.loaded & !shouldCheck(lp))) {
-			return lp.data;
+			return &lp;
 		}
 		if (lp.shouldReload()) {
 			lp.doUnload();
 		}
 		if (!lp.loaded) lp.doLoad();
-		return lp.data;
+		return &lp;
 	}
 	bool cppspManager::shouldCheck(loadedPage& p) {
 		timespec tmp1 = curTime;
@@ -723,150 +603,46 @@ namespace cppsp
 		} else return false;
 	}
 
-	void cppspManager::loadPage(Poll& p, String wd, String path, RGC::Allocator* a,
-			Delegate<void(Page*, exception* ex)> cb) {
+	AsyncValue<loadedPage*> cppspManager::loadPage(Poll& p, String wd, String path) {
 		loadedPage* lp1;
 		auto it = cache.find(path);
 		if (unlikely(int(it == cache.end()))) {
-			//check if file exists; if not, don't construct loadedPage object to avoid DoS
-			try {
-				precheckPage(path);
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-				return;
-			}
+			precheckPage(path);
 			lp1 = new loadedPage();
 			lp1->tmpDir = this->tmpDir;
 			lp1->path = path.toSTDString();
-			cache.insert( { sp.addString(path), lp1 });
+			lp1->manager = this;
+			cache.insert( { lp1->path, lp1 });
 		} else lp1 = (*it).second;
 		loadedPage& lp(*lp1);
 
 		int c = 0;
 		if (unlikely(lp1->compiling)) {
-			lp.loadCB.push_back( { a, Delegate<void(void*, exception* ex)>(cb), true });
-			return;
+			lp.loadCB.push_back( { nullptr });
+			return Future<loadedPage*>(&lp.loadCB[lp.loadCB.size() - 1].cb);
 		}
 		if (likely(lp1->loaded & !shouldCheck(*lp1))) {
-			xxx: Page* p;
-			try {
-				p = lp.doCreate(a);
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-			}
-			cb(p, nullptr);
-			return;
+			xxx: return lp1;
 		}
-		try {
-			c = lp.shouldCompile();
-			if (likely(lp1->loaded && c==0)) goto xxx;
-		} catch (exception& ex) {
-			cb(nullptr, &ex);
-			return;
-		}
+		c = lp.shouldCompile();
+		if (likely(lp1->loaded && c==0)) goto xxx;
 		if (c >= 2) {
-			lp.loadCB.push_back( { a, Delegate<void(void*, exception* ex)>(cb), true });
+			lp.loadCB.push_back( { nullptr });
 			try {
 				lp.doCompile(p, wd.toSTDString(), cxxopts);
 			} catch (exception& ex) {
 				lp.loadCB.resize(lp.loadCB.size() - 1);
-				cb(nullptr, &ex);
+				throw;
 			}
-			return;
+			if (lp.compiling) return Future<loadedPage*>(&lp.loadCB[lp.loadCB.size() - 1].cb);
+			return &lp;
 		}
-		try {
-			if (c >= 1) {
-				lp.doUnload();
-			}
-			lp.doLoad();
-			goto xxx;
-		} catch (exception& ex) {
-			cb(nullptr, &ex);
+		if (c >= 1) {
+			lp.doUnload();
 		}
+		lp.doLoad();
+		goto xxx;
 	}
-	void cppspManager::loadModule(Poll& p, Server* srv, String wd, String path,
-			Delegate<void(void*, exception* ex)> cb) {
-		loadedPage* lp1;
-		auto it = cache.find(path);
-		if (unlikely(int(it == cache.end()))) {
-			try {
-				precheckPage(path);
-			} catch (exception& ex) {
-				cb(nullptr, &ex);
-				return;
-			}
-			lp1 = new loadedPage();
-			lp1->tmpDir = this->tmpDir;
-			lp1->srv = srv;
-			lp1->path = path.toSTDString();
-			cache.insert( { sp.addString(path), lp1 });
-		} else lp1 = (*it).second;
-		loadedPage& lp(*lp1);
-
-		int c = 0;
-		if (unlikely(lp1->compiling)) {
-			lp.loadCB.push_back( { nullptr, cb, false });
-			return;
-		}
-		if (likely(lp1->loaded & !shouldCheck(*lp1))) {
-			xxx: cb(lp1->dlHandle, nullptr);
-			return;
-		}
-		try {
-			c = lp.shouldCompile();
-			if (likely(lp1->loaded && c==0)) goto xxx;
-		} catch (exception& ex) {
-			cb(nullptr, &ex);
-			return;
-		}
-		if (c >= 2) {
-			lp.loadCB.push_back( { nullptr, cb, false });
-			try {
-				lp.doCompile(p, wd.toSTDString(), cxxopts);
-			} catch (exception& ex) {
-				lp.loadCB.resize(lp.loadCB.size() - 1);
-				cb(nullptr, &ex);
-			}
-			return;
-		}
-		try {
-			if (c >= 1) {
-				lp.doUnload();
-			}
-			lp.doLoad();
-			goto xxx;
-		} catch (exception& ex) {
-			cb(nullptr, &ex);
-		}
-	}
-	String loadStaticPage(cppspManager* mgr, String path) {
-		return mgr->loadStaticPage(path);
-	}
-	vector<string>& CXXOpts(cppspManager* mgr) {
-		return mgr->cxxopts;
-	}
-	cppspManager* cppspManager_new() {
-		return new cppspManager();
-	}
-	void setThreadID(cppspManager* mgr, int tid) {
-		mgr->threadID = tid;
-	}
-	void loadPage(cppspManager* mgr, CP::Poll& p, String wd, String path, RGC::Allocator* a,
-			Delegate<void(Page*, exception* ex)> cb) {
-		return mgr->loadPage(p, wd, path, a, cb);
-	}
-	void cppspManager_delete(cppspManager* mgr) {
-		delete mgr;
-	}
-	void updateTime(cppspManager* mgr) {
-		clock_gettime(CLOCK_MONOTONIC, &mgr->curTime);
-	}
-	
-	void loadModule(cppspManager* mgr, CP::Poll& p, Server* srv, String wd, String path,
-			Delegate<void(void*, exception* ex)> cb) {
-		mgr->loadModule(p, srv, wd, path, cb);
-	}
-	
 	void handleError(exception* ex, cppsp::Response& resp, String path) {
 		resp.clear();
 		resp.statusCode = 500;

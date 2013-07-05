@@ -25,6 +25,7 @@
 #include <string>
 namespace cppsp
 {
+	typedef CP::String String;
 #ifndef __CPPSP_TOLOWER
 #define __CPPSP_TOLOWER
 	static inline char tolower(char c) {
@@ -100,6 +101,41 @@ namespace cppsp
 	}
 
 	int ci_compare(CP::String s1, CP::String s2);
+
+	/**
+	 Combine two paths. Result is stored in buf. Does not write a null byte.
+	 The memory block pointed to by buf must be at least l1 + l2 bytes.
+	 @return the length of the string written to buf
+	 */
+	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf);
+	/**
+	 Combine two paths. Result is stored in buf. Does not write a null byte.
+	 The memory block pointed to by buf must be at least strlen(p1) + strlen(p2) bytes.
+	 @return the length of the string written to buf
+	 */
+	int combinePath(const char* p1, const char* p2, char* buf);
+	/**
+	 Combine two paths securely. The resulting path is guaranteed to be under p1. (The user can not use ".." to leave the root directory)
+	 The memory block pointed to by buf must be at least l1 + l2 bytes.
+	 @return the length of the string written to buf
+	 */
+	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf);
+	/**
+	 Combine two paths securely. The resulting path is guaranteed to be under p1. (The user can not use ".." to leave the root directory)
+	 The memory block pointed to by buf must be at least strlen(p1) + strlen(p2) bytes.
+	 @return the length of the string written to buf
+	 */
+	int combinePathChroot(const char* p1, const char* p2, char* buf);
+	/**
+	 Combine two paths. Result is allocated from sp.
+	 @return the resulting path
+	 */
+	String combinePath(String p1, String p2, CP::StringPool& sp);
+	/**
+	 Combine two paths securely. The resulting path is guaranteed to be under p1. (The user can not use ".." to leave the root directory)
+	 @return the resulting path
+	 */
+	String combinePathChroot(String p1, String p2, CP::StringPool& sp);
 }
 
 #endif /* URLPARSER_H_ */

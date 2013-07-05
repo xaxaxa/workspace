@@ -49,8 +49,11 @@ struct workerThread
 	};
 	int threadid;
 	int cpu;	//id of cpu to pin to, or -1
-	workerThread(Socket& sock): srv(rootDir.c_str()),
+	workerThread(Socket& sock): srv(NULL,rootDir.c_str()),
 		listenSock(sock),cpu(-1){}
+	void setPoll(Poll& p) {
+		srv.p=&p;
+	}
 };
 class handler1: public RGC::Allocator
 {
@@ -79,6 +82,7 @@ void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
 	Poll p;
+	thr.setPoll(p);
 	if(thr.cpu>=0) pinToCPU(thr.cpu);
 	/*
 	p.add(thr->efd);
@@ -158,7 +162,9 @@ void* thread1(void* v) {
 	for(int ii=0;ii<(int)thr.modules.size();ii++) {
 		moduleCB[ii].s=thr.modules[ii];
 		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
-		thr.srv.loadModule(p,thr.modules[ii],&moduleCB[ii]);
+		auto tmp=thr.srv.loadModule(p,thr.modules[ii]);
+		if(tmp) moduleCB[ii](tmp(),NULL);
+		else tmp.wait(&moduleCB[ii]);
 	}
 	if(thr.modules.size()==0) thr.listenSock->repeatAcceptHandle(&cb);
 	p.loop();
@@ -281,7 +287,7 @@ int main(int argc, char** argv) {
 		workerThread& tmp=*(new (th+i) workerThread(*newsock));
 		tmp.cpu=(setAffinity?cpu:-1);
 		newsock->release();
-		CXXOpts(tmp.srv.mgr)=cxxopts;
+		tmp.srv.mgr->cxxopts=cxxopts;
 		tmp.srv.mgr->tmpDir=tmpDir;
 		tmp.modules=modules;
 		tmp.threadid=i+1;

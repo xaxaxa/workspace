@@ -262,5 +262,118 @@ namespace cppsp
 		}
 		return 0;
 	}
+
+	//inline-able memcpy() for copying SHORT STRINGS ONLY
+	static inline void memcpy2(void* dst, const void* src, int len) {
+		for (int i = 0; i < len; i++)
+			((char*) dst)[i] = ((const char*) src)[i];
+	}
+	// "/"		+ "aaaaa"	=> "/aaaaa"
+	// "/asdf/"	+ "zzz"		=> "/asdf/zzz"
+	// "/asdf/"	+ "zzz/"		=> "/asdf/zzz/"
+	// "/asdf"	+ "zzz"		=> "/zzz"
+	// "/asdf/"	+ "../zzz"	=> "/zzz"
+	// "/asdf/"	+ "a/../x"	=> "/asdf/x"
+	// "/asdf/"	+ "/zzz"		=> "/zzz"
+	//the size of buf should be at least strlen(p1)+strlen(p2)
+	//returns the length of the string written to buf; does NOT write null byte
+	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf) {
+		if (l2 > 0 && p2[0] == '/') {
+			memcpy2(buf, p2, l2);
+			return l2;
+		}
+		int i = l1;
+		memcpy2(buf, p1, i);
+		if (l2 > 0) {
+			i--;
+			while (i >= 0 && buf[i] != '/')
+				i--;
+			if (i < 0) i = 0;
+			split spl(p2, l2, '/');
+			while (spl.read()) {
+				const char* s = spl.value.data();
+				int l = spl.value.length();
+				if (l == 2 && *(const uint16_t*) s == *(const uint16_t*) "..") {
+					i--;
+					while (i >= 0 && buf[i] != '/')
+						i--;
+					if (i < 0) i = 0;
+				} else if (l == 1 && *s == '.') {
+					buf[i] = '/';
+					i++;
+				} else {
+					//while(i>=0 && buf[i]!='/')i--;
+					buf[i] = '/';
+					i++;
+					memcpy2(buf + i, s, l);
+					i += l;
+				}
+			}
+			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
+		}
+		if (i < 0) i = 0;
+		return i;
+	}
+	int combinePath(const char* p1, const char* p2, char* buf) {
+		return combinePath(p1, strlen(p1), p2, strlen(p2), buf);
+	}
+	//p1 is the "root" directory
+	//guarantees that the resulting path won't be outside of p1
+	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf) {
+		int i = l1;
+		memcpy2(buf, p1, i);
+		static const uint16_t parentDir = *(const uint16_t*) "..";
+		if (l2 > 0) {
+			bool first(true);
+			split spl(p2, l2, '/');
+			while (spl.read()) {
+				const char* s = spl.value.data();
+				int l = spl.value.length();
+				if (first) {
+					first = false;
+					if (l == 0) continue;
+				}
+				if (l == 2 && *(const uint16_t*) s == parentDir) {
+					i--;
+					while (i >= 0 && buf[i] != '/')
+						i--;
+					if (i < l1) i = l1;
+				} else if (l == 1 && *s == '.') {
+					if (!(i > 0 && buf[i - 1] == '/')) {
+						buf[i] = '/';
+						i++;
+					}
+				} else {
+					//while(i>=0 && buf[i]!='/')i--;
+					if (!(i > 0 && buf[i - 1] == '/')) {
+						buf[i] = '/';
+						i++;
+					}
+					memcpy2(buf + i, s, l);
+					i += l;
+				}
+			}
+			//if (l2 > 0 && i > 0 && p2[l2 - 1] != '/' && buf[i - 1] == '/')
+		}
+		if (i < l1) i = l1;
+		return i;
+	}
+	int combinePathChroot(const char* p1, const char* p2, char* buf) {
+		return combinePathChroot(p1, strlen(p1), p2, strlen(p2), buf);
+	}
+
+	String combinePath(String p1, String p2, StringPool& sp) {
+		char* tmp = sp.beginAdd(p1.length() + p2.length());
+		int l = combinePath(p1.data(), p2.data(), tmp);
+		sp.endAdd(l);
+		return {tmp,l};
+	}
+	String combinePathChroot(String p1, String p2, StringPool& sp) {
+		char* tmp = sp.beginAdd(p1.length() + p2.length());
+		int l = combinePathChroot(p1.data(), p2.data(), tmp);
+		sp.endAdd(l);
+		return {tmp,l};
+	}
+
 }
 

@@ -81,56 +81,12 @@ namespace cppspServer
 			rpos=(rpos+1)%(length*2);
 		}
 	};
-	class Server: public cppsp::Server {
+	class Server: public cppsp::DefaultServer {
 	public:
-		cppspManager* mgr;
-		String root;
-		Server(String root):mgr(cppspManager_new()),root(root) {
-		}
-		~Server() {
-			cppspManager_delete(mgr);
-		}
-		
-		void handleStaticRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
-		void handleDynamicRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) override;
-		
-		void loadPage(CP::Poll& p, String path, RGC::Allocator& a,
-			Delegate<void(Page*, exception* ex)> cb) override {
-			string tmp = mapPath(path.toSTDString());
-			cppsp::loadPage(mgr, p, rootDir(), {tmp.data(), (int) tmp.length()}, &a, cb);
-		}
-		void loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a,
-				Delegate<void(Page*, exception* ex)> cb) override {
-			cppsp::loadPage(mgr, p, rootDir(), path, &a, cb);
-		}
-		void loadModule(CP::Poll& p, String path, 
-			Delegate<void(void*, exception* ex)> cb) override {
-			string tmp = mapPath(path.toSTDString());
-			cppsp::loadModule(mgr, p, this, rootDir(), {tmp.data(), (int) tmp.length()}, cb);
-		}
-		void loadModuleFromFile(CP::Poll& p, String path, 
-				Delegate<void(void*, exception* ex)> cb) override {
-			cppsp::loadModule(mgr, p, this, rootDir(), path, cb);
-		}
-		String loadStaticPage(String path) override {
-			string tmp = mapPath(path.toSTDString());
-			return cppsp::loadStaticPage(mgr,{tmp.data(), (int) tmp.length()});
-		}
-		String loadStaticPageFromFile(String path) override {
-			return cppsp::loadStaticPage(mgr,path);
-		}
-		String rootDir() override {
-			return root;
-		}
-		cppspManager* manager() override {
-			return mgr;
-		}
-		//this function needs to be called periodically to check for file modifications
-		//otherwise auto re-compile will not work
-		//generally call it every 2 seconds
-		void updateTime() {
-			cppsp::updateTime(mgr);
-		}
+		Poll* p;
+		Server(Poll* p, string root):DefaultServer(root),p(p) {}
+		AsyncValue<Handler> routeStaticRequestFromFile(String path) override;
+		AsyncValue<Handler> routeDynamicRequestFromFile(String path) override;
 	};
 	class Request:public cppsp::CPollRequest
 	{
@@ -154,7 +110,6 @@ namespace cppspServer
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t* buf;
-		String path;
 		iovec iov[2];
 		bool keepAlive;
 		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
@@ -175,13 +130,12 @@ namespace cppspServer
 			else keepAlive=true;
 			resp.headers.insert({"Connection", keepAlive?"keep-alive":"close"});
 			
-			thr.handleRequest(req,resp,{&handler::finalize,this});
-		}
-		void setPath(String p) {
-			path.d=sp.beginAdd(p.length()+thr.root.length());
-			path.len=cppsp::combinePathChroot(thr.root.data(),thr.root.length(),
-				p.data(),p.length(),path.data());
-			sp.endAdd(path.len);
+			try {
+				thr.handleRequest(req,resp,{&handler::finalize,this});
+			} catch(exception& ex) {
+				cppsp::handleError(&ex,resp,req.path);
+				resp.flush( { &handler::flushCB, this });
+			}
 		}
 		static inline int itoa(int i, char* b) {
 			static char const digit[] = "0123456789";
@@ -195,10 +149,9 @@ namespace cppspServer
 			} while (i);
 			return l;
 		}
-		void handleStatic(String _path) {
+		void handleStatic(staticPage* Sp) {
 			try {
-				path=_path;
-				String data=cppsp::loadStaticPage(thr.mgr,path);
+				String data=Sp->data;
 				int bufferL = resp.buffer.length();
 				{
 					char* tmps = sp.beginAdd(16);
@@ -212,34 +165,19 @@ namespace cppspServer
 				iov[1]= {data.data(), (size_t)data.length()};
 				resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
 			} catch(exception& ex) {
-				cppsp::handleError(&ex,resp,path);
+				cppsp::handleError(&ex,resp,Sp->path);
 				resp.flush( { &handler::flushCB, this });
 			}
 		}
-		void handleDynamic(String _path) {
-			path=_path;
-			cppsp::loadPage(thr.mgr,p,thr.root,path,&sp,{&handler::loadCB,this});
-		}
-		void loadCB(Page* p, exception* ex) {
-			//printf("loadCB()\n");
-			if(ex!=NULL) {
-				cppsp::handleError(ex,resp,path);
-				resp.flush( { &handler::flushCB, this });
-				goto doFinish;
-			}
-			{
-				this->page=p;
-				p->sp=&sp;
-				//this->p=p;
-				//p->filePath=path;
-				p->request=&req;
-				p->response=&resp;
-				p->poll=&this->p;
-				p->server=&thr;
-				p->handleRequest({&handler::handleRequestCB,this});
-				return;
-			}
-		doFinish:;
+		void handleDynamic(loadedPage* lp) {
+			Page* p=lp->doCreate(&sp);
+			this->page=p;
+			p->sp=&sp;
+			p->request=&req;
+			p->response=&resp;
+			p->poll=&this->p;
+			p->server=&thr;
+			p->handleRequest({&handler::handleRequestCB,this});
 		}
 		void sockReadCB(int r) {
 			if(r<=0) {
@@ -283,12 +221,33 @@ namespace cppspServer
 			s.release();
 		}
 	};
-	void Server::handleStaticRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
+	void staticHandler(staticPage* v,cppsp::Request& req, Response& resp, Delegate<void()> cb) {
 		cppspServer::Request& r=static_cast<cppspServer::Request&>(req);
-		(*(handler*)r._handler).handleStatic(path);
+		(*(handler*)r._handler).handleStatic(v);
 	}
-	void Server::handleDynamicRequestFromFile(String path, cppsp::Request& req, Response& resp, Delegate<void()> cb) {
+	void dynamicHandler(loadedPage* v,cppsp::Request& req, Response& resp, Delegate<void()> cb) {
 		cppspServer::Request& r=static_cast<cppspServer::Request&>(req);
-		(*(handler*)r._handler).handleDynamic(path);
+		(*(handler*)r._handler).handleDynamic(v);
+	}
+	
+	AsyncValue<Handler> Server::routeStaticRequestFromFile(String path) {
+		staticPage* sp=mgr->loadStaticPage(path);
+		return Handler(&staticHandler,sp);
+	}
+	struct requestRouterState
+	{
+		Delegate<void(Handler,exception*)> cb;
+		void operator()(loadedPage* lp, exception* ex) {
+			if(lp==NULL)cb(nullptr,ex);
+			else cb(Handler(&dynamicHandler,lp),nullptr);
+			delete this;
+		}
+	};
+	AsyncValue<Handler> Server::routeDynamicRequestFromFile(String path) {
+		auto lp=mgr->loadPage(*p,root,path);
+		if(lp) return Handler(&dynamicHandler,lp());
+		requestRouterState* st=new requestRouterState();
+		lp.wait(st);
+		return Future<Handler>(&st->cb);
 	}
 }
