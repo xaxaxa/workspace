@@ -24,6 +24,20 @@
 #include <string>
 #include <stdexcept>
 #include <rgc.H>
+#include <delegate.H>
+#include <string.h>
+
+#ifndef DEPRECATED
+#ifdef __GNUC__
+#define DEPRECATED(func) func __attribute__ ((deprecated))
+#elif defined(_MSC_VER)
+#define DEPRECATED(func) __declspec(deprecated) func
+#else
+#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
+#define DEPRECATED(func) func
+#endif
+#endif
+
 using namespace std;
 namespace CP
 {
@@ -70,9 +84,12 @@ namespace CP
 				d((char*) mb.data()), len(mb.length()) {
 		}
 		int compare(const String& other) const {
-			if (len < other.len) return -1;
-			else if (len > other.len) return 1;
-			else if (len == 0) return 0;
+			if (len < other.len)
+				return -1;
+			else if (len > other.len)
+				return 1;
+			else if (len == 0)
+				return 0;
 			else return memcmp(d, other.d, len);
 		}
 		inline bool operator<(const String& other) const {
@@ -103,16 +120,16 @@ namespace CP
 			return std::string(d, len);
 		}
 		inline String subString(int i, int l) {
-			if (i < 0 || i + l > this->len || l < 0) throw range_error(
-					"String::subString() out of range");
+			if (i < 0 || i + l > this->len || l < 0)
+				throw range_error("String::subString() out of range");
 			return String(d + i, l);
 		}
 		inline String subString(int i) {
 			return subString(i, len - i);
 		}
 		inline void clip(int index, int length) {
-			if (index < 0 || index + length > this->len || length < 0) throw range_error(
-					"String::clip() out of range");
+			if (index < 0 || index + length > this->len || length < 0)
+				throw range_error("String::clip() out of range");
 			d += index;
 			len = length;
 		}
@@ -170,6 +187,140 @@ namespace CP
 	CP::String MemoryBuffer::String() {
 		return {(char*)data(),length()};
 	}
+	struct Undefined
+	{
+
+	};
+	static Undefined undefined;
+	template<class T> class Optional
+	{
+	public:
+		T value;
+		bool exists;
+		T& operator()() {
+			return value;
+		}
+		T& operator*() {
+			return value;
+		}
+		T* operator->() {
+			return &value;
+		}
+		operator bool() {
+			return exists;
+		}
+		bool operator==(Undefined) {
+			return !exists;
+		}
+		Optional<T>& operator=(const T& other) {
+			value = other;
+			return *this;
+		}
+		Optional<T>& operator=(const Optional<T>& other) {
+			if ((exists = other.exists)) value = other.value;
+			return *this;
+		}
+		Optional<T>& operator=(Undefined) {
+			exists = false;
+			return *this;
+		}
+		Optional(const T& other) :
+				value(other) {
+			exists = true;
+		}
+		Optional(const Optional<T>& other) :
+				value(other.value), exists(other.exists) {
+		}
+		struct _placeholder1
+		{
+		};
+		template<class ... A> Optional(_placeholder1, A&&... a) :
+				value(std::forward<A>(a)...), exists(true) {
+
+		}
+		template<class ... A>
+		static Optional<T> create(A&&... a) {
+			return Optional<T>(_placeholder1(), std::forward<A>(a)...);
+		}
+		Optional() :
+				exists(false) {
+		}
+		Optional(const Undefined& u) :
+				exists(false) {
+		}
+	};
+	template<class T>
+	struct Future
+	{
+		Delegate<void(T, exception*)>* cbAddr;
+		Future(Delegate<void(T, exception*)>* cbAddr) :
+				cbAddr(cbAddr) {
+		}
+	};
+	template<class T> class AsyncValue
+	{
+	public:
+		T value;
+		Delegate<void(T, exception*)>* cbAddr;
+		bool async;
+		T& operator()() {
+			return value;
+		}
+		T& operator*() {
+			return value;
+		}
+		T* operator->() {
+			return &value;
+		}
+		operator bool() {
+			return !async;
+		}
+		bool operator==(Undefined) {
+			return async;
+		}
+		AsyncValue<T>& operator=(const T& other) {
+			value = other;
+			return *this;
+		}
+		AsyncValue<T>& operator=(const AsyncValue<T>& other) {
+			if (!(async = other.async)) value = other.value;
+			return *this;
+		}
+		AsyncValue<T>& operator=(Undefined) {
+			async = true;
+			return *this;
+		}
+		AsyncValue(const T& other) :
+				value(other) {
+			async = false;
+		}
+		AsyncValue(const AsyncValue<T>& other) :
+				value(other.value), async(other.async) {
+		}
+		AsyncValue(Future<T> f) :
+				cbAddr(f.cbAddr), async(true) {
+		}
+		struct _placeholder1
+		{
+		};
+		template<class ... A> AsyncValue(_placeholder1, A&&... a) :
+				value(std::forward<A>(a)...), async(false) {
+
+		}
+		template<class ... A>
+		static AsyncValue<T> create(A&&... a) {
+			return AsyncValue<T>(_placeholder1(), std::forward<A>(a)...);
+		}
+		AsyncValue() :
+				async(true) {
+		}
+		AsyncValue(const Undefined& u) :
+				async(true) {
+		}
+		void wait(Delegate<void(T, exception*)> cb) {
+			*cbAddr = cb;
+		}
+	};
 }
 
 #endif /* BASICTYPES_H_ */
