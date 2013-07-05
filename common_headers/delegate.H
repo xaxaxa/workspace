@@ -30,6 +30,9 @@ struct GenericDelegate
 	void* operator=(void* func) {
 		return this->func=func;
 	}
+	operator bool() {
+		return func!=NULL;
+	}
 };
 
 template<class SIGNATURE> struct DelegateBase;
@@ -68,7 +71,7 @@ struct Delegate<R(P...)>:public DelegateBase<R(P...)>
 	Delegate() {
 		this->func=NULL;
 	}
-	Delegate(R (*func)(void* data, P... p...), void* data): DelegateBase<R(P...)>(func,data) {}
+	//Delegate(R (*func)(void* data, P... p...), void* data): DelegateBase<R(P...)>(func,data) {}
 	template<class X>Delegate(R (*func)(X*,P...), X* th) {
 		this->func=(void*)(R(*)(void*,P...))func;
 		this->data=th;
@@ -118,7 +121,7 @@ public:
 		item* next;
 		template<class ... P2>
 		inline R operator()(P2 && ...p) const {
-			func(std::forward<P2>(p)...);
+			return func(std::forward<P2>(p)...);
 		}
 	};
 	item* last = NULL;
@@ -138,7 +141,7 @@ public:
 		delete it;
 	}
 	inline R operator()(P... p) const {
-		if (last != NULL) (*last)(std::forward<P>(p)...);
+		return (*last)(std::forward<P>(p)...);
 	}
 };
 #endif
