@@ -1187,7 +1187,7 @@ namespace CP
 		void _queueHandle(Handle& h, Events new_e);
 		void _applyHandle(Handle& h, Events old_e);
 	};
-	typedef EPoll Poll;
+	typedef NewEPoll Poll;
 	class StandardStream: public Stream
 	{
 	public:
