@@ -382,7 +382,7 @@ namespace cppsp
 
 	DefaultServer::DefaultServer(string root) :
 			mgr(new cppspManager()), root(root) {
-
+		mgr->srv = this;
 	}
 	DefaultServer::~DefaultServer() {
 		delete mgr;

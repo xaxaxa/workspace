@@ -5,28 +5,28 @@
 #define TO_C_STR(in,inLen,out) char out[inLen+1];\
 		memcpy(out,in,inLen);\
 		out[inLen]=0;
-DelegateChain<void(Request&, Response&, Delegate<void()>)>::item* it;
+DelegateChain<AsyncValue<Handler>(String)>::item* it;
 Server* server;
 String filePath;
-void handleRequest(void*, Request& req, Response& resp, Delegate<void()> cb) {
+AsyncValue<Handler> routeRequest(void*, String path) {
 	struct stat st;
-	String s=server->mapPath(req.path,*req.sp);
-	TO_C_STR(s.data(),s.length(),tmp);
-	if(::stat(tmp,&st)>=0 && S_ISDIR(st.st_mode)) {
+	string s=server->mapPath(path.toSTDString());
+	if(::stat(s.c_str(),&st)>=0 && S_ISDIR(st.st_mode)) {
 		//redirect to self
-		server->handleDynamicRequestFromFile(filePath,req,resp,cb);
-		return;
+		return server->routeDynamicRequestFromFile(filePath);
 	}
-	(*it->prev)(req,resp,cb);
+	return (*it->prev)(path);
 }
 extern "C" void initModule(ModuleParams& p) {
 	server=p.server;
 	filePath=p.filePath;
-	it=server->handleRequest.attach(&handleRequest);
+	it=server->routeRequest.attach(&routeRequest);
 }
 extern "C" void deinitModule() {
-	server->handleRequest.detach(it);
+	server->routeRequest.detach(it);
 }
+%><%
+string path=server->mapPath(request->path.toSTDString());
 %>
 <!DOCTYPE HTML>
 <html>
@@ -46,7 +46,6 @@ extern "C" void deinitModule() {
 	</tr>
 	
 <%
-string path=server->mapPath(request->path.toSTDString());
 vector<string> list;
 auto tmp=[&](const char* name) {
 	list.push_back(name);
@@ -57,8 +56,8 @@ for(int i=0;i<list.size();i++) {
 	string name=list[i];
 	struct stat st;
 	char p[path.length()+name.length()+1];
-	p[combinePath(path.c_str(),name.c_str(),p)]=0;
-	if(stat(p,&st)<0) return;
+	p[combinePathChroot(path.c_str(),name.c_str(),p)]=0;
+	if(stat(p,&st)<0) continue;
 	time_t rawtime=st.st_mtime;
 	struct tm * timeinfo;
 	char buffer[256];
@@ -73,9 +72,6 @@ for(int i=0;i<list.size();i++) {
 		</td>
 		<td align="right"><%=buffer%></td>
 		<td align="right"><%=(int64_t)st.st_size%></td>
-	</tr>
-	<tr>
-		<td></td>
 	</tr>
 	<%
 }

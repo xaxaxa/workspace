@@ -1,16 +1,17 @@
 <%#
 //example cppsp module that causes all pages to be served as static pages
 
-DelegateChain<void(Request&, Response&, Delegate<void()>)>::item* it;
+DelegateChain<AsyncValue<Handler>(String)>::item* it;
 Server* server;
-void handleRequest(void*, Request& req, Response& resp, Delegate<void()> cb) {
-	server->handleStaticRequest(req.path,req,resp,cb);
+AsyncValue<Handler> routeRequest(void*, String path) {
+	return server->routeStaticRequest(path);
 }
 extern "C" void initModule(ModuleParams& p) {
 	server=p.server;
-	it=server->handleRequest.attach(&handleRequest);
+	printf("server=%p\n",server);
+	it=server->routeRequest.attach(&routeRequest);
 }
 extern "C" void deinitModule() {
-	server->handleRequest.detach(it);
+	server->routeRequest.detach(it);
 }
 %>
