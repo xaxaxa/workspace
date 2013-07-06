@@ -27,6 +27,7 @@
 #include <string>
 #include "stringutils.H"
 #include "headercontainer.H"
+#define CPPSP_VERSION 20130705
 using namespace std;
 using CP::String;
 using CP::AsyncValue;
