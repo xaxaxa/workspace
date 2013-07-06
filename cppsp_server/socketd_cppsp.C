@@ -68,8 +68,8 @@ int main(int argc, char** argv) {
 				}
 			});
 	
-	cppspServer::Server srv(rootDir.c_str());
-	auto& v=CXXOpts(srv.mgr);
+	cppspServer::Server srv(&p,rootDir.c_str());
+	auto& v=srv.mgr->cxxopts;
 	v.insert(v.end(),cxxopts.begin(),cxxopts.end());
 	cxxopts.clear();
 	
@@ -116,7 +116,9 @@ int main(int argc, char** argv) {
 	for(int ii=0;ii<(int)modules.size();ii++) {
 		moduleCB[ii].s=modules[ii];
 		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
-		srv.loadModule(p,modules[ii],&moduleCB[ii]);
+		auto res=srv.loadModule(p,modules[ii]);
+		if(res) moduleCB[ii](res(),nullptr);
+		else res.wait(&moduleCB[ii]);
 	}
 	if(modules.size()==0) new socketd_client(p,&cb);
 	
