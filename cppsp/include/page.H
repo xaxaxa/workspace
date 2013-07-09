@@ -230,8 +230,12 @@ namespace cppsp
 		virtual void handleDynamicRequestFromFile(String path, Request& req, Response& resp,
 				Delegate<void()> cb);
 		/**
-		 Default request handler. Calls "routeRequest" to obtain the handler for the specific uri, and caches the
+		 Calls routeRequest() to obtain the handler for the specific uri, and caches the
 		 routing decision.
+		 */
+		void handleRoutedRequest(String path, Request& req, Response& resp, Delegate<void()> cb);
+		/**
+		 Default request handler. Calls handleRoutedRequest() with req.path as the path.
 		 */
 		void defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb);
 

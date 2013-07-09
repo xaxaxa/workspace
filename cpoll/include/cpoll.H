@@ -1120,8 +1120,9 @@ namespace CP
 	//XXX: AIO support in the linux kernel is incomplete, and
 	//	has many serious limitations such as:
 	//	- files have to be opened as O_DIRECT
-	//	- O_DIRECT implies that all I/O requests have to
-	//		be block-aligned
+	//	- all I/O requests have to be block-aligned
+	// - the page cache is bypassed
+	// - io_submit may block
 	//Because of the said reasons, AIO will not be implemented
 	//for now
 	/*class AIO: public SignalFD

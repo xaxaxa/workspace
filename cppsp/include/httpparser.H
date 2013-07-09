@@ -25,7 +25,7 @@
 #include <cpoll/cpoll.H>
 #include "headercontainer.H"
 
-#define CPPSP_MAXHEADERS 32
+#define CPPSP_MAXHEADERS 128
 namespace cppsp
 {
 	using namespace CP;

@@ -349,8 +349,9 @@ namespace cppsp
 					resp.sp->New<requestHandlerState>(requestHandlerState { nullptr, &req, &resp, cb }));
 		}
 	}
-	void Server::defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
-		auto it = routeCache.find(req.path);
+	void Server::handleRoutedRequest(String path, Request& req, Response& resp,
+			Delegate<void()> cb) {
+		auto it = routeCache.find(path);
 		timespec tmp1 = curTime;
 		tmp1.tv_sec -= routeCacheDuration;
 		if (likely(it != routeCache.end() && tsCompare((*it).second->lastUpdate, tmp1) > 0)) {
@@ -359,11 +360,14 @@ namespace cppsp
 		}
 		//printf("re-routing %s\n", req.path.toSTDString().c_str());
 		auto* st = resp.sp->New<requestHandlerState>(
-				requestHandlerState { this, &req, &resp, cb, req.path });
-		auto h = routeRequest(req.path);
+				requestHandlerState { this, &req, &resp, cb, path });
+		auto h = routeRequest(path);
 		if (h)
 			(*st)(h(), nullptr);
 		else h.wait(st);
+	}
+	void Server::defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
+		handleRoutedRequest(req.path, req, resp, cb);
 	}
 	AsyncValue<Handler> Server::defaultRouteRequest(String path) {
 		if (path.length() > 6 && memcmp(path.data() + (path.length() - 6), ".cppsp", 6) == 0)
@@ -376,6 +380,7 @@ namespace cppsp
 		int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
 		return String(tmp, l);
 	}
+	
 	void Server::updateTime() {
 		clock_gettime(CLOCK_MONOTONIC, &curTime);
 	}
