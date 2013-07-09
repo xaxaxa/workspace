@@ -1073,7 +1073,7 @@ namespace CP
 				EventHandlerData& ed = eventData[i];
 				if (ed.state == EventHandlerData::States::invalid) continue;
 				if (ed.opcb != nullptr) {
-					ed.opcb(e, ed, evtd, (confident & e) == e);
+					if (ed.opcb(e, ed, evtd, (confident & e) == e)) ret |= e;
 					if (d) break;
 					continue;
 				}
@@ -1082,9 +1082,10 @@ namespace CP
 						EventHandlerData::States::invalid;
 				try {
 					if (doOperation(e, ed, evtd, oldstate, (confident & e) == e)) {
-						if (d) break;
 						ret |= e;
+						if (d) break;
 					} else {
+						if (d) break;
 						ed.state = oldstate;
 					}
 				} catch (const CancelException& ex) {
@@ -2031,35 +2032,35 @@ namespace CP
 		evt = evt & (event_t) h->getEvents();
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-		Events old_e = h->getEvents();
 		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
 		if (_dispatchingDeleted) goto aaa;
-		Events new_e;
+		event_t failed;
+		failed = 0;
 		while (true) {
-			new_e = h->getEvents();
-			events = (events | (old_e ^ new_e)) & new_e;
-			old_e = new_e;
+			events = Events((event_t) h->getEvents() & ~failed);
 			if (events == Events::none) break;
-			events = h->dispatchMultiple(events, Events::none, evtd);
+			event_t res = (event_t) h->dispatchMultiple(events, Events::none, evtd);
+			failed |= event_t(events) & ~res;
 			if (_dispatchingDeleted) goto aaa;
 		}
 		//_applyHandle(*h, old_e);
 		aaa: _dispatchingHandle = NULL;
 	}
 	void NewEPoll::_drainHandle(Handle& h, Events new_e) {
-		Events old_e = h.getEvents();
 		if (new_e != Events::none) {
 			EventData evtd;
 			evtd.hungUp = evtd.error = false;
 			_dispatchingDeleted = false;
 			_dispatchingHandle = &h;
-			do {
-				new_e = h.dispatchMultiple(new_e, Events::none, evtd);
+			event_t failed;
+			failed = 0;
+			while (true) {
+				Events events = Events((event_t) h.getEvents() & ~failed);
+				if (events == Events::none) break;
+				event_t res = (event_t) h.dispatchMultiple(events, Events::none, evtd);
+				failed |= event_t(events) & ~res;
 				if (_dispatchingDeleted) goto out;
-				Events newest_e = h.getEvents();
-				new_e = (new_e | (old_e ^ newest_e)) & newest_e;
-				old_e = newest_e;
-			} while (new_e != Events::none);
+			}
 		}
 		out: _dispatchingHandle = NULL;
 	}
