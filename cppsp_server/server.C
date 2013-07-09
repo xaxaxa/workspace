@@ -103,7 +103,6 @@ namespace cppspServer
 		Server& thr;
 		CP::Poll& p;
 		Socket& s;
-		Page* page;
 		StringPool sp;
 		Request req;
 		cppsp::Response resp;
@@ -133,8 +132,7 @@ namespace cppspServer
 			try {
 				thr.handleRequest(req,resp,{&handler::finalize,this});
 			} catch(exception& ex) {
-				cppsp::handleError(&ex,resp,req.path);
-				resp.flush( { &handler::flushCB, this });
+				thr.handleError(req,resp,ex,{&handler::finalize,this});
 			}
 		}
 		static inline int itoa(int i, char* b) {
@@ -171,7 +169,6 @@ namespace cppspServer
 		}
 		void handleDynamic(loadedPage* lp) {
 			Page* p=lp->doCreate(&sp);
-			this->page=p;
 			p->sp=&sp;
 			p->request=&req;
 			p->response=&resp;
@@ -194,8 +191,6 @@ namespace cppspServer
 			finalize();
 		}
 		void handleRequestCB() {
-			page->destruct();
-			page=nullptr;
 			//s->shutdown(SHUT_WR);
 			//release();
 			//s->repeatRead(buf,sizeof(buf),{&handler::sockReadCB,this});

@@ -66,6 +66,10 @@ namespace cppsp
 		 */
 		StringMap form;
 		/**
+		 can be used to pass custom parameters into a page (from a request router, etc)
+		 */
+		void* customParams;
+		/**
 		 HTTP method (GET, POST, etc).
 		 */
 		String method;
@@ -199,6 +203,8 @@ namespace cppsp
 	class Server: public RGC::Object
 	{
 	public:
+		typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
+		typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
 		timespec curTime { 0, 0 };
 		Server();
 
@@ -206,7 +212,11 @@ namespace cppsp
 		 The handle request callback. It is called for every request right after reading in all the request data and instantiating the Request and Response objects.
 		 You can override the behavior of the web server by attaching (from within a cppsp module). See the example .cppsm modules in /www (included with the cppsp source).
 		 */
-		DelegateChain<void(Request&, Response&, Delegate<void()>)> handleRequest;
+		HandleRequestChain handleRequest;
+		/**
+		 The error handler callback. Called when an exception occurs during the execution of a request handler, request router, or page.
+		 */
+		HandleErrorChain handleError;
 		/**
 		 Load static file from "path" and serve it to the specified response. path is relative to server root.
 		 */
@@ -238,6 +248,7 @@ namespace cppsp
 		 Default request handler. Calls handleRoutedRequest() with req.path as the path.
 		 */
 		void defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb);
+		void defaultHandleError(Request& req, Response& resp, exception& ex, Delegate<void()> cb);
 
 		/*
 		 Called by the default request handler to translate a request uri to a handler delegate.
@@ -384,6 +395,7 @@ namespace cppsp
 		Server* server;
 		/**
 		 internal field do not use.
+		 web server callback.
 		 */
 		Callback cb;
 		/**

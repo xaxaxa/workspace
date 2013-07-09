@@ -63,8 +63,8 @@ namespace cppsp
 		try {
 			processRequest();
 		} catch (exception& ex) {
-			handleError(&ex, *response, this->filePath);
-			flush();
+			server->handleError(*request, *response, ex, cb);
+			destruct();
 		}
 	}
 	void Page::render(CP::StreamWriter& out) {
@@ -86,16 +86,16 @@ namespace cppsp
 			if (doRender) render(response->output);
 			flush();
 		} catch (exception& ex) {
-			handleError(&ex, *response, this->filePath);
+			server->handleError(*request, *response, ex, cb);
 			flush();
 		}
 	}
 	void Page::cancelLoad(exception* ex) {
 		if (ex == NULL) {
 			runtime_error re("Web page execution cancelled");
-			handleError(&re, *response, this->filePath);
-		} else handleError(ex, *response, this->filePath);
-		response->flush( { &Page::_flushCB, this });
+			server->handleError(*request, *response, re, cb);
+		} else server->handleError(*request, *response, *ex, cb);
+		destruct();
 	}
 	void Page::_readPOSTCB(Request& r) {
 		initCB();
@@ -167,7 +167,9 @@ namespace cppsp
 		flushCB();
 	}
 	void Page::finalizeCB() {
-		if (this->cb != nullptr) cb();
+		auto cb1 = this->cb;
+		destruct();
+		if (cb1 != nullptr) cb1();
 	}
 
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
@@ -290,6 +292,7 @@ namespace cppsp
 
 	Server::Server() {
 		handleRequest.attach( { &Server::defaultHandleRequest, this });
+		handleError.attach( { &Server::defaultHandleError, this });
 		routeRequest.attach( { &Server::defaultRouteRequest, this });
 	}
 	struct requestHandlerState
@@ -314,15 +317,13 @@ namespace cppsp
 						}
 					}
 					h(*req, *resp, cb);
-					resp->sp->dealloc(this);
 				} catch (exception& ex1) {
-					handleError(&ex1, *resp, req->path);
-					goto sss;
+					s->handleError(*req, *resp, ex1, cb);
 				}
 			} else {
-				handleError(ex, *resp, req->path);
-				sss: resp->flush( { &requestHandlerState::flushCB, this });
+				s->handleError(*req, *resp, *ex, cb);
 			}
+			resp->sp->del(this);
 		}
 		void flushCB(Response&) {
 			cb();
@@ -368,6 +369,22 @@ namespace cppsp
 	}
 	void Server::defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
 		handleRoutedRequest(req.path, req, resp, cb);
+	}
+	struct flusher: public RGC::Object
+	{
+		Delegate<void()> cb;
+		flusher(const Delegate<void()>& cb) :
+				cb(cb) {
+		}
+		void operator()(int i) {
+			cb();
+			destruct();
+		}
+	};
+	void Server::defaultHandleError(Request& req, Response& resp, exception& ex,
+			Delegate<void()> cb) {
+		cppsp::handleError(&ex, resp, req.path);
+		resp.flush(resp.sp->New<flusher>(cb));
 	}
 	AsyncValue<Handler> Server::defaultRouteRequest(String path) {
 		if (path.length() > 6 && memcmp(path.data() + (path.length() - 6), ".cppsp", 6) == 0)

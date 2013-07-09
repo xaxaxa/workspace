@@ -1,0 +1,25 @@
+<%#
+//example cppsp error handler module
+
+Server::HandleErrorChain::item* it;
+Server* server;
+String filePath;
+void handleError(void*, Request& req, Response& resp, exception& ex, Delegate<void()> cb) {
+	const char* msg=ex.what();
+	char* s=(char*)malloc(strlen(msg));
+	if(s==nullptr) throw bad_alloc();
+	strcpy(s,msg);
+	req.customParams=s;
+	return server->handleDynamicRequestFromFile(filePath,req,resp,cb);
+}
+extern "C" void initModule(ModuleParams& p) {
+	server=p.server;
+	filePath=p.filePath;
+	printf("server=%p\n",server);
+	it=server->handleError.attach(&handleError);
+}
+extern "C" void deinitModule() {
+	server->handleError.detach(it);
+}
+%>
+error: <%=(const char*)request->customParams%>
