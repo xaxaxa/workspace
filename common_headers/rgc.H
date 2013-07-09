@@ -76,9 +76,16 @@ namespace RGC
 	public:
 		virtual void* alloc(int s)=0;
 		virtual void dealloc(void* obj)=0;
-		template<class T, class... A>
+		void _setAllocator(void* v, Allocator* a) {
+		} //not inherited from Object; do nothing
+		void _setAllocator(Object* o, Allocator* a) {
+			o->allocator = a;
+		}
+		template<class T, class ... A>
 		T* New(A&&... a) {
-			return new (alloc(sizeof(T))) T(std::forward<A>(a)...);
+			T* tmp = new (alloc(sizeof(T))) T(std::forward<A>(a)...);
+			_setAllocator(tmp, this);
+			return tmp;
 		}
 		template<class T>
 		void del(T* obj) {
