@@ -53,12 +53,12 @@ namespace RGC
 			/*objs--;
 			 cout << objs << " objects" << endl;*/
 		}
-		inline void retain(int n=1) {
-			atomic_add(n,refCount);
+		inline void retain(int n = 1) {
+			atomic_add(n, refCount);
 		}
 		inline void destruct();
-		inline bool release(int n=1) { //returns whether or not destruction occurred
-			atomic_sub(n,refCount);
+		inline bool release(int n = 1) { //returns whether or not destruction occurred
+			atomic_sub(n, refCount);
 			if (refCount <= 0) {
 				destruct();
 				return true;
@@ -104,7 +104,8 @@ namespace RGC
 	};
 	static DefaultAllocator defaultAllocator;
 	void Object::destruct() {
-		if(allocator==NULL) delete this;
+		if (allocator == NULL)
+			delete this;
 		else allocator->del(this);
 	}
 	//template<class T> struct Ref;
@@ -172,58 +173,10 @@ namespace RGC
 		}
 	};
 	//creates a new instance, but disowns it
-	template<class T, class ... ARGS> inline T* newObj(ARGS&&... args)
-	{
+	template<class T, class ... ARGS> inline T* newObj(ARGS&&... args) {
 		T* tmp = new T(std::forward<ARGS>(args)...);
 		tmp->refCount--;
 		return tmp;
 	}
-/*template<class T> struct Ref
- {
- T* obj;
- template<class ... ARGS> inline Ref(ARGS&& ... args)
- :obj(new T(std::forward<ARGS>(args)...))
- {
- }
- Ref(const Property<T>& prop):obj(prop.obj)
- {
- obj->retain();
- }
- ~Ref()
- {
- obj->release();
- }
- inline T* operator()() const
- {
- return obj;
- }
- inline T* operator->() const
- {
- return obj;
- }
- inline T& operator*() const
- {
- return *obj;
- }
- inline T* get() const
- {
- return obj;
- }
- };*/
-
-//callback mechanism similar to .NET events
-			/*template<class funcType> class Event
-			 {
-			 public:
-			 vector<funcType> callbacks;
-			 void operator()() {
-			 for(int i=0;i<callbacks.size();i++)
-			 callbacks[i]();
-			 }
-			 void operator+=(const funcType& cb) {
-			 callbacks.push_back(cb);
-			 }
-
-			 };*/
-			}
+}
 #endif
