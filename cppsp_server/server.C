@@ -84,7 +84,34 @@ namespace cppspServer
 	class Server: public cppsp::DefaultServer {
 	public:
 		Poll* p;
-		Server(Poll* p, string root):DefaultServer(root),p(p) {}
+		Timer t;
+		int _lastRequests=0;
+		bool timerRunning;
+		void timerCB(int i) {
+			updateTime();
+			if(performanceCounters.totalRequestsReceived<=_lastRequests) {
+				disableTimer();
+			}
+			_lastRequests=performanceCounters.totalRequestsReceived;
+		}
+		Server(Poll* p, string root):DefaultServer(root),p(p),timerRunning(false) {
+			t.setCallback({&Server::timerCB,this});
+			p->add(t);
+			handleRequest.attach( { &Server::_defaultHandleRequest, this });
+		}
+		void enableTimer() {
+			t.setInterval(2000);
+			timerRunning=true;
+			updateTime();
+		}
+		void disableTimer() {
+			timerRunning=false;
+			t.setInterval(0);
+		}
+		void _defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
+			if(unlikely(!timerRunning)) enableTimer();
+			defaultHandleRequest(req,resp,cb);
+		}
 		AsyncValue<Handler> routeStaticRequestFromFile(String path) override;
 		AsyncValue<Handler> routeDynamicRequestFromFile(String path) override;
 	};
@@ -128,7 +155,7 @@ namespace cppspServer
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
 			resp.headers.insert({"Connection", keepAlive?"keep-alive":"close"});
-			
+			thr.performanceCounters.totalRequestsReceived++;
 			try {
 				thr.handleRequest(req,resp,{&handler::finalize,this});
 			} catch(exception& ex) {
@@ -196,6 +223,7 @@ namespace cppspServer
 			finalize();
 		}
 		void finalize() {
+			thr.performanceCounters.totalRequestsFinished++;
 			if(resp.closed) {
 				destruct(); return;
 			}

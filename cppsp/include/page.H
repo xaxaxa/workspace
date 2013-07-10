@@ -211,6 +211,15 @@ namespace cppsp
 	class Server: public RGC::Object
 	{
 	public:
+		struct PerformanceCounters
+		{ //to be incremented by the web server
+			int totalRequestsReceived;
+			int totalRequestsFinished;
+			PerformanceCounters() :
+					totalRequestsReceived(0), totalRequestsFinished(0) {
+			}
+		} performanceCounters;
+
 		typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
 		typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
 		timespec curTime { 0, 0 };
@@ -256,6 +265,9 @@ namespace cppsp
 		 Default request handler. Calls handleRoutedRequest() with req.path as the path.
 		 */
 		void defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb);
+		/**
+		 Default error handler. Outputs the "Server Error" page similar to ASP.net
+		 */
 		void defaultHandleError(Request& req, Response& resp, exception& ex, Delegate<void()> cb);
 
 		/*
@@ -291,7 +303,9 @@ namespace cppsp
 			throw logic_error("routeDynamicRequestFromFile() not implemented");
 		}
 		/**
-		 Default request router.
+		 Default request router. Calls either routeStaticRequest() or routeDynamicRequest() based on
+		 the filename extension. Files ending with .cppsp are treated as dynamic pages, and everything else
+		 are treated as static pages.
 		 */
 		AsyncValue<Handler> defaultRouteRequest(String path);
 		struct RouteCacheEntry
@@ -302,9 +316,12 @@ namespace cppsp
 		};
 		map<String, RouteCacheEntry*> routeCache;
 		/**
-		 Time (in seconds) to cache routing decisions for.
+		 Time (in seconds) before considering a cached routing decision invalid and perform a re-route.
+		 Increasing this may increase performance, but will increase the delay before a page is recompiled
+		 after being edited.
 		 */
 		int routeCacheDuration = 2;
+		int routeCacheCleanInterval = 60;
 
 		/**
 		 Returns absolute path of server root directory.

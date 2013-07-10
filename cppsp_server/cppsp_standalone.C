@@ -40,6 +40,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 
 struct workerThread
 {
+	Poll p;
 	cppspServer::Server srv;
 	vector<const char*> modules;
 	Ref<CP::Socket> listenSock;
@@ -49,11 +50,8 @@ struct workerThread
 	};
 	int threadid;
 	int cpu;	//id of cpu to pin to, or -1
-	workerThread(Socket& sock): srv(NULL,rootDir.c_str()),
+	workerThread(Socket& sock): srv(&p,rootDir.c_str()),
 		listenSock(sock),cpu(-1){}
-	void setPoll(Poll& p) {
-		srv.p=&p;
-	}
 };
 class handler1: public RGC::Allocator
 {
@@ -81,8 +79,7 @@ void pinToCPU(int cpu) {
 void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
-	Poll p;
-	thr.setPoll(p);
+	Poll& p=thr.p;
 	if(thr.cpu>=0) pinToCPU(thr.cpu);
 	/*
 	p.add(thr->efd);
@@ -123,15 +120,6 @@ void* thread1(void* v) {
 	} cb {p, thr, handlerPool, 0};
 	
 	p.add(*thr.listenSock);
-	Timer t((uint64_t)2000);
-	struct {
-		cppspServer::Server& srv;
-		void operator()(int count) {
-			srv.updateTime();
-		}
-	} cb1 {srv};
-	t.setCallback(&cb1);
-	p.add(t);
 	
 	int modsLeft;
 	struct {
