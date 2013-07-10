@@ -163,8 +163,7 @@ namespace cppspServer
 				iov[1]= {data.data(), (size_t)data.length()};
 				resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
 			} catch(exception& ex) {
-				cppsp::handleError(&ex,resp,Sp->path);
-				resp.flush( { &handler::flushCB, this });
+				thr.handleError(req,resp,ex,{&handler::finalize,this});
 			}
 		}
 		void handleDynamic(loadedPage* lp) {
