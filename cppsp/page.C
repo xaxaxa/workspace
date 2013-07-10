@@ -103,7 +103,7 @@ namespace cppsp
 	void Page::flush() {
 		if (response->closed)
 			finalizeCB();
-		else response->flush( { &Page::_flushCB, this });
+		else response->finalize( { &Page::_flushCB, this });
 	}
 	String Page::mapPath(String path) {
 		return server->mapPath(mapRelativePath(path), *sp);
@@ -194,8 +194,8 @@ namespace cppsp
 
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :
 			outputStream(&out), output((CP::BufferedOutput&) buffer), sp(sp), alloc(sp),
-					headers(less<String>(), alloc), headersWritten(false), closed(false),
-					sendChunked(false) {
+					headers(less<String>(), alloc), _bufferPos(0), headersWritten(false), closed(false),
+					sendChunked(false), _writing(false) {
 		addDefaultHeaders();
 	}
 	void Response::addDefaultHeaders() {
@@ -218,6 +218,7 @@ namespace cppsp
 			x += 2;
 			sw.endWrite(x);
 		}
+		if (This->sendChunked) This->headers["Transfer-Encoding"] = "chunked";
 		for (auto it = This->headers.begin(); it != This->headers.end(); it++) {
 			int l1 = (*it).first.length();
 			int l2 = (*it).second.length();
@@ -236,33 +237,68 @@ namespace cppsp
 	void Response::serializeHeaders(CP::StreamWriter& sw) {
 		Response_doWriteHeaders(this, sw);
 	}
-	void Response::flush(Callback cb) {
+	void Response::flush(bool finalize) {
 		//printf("flush\n");
 		if (closed) throw runtime_error("connection has already been closed by the client");
+		if (_writing) {
+			_doWrite = true;
+			return;
+		}
+		_doWrite = false;
+		_writing = true;
+		if (finalize && sendChunked) output.write("\r\n0\r\n");
 		output.flush();
-		this->_cb = cb;
-		if (likely(!headersWritten)) {
+		if (!headersWritten) {
 			headersWritten = true;
 			int bufferL = buffer.length();
-			{
+			if (!sendChunked) {
 				char* tmps = sp->beginAdd(16);
 				int l = itoa(buffer.length(), tmps);
 				sp->endAdd(l);
 				this->headers.insert( { "Content-Length", { tmps, l } });
+			} else {
+				output.write("\r\n");
+				output.flush();
+			}
+			{
 				CP::StreamWriter sw(buffer);
 				Response_doWriteHeaders(this, sw);
 			}
 			iov[0]= {buffer.data()+bufferL, (size_t)(buffer.length()-bufferL)};
-			iov[1]= {buffer.data(), (size_t)bufferL};
-			outputStream->writevAll(iov, 2, { &Response::_writeCB, this });
+			if (sendChunked) {
+				int l2 = buffer.length();
+				output.writeF("%x\r\n", finalize ? bufferL - 5 : bufferL);
+				output.flush();
+				iov[1]= {buffer.data()+l2,size_t(buffer.length()-l2)};
+				iov[2]= {buffer.data(),(size_t)(bufferL+2)};
+				outputStream->writevAll(iov, 3, { &Response::_writeCB, this });
+			} else {
+				iov[1]= {buffer.data(), (size_t)bufferL};
+				outputStream->writevAll(iov, 2, {&Response::_writeCB, this});
+			}
+			_bufferPos = buffer.length();
 			return;
 		} else {
-			if (buffer.length() <= 0) {
-				cb(*this);
+			if (_bufferPos >= buffer.length()) {
+				_writing = false;
+				if (flushCB) flushCB(*this);
 				return;
 			}
-			outputStream->write(buffer.data(), buffer.length(), { &Response::_writeCB, this });
+			if (sendChunked) {
+				int _len = buffer.length();
+				int l = _len - _bufferPos;
+				output.writeF("\r\n%x\r\n", finalize ? l - 5 : l);
+				output.flush();
+				iov[0]= {buffer.data()+_len+2,size_t(buffer.length()-_len-2)};
+				iov[1]= {buffer.data() + _bufferPos,(size_t)(l+2)};
+				_bufferPos = buffer.length();
+				outputStream->writevAll(iov, 2, { &Response::_writeCB, this });
+			}
 		}
+	}
+	void Response::finalize(Callback cb) {
+		flushCB = cb;
+		flush(true);
 	}
 	void Response::clear() {
 		output.flush();
@@ -271,8 +307,10 @@ namespace cppsp
 	}
 	void Response::_writeCB(int r) {
 		if (r <= 0) closed = true;
-		buffer.clear();
-		_cb(*this);
+		_writing = false;
+		if (_doWrite)
+			flush();
+		else if (flushCB) flushCB(*this);
 	}
 	
 	void Request::reset() {
@@ -288,6 +326,7 @@ namespace cppsp
 		headersWritten = false;
 		closed = false;
 		sendChunked = false;
+		flushCB = nullptr;
 	}
 
 	Server::Server() {
@@ -384,7 +423,7 @@ namespace cppsp
 	void Server::defaultHandleError(Request& req, Response& resp, exception& ex,
 			Delegate<void()> cb) {
 		cppsp::handleError(&ex, resp, req.path);
-		resp.flush(resp.sp->New<flusher>(cb));
+		resp.finalize(resp.sp->New<flusher>(cb));
 	}
 	AsyncValue<Handler> Server::defaultRouteRequest(String path) {
 		if (path.length() > 6 && memcmp(path.data() + (path.length() - 6), ".cppsp", 6) == 0)

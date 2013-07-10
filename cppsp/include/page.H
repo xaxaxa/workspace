@@ -115,7 +115,7 @@ namespace cppsp
 		/**
 		 internal field do not use.
 		 */
-		Callback _cb;
+		Callback flushCB;
 		/**
 		 The per-request StringPool instance. You can allocate memory from this if it only need to persist for the duration of this http request. The StringPool is cleared after the page has finished executing.
 		 */
@@ -134,11 +134,16 @@ namespace cppsp
 		/**
 		 internal field do not use.
 		 */
-		iovec iov[2];
+		iovec iov[3];
 		/**
 		 HTTP response status code (200, 500, etc).
 		 */
 		int statusCode;
+		/**
+		 internal field do not use.
+		 */
+		int _bufferPos;
+		int _writeTo;
 
 		/**
 		 internal field do not use.
@@ -152,6 +157,8 @@ namespace cppsp
 		 TODO: chunked output not yet implemented.
 		 */
 		bool sendChunked;
+		bool _writing;
+		bool _doWrite;
 		/*virtual void doWriteHeaders();
 		 void writeHeaders() {
 		 if (!headersWritten) {
@@ -162,7 +169,8 @@ namespace cppsp
 		/**
 		 internal method do not use.
 		 */
-		virtual void flush(Callback cb);
+		virtual void flush(bool finalize = false);
+		virtual void finalize(Callback cb);
 		/**
 		 clear buffered output
 		 */
