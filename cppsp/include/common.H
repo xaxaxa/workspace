@@ -57,7 +57,7 @@ namespace cppsp
 	/**
 	 Internal API.
 	 */
-	class loadedPage
+	class loadedPage: public RGC::Object
 	{
 	public:
 		cppspManager* manager;
@@ -108,12 +108,11 @@ namespace cppsp
 	/**
 	 Internal API.
 	 */
-	struct staticPage
+	struct staticPage: public RGC::Object
 	{
 		String data;
 		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
 		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
-		timespec lastUse; //CLOCK_MONOTONIC
 		string path;
 		bool loaded;
 		void doLoad();
@@ -135,18 +134,18 @@ namespace cppsp
 		unordered_map<String, loadedPage*> cache;
 		unordered_map<String, staticPage*> staticCache;
 		vector<string> cxxopts;
-		timespec curTime { 0, 0 };
+		timespec curTime { 0, 0 };//CLOCK_MONOTONIC
 		string tmpDir;
 		int threadID;
 		cppspManager();
 		AsyncValue<loadedPage*> loadPage(CP::Poll& p, String wd, String path);
+		staticPage* loadStaticPage(String path);
 		/**
 		 Delete old cache entries.
 		 @param minAge the minimum age (in seconds since the entry was last accessed) for an entry to be deleted
 		 @unmaintained_api
 		 */
 		void cleanCache(int minAge);
-		staticPage* loadStaticPage(String path);
 		bool shouldCheck(loadedPage& p);
 		bool shouldCheck(staticPage& p);
 		void updateTime() {

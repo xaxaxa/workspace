@@ -437,8 +437,32 @@ namespace cppsp
 		return String(tmp, l);
 	}
 	
-	void Server::updateTime() {
+	void Server::updateTime(bool noCleanCache) {
 		clock_gettime(CLOCK_MONOTONIC, &curTime);
+		if (noCleanCache) return;
+		timespec tmp1 = curTime;
+		tmp1.tv_sec -= routeCacheCleanInterval;
+		//printf("%i\n",tsCompare(_lastClean, tmp1));
+		if (tsCompare(_lastClean, tmp1) < 0) {
+			_lastClean = curTime;
+			cleanCache();
+		}
+	}
+	void Server::cleanCache() {
+		timespec tmp1 = curTime;
+		tmp1.tv_sec -= routeCacheCleanInterval;
+		auto it = routeCache.begin();
+		int del = 0;
+		while (it != routeCache.end()) {
+			if (tsCompare((*it).second->lastUpdate, tmp1) < 0) {
+				delete (*it).second;
+				auto tmp = it;
+				it++;
+				routeCache.erase(tmp);
+				del++;
+			} else it++;
+		}
+		if (del > 0) printf("%i route cache entries purged\n", del);
 	}
 
 	DefaultServer::DefaultServer(string root) :
@@ -510,10 +534,13 @@ namespace cppsp
 	String DefaultServer::loadStaticPageFromFile(String path) {
 		return mgr->loadStaticPage(path)->data;
 	}
-	
-	void DefaultServer::updateTime() {
-		Server::updateTime();
+	void DefaultServer::updateTime(bool noCleanCache) {
+		Server::updateTime(noCleanCache);
 		mgr->curTime = curTime;
+	}
+	void DefaultServer::cleanCache() {
+		Server::cleanCache();
+		mgr->cleanCache(this->fileCacheCleanInterval);
 	}
 
 } /* namespace cppsp */

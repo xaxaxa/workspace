@@ -643,6 +643,36 @@ namespace cppsp
 		lp.doLoad();
 		goto xxx;
 	}
+	void cppspManager::cleanCache(int minAge) {
+		timespec tmp1 = curTime;
+		tmp1.tv_sec -= minAge;
+		int del = 0;
+		{
+			auto it = cache.begin();
+			while (it != cache.end()) {
+				if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) < 0) {
+					delete (*it).second;
+					auto tmp = it;
+					it++;
+					cache.erase(tmp);
+					del++;
+				} else it++;
+			}
+		}
+		{
+			auto it = staticCache.begin();
+			while (it != staticCache.end()) {
+				if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) < 0) {
+					delete (*it).second;
+					auto tmp = it;
+					it++;
+					staticCache.erase(tmp);
+					del++;
+				} else it++;
+			}
+		}
+		if (del > 0) printf("%i file cache entries purged\n", del);
+	}
 	void handleError(exception* ex, cppsp::Response& resp, String path) {
 		resp.clear();
 		resp.statusCode = 500;

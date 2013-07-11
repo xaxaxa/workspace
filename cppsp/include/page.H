@@ -203,8 +203,7 @@ namespace cppsp
 	/**
 	 Represents a request handler callback.
 	 */
-	typedef Delegate<void(Request&, Response&, Delegate<void()> cb)> Handler;
-	typedef Delegate<void(Handler, exception*)> HandlerCB;
+	typedef DelegateRef<void(Request&, Response&, Delegate<void()> cb)> Handler;
 	/**
 	 Represents a cppsp web server instance.
 	 */
@@ -314,6 +313,10 @@ namespace cppsp
 			string path;
 			timespec lastUpdate; //CLOCK_MONOTONIC
 		};
+		/**
+		 Internal field.
+		 Holds route cache entries.
+		 */
 		map<String, RouteCacheEntry*> routeCache;
 		/**
 		 Time (in seconds) before considering a cached routing decision invalid and perform a re-route.
@@ -321,7 +324,11 @@ namespace cppsp
 		 after being edited.
 		 */
 		int routeCacheDuration = 2;
-		int routeCacheCleanInterval = 60;
+		/**
+		 Time (in seconds) before considering purging a cached routing decision.
+		 Increasing this may increase performance, but may increase memory usage.
+		 */
+		int routeCacheCleanInterval = 120;
 
 		/**
 		 Returns absolute path of server root directory.
@@ -366,7 +373,9 @@ namespace cppsp
 		virtual cppspManager* manager() {
 			return NULL;
 		}
-		virtual void updateTime();
+		virtual void updateTime(bool noCleanCache = false);
+		timespec _lastClean { 0, 0 };
+		virtual void cleanCache();
 	};
 	//cppspManager based Server
 	class DefaultServer: public Server
@@ -374,6 +383,13 @@ namespace cppsp
 	public:
 		cppspManager* mgr;
 		string root;
+		/**
+		 Time (in seconds) before considering purging a cached cppspManager managed page.
+		 For static pages, each cache entry contains an mmap()ed area backed by that file.
+		 For dynamic pages, each cache entry contains an mmap()ed area backed by the page's string
+		 table, and a dynamic linker handle from dlopen().
+		 */
+		int fileCacheCleanInterval = 600; //10 min.
 		DefaultServer(string root);
 		~DefaultServer();
 
@@ -392,7 +408,8 @@ namespace cppsp
 		//this function needs to be called periodically to check for file modifications
 		//otherwise auto re-compile will not work
 		//generally call it every 2 seconds
-		void updateTime() override;
+		void updateTime(bool noCleanCache = false) override;
+		void cleanCache() override;
 	};
 	/**
 	 Base class for all cppsp pages.

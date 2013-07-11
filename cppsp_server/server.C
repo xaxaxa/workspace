@@ -89,7 +89,7 @@ namespace cppspServer
 		bool timerRunning;
 		void timerCB(int i) {
 			updateTime();
-			if(performanceCounters.totalRequestsReceived<=_lastRequests) {
+			if(timerRunning && performanceCounters.totalRequestsReceived<=_lastRequests) {
 				disableTimer();
 			}
 			_lastRequests=performanceCounters.totalRequestsReceived;
@@ -100,13 +100,13 @@ namespace cppspServer
 			handleRequest.attach( { &Server::_defaultHandleRequest, this });
 		}
 		void enableTimer() {
-			t.setInterval(2000);
+			t.setInterval(routeCacheDuration*1000);
 			timerRunning=true;
-			updateTime();
+			updateTime(true); //true indicates to inhibit cache cleaning
 		}
 		void disableTimer() {
 			timerRunning=false;
-			t.setInterval(0);
+			t.setInterval(routeCacheCleanInterval*1000);
 		}
 		void _defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
 			if(unlikely(!timerRunning)) enableTimer();
