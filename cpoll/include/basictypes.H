@@ -45,6 +45,7 @@ namespace CP
 	typedef Delegate<void(int32_t)> Callback;
 	typedef uint8_t event_t;
 	struct String;
+	void * memrmem(void *s, size_t slen, void *t, size_t tlen);
 	class MemoryBuffer: virtual public RGC::Object
 	{
 	public:
@@ -144,6 +145,16 @@ namespace CP
 		}
 		inline int indexOf(char c, int i = 0) {
 			void* tmp = memchr(d + i, c, len - i);
+			return tmp == NULL ? -1 : (((char*) tmp) - d);
+		}
+		inline int lastIndexOf(String s, int i = -1) {
+			if (i < 0) i = len - 1;
+			void* tmp = memrmem(d, i + 1, s.d, s.len);
+			return tmp == NULL ? -1 : (((char*) tmp) - d);
+		}
+		inline int lastIndexOf(char c, int i = -1) {
+			if (i < 0) i = len - 1;
+			void* tmp = memrchr(d, c, i + 1);
 			return tmp == NULL ? -1 : (((char*) tmp) - d);
 		}
 		inline char& operator[](int i) {

@@ -904,6 +904,7 @@ namespace CP
 
 		File();
 		File(HANDLE handle);
+		File(const char* name, int flags, int perms = 0);
 		virtual void init(HANDLE handle);
 		Events _getEvents();
 		///only accepts one event
@@ -1032,7 +1033,7 @@ namespace CP
 		void connect(const sockaddr *addr, int32_t addr_size, const Callback& cb);
 		void connect(const EndPoint &ep, const Callback& cb);
 		void connect(const char* hostname, const char* port, const Callback& cb, int32_t family =
-				AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
+		AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 
 		//callback function must release() or free() the received object
 		void accept(const Delegate<void(Socket*)>& cb, bool repeat = false);
@@ -1307,8 +1308,8 @@ namespace CP
 			return {(char*)buffer+bufferPos,bufferSize-bufferPos};
 		}
 		void endAppend(int len) {
-			if (bufferPos + len > bufferSize) throw overflow_error(
-					"invalid length parameter to MemoryStream::endAppend()");
+			if (bufferPos + len > bufferSize)
+				throw overflow_error("invalid length parameter to MemoryStream::endAppend()");
 			bufferPos += len;
 			if (bufferPos > this->len) this->len = bufferPos;
 		}
@@ -1564,8 +1565,8 @@ namespace CP
 			return {(char*)buffer+bufferPos,bufferSize-bufferPos};
 		}
 		void endAppend(int len) {
-			if (bufferPos + len > bufferSize) throw overflow_error(
-					"invalid length parameter to MemoryStream::endAppend()");
+			if (bufferPos + len > bufferSize)
+				throw overflow_error("invalid length parameter to MemoryStream::endAppend()");
 			bufferPos += len;
 			if (bufferPos > this->len) this->len = bufferPos;
 		}
@@ -1677,8 +1678,8 @@ namespace CP
 			if (pbuf != NULL) __dec_autofree();
 		}
 		inline Buffer subBuffer(int index, int length) const {
-			if (index < 0 || index + length > this->len || length < 0) throw range_error(
-					"Buffer::subBuffer() out of range");
+			if (index < 0 || index + length > this->len || length < 0)
+				throw range_error("Buffer::subBuffer() out of range");
 			return Buffer(pbuf, d + index, length);
 		}
 		inline Buffer subBuffer(int index) const {
@@ -1704,7 +1705,8 @@ namespace CP
 		inline void set(int i, bool b) {
 			int tmp1 = i / 32;
 			__uint32_t tmp = data[tmp1];
-			if (b) data[tmp1] = tmp | ((int) 1 << (i % 32));
+			if (b)
+				data[tmp1] = tmp | ((int) 1 << (i % 32));
 			else data[tmp1] = tmp & (~((int) 1 << (i % 32)));
 		}
 	};

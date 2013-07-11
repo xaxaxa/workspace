@@ -851,6 +851,10 @@ namespace CP
 			deletionFlag(NULL), dispatching(false) {
 		init(handle);
 	}
+	File::File(const char* name, int flags, int perms) :
+			deletionFlag(NULL), dispatching(false) {
+		init(open(name, flags, perms));
+	}
 	void File::init(HANDLE handle) {
 		Handle::init(handle);
 	}
@@ -2472,6 +2476,14 @@ namespace CP
 	void PThreadMutex::unlock() {
 		pthread_mutex_unlock(&m);
 	}
-
+	void * memrmem(void *s, size_t slen, void *t, size_t tlen) {
+		if (slen >= tlen) {
+			size_t i = slen - tlen;
+			do {
+				if (memcmp((char*) s + i, (char*) t, tlen) == 0) return (char*) s + i;
+			} while (i-- != 0);
+		}
+		return NULL;
+	}
 }
 
