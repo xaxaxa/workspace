@@ -48,7 +48,6 @@ struct workerThread
 		pid_t pid;
 		pthread_t thread;
 	};
-	int threadid;
 	int cpu;	//id of cpu to pin to, or -1
 	workerThread(Socket& sock): srv(&p,rootDir.c_str()),
 		listenSock(sock),cpu(-1){}
@@ -108,7 +107,6 @@ void* thread1(void* v) {
 		MemoryPool& handlerPool;
 		int reqn;
 		void operator()(HANDLE sock) {
-			//printf("thread %i: accepted socket: %p (%i)\n",thr->threadid,sock,sock->handle);
 			handler1* hdlr=new (handlerPool.alloc())
 				handler1(thr.srv,p,sock,thr.listenSock->addressFamily,
 					thr.listenSock->type,thr.listenSock->protocol);
@@ -279,7 +277,7 @@ int main(int argc, char** argv) {
 		tmp.srv.mgr->cxxopts=cxxopts;
 		tmp.srv.mgr->tmpDir=tmpDir;
 		tmp.modules=modules;
-		tmp.threadid=i+1;
+		tmp.srv.threadID=i;
 		if(threads==1) {
 			thread1(&tmp);
 			return 0;

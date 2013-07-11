@@ -329,7 +329,8 @@ namespace cppsp
 		flushCB = nullptr;
 	}
 
-	Server::Server() {
+	Server::Server() :
+			threadID(0) {
 		handleRequest.attach( { &Server::defaultHandleRequest, this });
 		handleError.attach( { &Server::defaultHandleError, this });
 		routeRequest.attach( { &Server::defaultRouteRequest, this });

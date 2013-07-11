@@ -18,16 +18,20 @@ body,table,td,input {
 .cachelist thead {
 	background: #bff;
 }
-.s_compiling {
+.persistent>td {
+	background: #ff0;
+}
+td.s_compiling {
 	background: #f33;
 }
-.s_loaded {
+td.s_loaded {
 	background: #3f3;
 }
-.s_unloaded {
+td.s_unloaded {
 	background: #000;
 	color: #fff;
 }
+
 </style>
 </head>
 <%$
@@ -41,6 +45,7 @@ double dateDiff(timespec t1, timespec t2) {
 	cppspManager* cm=server->manager();
 	if(cm==NULL) throw runtime_error("server is not managed by cppspManager");
 	%>
+	<h2>Worker #<%=server->threadID%></h2>
 	Dynamic page cache: <br />
 	<table class="cachelist">
 		<thead>
@@ -59,7 +64,7 @@ double dateDiff(timespec t1, timespec t2) {
 			strftime(buffer, sizeof(buffer), "%F %r", &time1);
 			const char* state=tmp->compiling?"compiling":tmp->loaded?"loaded":"unloaded";
 			%>
-			<tr>
+			<tr<%=tmp->persistent?" class=\"persistent\" title=\"Persistent\"":""%>>
 				<td><%htmlEscape((*it).first,output);%></td>
 				<td><%htmlEscape(buffer,output);%></td>
 				<td><%=int64_t(-dateDiff(cm->curTime,tmp->lastCheck)/1000)%> seconds ago</td>

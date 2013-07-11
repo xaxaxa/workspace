@@ -133,7 +133,6 @@ namespace cppspServer
 	//handles a single connection
 	//just instantiate-and-forget; it will self-destruct when connection is closed
 	struct handler:public RGC::Object {
-		Allocator* alloc;
 		Server& thr;
 		CP::Poll& p;
 		Socket& s;

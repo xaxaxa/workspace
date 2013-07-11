@@ -222,6 +222,7 @@ namespace cppsp
 		typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
 		typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
 		timespec curTime { 0, 0 };
+		int threadID;
 		Server();
 
 		/**
