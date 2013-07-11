@@ -149,6 +149,17 @@ namespace CP
 		inline char& operator[](int i) {
 			return d[i];
 		}
+		String copy() {
+			String tmp;
+			tmp.d = (char*) malloc((tmp.len = len));
+			memcpy(tmp.d, d, len);
+			return tmp;
+		}
+		void dealloc() {
+			free(d);
+			d = NULL;
+			len = 0;
+		}
 	};
 	template<class ... T>
 	String concat(RGC::Allocator& alloc, T ... s...) {
