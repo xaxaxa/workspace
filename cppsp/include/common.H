@@ -92,6 +92,7 @@ namespace cppsp
 		pid_t compilerPID;
 		bool loaded;
 		bool compiling;
+		bool persistent;
 		void readCB(int r);
 		void deleteTmpfiles();
 		void afterCompile(bool success);

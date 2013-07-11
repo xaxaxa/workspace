@@ -447,6 +447,8 @@ namespace cppsp
 			ModuleParams p;
 			p.server = manager->srv;
 			p.filePath = this->path;
+			p.page = this;
+			this->persistent = true;
 			initModule(p);
 			fprintf(stderr, "module %s loaded\n", path.c_str());
 		}
@@ -483,7 +485,7 @@ namespace cppsp
 		return tmp;
 	}
 	loadedPage::loadedPage() :
-			dlHandle(NULL), stringTable(NULL), stringTableFD(-1) {
+			dlHandle(NULL), stringTable(NULL), stringTableFD(-1), persistent(false) {
 		//printf("loadedPage()\n");
 		compiling = false;
 		doUnload();
@@ -650,7 +652,8 @@ namespace cppsp
 		{
 			auto it = cache.begin();
 			while (it != cache.end()) {
-				if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) < 0) {
+				if ((*it).second->refCount <= 1 && !(*it).second->persistent
+						&& tsCompare((*it).second->lastCheck, tmp1) < 0) {
 					delete (*it).second;
 					auto tmp = it;
 					it++;

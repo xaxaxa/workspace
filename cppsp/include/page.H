@@ -546,12 +546,14 @@ namespace cppsp
 		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
 	};
+	class loadedPage;
 	//the ModuleParams struct itself (passed in to modules at initialization time) is not
 	//guaranteed to exist after initModule() returns
 	struct ModuleParams
 	{
 		Server* server; //guaranteed to exist until after deinitModule() returns
 		String filePath; //guaranteed to exist until after deinitModule() returns
+		loadedPage* page;
 	};
 } /* namespace cppsp */
 #endif /* PAGE_H_ */
