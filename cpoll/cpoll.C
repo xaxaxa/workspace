@@ -1982,6 +1982,7 @@ namespace CP
 		h.onEventsChange = Delegate<void(Handle&, Events)>(&NewEPoll::_applyHandle, this);
 		_queueHandle(h, h.getEvents());
 		h.onClose = Delegate<void(Handle& h)>(&NewEPoll::del, this);
+		h.setBlocking(false);
 	}
 	void NewEPoll::del(Handle& h) {
 		if (&h == _dispatchingHandle) _dispatchingDeleted = true;
