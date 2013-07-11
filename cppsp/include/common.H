@@ -112,6 +112,7 @@ namespace cppsp
 	struct staticPage: public RGC::Object
 	{
 		String data;
+		String mime;
 		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
 		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
 		string path;
@@ -134,8 +135,9 @@ namespace cppsp
 		Server* srv;
 		unordered_map<String, loadedPage*> cache;
 		unordered_map<String, staticPage*> staticCache;
+		unordered_map<string, string> mimeTypes; //only for static pages
 		vector<string> cxxopts;
-		timespec curTime { 0, 0 };//CLOCK_MONOTONIC
+		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		string tmpDir;
 		int threadID;
 		cppspManager();
@@ -152,6 +154,7 @@ namespace cppsp
 		void updateTime() {
 			clock_gettime(CLOCK_MONOTONIC, &curTime);
 		}
+		void loadMimeDB(CP::StreamReader& in);
 	};
 	int tsCompare(struct timespec time1, struct timespec time2);
 

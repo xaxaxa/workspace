@@ -95,9 +95,16 @@ namespace cppspServer
 			_lastRequests=performanceCounters.totalRequestsReceived;
 		}
 		Server(Poll* p, string root):DefaultServer(root),p(p),timerRunning(false) {
+			updateTime();
 			t.setCallback({&Server::timerCB,this});
 			p->add(t);
 			handleRequest.attach( { &Server::_defaultHandleRequest, this });
+		}
+		void loadDefaultMimeDB() {
+			File f("/usr/share/mime/globs",O_RDONLY);
+			f.setBlocking(true);
+			StreamReader sr(f);
+			mgr->loadMimeDB(sr);
 		}
 		void enableTimer() {
 			t.setInterval(routeCacheDuration*1000);
@@ -178,6 +185,7 @@ namespace cppspServer
 			try {
 				String data=Sp->data;
 				int bufferL = resp.buffer.length();
+				if(Sp->mime.length()>0)resp.headers["Content-Type"]=Sp->mime;
 				{
 					char* tmps = sp.beginAdd(16);
 					int l = itoa(data.length(), tmps);

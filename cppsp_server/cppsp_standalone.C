@@ -79,6 +79,7 @@ void pinToCPU(int cpu) {
 void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
+	srv.loadDefaultMimeDB();
 	Poll& p=thr.p;
 	if(thr.cpu>=0) pinToCPU(thr.cpu);
 	/*

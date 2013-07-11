@@ -576,6 +576,14 @@ namespace cppsp
 			precheckPage(path);
 			lp1 = new staticPage();
 			lp1->path = path.toSTDString();
+			int i = path.lastIndexOf('.');
+			if (i >= 0) {
+				string ext = path.subString(i + 1).toSTDString();
+				auto it = mimeTypes.find(ext);
+				if (it != mimeTypes.end()) {
+					lp1->mime = (*it).second;
+				}
+			}
 			staticCache.insert( { lp1->path, lp1 });
 		} else lp1 = (*it).second;
 		staticPage& lp(*lp1);
@@ -675,6 +683,25 @@ namespace cppsp
 			}
 		}
 		if (del > 0) printf("%i file cache entries purged\n", del);
+	}
+	void cppspManager::loadMimeDB(CP::StreamReader& in) {
+		string s;
+		while (true) {
+			s = in.readLine();
+			if (s.length() <= 0) {
+				if (in.eof)
+					break;
+				else continue;
+			}
+			String tmp = s;
+			int i = tmp.indexOf(':');
+			if (i < 0) continue;
+			String ext = tmp.subString(i + 1);
+			if (ext.len < 3) continue;
+			if (!(ext[0] == '*' && ext[1] == '.')) continue;
+			ext.clip(2);
+			mimeTypes.insert( { ext.toSTDString(), tmp.subString(0, i).toSTDString() });
+		}
 	}
 	void handleError(exception* ex, cppsp::Response& resp, String path) {
 		resp.clear();
