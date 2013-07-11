@@ -731,19 +731,17 @@ namespace CP
 			String buf = _sr.beginPutData();
 			int r = input->read(buf.data(), buf.length());
 			if (r <= 0) {
+				eof = true;
 				String tmp = _sr.getBufferData();
-
 				if (out_s == NULL) {
-					if (cb == nullptr) return;
-					string tmps = tmp.toSTDString();
-					eof = true;
+					this->tmp.append(tmp.data(), tmp.length());
 					_sr.reset();
-					cb(tmps);
+					if (cb) cb(this->tmp);
 				} else {
 					out_s->write(tmp.data(), tmp.length());
 					tmp_i += tmp.length();
 					_sr.reset();
-					if (cb_s != nullptr) cb_s(tmp_i);
+					if (cb_s) cb_s(tmp_i);
 				}
 				return;
 			} else {
@@ -756,9 +754,9 @@ namespace CP
 			String tmp = _sr.getBufferData();
 			eof = true;
 			if (out_s == NULL) {
-				string tmps = tmp.toSTDString();
+				this->tmp.append(tmp.data(), tmp.length());
 				_sr.reset();
-				cb(tmps);
+				cb(this->tmp);
 			} else {
 				out_s->write(tmp.data(), tmp.length());
 				tmp_i += tmp.length();
