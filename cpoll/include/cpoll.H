@@ -1498,8 +1498,9 @@ namespace CP
 			return std::numeric_limits<size_type>::max() / sizeof(T);
 		}
 		//    construction/destruction
-		inline void construct(pointer p, const T& t) {
-			new (p) T(t);
+		template<class ... A>
+		inline void construct(pointer p, A && ...a) {
+			new (p) T(std::forward<A>(a)...);
 		}
 		inline void destroy(pointer p) {
 			p->~T();

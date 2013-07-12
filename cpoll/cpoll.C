@@ -1361,12 +1361,12 @@ namespace CP
 				ed.cb(shutdown(ed.misc.shutdown.how));
 				return true;
 			case Operations::connect:
+				if (!confident) return false;
 				if (evtd.error || evtd.hungUp) {
 					ed.state = EventHandlerData::States::invalid;
 					ed.cb(-1);
 					return true;
 				}
-				if (!confident && (checkEvents(event) & event) != event) return false;
 				ed.cb(0);
 				goto success;
 			case Operations::sendTo:
@@ -1469,14 +1469,14 @@ namespace CP
 		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
 		unsigned int i;
 		for (i = 0; i < hosts.size(); i++) {
-			int _f = socket(hosts[i]->addressFamily, socktype | SOCK_CLOEXEC | SOCK_NONBLOCK, proto);
+			int _f = socket(hosts[i]->addressFamily, socktype | SOCK_CLOEXEC, proto);
 			if (_f < 0) continue;
 			int size = hosts[i]->getSockAddrSize();
 			uint8_t tmp[size];
 			hosts[i]->getSockAddr((sockaddr*) tmp);
 			if (::connect(_f, (sockaddr*) tmp, size) == 0) {
 				init(_f, hosts[i]->addressFamily, socktype, proto);
-				break;
+				return;
 			} else {
 				::close(_f);
 				continue;
