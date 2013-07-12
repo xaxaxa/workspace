@@ -81,10 +81,37 @@ namespace cppspServer
 			rpos=(rpos+1)%(length*2);
 		}
 	};
+	
+	template<class T>
+	class ObjectPool: public RGC::Object
+	{
+	public:
+		T** items;
+		int size;
+		int length;
+		ObjectPool(int size):size(size),length(0) {
+			items=new T*[size];
+		}
+		~ObjectPool() {
+			for(int i=0;i<length;i++) delete items[i];
+			delete[] items;
+		}
+		T* tryGet() {
+			if(length<=0) return NULL;
+			return items[--length];
+		}
+		void put(T* obj) {
+			if(length>=size) delete obj;
+			else {
+				items[length++]=obj;
+			}
+		}
+	};
 	class Server: public cppsp::DefaultServer {
 	public:
 		Poll* p;
 		Timer t;
+		ObjectPool<Response> _responsePool;
 		int _lastRequests=0;
 		bool timerRunning;
 		void timerCB(int i) {
@@ -94,7 +121,8 @@ namespace cppspServer
 			}
 			_lastRequests=performanceCounters.totalRequestsReceived;
 		}
-		Server(Poll* p, string root):DefaultServer(root),p(p),timerRunning(false) {
+		Server(Poll* p, string root):DefaultServer(root),p(p),
+			_responsePool(128),timerRunning(false) {
 			updateTime();
 			t.setCallback({&Server::timerCB,this});
 			p->add(t);
@@ -138,14 +166,14 @@ namespace cppspServer
 		Socket& s;
 		StringPool sp;
 		Request req;
-		cppsp::Response resp;
+		cppsp::Response* resp;
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t* buf;
 		iovec iov[2];
 		bool keepAlive;
 		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
-			p(poll),s(s), req(this->s,&sp),resp(this->s,&sp) {
+			p(poll),s(s),sp(2048),req(this->s,&sp) {
 			//printf("handler()\n");
 			req._handler=this;
 			poll.add(this->s);
@@ -153,20 +181,27 @@ namespace cppspServer
 			if(req.readRequest({&handler::readCB, this})) readCB(true);
 		}
 		void readCB(bool success) {
-			if(!success) {
+			if(unlikely(!success)) {
 				destruct();
 				return;
 			}
+			//if((sp=thr._stringPoolPool.tryGet())==nullptr) sp=new StringPool();
+			if((resp=thr._responsePool.tryGet())) resp->init(this->s,&sp);
+			else resp=new Response(this->s,&sp);
+			
+			//keepAlive=true;
 			auto it=req.headers.find("connection");
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
-			resp.headers.insert({"Connection", keepAlive?"keep-alive":"close"});
+			resp->headers.insert({"Connection", keepAlive?"keep-alive":"close"});
+			
 			thr.performanceCounters.totalRequestsReceived++;
 			try {
-				thr.handleRequest(req,resp,{&handler::finalize,this});
+				thr.handleRequest(req,*resp,{&handler::finalize,this});
 			} catch(exception& ex) {
-				thr.handleError(req,resp,ex,{&handler::finalize,this});
+				thr.handleError(req,*resp,ex,{&handler::finalize,this});
 			}
+			
 		}
 		static inline int itoa(int i, char* b) {
 			static char const digit[] = "0123456789";
@@ -181,6 +216,7 @@ namespace cppspServer
 			return l;
 		}
 		void handleStatic(staticPage* Sp) {
+			Response& resp(*this->resp);
 			try {
 				String data=Sp->data;
 				int bufferL = resp.buffer.length();
@@ -201,6 +237,7 @@ namespace cppspServer
 			}
 		}
 		void handleDynamic(loadedPage* lp) {
+			Response& resp(*this->resp);
 			Page* p=lp->doCreate(&sp);
 			p->sp=&sp;
 			p->request=&req;
@@ -231,13 +268,16 @@ namespace cppspServer
 		}
 		void finalize() {
 			thr.performanceCounters.totalRequestsFinished++;
-			if(resp.closed) {
+			if(resp->closed) {
 				destruct(); return;
 			}
+			req.reset();
+			resp->reset();
+			thr._responsePool.put(resp);
+			resp=nullptr;
 			sp.clear();
 			if(keepAlive) {
-				req.reset();
-				resp.reset();
+				req.init(s,&sp);
 				if(req.readRequest({&handler::readCB,this})) readCB(true);
 			} else {
 				s.shutdown(SHUT_WR);

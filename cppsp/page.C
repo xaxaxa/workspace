@@ -171,10 +171,13 @@ namespace cppsp
 		destruct();
 		if (cb1 != nullptr) cb1();
 	}
-
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
 			inputStream(&inp), sp(sp), alloc(sp), headers(sp), queryString(less<String>(), alloc),
 					form(less<String>(), alloc) {
+	}
+	void Request::init(CP::Stream& inp, CP::StringPool* sp) {
+		new (&queryString) StringMap(less<String>(), alloc);
+		new (&form) StringMap(less<String>(), alloc);
 	}
 	void Request::parsePost(String buf) {
 		struct
@@ -193,9 +196,16 @@ namespace cppsp
 	}
 
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :
-			outputStream(&out), output((CP::BufferedOutput&) buffer), sp(sp), alloc(sp),
+			outputStream(&out), buffer(), output((CP::BufferedOutput&) buffer), sp(sp), alloc(sp),
 					headers(less<String>(), alloc), _bufferPos(0), headersWritten(false), closed(false),
 					sendChunked(false), _writing(false) {
+		addDefaultHeaders();
+	}
+	void Response::init(CP::Stream& out, CP::StringPool* sp) {
+		outputStream = &out;
+		this->alloc.sp = sp;
+		this->sp = sp;
+		new (&headers) StringMap(less<String>(), alloc);
 		addDefaultHeaders();
 	}
 	void Response::addDefaultHeaders() {
@@ -315,18 +325,19 @@ namespace cppsp
 	
 	void Request::reset() {
 		headers.clear();
-		queryString.clear();
-		form.clear();
+		queryString.~map();
+		form.~map();
+		this->inputStream = nullptr;
 	}
 	void Response::reset() {
-		headers.clear();
-		addDefaultHeaders();
+		headers.~map();
 		output.flush();
 		buffer.clear();
 		headersWritten = false;
 		closed = false;
 		sendChunked = false;
 		flushCB = nullptr;
+		outputStream = nullptr;
 	}
 
 	Server::Server() :

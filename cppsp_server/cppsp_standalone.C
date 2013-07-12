@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
 						"\t-r <root>: set root directory (must be absolute) (default: $(pwd))\n"
 						"\t-t <threads>: # of worker processes/threads to start up (default: sysconf(_SC_NPROCESSORS_CONF))\n"
 						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n"
-						"\t-a: automatically set cpu affinity for the created worker threads/processes\n"
+						"\t-a: automatically set cpu affinity of the created worker threads/processes\n"
 						"\t-b <path>: the directory in which temporary binaries are stored\n",argv[0]);
 						exit(1);
 					}

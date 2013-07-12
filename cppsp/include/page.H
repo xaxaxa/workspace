@@ -41,6 +41,7 @@ namespace cppsp
 	{
 	public:
 		Request(CP::Stream& inp, CP::StringPool* sp);
+		void init(CP::Stream& inp, CP::StringPool* sp);
 		virtual ~Request() {
 		}
 		/**
@@ -89,6 +90,7 @@ namespace cppsp
 		void parsePost(String buf);
 		/**
 		 internal method do not use.
+		 See Response::reset().
 		 */
 		virtual void reset();
 	};
@@ -100,6 +102,8 @@ namespace cppsp
 	public:
 		typedef Delegate<void(Response&)> Callback;
 		Response(CP::Stream& out, CP::StringPool* sp);
+		Response(const Response& other) = delete;
+		void init(CP::Stream& out, CP::StringPool* sp);
 		/**
 		 internal field do not use.
 		 */
@@ -196,6 +200,10 @@ namespace cppsp
 		void _writeCB(int r);
 		/**
 		 internal method do not use.
+		 Partially destructs the Response object. You can call init()
+		 later on to reuse this Response object. This violates RAII
+		 principles, but is necessary for good performance and low
+		 memory usage.
 		 */
 		virtual void reset();
 	};
