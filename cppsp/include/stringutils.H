@@ -33,21 +33,6 @@ namespace cppsp
 		return c;
 	}
 #endif
-	struct ci_less: std::binary_function<std::string, std::string, bool>
-	{
-		// case-independent (ci) compare_less binary function
-		struct nocase_compare: public std::binary_function<unsigned char, unsigned char, bool>
-		{
-			bool operator()(const unsigned char& c1, const unsigned char& c2) const {
-				return tolower(c1) < tolower(c2);
-			}
-		};
-		bool operator()(const std::string & s1, const std::string & s2) const {
-			return std::lexicographical_compare(s1.begin(), s1.end(), // source range
-					s2.begin(), s2.end(), // dest range
-					nocase_compare()); // comparison
-		}
-	};
 
 	void urlDecode(const char* in, int inLen, CP::StreamWriter& sw);
 	static inline void urlDecode(CP::String in, CP::StreamWriter& sw) {
@@ -101,6 +86,12 @@ namespace cppsp
 	}
 
 	int ci_compare(CP::String s1, CP::String s2);
+	struct ci_less: std::binary_function<CP::String, CP::String, bool>
+	{
+		bool operator()(const CP::String & s1, const CP::String & s2) const {
+			return ci_compare(s1, s2) < 0;
+		}
+	};
 
 	/**
 	 Combine two paths. Result is stored in buf. Does not write a null byte.

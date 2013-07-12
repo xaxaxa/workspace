@@ -178,5 +178,23 @@ namespace RGC
 		tmp->refCount--;
 		return tmp;
 	}
+	
+	template<class T> struct FakePtr
+	{
+		T obj;
+		template<class ... ARGS>
+		FakePtr(ARGS&&... args): obj(std::forward<ARGS>(args)...) {}
+		FakePtr(const FakePtr<T>& other)=delete;
+		inline T& operator*() {
+			return obj;
+		}
+		inline T* operator->() {
+			return &obj;
+		}
+		inline T* get() const {
+			return &obj;
+		}
+		FakePtr operator=(const FakePtr& other)=delete;
+	};
 }
 #endif
