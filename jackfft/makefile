@@ -11,6 +11,8 @@ freqrecord:
 	g++ -g3 freqrecord.C -o freqrecord --std=c++0x -lcplib -ljack -lfftw3 $(FLAGS) $(PKG_CONFIG)
 freqplay:
 	g++ -g3 freqplay.C -o freqplay --std=c++0x -lcplib -ljack -lfftw3 $(FLAGS) $(PKG_CONFIG)
+modulate:
+	g++ -g3 -Ofast -pthread modulate.C -o modulate --std=c++0x -lrt -ljack -lfftw3 $(FLAGS)
 converters: jack_f2i jack_i2f
 transform1:
 	g++ transform1.C -o transform1
