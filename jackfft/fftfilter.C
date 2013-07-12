@@ -180,7 +180,7 @@ namespace xaxaxa
 
 		virtual void DoProcess()
 		{
-			UInt complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
+			Int complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
 			//asdf++;
 			//if(asdf>1)
 			//{
@@ -274,12 +274,17 @@ namespace xaxaxa
 				double cosine=(tmpcomplex[i2][0]*(1.0-trololo) + tmpcomplex[i2+1][0]*trololo);
 
 				double amplitude=sqrt(sine*sine+cosine*cosine);
+				
+				
 				double phase=atan2(cosine,sine);	//radians; [-pi,pi]
 				//double phase_delta1=(skip_samples%period1)/period1*(2*M_PI);
 				phase=phase*((double)period1);
 				//phase=phase/((double)(M_PI*2));
 				//phase=phase*((double)(M_PI*2));
 				phase=phase/((double)period2);
+				
+				//double phase=atan2(tmpcomplex[i][0],tmpcomplex[i][1]);
+				
 				//phase*=1.5;
 				//if(i==100)cout << phase << endl;
 				//else i2=i;

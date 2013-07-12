@@ -44,12 +44,14 @@ using namespace std;
 
 vector<jack_port_t *> inputs;
 vector<jack_port_t *> outputs;
+jack_port_t* outputs2;
 #define CHANNELS 2
 #define CONCAT(X) (((stringstream&)(stringstream()<<X)).str())
 double cur_index = 0;
 int srate;
 bool display_spectrum = false;
 bool display_spectrogram = false;
+bool output_spectrogram = false;
 bool spectrum2=false;
 
 using namespace xaxaxa;
@@ -60,7 +62,7 @@ FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
 FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
 struct timespec last_refreshed;
 #define EQ_POINTS 10000
-#define SPECTRUM2_POINTS 32
+#define SPECTRUM2_POINTS 128
 #define SPECTROGRAM_LEN 1000
 EQControl* c;
 EQControl* c_eq2;
@@ -70,6 +72,7 @@ Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
 bool do_mux=false;
 double v_mux=0.5;
+double spectrogramOutputPhase[SPECTRUM2_POINTS];
 
 template<class t> inline double complex_to_real(const t& x)
 {
@@ -84,20 +87,23 @@ inline double abs1(double d)
 	return d<0?-d:d;
 }
 //accuracy is the # of output samples
-void asdasdasd(double* out, fftw_complex* in, int len, int accuracy, double multiplier=1) {
-	int max_exponent=(int)floor(log2(len));
+void asdasdasd(double* out, fftw_complex* in, int len, int maxfreq, int accuracy, double multiplier=1) {
+	static const int base=268; //Hz
+	int max_exponent=(int)floor(log2(double(maxfreq)/base));
+	if(max_exponent>4)max_exponent=4;	//ignore frequencies >= 3520Hz
+	int maxf=base*pow(2,max_exponent);
 	for(int i=0;i<accuracy;i++) {
 		//out[i]=0;
 		double x=double(i)/accuracy;
-		for(int exponent=6;exponent<max_exponent;exponent++) {
-			int i1=pow(2,exponent+x);
-			int i2=pow(2,exponent+(double(i+1)/accuracy));
+		for(int exponent=0;exponent<max_exponent;exponent++) {
+			int i1=(int)floor(base*pow(2,exponent+x)/maxfreq*len);
+			int i2=(int)ceil(base*pow(2,exponent+(double(i+1)/accuracy))/maxfreq*len);
 			double dist=double(i2-i1)/2;
 			double center=i1+dist;
 			for(int zxc=i1;zxc<i2;zxc++) {
 				double dist1=dist-abs1(zxc-center);
 				dist1/=dist;
-				out[i]+=complex_to_real(in[zxc])*accuracy/16*multiplier/(i2-i1)/(max_exponent-5);
+				out[i]+=complex_to_real(in[zxc])/len*500*accuracy*multiplier/(i2-i1)/max_exponent;
 			}
 		}
 	}
@@ -216,6 +222,22 @@ int process(jack_nframes_t length, void *arg)
 			for(register unsigned int ii=0;ii<CHANNELS;ii++)
 				out_samples[ii][i]=2*(avg*(1.-v_mux)+(out_samples[ii][i]-avg)*v_mux);
 		}
+	if(output_spectrogram && spectrum2) {
+		jack_default_audio_sample_t *out = (jack_default_audio_sample_t *)
+			jack_port_get_buffer(outputs2, length);
+		for(int t=0;t<length;t++) out[t]=0;
+		double min=-1;
+		for(int i=0;i<SPECTRUM2_POINTS;i++)
+			if(min==-1 || c2->data[i]<min)min=c2->data[i];
+		for(int i=0;i<SPECTRUM2_POINTS;i++) {
+			double freq=268*pow(2,double(i)/SPECTRUM2_POINTS);
+			for(int t=0;t<length;t++) {
+				out[t]+=(c2->data[i]-min)*sin(spectrogramOutputPhase[i]+2*M_PI*freq*t/srate)/SPECTRUM2_POINTS;
+			}
+			spectrogramOutputPhase[i]=
+				xaxaxa::modulus(spectrogramOutputPhase[i]+2*M_PI*freq*length/srate,double(2*M_PI));
+		}
+	}
 	for(size_t i = 0; i < inputs.size(); i++)
 	{
 		if(filt[i] != NULL)goto asdfghjkl;
@@ -276,7 +298,7 @@ void* thread1(void* v)
 				
 				fftw_complex* data=fftf->lastSpectrum;
 				if(spectrum2) {
-					asdasdasd(c2->data, data, complexsize, c2->datalen, 1.d/inputs.size()/complexsize * 100);
+					asdasdasd(c2->data, data, complexsize, srate/2, c2->datalen, 1.d/inputs.size()/complexsize * 100);
 				}
 				else
 					for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
@@ -553,6 +575,17 @@ void setFilterParams(FFTFilter<jack_default_audio_sample_t>& f)
 #define TOKEN_TO_STRING(TOK) # TOK
 #define JACKFFT_GETWIDGET(x) b->get_widget(TOKEN_TO_STRING(x), x)
 
+jack_client_t *client;
+void enableSpectrogramOutput() {
+	outputs2=(jack_port_register(client, "spectrogram",
+		JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
+	for(int i=0;i<SPECTRUM2_POINTS;i++)
+		spectrogramOutputPhase[i]=0;
+}
+void disableSpectrogramOutput() {
+	jack_port_unregister(client, outputs2);
+}
+
 int main(int argc, char *argv[])
 {
 	memset(&last_refreshed, 0, sizeof(last_refreshed));
@@ -576,7 +609,7 @@ int main(int argc, char *argv[])
 		filt[i] = trololo;
 	}
 
-	jack_client_t *client;
+	
 	jack_set_error_function(error);
 	JackStatus st;
 	if((client = jack_client_open("jackfft", JackNoStartServer, &st)) == 0) {
@@ -612,6 +645,7 @@ int main(int argc, char *argv[])
 	Gtk::CheckButton* c_pitchshift;
 	Gtk::CheckButton* c_spectrum;
 	Gtk::CheckButton* c_spectrogram;
+	Gtk::CheckButton* c_spectrogram1;
 	Gtk::CheckButton* c_spectrum2;
 	Gtk::CheckButton* c_mux;
 	Gtk::Label* label8;
@@ -628,7 +662,7 @@ int main(int argc, char *argv[])
 	JACKFFT_GETWIDGET(b_shift); JACKFFT_GETWIDGET(filechooserdialog1); JACKFFT_GETWIDGET(viewport1);
 	JACKFFT_GETWIDGET(viewport2); JACKFFT_GETWIDGET(c_spectrum); JACKFFT_GETWIDGET(c_spectrum2);
 	JACKFFT_GETWIDGET(s_mux); JACKFFT_GETWIDGET(c_mux); JACKFFT_GETWIDGET(viewport4);
-	JACKFFT_GETWIDGET(c_spectrogram);
+	JACKFFT_GETWIDGET(c_spectrogram); JACKFFT_GETWIDGET(c_spectrogram1);
 	
 	//initialize controls
 	b_save->signal_clicked().connect(&save);
@@ -750,10 +784,9 @@ hhhhh:
 		t1->remove(*v);
 	}*/
 
+	//spectrum display
 	c_spectrum->set_active(display_spectrum);
-	c_spectrogram->set_active(display_spectrogram);
 	viewport2->set_visible(display_spectrum);
-	viewport4->set_visible(display_spectrogram);
 	c_spectrum->signal_toggled().connect([c_spectrum]()
 	{
 		Gtk::Window* w1;
@@ -772,6 +805,10 @@ hhhhh:
 		b->get_widget("viewport2", vp);
 		vp->set_visible(display_spectrum);
 	});
+	
+	//spectrogram display
+	c_spectrogram->set_active(display_spectrogram);
+	viewport4->set_visible(display_spectrogram);
 	c_spectrogram->signal_toggled().connect([c_spectrogram]()
 	{
 		Gtk::Window* w1;
@@ -789,6 +826,18 @@ hhhhh:
 		Gtk::Viewport* vp;
 		b->get_widget("viewport4", vp);
 		vp->set_visible(display_spectrogram);
+	});
+	
+	//spectrogram output
+	c_spectrogram1->set_active(output_spectrogram);
+	c_spectrogram1->signal_toggled().connect([c_spectrogram1]()
+	{
+		if(output_spectrogram && !c_spectrogram1->get_active()) {
+			disableSpectrogramOutput();
+		} else if(!output_spectrogram && c_spectrogram1->get_active()) {
+			enableSpectrogramOutput();
+		}
+		output_spectrogram=c_spectrogram1->get_active();
 	});
 	
 	c_spectrum2->set_active(spectrum2);
