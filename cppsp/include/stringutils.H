@@ -127,6 +127,10 @@ namespace cppsp
 	 @return the resulting path
 	 */
 	String combinePathChroot(String p1, String p2, CP::StringPool& sp);
+	/**
+	 c should be of at least 32 chars
+	 */
+	int rfctime(const tm& time, char* c);
 }
 
 #endif /* URLPARSER_H_ */

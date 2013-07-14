@@ -345,6 +345,11 @@ namespace cppsp
 		handleRequest.attach( { &Server::defaultHandleRequest, this });
 		handleError.attach( { &Server::defaultHandleError, this });
 		routeRequest.attach( { &Server::defaultRouteRequest, this });
+		curRFCTime.d = (char*) malloc(32);
+		curRFCTime.len = 0;
+	}
+	Server::~Server() {
+		free(curRFCTime.d);
 	}
 	struct requestHandlerState
 	{
@@ -451,6 +456,10 @@ namespace cppsp
 	
 	void Server::updateTime(bool noCleanCache) {
 		clock_gettime(CLOCK_MONOTONIC, &curTime);
+		clock_gettime(CLOCK_REALTIME, &curClockTime);
+		tm time;
+		gmtime_r(&curClockTime.tv_sec, &time);
+		curRFCTime.len = rfctime(time, curRFCTime.d);
 		if (noCleanCache) return;
 		timespec tmp1 = curTime;
 		tmp1.tv_sec -= routeCacheCleanInterval;

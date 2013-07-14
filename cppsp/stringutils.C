@@ -25,12 +25,15 @@ using namespace CP;
 namespace cppsp
 {
 	inline char hexCharToInt(char ch) {
-		if (ch <= '9') return ch - '0';
-		else if (ch <= 'Z') return ch - 'A' + 10;
+		if (ch <= '9')
+			return ch - '0';
+		else if (ch <= 'Z')
+			return ch - 'A' + 10;
 		else return ch - 'a' + 10;
 	}
 	inline char intToHexChar(char i) {
-		if (i < 10) return i + '0';
+		if (i < 10)
+			return i + '0';
 		else return i - 10 + 'A';
 	}
 	void urlDecode(const char* in, int inLen, StreamWriter& sw) {
@@ -164,7 +167,8 @@ namespace cppsp
 				int l = spl.value.len;
 				const char* _end = s + l;
 				const char* tmp = (const char*) memchr(s, '=', l);
-				if (tmp == NULL) cb(s, l, nullptr, 0);
+				if (tmp == NULL)
+					cb(s, l, nullptr, 0);
 				else cb(s, tmp - s, tmp + 1, _end - tmp - 1);
 			}
 		}
@@ -375,5 +379,66 @@ namespace cppsp
 		return {tmp,l};
 	}
 
+	static inline int itoa1(int i, char* b) {
+		static char const digit[] = "0123456789";
+		char* p = b;
+		//negative detection is not needed for this specific use-case
+		//(writing the content-length header)
+		/*if (i < 0) {
+		 *p++ = '-';
+		 i = -i;
+		 }*/
+		p += (i == 0 ? 0 : int(log10f(i))) + 1;
+		*p = '\0';
+		int l = p - b;
+		do { //Move back, inserting digits as u go
+			*--p = digit[i % 10];
+			i = i / 10;
+		} while (i);
+		return l;
+	}
+	//pads beginning with 0s
+	//i: input number
+	//d: # of digits
+	static inline int itoa2(int i, int d, char* b) {
+		static char const digit[] = "0123456789";
+		for (int x = d - 1; x >= 0; x--) {
+			b[x] = digit[i % 10];
+			i /= 10;
+		}
+		return d;
+	}
+	int rfctime(const tm& time, char* c) {
+		static const char* days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+		static const char* months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+				"Oct", "Nov", "Dec" };
+		char* s = c;
+		//AAA, AA AAA ???? AA:AA:AA GMT\0
+		const char* day = days[time.tm_wday];
+		//copy 4 bytes (includes extra null byte)
+		*(int*) c = (*(int*) day) | int(',') << 24;
+		c += 4;
+		*(c++) = ' ';
+		c += itoa1(time.tm_mday, c);
+		*(c++) = ' ';
+		const char* month = months[time.tm_mon];
+		*(c++) = *(month++);
+		*(c++) = *(month++);
+		*(c++) = *(month++);
+		*(c++) = ' ';
+		c += itoa1(time.tm_year + 1900, c);
+		*(c++) = ' ';
+		c += itoa2(time.tm_hour, 2, c);
+		*(c++) = ':';
+		c += itoa2(time.tm_min, 2, c);
+		*(c++) = ':';
+		c += itoa2(time.tm_sec, 2, c);
+		*(c++) = ' ';
+		*(c++) = 'G';
+		*(c++) = 'M';
+		*(c++) = 'T';
+		*(c++) = '\0';
+		return int(c - s) - 1;
+	}
 }
 

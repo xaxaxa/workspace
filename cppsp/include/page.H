@@ -229,9 +229,12 @@ namespace cppsp
 
 		typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
 		typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
-		timespec curTime { 0, 0 };
+		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
+		timespec curClockTime { 0, 0 }; //CLOCK_REALTIME
+		String curRFCTime;
 		int threadID;
 		Server();
+		~Server();
 
 		/**
 		 The handle request callback. It is called for every request right after reading in all the request data and instantiating the Request and Response objects.

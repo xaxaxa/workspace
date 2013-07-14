@@ -195,6 +195,15 @@ namespace cppspServer
 			else keepAlive=true;
 			resp->headers.insert({"Connection", keepAlive?"keep-alive":"close"});
 			
+			/*char* date=sp.beginAdd(32);
+			tm time;
+			gmtime_r(&thr.curClockTime.tv_sec,&time);
+			int l=rfctime(time,date);
+			if(l>32)l=32;
+			sp.endAdd(l);
+			*/
+			resp->headers.insert({"Date", sp.addString(thr.curRFCTime)});
+			
 			thr.performanceCounters.totalRequestsReceived++;
 			try {
 				thr.handleRequest(req,*resp,{&handler::finalize,this});
