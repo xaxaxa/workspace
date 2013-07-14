@@ -16,7 +16,7 @@ public:
 	vector<threadData> threads;
 	
 	FFTBench(int fftsize, int iters):fftsize(fftsize),iters(iters) {}
-	void prepareThreads(int t) override {
+	void prepareThreads(int t) {
 		threads.resize(t);
 		for(int i=0;i<t;i++) {
 			threads[i].data=(double*)fftw_malloc(fftsize*sizeof(double));
@@ -25,15 +25,15 @@ public:
 				threads[i].data_c, FFTW_MEASURE|FFTW_PRESERVE_INPUT);
 		}
 	}
-	void destroyThreads() override {
+	void destroyThreads() {
 		for(int i=0;i<(int)threads.size();i++) {
 			fftw_free(threads[i].data);
 			fftw_free(threads[i].data_c);
 			fftw_destroy_plan(threads[i].p);
 		}
 	}
-	void doRun(BenchmarkThread& th) override {
-		auto& d=threads[th.threadIndex];
+	void doRun(BenchmarkThread& th) {
+		threadData& d=threads[th.threadIndex];
 		double freq=1./2000;	//periods per sample
 		for(int i=0;i<fftsize;i++) {
 			d.data[i]=double(rand())/RAND_MAX;
@@ -43,10 +43,10 @@ public:
 			fftw_execute(d.p);
 		th.endTiming();
 	}
-	double valueFunc(int64_t t, int64_t tCPU, void* v) override {
+	double valueFunc(int64_t t, int64_t tCPU, void* v) {
 		return double(iters)/tCPU*1000000000;
 	}
-	string unit() override {
+	string unit() {
 		return "FFTs/s";
 	}
 };

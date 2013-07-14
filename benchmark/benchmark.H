@@ -1,4 +1,3 @@
-#include <delegate.H>
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
@@ -37,6 +36,7 @@ struct BenchmarkRun
 	BenchmarkRunner* runner;
 	Benchmark* target;
 	int threads;
+	BenchmarkRun(BenchmarkRunner* r, Benchmark* t, int th):runner(r),target(t),threads(th) {}
 };
 class BenchmarkThread
 {
@@ -131,8 +131,9 @@ struct BenchmarkResultGroup
 class BenchmarkRunner
 {
 public:
-	int threads=-1;
-	int runs=-1;
+	int threads;
+	int runs;
+	BenchmarkRunner():threads(-1),runs(-1) {}
 	static void* _doRun(void* v) {
 		BenchmarkThread* t=(BenchmarkThread*)v;
 		(*t->run->target)(*t);
@@ -169,7 +170,7 @@ public:
 		return res;
 	}
 	BenchmarkResultGroup doRun(Benchmark& target, int threads, int runs) {
-		BenchmarkRun r{this,&target,threads};
+		BenchmarkRun r(this,&target,threads);
 		BenchmarkResultGroup rg;
 		rg.results.resize(runs);
 		target.prepareThreads(r.threads);
@@ -189,7 +190,7 @@ public:
 	}
 	void displayResult_single(const char* name, const BenchmarkResultGroup& rg) {
 		//printf("format:		name 	runs	avgTime	avgCPUTime	maxDeviation	maxThreadDeviation\n");
-		auto& tmp=rg;
+		const BenchmarkResultGroup& tmp=rg;
 		
 		printf("full-load benchmark for '%s':\n",name);
 		printf("   threads:      %13i\n",(int)tmp.threads);
@@ -209,7 +210,7 @@ public:
 		double sc=0;
 		for(int i=1;i<=_threads();i++) {
 			BenchmarkResultGroup rg=doRun(target,i,_runs());
-			auto& tmp=rg;
+			BenchmarkResultGroup& tmp=rg;
 			
 			if(i==1) sc=tmp.avgValue;
 			printf("   %3i  %13.2lf  %13.2lf  %6.2lf   %6.2lf %13.2f %%\n",
