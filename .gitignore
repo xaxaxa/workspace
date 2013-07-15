@@ -17,6 +17,8 @@
 /tmp2
 /termchat
 /.metadata
+/bin/*
+/lib/*
 *.o
 *.gch
 *.exe
