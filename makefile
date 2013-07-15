@@ -5,7 +5,7 @@ CC := gcc
 CXX := g++
 all: server123 termchat tmp1 tmp2 nc.xaxaxa email_extract tcpfuck bitflip_proxy \
 	generic_ui generic_struct cplib cpoll cppsp cppsp_standalone socketd_cppsp \
-	socketd fbdump http_simplebench buffer
+	socketd fbdump http_simplebench buffer jackfft dedup benchmark
 install: termchat_install nc.xaxaxa_install
 clean:
 	rm -rf termchat servertroll tmp tmp1 tmp2 nc.xaxaxa server123 lib/* bin/*
@@ -41,6 +41,12 @@ tcpfuck: bin/tcpfuck
 	
 bitflip_proxy: bin/bitflip_proxy
 	
+tcpsdump: bin/tcpsdump bin/rmhttphdr
+jackfft: bin/jackfft
+dedup: bin/dedup
+benchmark: fftbench fibbench
+fftbench: bin/fftbench
+fibbench: bin/fibbench
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -56,9 +62,9 @@ bin/tmp2: tmp2.C cplib
 	$(CXX) tmp2.C -o bin/tmp2 -lcplib $(CFLAGS1)
 bin/nc.xaxaxa: cpoll
 	$(CXX) nc.xaxaxa.C -o bin/nc.xaxaxa -lcpoll -lpthread $(CFLAGS1)
-bin/buffer: buffer.C
+bin/buffer: buffer.C cpoll
 	$(CXX) buffer.C -o bin/buffer -lcpoll -lpthread $(CFLAGS1)
-bin/http_simplebench: http_simplebench.C
+bin/http_simplebench: http_simplebench.C cpoll
 	$(CXX) http_simplebench.C -o bin/http_simplebench -lcpoll -lpthread $(CFLAGS1)
 bin/tcpfuck: tcpfuck.C cpoll
 	$(CXX) tcpfuck.C -o bin/tcpfuck -lcpoll -lpthread $(CFLAGS1)
@@ -68,6 +74,7 @@ bin/bitflip_proxy: bitflip_proxy.C cpoll
 bin/fbdump: generic_ui generic_struct cplib
 	$(CXX) js/fbdump.C js/curl_httpreq.C -o bin/fbdump -lgeneric_ui -lgeneric_struct\
 		-lpthread -lv8 -lcplib -ldl -lcurl -levent $(CFLAGS1)
+	cp -f js/fbdump.js bin/
 lib/fbdump_cui.so:
 	$(CXX) js/fbdump_cui.C --shared -o lib/fbdump_cui.so \
 		`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
@@ -75,8 +82,24 @@ bin/cppsp_standalone: cppsp
 	$(CXX) cppsp_server/cppsp_standalone.C -o bin/cppsp_standalone -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/socketd_cppsp: cppsp
 	$(CXX) cppsp_server/socketd_cppsp.C -o bin/socketd_cppsp -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
-bin/socketd:
+bin/socketd: cpoll
 	$(CXX) socketd/all.C -o bin/socketd -lcpoll -lrt $(CFLAGS1)
+bin/tcpsdump:
+	$(CXX) tcpsdump/main.cxx -o bin/tcpsdump -lpcap -lpthread $(CFLAGS1)
+bin/rmhttphdr: cplib
+	$(CXX) tcpsdump/rmhttphdr.cxx -o bin/rmhttphdr -lcplib -lpthread $(CFLAGS1)
+bin/jackfft: cplib cpoll
+	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3 \
+	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
+	cp -f ../jackfft/main2.ui bin/
+	cp -f ../trollface200.png bin/
+bin/dedup:
+	$(CXX) dedup/dedup.C -o bin/dedup -lpthread $(CFLAGS1)
+bin/fftbench:
+	$(CXX) benchmark/fftbench.C -o bin/fftbench -lpthread -lfftw3 $(CFLAGS1)
+bin/fibbench:
+	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
+bin/fibbench:
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)
