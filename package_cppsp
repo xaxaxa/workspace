@@ -1,0 +1,97 @@
+#!/bin/bash
+#usage: $0 target
+TARGET="$1"
+mkdir -p "$TARGET"
+cp -a common_headers include "$TARGET"/
+rm -f cppsp_server/*.cppsp.C
+for x in cpoll cppsp cppsp_server socketd; do
+	mkdir -p "$TARGET"/$x;
+	cp -a $x/*.C $x/*.H $x/include "$TARGET"/$x/;
+done;
+cp -a test/socketd_proxy.C "$TARGET"/
+cat >"$TARGET"/makefile <<EOF
+OPTFLAGS := -Ofast -march=native -flto
+CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -I./include
+CXX := g++
+all: cppsp_standalone cpoll.o cppsp.o socketd_bin socketd_cppsp socketd_proxy.so
+cppsp_standalone: 
+	\$(CXX) cppsp_server/cppsp_standalone.C cpoll/all.C cppsp/all.C -o cppsp_standalone -lpthread -ldl -lrt \$(CXXFLAGS)
+socketd_bin: 
+	\$(CXX) socketd/all.C cpoll/all.C -o socketd_bin -lpthread -ldl -lrt \$(CXXFLAGS) 
+socketd_cppsp: 
+	\$(CXX) cppsp_server/socketd_cppsp.C cpoll/all.C cppsp/all.C -o socketd_cppsp -lpthread -ldl -lrt \$(CXXFLAGS)
+cpoll.o:
+	\$(CXX) cpoll/all.C -c -o cpoll.o \$(CXXFLAGS) -fPIC
+cppsp.o:
+	\$(CXX) cppsp/all.C -c -o cppsp.o \$(CXXFLAGS) -fPIC
+socketd_proxy.so: cpoll.o
+	\$(CXX) socketd_proxy.C cpoll.o -o socketd_proxy.so -ldl -lpthread --std=c++0x --shared -fPIC \$(CXXFLAGS) 
+clean:
+	rm -f cpoll.o cppsp.o cppsp_standalone socketd_bin socketd_cppsp socketd_proxy.so
+	rm -f www/*.cppsp.so www/*.cppsp.C www/*.cppsp.txt
+	rm -f www/*.cppsm.so www/*.cppsm.C www/*.cppsm.txt
+	rm -f www/*.html.so www/*.html.C www/*.html.txt
+EOF
+cat >"$TARGET"/run_example <<EOF
+#!/bin/bash
+num_cpus=\$(grep vendor_id /proc/cpuinfo | wc -l)
+./cppsp_standalone -r "\$(pwd)"/www -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -pthread -c -Ofast -c -march=native -c "\$(pwd)"/cpoll.o -c "\$(pwd)"/cppsp.o -t "\$num_cpus" -f \$@
+EOF
+cat >"$TARGET"/run_application <<EOF
+#!/bin/bash
+# usage: run_application /ABSOLUTE/PATH/TO/APPLICATION
+
+num_cpus=\$(grep vendor_id /proc/cpuinfo | wc -l)
+./cppsp_standalone -f -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -pthread -c -Ofast -c -march=native -c "\$(pwd)"/cpoll.o -c "\$(pwd)"/cppsp.o -t "\$num_cpus" -r "\$@"
+EOF
+cat >"$TARGET"/run_socketd_example <<EOF
+#!/bin/bash
+export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH":"\$(pwd)"
+./socketd_exampleconf > socketd_example.conf
+./socketd_bin socketd_example.conf
+EOF
+cat >"$TARGET"/socketd_exampleconf <<EOF
+#!/bin/bash
+P="\$(pwd)"
+cat <<EOF1
+listen 0.0.0.0:16969 512; //backlog=512
+//default thread count is NCPU
+//threads 2;
+
+//bindings sections embedded in vhost sections are processed
+//before bindings in the global scope
+ipcbuffersize 16777216;
+vhost vh1 {
+	bindings {
+		{
+			listen 0.0.0.0:16969;
+			httphost localhost:16969; //only match requests going to hostname "localhost"
+		}
+	}
+	//the second exec is a shell command telling the shell to not fork, but execve() directly
+	exec exec \$P/socketd_cppsp -m /dir_list.cppsm -r \$P/www -c -fPIC -c -I\$P/include -c -Ofast -c -march=native -c \$P/cpoll.o -c \$P/cppsp.o -f;
+	shell 1;
+	preload 0; //socketd_cppsp is a native socketd application; no need to preload socketd_proxy
+	//at runtime, the # of processes will be rounded up to the nearest multiple
+	//of the # of socketd threads, so the actual processes started will be NCPU
+	processes 1;
+}
+vhost vh2 {
+	bindings {
+		//adjust your /etc/hosts to test this
+		{httphost host1:16969;}	
+	}
+	exec exec lighttpd -D -f /path/to/lighttpd.conf;
+	shell 1;
+	preload 1; //preload socketd_proxy.so to run an unmodified http server under socketd
+}
+
+EOF1
+EOF
+chmod +x "$TARGET"/run_example "$TARGET"/run_application "$TARGET"/run_socketd_example "$TARGET"/socketd_exampleconf
+
+mkdir "$TARGET"/www
+cp -a cppsp_server/*.cppsp cppsp_server/*.cppsm cppsp_server/*.html test/*.cppsp "$TARGET"/www/
+
+
+
