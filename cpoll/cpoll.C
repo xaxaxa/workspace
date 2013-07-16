@@ -2263,7 +2263,7 @@ namespace CP
 
 	StringPool::StringPool(int pageSize) :
 			_firstPage(NULL), _curPage(NULL), _firstRawItem(NULL), _curRawItem(NULL),
-					_pageSize(pageSize) {
+					_pageSize(pageSize), _curIndex(0) {
 
 	}
 	StringPool::~StringPool() {

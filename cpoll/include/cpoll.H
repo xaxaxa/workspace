@@ -1338,13 +1338,21 @@ namespace CP
 		StringPool(int pageSize = 4096);
 		~StringPool();
 		char* beginAdd(int sz) {
+			int off = 0;
+			if (sz >= 8) {
+				off = 8 - (_curIndex % 8);
+			} else if (sz >= 4) {
+				off = 4 - (_curIndex % 4);
+			} else if (sz == 2) {
+				off = 2 - (_curIndex % 2);
+			}
 #ifdef STRINGPOOL_MEMORY_DIAG
 			int length = sz + sizeof(int) + 1;
 #else
 			int length = sz + 1;
 #endif
-			if (likely(_curPage!=NULL && length<=(_pageSize - (int) sizeof(_pageHeader) - _curIndex))) {
-				sssss:
+			if (likely(_curPage!=NULL && length+off<=(_pageSize - (int) sizeof(_pageHeader) - _curIndex))) {
+				sssss: _curIndex += off;
 				//insert null byte at the end
 				*(((char*) (_curPage + 1)) + _curIndex + sz) = 0;
 #ifdef STRINGPOOL_MEMORY_DIAG
@@ -1356,7 +1364,7 @@ namespace CP
 				return ((char*) (_curPage + 1)) + _curIndex;
 #endif
 			}
-			if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
+			if (length + off > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
 				_addRaw(length);
 				return ((char*) (_curRawItem + 1));
 			}
