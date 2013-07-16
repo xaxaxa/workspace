@@ -1339,13 +1339,18 @@ namespace CP
 		~StringPool();
 		char* beginAdd(int sz) {
 			int off = 0;
-			if (sz >= 8) {
+#ifndef __i386__
+#ifndef __amd64__
+			/*if (sz >= 8) {
 				off = 8 - (_curIndex % 8);
 			} else if (sz >= 4) {
 				off = 4 - (_curIndex % 4);
 			} else if (sz == 2) {
 				off = 2 - (_curIndex % 2);
-			}
+			}*/
+			off = 8 - (_curIndex % 8);
+#endif
+#endif
 #ifdef STRINGPOOL_MEMORY_DIAG
 			int length = sz + sizeof(int) + 1;
 #else
@@ -1364,7 +1369,7 @@ namespace CP
 				return ((char*) (_curPage + 1)) + _curIndex;
 #endif
 			}
-			if (length + off > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
+			if (length > (_pageSize - (int) sizeof(_pageHeader)) / 2) {
 				_addRaw(length);
 				return ((char*) (_curRawItem + 1));
 			}
