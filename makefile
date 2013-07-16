@@ -1,6 +1,6 @@
 
 CFLAGS := -Ofast -march=native
-CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions --std=c++0x $(CFLAGS)
+CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions --std=c++0x -fPIC $(CFLAGS)
 CC := gcc
 CXX := g++
 all: server123 termchat tmp1 tmp2 nc.xaxaxa email_extract tcpfuck bitflip_proxy \
@@ -78,9 +78,9 @@ bin/fbdump: generic_ui generic_struct cplib
 lib/fbdump_cui.so:
 	$(CXX) js/fbdump_cui.C --shared -o lib/fbdump_cui.so \
 		`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
-bin/cppsp_standalone: cppsp
+bin/cppsp_standalone: cppsp cpoll
 	$(CXX) cppsp_server/cppsp_standalone.C -o bin/cppsp_standalone -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
-bin/socketd_cppsp: cppsp
+bin/socketd_cppsp: cppsp cpoll
 	$(CXX) cppsp_server/socketd_cppsp.C -o bin/socketd_cppsp -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/socketd: cpoll
 	$(CXX) socketd/all.C -o bin/socketd -lcpoll -lrt $(CFLAGS1)
@@ -91,8 +91,8 @@ bin/rmhttphdr: cplib
 bin/jackfft: cplib cpoll
 	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3 \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
-	cp -f ../jackfft/main2.ui bin/
-	cp -f ../trollface200.png bin/
+	cp -f jackfft/main2.ui bin/
+	cp -f trollface200.png bin/
 bin/dedup:
 	$(CXX) dedup/dedup.C -o bin/dedup -lpthread $(CFLAGS1)
 bin/fftbench:
