@@ -9,7 +9,7 @@
 #include <iostream>
 int aaaaa=0;
 %>
-<%@ class sss inherits _1_cppsp %>
+<%@ class sss inherits "public _1_cppsp" %>
 <%$
 void init() {
 	doReadPost=true;

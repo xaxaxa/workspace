@@ -49,5 +49,6 @@ streamtest:
 	g++ streamtest.C -o streamtest --std=c++0x -g3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 keepalive_test: keepalive_test.C
 	g++ keepalive_test.C -o keepalive_test --std=c++0x -g3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
-
+so_vuln:
+	g++ so_vuln.C -o so_vuln --std=c++0x -g3 -I../include -L../lib -lcpoll -Wno-pmf-conversions
 

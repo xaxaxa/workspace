@@ -1,0 +1,22 @@
+<%@ class p %><%$
+Timer t;
+int n=0;
+void doInit() {
+	response->sendChunked=true;
+	timerCB(1);
+	t.setInterval(500);
+	t.setCallback({&p::timerCB,this});
+	poll->add(t);
+}
+void timerCB(int i) {
+	try {
+		response->write("sssss<br />");
+		if(++n >= 3) {
+			t.setInterval(0);
+			flush();
+		} else response->flush();
+	} catch(...) {
+		destruct();
+	}
+}
+%>

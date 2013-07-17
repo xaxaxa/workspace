@@ -39,7 +39,9 @@ string asdf() {
 void doInit() {
 	//initCB();
 	//throw runtime_error("aaaaaa");
-	loadNestedPage("1.cppsp", {&p::cb1,this});
+	auto res=loadNestedPage("1.cppsp");
+	if(res) cb1(res(),nullptr);
+	else res.wait({&p::cb1,this});
 }
 
 Page* p=NULL;
