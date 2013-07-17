@@ -1546,8 +1546,7 @@ namespace CP
 		uint8_t addr[size];
 		//ep->GetSockAddr((sockaddr*)tmp);
 		int tmp = recvfrom(handle, buf, len, flags, (sockaddr*) addr, &size);
-		checkError(tmp);
-		ep.setSockAddr((sockaddr*) addr);
+		if (tmp == 0) ep.setSockAddr((sockaddr*) addr);
 		return tmp;
 	}
 	int32_t Socket::sendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep) {
@@ -1555,7 +1554,7 @@ namespace CP
 		uint8_t addr[size];
 		ep.getSockAddr((sockaddr*) addr);
 		int tmp = sendto(handle, buf, len, flags, (sockaddr*) addr, size);
-		return checkError(tmp);
+		return tmp;
 	}
 	void Socket::recvFrom(void* buf, int32_t len, int32_t flags, EndPoint& ep, const Callback& cb,
 			bool repeat) {
@@ -1982,9 +1981,11 @@ namespace CP
 			return;
 		}
 		h.onEventsChange = Delegate<void(Handle&, Events)>(&NewEPoll::_applyHandle, this);
-		_queueHandle(h, h.getEvents());
+		h._undispatched = h.getEvents();
+		_queueHandle(h);
 		h.onClose = Delegate<void(Handle& h)>(&NewEPoll::del, this);
 		h.setBlocking(false);
+
 	}
 	void NewEPoll::del(Handle& h) {
 		if (&h == _dispatchingHandle) _dispatchingDeleted = true;
@@ -2007,19 +2008,14 @@ namespace CP
 			_pending.clear();
 			std::sort(tmpevents1.begin(), tmpevents1.end(), compareDrainInfo);
 			Handle* last_h = NULL;
-			Events last_e = Events::none;
 			for (int i = 0; i < (int) tmpevents1.size(); i++) {
 				if (tmpevents1[i].h == NULL) continue;
 				ret = true;
-				if (last_h == tmpevents1[i].h) {
-					last_e = last_e | tmpevents1[i].new_e;
-					continue;
-				}
-				if (last_h != NULL) _drainHandle(*last_h, last_e);
+				if (last_h == tmpevents1[i].h) continue;
+				if (last_h != NULL) _drainHandle(*last_h);
 				last_h = tmpevents1[i].h;
-				last_e = tmpevents1[i].new_e;
 			}
-			if (last_h != NULL) _drainHandle(*last_h, last_e);
+			if (last_h != NULL) _drainHandle(*last_h);
 			_draining = NULL;
 		}
 		epoll_event evts[MAX_EVENTS];
@@ -2041,31 +2037,32 @@ namespace CP
 		_dispatchingDeleted = false;
 		EventData evtd;
 		event_t evt = (event_t) ePollToEvents(event.events);
-		evt = evt & (event_t) h->getEvents();
+		Events E = h->getEvents();
+		evt = evt & (event_t) E;
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
+		event_t failed = (event_t(E) ^ event_t(h->_undispatched)) & ~evt;
+		event_t toDispatch = event_t(E) & ~failed;
+		Events events = h->dispatchMultiple((Events) toDispatch, (Events) evt, evtd);
 		if (_dispatchingDeleted) goto aaa;
-		event_t failed;
-		failed = 0;
+		failed |= (toDispatch & ~(event_t) events);
 		while (true) {
 			events = Events((event_t) h->getEvents() & ~failed);
 			if (events == Events::none) break;
-			event_t res = (event_t) h->dispatchMultiple(events, Events::none, evtd);
-			failed |= event_t(events) & ~res;
+			failed |= event_t(events) & ~(event_t) h->dispatchMultiple(events, Events::none, evtd);
 			if (_dispatchingDeleted) goto aaa;
 		}
+		h->_undispatched = Events::none;
 		//_applyHandle(*h, old_e);
 		aaa: _dispatchingHandle = NULL;
 	}
-	void NewEPoll::_drainHandle(Handle& h, Events new_e) {
-		if (new_e != Events::none) {
+	void NewEPoll::_drainHandle(Handle& h) {
+		if (h._undispatched != Events::none) {
 			EventData evtd;
 			evtd.hungUp = evtd.error = false;
 			_dispatchingDeleted = false;
 			_dispatchingHandle = &h;
-			event_t failed;
-			failed = 0;
+			event_t failed = event_t(h.getEvents()) ^ (event_t) h._undispatched;
 			while (true) {
 				Events events = Events((event_t) h.getEvents() & ~failed);
 				if (events == Events::none) break;
@@ -2074,15 +2071,17 @@ namespace CP
 				if (_dispatchingDeleted) goto out;
 			}
 		}
+		h._undispatched = Events::none;
 		out: _dispatchingHandle = NULL;
 	}
-	void NewEPoll::_queueHandle(Handle& h, Events new_e) {
-		_pending.push_back( { &h, new_e });
+	void NewEPoll::_queueHandle(Handle& h) {
+		_pending.push_back( { &h });
 	}
 	void NewEPoll::_applyHandle(Handle& h, Events old_e) {
 		Events new_e = h.getEvents();
-		Events new_added = (old_e ^ new_e) & new_e;
-		if (new_added != Events::none) _queueHandle(h, new_added);
+		Events delta = (old_e ^ new_e);
+		h._undispatched = h._undispatched ^ delta;
+		if (delta != Events::none) _queueHandle(h);
 	}
 
 	StandardStream::StandardStream() :

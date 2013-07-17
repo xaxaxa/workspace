@@ -866,6 +866,7 @@ namespace CP
 		Handle& operator=(const Handle& other) = delete;
 		//void* __private;
 		HANDLE handle;
+		Events _undispatched;
 		bool _supportsEPoll;
 		Handle();
 		Handle(HANDLE handle);
@@ -1166,7 +1167,6 @@ namespace CP
 		struct drainInfo
 		{
 			Handle* h;
-			Events new_e;
 		};
 		vector<drainInfo> _pending;
 		vector<drainInfo>* _draining;
@@ -1185,8 +1185,8 @@ namespace CP
 		void del(Handle& h);
 		bool _doIteration(int timeout);
 		void _doDispatch(const epoll_event& event);
-		void _drainHandle(Handle& h, Events new_e);
-		void _queueHandle(Handle& h, Events new_e);
+		void _drainHandle(Handle& h);
+		void _queueHandle(Handle& h);
 		void _applyHandle(Handle& h, Events old_e);
 	};
 	typedef NewEPoll Poll;
