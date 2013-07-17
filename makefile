@@ -47,6 +47,7 @@ dedup: bin/dedup
 benchmark: fftbench fibbench
 fftbench: bin/fftbench
 fibbench: bin/fibbench
+iptsocks_new: bin/iptsocks_new
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -99,7 +100,8 @@ bin/fftbench:
 	$(CXX) benchmark/fftbench.C -o bin/fftbench -lpthread -lfftw3 $(CFLAGS1)
 bin/fibbench:
 	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
-bin/fibbench:
+bin/iptsocks_new: cpoll
+	$(CXX) iptsocks_new/all.C -o bin/iptsocks_new -lcpoll -lpthread $(CFLAGS1)
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)

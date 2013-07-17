@@ -1,4 +1,7 @@
-<html>
+<%#
+#include <dlfcn.h>
+#include <cxxabi.h>
+%><html>
 <head>
 <title>show cache</title>
 <style>
@@ -38,6 +41,17 @@ td.s_unloaded {
 //returns miliseconds
 double dateDiff(timespec t1, timespec t2) {
 	return double(t2.tv_sec-t1.tv_sec)*1000+double(t2.tv_nsec-t1.tv_nsec)/1000000;
+}
+const char* ifnull(const char* s, const char* n) {
+	return s==nullptr?n:s;
+}
+void writeAddr(StreamWriter& sw, void* addr) {
+	Dl_info inf; char* sname;
+	dladdr(addr,&inf);
+	if(inf.dli_sname==nullptr) sname=nullptr;
+	else sname=abi::__cxa_demangle(inf.dli_sname, 0, 0, nullptr);
+	sw.writeF("%s: %s (%p)",ifnull(inf.dli_fname,"?"), ifnull(sname,"?"), addr);
+	if(sname) free(sname);
 }
 %>
 <body>
@@ -114,7 +128,10 @@ double dateDiff(timespec t1, timespec t2) {
 			%>
 			<tr>
 				<td><%htmlEscape((*it).first,output);%></td>
-				<td><%output.writeF("%p, %p",tmp->handler.func,tmp->handler.data);%></td>
+				<td><%
+				writeAddr(output,(void*)tmp->handler.func);
+				output.writeF(", %p",tmp->handler.data);
+				%></td>
 				<td><%=int64_t(-dateDiff(cm->curTime,tmp->lastUpdate)/1000)%> seconds ago</td>
 			</tr>
 			<%
