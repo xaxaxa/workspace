@@ -454,26 +454,28 @@ namespace cppsp
 		return String(tmp, l);
 	}
 	
-	void Server::updateTime(bool noCleanCache) {
+	bool Server::updateTime(bool noCleanCache) {
 		clock_gettime(CLOCK_MONOTONIC, &curTime);
 		clock_gettime(CLOCK_REALTIME, &curClockTime);
 		tm time;
 		gmtime_r(&curClockTime.tv_sec, &time);
 		curRFCTime.len = rfctime(time, curRFCTime.d);
-		if (noCleanCache) return;
+		if (noCleanCache) return true;
 		timespec tmp1 = curTime;
 		tmp1.tv_sec -= routeCacheCleanInterval;
 		//printf("%i\n",tsCompare(_lastClean, tmp1));
 		if (tsCompare(_lastClean, tmp1) < 0) {
 			_lastClean = curTime;
-			cleanCache();
+			return cleanCache();
 		}
+		return true;
 	}
-	void Server::cleanCache() {
+	bool Server::cleanCache() {
 		timespec tmp1 = curTime;
 		tmp1.tv_sec -= routeCacheCleanInterval;
 		auto it = routeCache.begin();
 		int del = 0;
+		bool ret = false;
 		while (it != routeCache.end()) {
 			if (tsCompare((*it).second->lastUpdate, tmp1) < 0) {
 				delete (*it).second;
@@ -481,9 +483,13 @@ namespace cppsp
 				it++;
 				routeCache.erase(tmp);
 				del++;
-			} else it++;
+			} else {
+				it++;
+				ret = true;
+			}
 		}
 		if (del > 0) printf("%i route cache entries purged\n", del);
+		return ret;
 	}
 
 	DefaultServer::DefaultServer(string root) :
@@ -555,13 +561,14 @@ namespace cppsp
 	String DefaultServer::loadStaticPageFromFile(String path) {
 		return mgr->loadStaticPage(path)->data;
 	}
-	void DefaultServer::updateTime(bool noCleanCache) {
-		Server::updateTime(noCleanCache);
+	bool DefaultServer::updateTime(bool noCleanCache) {
+		bool b=Server::updateTime(noCleanCache);
 		mgr->curTime = curTime;
+		return b;
 	}
-	void DefaultServer::cleanCache() {
-		Server::cleanCache();
-		mgr->cleanCache(this->fileCacheCleanInterval);
+	bool DefaultServer::cleanCache() {
+		bool b = Server::cleanCache();
+		return b | mgr->cleanCache(this->fileCacheCleanInterval);
 	}
 
 } /* namespace cppsp */

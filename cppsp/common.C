@@ -653,21 +653,25 @@ namespace cppsp
 		lp.doLoad();
 		goto xxx;
 	}
-	void cppspManager::cleanCache(int minAge) {
+	bool cppspManager::cleanCache(int minAge) {
 		timespec tmp1 = curTime;
 		tmp1.tv_sec -= minAge;
 		int del = 0;
+		bool ret = false;
 		{
 			auto it = cache.begin();
 			while (it != cache.end()) {
-				if ((*it).second->refCount <= 1 && !(*it).second->persistent
-						&& tsCompare((*it).second->lastCheck, tmp1) < 0) {
-					delete (*it).second;
-					auto tmp = it;
-					it++;
-					cache.erase(tmp);
-					del++;
-				} else it++;
+				if (!(*it).second->persistent) {
+					if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) < 0) {
+						delete (*it).second;
+						auto tmp = it;
+						it++;
+						cache.erase(tmp);
+						del++;
+						continue;
+					} else ret = true;
+				}
+				it++;
 			}
 		}
 		{
@@ -679,10 +683,13 @@ namespace cppsp
 					it++;
 					staticCache.erase(tmp);
 					del++;
-				} else it++;
+					continue;
+				} else ret = true;
+				it++;
 			}
 		}
 		if (del > 0) printf("%i file cache entries purged\n", del);
+		return ret;
 	}
 	void cppspManager::loadMimeDB(CP::StreamReader& in) {
 		string s;

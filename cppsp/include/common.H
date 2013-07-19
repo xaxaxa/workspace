@@ -146,9 +146,10 @@ namespace cppsp
 		/**
 		 Delete old cache entries.
 		 @param minAge the minimum age (in seconds since the entry was last accessed) for an entry to be deleted
+		 @returns whether or not there are any non-persistent items left
 		 @unmaintained_api
 		 */
-		void cleanCache(int minAge);
+		bool cleanCache(int minAge);
 		bool shouldCheck(loadedPage& p);
 		bool shouldCheck(staticPage& p);
 		void updateTime() {

@@ -385,9 +385,16 @@ namespace cppsp
 		virtual cppspManager* manager() {
 			return NULL;
 		}
-		virtual void updateTime(bool noCleanCache = false);
+		/**
+		 @returns whether or not the timer still need to run
+		 */
+		virtual bool updateTime(bool noCleanCache = false);
 		timespec _lastClean { 0, 0 };
-		virtual void cleanCache();
+		/**
+		 Purges expired cache items.
+		 @returns whether or not there are items left that could be purged in the future.
+		 */
+		virtual bool cleanCache();
 	};
 	//cppspManager based Server
 	class DefaultServer: public Server
@@ -420,8 +427,9 @@ namespace cppsp
 		//this function needs to be called periodically to check for file modifications
 		//otherwise auto re-compile will not work
 		//generally call it every 2 seconds
-		void updateTime(bool noCleanCache = false) override;
-		void cleanCache() override;
+
+		bool updateTime(bool noCleanCache = false) override;
+		bool cleanCache() override;
 	};
 	/**
 	 Base class for all cppsp pages.

@@ -113,16 +113,19 @@ namespace cppspServer
 		Timer t;
 		ObjectPool<Response> _responsePool;
 		int _lastRequests=0;
-		bool timerRunning;
+		int timerState=0;
 		void timerCB(int i) {
-			updateTime();
-			if(timerRunning && performanceCounters.totalRequestsReceived<=_lastRequests) {
+			if(!updateTime() && timerState==1) {
 				disableTimer();
+				return;
+			}
+			if(timerState==2 && performanceCounters.totalRequestsReceived<=_lastRequests) {
+				slowTimer();
 			}
 			_lastRequests=performanceCounters.totalRequestsReceived;
 		}
 		Server(Poll* p, string root):DefaultServer(root),p(p),
-			_responsePool(128),timerRunning(false) {
+			_responsePool(128) {
 			updateTime();
 			t.setCallback({&Server::timerCB,this});
 			p->add(t);
@@ -135,16 +138,22 @@ namespace cppspServer
 			mgr->loadMimeDB(sr);
 		}
 		void enableTimer() {
+			if(timerState==0) printf("enabling timer\n");
 			t.setInterval(routeCacheDuration*1000);
-			timerRunning=true;
+			timerState=2;
 			updateTime(true); //true indicates to inhibit cache cleaning
 		}
-		void disableTimer() {
-			timerRunning=false;
+		void slowTimer() {
 			t.setInterval(routeCacheCleanInterval*1000);
+			timerState=1;
+		}
+		void disableTimer() {
+			printf("disabling timer\n");
+			t.setInterval(0);
+			timerState=0;
 		}
 		void _defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
-			if(unlikely(!timerRunning)) enableTimer();
+			if(unlikely(timerState<2)) enableTimer();
 			defaultHandleRequest(req,resp,cb);
 		}
 		AsyncValue<Handler> routeStaticRequestFromFile(String path) override;
