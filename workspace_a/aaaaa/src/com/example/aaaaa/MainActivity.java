@@ -54,7 +54,7 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 		for (int i = 0; i < n; i++) {
 			RadioButton rb = new RadioButton(this
 					.findViewById(R.id.radioGroup1).getContext());
-			rb.setText(String.valueOf(i + 1));
+			rb.setText(String.valueOf(i));
 			ht.put(rb, new Integer(i));
 			rg.addView(rb);
 			if (i == 0)
@@ -63,12 +63,7 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 		helloLog("This will log to LogCat via the native call.");
 		rnd = new java.util.Random();
 
-		String dir = Environment.getExternalStorageDirectory().getPath()
-				+ "/zxcvb";
-		android.widget.EditText txt = (android.widget.EditText) this
-				.findViewById(R.id.editText1);
-		txt.setText(dir);
-
+		test3(null);
 	}
 
 	@Override
@@ -120,15 +115,24 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 				.findViewById(R.id.editText1);
 		txt.setText("/storage/extSdCard/zxcvb");
 	}
+	public void test3(View v) {
+		String dir = Environment.getExternalStorageDirectory().getPath()
+			+ "/zxcvb";
+		android.widget.EditText txt = (android.widget.EditText) this
+			.findViewById(R.id.editText1);
+		txt.setText(dir);
+	}
 
 	public void start() {
 		if (ddddd) {
 			zxcvb = asdfg + 3;
+			updateLabel();
 			return;
 		}
 		ddddd = true;
 		asdfg = 0;
 		zxcvb = n;
+		updateLabel();
 		prepare();
 		CheckBox chk = (CheckBox) this.findViewById(R.id.checkBox1);
 		if (chk.isChecked()) {
@@ -149,6 +153,10 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 	String dir() {
 		return ((android.widget.EditText) this.findViewById(R.id.editText1))
 				.getText().toString();
+	}
+	public void updateLabel() {
+		TextView t=(TextView)this.findViewById(R.id.textView2);
+		t.setText(Integer.toString(asdfg)+"/"+Integer.toString(zxcvb));
 	}
 
 	public void prepare() {
@@ -228,6 +236,7 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 			Log.e("EXCEPTION", ex.getMessage());
 		}
 		asdfg++;
+		updateLabel();
 		perform();
 	}
 
