@@ -36,6 +36,9 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.142870301" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 --std=c++0x -Wno-pmf-conversions -fno-omit-frame-pointer" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.other.pic.1456659329" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.768026622" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="_LARGEFILE64_SOURCE"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.224156660" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.170069979" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
@@ -60,9 +63,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.317623061.1849719517" name="http.C" rcbsApplicability="disable" resourcePath="http.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1000013721">
-						<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599.1000013721" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.269481599"/>
-					</fileInfo>
 					<sourceEntries>
 						<entry excluding="http.C|all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
@@ -123,9 +123,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.1045629552.149991274" name="http.C" rcbsApplicability="disable" resourcePath="http.C" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.79508858">
-						<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465.79508858" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1079844465"/>
-					</fileInfo>
 					<sourceEntries>
 						<entry excluding="http.C|all.C|rgctest.C|t1.C" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
