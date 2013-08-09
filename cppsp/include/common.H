@@ -113,11 +113,17 @@ namespace cppsp
 	{
 		String data;
 		String mime;
+		int64_t fileLen; //the "len" field in "data" is 32 bit; "data" should not be used for files >2GB
 		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
 		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
 		string path;
+		int fd;
 		bool loaded;
-		void doLoad();
+		/**
+		 @param keepFD whether to keep file descriptor open (if false, it will be closed before returning)
+		 @param map whether to map the file into virtual memory
+		 */
+		void doLoad(bool keepFD, bool map);
 		void doUnload();
 		bool shouldReload();
 		staticPage();
@@ -140,6 +146,7 @@ namespace cppsp
 		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		string tmpDir;
 		int threadID;
+		bool staticPage_keepFD, staticPage_map;
 		cppspManager();
 		AsyncValue<loadedPage*> loadPage(CP::Poll& p, String wd, String path);
 		staticPage* loadStaticPage(String path);

@@ -25,6 +25,8 @@ using namespace cppsp;
 using namespace RGC;
 #define rmb() /**/
 #define wmb() /**/
+#define CPPSP_USE_SENDFILE
+#define CPPSP_SENDFILE_BUFSIZE (1024*16)
 
 namespace cppspServer
 {
@@ -126,6 +128,10 @@ namespace cppspServer
 		}
 		Server(Poll* p, string root):DefaultServer(root),p(p),
 			_responsePool(128) {
+#ifdef CPPSP_USE_SENDFILE
+			this->mgr->staticPage_keepFD=true;
+			this->mgr->staticPage_map=false;
+#endif
 			updateTime();
 			t.setCallback({&Server::timerCB,this});
 			p->add(t);
@@ -179,7 +185,13 @@ namespace cppspServer
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t* buf;
-		iovec iov[2];
+		union {
+			iovec iov[2];
+			struct {
+				staticPage* _staticPage;
+				int64_t _sendFileOffset;
+			};
+		};
 		bool keepAlive;
 		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
 			p(poll),s(s),sp(2048),req(this->s,&sp) {
@@ -221,12 +233,12 @@ namespace cppspServer
 			}
 			
 		}
-		static inline int itoa(int i, char* b) {
+		static inline int itoa64(int64_t i, char* b) {
 			static char const digit[] = "0123456789";
 			char* p = b;
-			p += (i==0?0:int(log10f(i))) + 1;
+			int l;
+			p += (l=((i==0?0:int(log10(i))) + 1));
 			*p = '\0';
-			int l = p - b;
 			do { //Move back, inserting digits as u go
 				*--p = digit[i % 10];
 				i = i / 10;
@@ -236,22 +248,49 @@ namespace cppspServer
 		void handleStatic(staticPage* Sp) {
 			Response& resp(*this->resp);
 			try {
-				String data=Sp->data;
 				int bufferL = resp.buffer.length();
 				if(Sp->mime.length()>0)resp.headers["Content-Type"]=Sp->mime;
 				{
-					char* tmps = sp.beginAdd(16);
-					int l = itoa(data.length(), tmps);
+					char* tmps = sp.beginAdd(22);
+					int l = itoa64(Sp->fileLen, tmps);
 					sp.endAdd(l);
 					resp.headers.insert({"Content-Length", { tmps, l }});
 					StreamWriter sw(resp.buffer);
 					resp.serializeHeaders(sw);
 				}
+#ifdef CPPSP_USE_SENDFILE
+				_staticPage=Sp;
+				_sendFileOffset=0;
+				s.sendAll(resp.buffer.data()+bufferL,resp.buffer.length()-bufferL,
+					MSG_MORE, { &handler::sendHeadersCB, this });
+#else
+				String data=Sp->data;
 				iov[0]= {resp.buffer.data()+bufferL, (size_t)(resp.buffer.length()-bufferL)};
 				iov[1]= {data.data(), (size_t)data.length()};
 				resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
+#endif
 			} catch(exception& ex) {
 				thr.handleError(req,resp,ex,{&handler::finalize,this});
+			}
+		}
+		void sendHeadersCB(int r) {
+			if(r<=0) {
+				destruct();
+				return;
+			}
+			_beginSendFile();
+		}
+		void _beginSendFile() {
+			s.sendFileFrom(_staticPage->fd,_sendFileOffset,CPPSP_SENDFILE_BUFSIZE,{&handler::sendFileCB,this});
+		}
+		void sendFileCB(int r) {
+			if(r<0) {
+				destruct();
+			} else if(r==0) {
+				finalize();
+			} else {
+				_sendFileOffset+=(int64_t)r;
+				_beginSendFile();
 			}
 		}
 		void handleDynamic(loadedPage* lp) {
