@@ -65,6 +65,7 @@ namespace cppsp
 			cppsp::parseQueryString(q + 1, path + pathLen - q - 1, &cb, false);
 			This->path = {path, q - path};
 		}
+		This->path = cppsp::urlDecode(This->path.d, This->path.len, *This->sp);
 		return true;
 	}
 	bool CPollRequest::readRequest(const Delegate<void(bool)>& cb) {
