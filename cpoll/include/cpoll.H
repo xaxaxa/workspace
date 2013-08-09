@@ -50,6 +50,7 @@
 #include "statemachines.H"
 #include <fcntl.h>
 #include <math.h>
+#include <sys/sendfile.h>
 
 #ifndef WARNLEVEL
 #define WARNLEVEL 5
@@ -801,7 +802,7 @@ namespace CP
 		: uint8_t
 		{
 			none = 0, read = 1, write, send, recv, sendTo, recvFrom, accept, readAll, writeAll,
-		sendAll, recvAll, shutdown, connect, close, readv, writev, lastItem
+		sendAll, recvAll, shutdown, connect, close, readv, writev, sendFileFrom, sendFileTo, lastItem
 	};
 
 	struct EventData
@@ -840,6 +841,12 @@ namespace CP
 			{
 				eventfd_t evt;
 			} eventfd;
+			struct
+			{
+				HANDLE fd;
+				int64_t offset;
+				int32_t len;
+			} sendFile;
 		} misc;
 		Delegate<bool(Events event, EventHandlerData& ed, const EventData& evtd, bool confident)> opcb;
 		Operations op;
@@ -962,6 +969,29 @@ namespace CP
 			send(buf, len, flags, cb, true);
 		}
 		void sendAll(const void* buf, int32_t len, int32_t flags, const Callback& cb);
+
+		//all integers representing on-disk offsets and lengths are 64 bit;
+		//integers representing in-memory offsets and lengths are 32 bit.
+		int32_t sendFileFrom(HANDLE fd, int64_t offset, int32_t len) {
+			off_t off = (off_t) offset;
+			return (int32_t) sendfile(handle, fd, offset < 0 ? nullptr : &off, (size_t) len);
+		}
+		int32_t sendFileTo(HANDLE fd, int64_t offset, int32_t len) {
+			off_t off = (off_t) offset;
+			return (int32_t) sendfile(fd, handle, offset < 0 ? nullptr : &off, (size_t) len);
+		}
+
+		void sendFileFrom(HANDLE fd, int64_t offset, int32_t len, const Callback& cb, bool repeat =
+				false);
+		void repeatSendFileFrom(HANDLE fd, int64_t offset, int32_t len, const Callback& cb) {
+			return sendFileFrom(fd, offset, len, cb, true);
+		}
+		void sendFileTo(HANDLE fd, int64_t offset, int32_t len, const Callback& cb, bool repeat =
+				false);
+		void repeatSendFileTo(HANDLE fd, int64_t offset, int32_t len, const Callback& cb) {
+			return sendFileTo(fd, offset, len, cb, true);
+		}
+
 		virtual Events getEvents() override final {
 			return _getEvents();
 		}
@@ -1308,8 +1338,8 @@ namespace CP
 			return {(char*)buffer+bufferPos,bufferSize-bufferPos};
 		}
 		void endAppend(int len) {
-			if (bufferPos + len > bufferSize)
-				throw overflow_error("invalid length parameter to MemoryStream::endAppend()");
+			if (bufferPos + len > bufferSize) throw overflow_error(
+					"invalid length parameter to MemoryStream::endAppend()");
 			bufferPos += len;
 			if (bufferPos > this->len) this->len = bufferPos;
 		}
@@ -1342,12 +1372,12 @@ namespace CP
 #ifndef __i386__
 #ifndef __amd64__
 			/*if (sz >= 8) {
-				off = 8 - (_curIndex % 8);
-			} else if (sz >= 4) {
-				off = 4 - (_curIndex % 4);
-			} else if (sz == 2) {
-				off = 2 - (_curIndex % 2);
-			}*/
+			 off = 8 - (_curIndex % 8);
+			 } else if (sz >= 4) {
+			 off = 4 - (_curIndex % 4);
+			 } else if (sz == 2) {
+			 off = 2 - (_curIndex % 2);
+			 }*/
 			off = 8 - (_curIndex % 8);
 #endif
 #endif
@@ -1579,8 +1609,8 @@ namespace CP
 			return {(char*)buffer+bufferPos,bufferSize-bufferPos};
 		}
 		void endAppend(int len) {
-			if (bufferPos + len > bufferSize)
-				throw overflow_error("invalid length parameter to MemoryStream::endAppend()");
+			if (bufferPos + len > bufferSize) throw overflow_error(
+					"invalid length parameter to MemoryStream::endAppend()");
 			bufferPos += len;
 			if (bufferPos > this->len) this->len = bufferPos;
 		}
@@ -1692,8 +1722,8 @@ namespace CP
 			if (pbuf != NULL) __dec_autofree();
 		}
 		inline Buffer subBuffer(int index, int length) const {
-			if (index < 0 || index + length > this->len || length < 0)
-				throw range_error("Buffer::subBuffer() out of range");
+			if (index < 0 || index + length > this->len || length < 0) throw range_error(
+					"Buffer::subBuffer() out of range");
 			return Buffer(pbuf, d + index, length);
 		}
 		inline Buffer subBuffer(int index) const {
@@ -1719,8 +1749,7 @@ namespace CP
 		inline void set(int i, bool b) {
 			int tmp1 = i / 32;
 			__uint32_t tmp = data[tmp1];
-			if (b)
-				data[tmp1] = tmp | ((int) 1 << (i % 32));
+			if (b) data[tmp1] = tmp | ((int) 1 << (i % 32));
 			else data[tmp1] = tmp & (~((int) 1 << (i % 32)));
 		}
 	};

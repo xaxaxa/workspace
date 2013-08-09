@@ -153,9 +153,8 @@ namespace CP
 		this->port = ntohs(addr.sin_port);
 	}
 	void IPEndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_INET)
-			throw CPollException(
-					"attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
+		if (addr->sa_family != AF_INET) throw CPollException(
+				"attemting to set the address of an IPEndPoint to a sockaddr that is not AF_INET");
 		set_addr(*(sockaddr_in*) addr);
 	}
 	IPEndPoint::IPEndPoint(const sockaddr_in& addr) {
@@ -171,9 +170,8 @@ namespace CP
 		return sizeof(sockaddr_in);
 	}
 	void IPEndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily)
-			throw CPollException(
-					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily) throw CPollException(
+				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		IPEndPoint& tmp((IPEndPoint&) to);
 		tmp.address = address;
 		tmp.port = port;
@@ -205,9 +203,8 @@ namespace CP
 		set_addr(addr);
 	}
 	void IPv6EndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_INET6)
-			throw CPollException(
-					"attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
+		if (addr->sa_family != AF_INET6) throw CPollException(
+				"attemting to set the address of an IPv6EndPoint to a sockaddr that is not AF_INET6");
 		set_addr(*(sockaddr_in6*) addr);
 	}
 	void IPv6EndPoint::getSockAddr(sockaddr* addr) const {
@@ -222,9 +219,8 @@ namespace CP
 		return sizeof(sockaddr_in);
 	}
 	void IPv6EndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily)
-			throw CPollException(
-					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily) throw CPollException(
+				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		IPv6EndPoint& tmp((IPv6EndPoint&) to);
 		tmp.address = address;
 		tmp.port = port;
@@ -253,9 +249,8 @@ namespace CP
 		set_addr(addr);
 	}
 	void UNIXEndPoint::setSockAddr(const sockaddr* addr) {
-		if (addr->sa_family != AF_UNIX)
-			throw CPollException(
-					"attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
+		if (addr->sa_family != AF_UNIX) throw CPollException(
+				"attemting to set the address of an UNIXEndPoint to a sockaddr that is not AF_UNIX");
 		set_addr(*(sockaddr_un*) addr);
 	}
 	void UNIXEndPoint::getSockAddr(sockaddr* addr) const {
@@ -268,9 +263,8 @@ namespace CP
 		return sizeof(sa_family_t) + name.length() + 1;
 	}
 	void UNIXEndPoint::clone(EndPoint& to) const {
-		if (to.addressFamily != addressFamily)
-			throw CPollException(
-					"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
+		if (to.addressFamily != addressFamily) throw CPollException(
+				"attempting to clone an EndPoint to another EndPoint with a different addressFamily");
 		UNIXEndPoint& tmp((UNIXEndPoint&) to);
 		tmp.name = name;
 	}
@@ -322,17 +316,16 @@ namespace CP
 	}
 
 	static inline void Stream_beginReadv(Stream* This) {
-		if (This->_readvAll.i < This->_readvAll.iovcnt)
-			This->readv(This->_readvAll.iov + This->_readvAll.i,
-					This->_readvAll.iovcnt - This->_readvAll.i, { &Stream::_readvCB, This });
+		if (This->_readvAll.i < This->_readvAll.iovcnt) This->readv(
+				This->_readvAll.iov + This->_readvAll.i, This->_readvAll.iovcnt - This->_readvAll.i, {
+						&Stream::_readvCB, This });
 		else {
 			This->_readvAll.cb(This->_readvAll.br);
 		}
 	}
 	static inline void Stream_beginReadAll(Stream* This) {
-		if (This->_readAll.i < This->_readAll.len)
-			This->read(This->_readAll.buf + This->_readAll.i, This->_readAll.len - This->_readAll.i, {
-					&Stream::_readAllCB, This });
+		if (This->_readAll.i < This->_readAll.len) This->read(This->_readAll.buf + This->_readAll.i,
+				This->_readAll.len - This->_readAll.i, { &Stream::_readAllCB, This });
 		else {
 			This->_readAll.cb(This->_readAll.i);
 		}
@@ -365,17 +358,17 @@ namespace CP
 		Stream_beginReadAll(this);
 	}
 	static inline void Stream_beginWritev(Stream* This) {
-		if (This->_writevAll.i < This->_writevAll.iovcnt)
-			This->writev(This->_writevAll.iov + This->_writevAll.i,
-					This->_writevAll.iovcnt - This->_writevAll.i, { &Stream::_writevCB, This });
+		if (This->_writevAll.i < This->_writevAll.iovcnt) This->writev(
+				This->_writevAll.iov + This->_writevAll.i, This->_writevAll.iovcnt - This->_writevAll.i,
+				{ &Stream::_writevCB, This });
 		else {
 			This->_writevAll.cb(This->_writevAll.br);
 		}
 	}
 	static inline void Stream_beginWriteAll(Stream* This) {
-		if (This->_writeAll.i < This->_writeAll.len)
-			This->write(This->_writeAll.buf + This->_writeAll.i,
-					This->_writeAll.len - This->_writeAll.i, { &Stream::_writeAllCB, This });
+		if (This->_writeAll.i < This->_writeAll.len) This->write(
+				This->_writeAll.buf + This->_writeAll.i, This->_writeAll.len - This->_writeAll.i, {
+						&Stream::_writeAllCB, This });
 		else {
 			This->_writeAll.cb(This->_writeAll.i);
 		}
@@ -872,9 +865,9 @@ namespace CP
 	EventHandlerData* File::beginAddEvent(Events event) {
 		int i = eventToIndex(event);
 		EventHandlerData *ed = &eventData[i];
-		if (ed->state != EventHandlerData::States::invalid)
-			throw CPollException("Already listening for the specified event on the specified file. "
-					"For example, you may not read() and recv() on one socket at the same time.");
+		if (ed->state != EventHandlerData::States::invalid) throw CPollException(
+				"Already listening for the specified event on the specified file. "
+						"For example, you may not read() and recv() on one socket at the same time.");
 		eventData[i].opcb = nullptr;
 		return ed;
 	}
@@ -949,8 +942,8 @@ namespace CP
 				if (r <= 0) {
 					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)
-						ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
 					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
@@ -972,8 +965,8 @@ namespace CP
 				if (r <= 0) {
 					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)
-						ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
 					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
@@ -993,8 +986,8 @@ namespace CP
 				if (r <= 0) {
 					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)
-						ed.cb(ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? r : ed.misc.bufferIO.len_done);
 					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
@@ -1012,8 +1005,8 @@ namespace CP
 				if (r <= 0) {
 					if (r < 0 && isWouldBlock()) return false;
 					ed.state = EventHandlerData::States::invalid;
-					if (ed.cb != nullptr)
-						ed.cb(ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
+					if (ed.cb != nullptr) ed.cb(
+							ed.misc.bufferIO.len_done == 0 ? -1 : ed.misc.bufferIO.len_done);
 					return true;
 				}
 				ed.misc.bufferIO.len_done += r;
@@ -1025,6 +1018,12 @@ namespace CP
 			case Operations::close:
 				if (!confident && (checkEvents(event) & event) != event) return false;
 				close();
+				break;
+			case Operations::sendFileFrom:
+				r = sendFileFrom(ed.misc.sendFile.fd, ed.misc.sendFile.offset, ed.misc.sendFile.len);
+				break;
+			case Operations::sendFileTo:
+				r = sendFileTo(ed.misc.sendFile.fd, ed.misc.sendFile.offset, ed.misc.sendFile.len);
 				break;
 			case Operations::none:
 				if (!confident && (checkEvents(event) & event) != event) return false;
@@ -1298,6 +1297,36 @@ namespace CP
 		ed->opcb= {&File_doWritev,this};
 		endAddEvent(e, repeat);
 	}
+	static inline void File_prepareSendFile(File* This, Events e, Operations op, HANDLE fd,
+			int64_t offset, int32_t len, const Callback& cb, bool repeat) {
+		EventHandlerData* ed = This->beginAddEvent(e);
+		ed->cb = cb;
+		ed->misc.sendFile.fd = fd;
+		ed->misc.sendFile.len = len;
+		ed->misc.sendFile.offset = offset;
+		ed->op = op;
+		This->endAddEvent(e, repeat);
+	}
+	void File::sendFileFrom(HANDLE fd, int64_t offset, int32_t len, const Callback& cb,
+			bool repeat) {
+		if (!_supportsEPoll) {
+			asdfg: int32_t r = sendFileFrom(fd, offset, len);
+			cb(r);
+			if (repeat && r > 0) goto asdfg;
+			return;
+		}
+		File_prepareSendFile(this, Events::out, Operations::sendFileFrom, fd, offset, len, cb,
+				repeat);
+	}
+	void File::sendFileTo(HANDLE fd, int64_t offset, int32_t len, const Callback& cb, bool repeat) {
+		if (!_supportsEPoll) {
+			asdfg: int32_t r = sendFileTo(fd, offset, len);
+			cb(r);
+			if (repeat && r > 0) goto asdfg;
+			return;
+		}
+		File_prepareSendFile(this, Events::in, Operations::sendFileTo, fd, offset, len, cb, repeat);
+	}
 
 //Socket
 	Socket::Socket() :
@@ -1406,9 +1435,8 @@ namespace CP
 	void Socket::bind(const char* hostname, const char* port, int32_t family, int32_t socktype,
 			int32_t proto, int32_t flags, Callback initsock) {
 		//XXX
-		if (handle != -1)
-			throw CPollException(
-					"Socket::bind(string, ...) creates a socket, but the socket is already initialized");
+		if (handle != -1) throw CPollException(
+				"Socket::bind(string, ...) creates a socket, but the socket is already initialized");
 		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
 		unsigned int i;
 		for (i = 0; i < hosts.size(); i++) {
@@ -1463,9 +1491,8 @@ namespace CP
 	void Socket::connect(const char* hostname, const char* port, int32_t family, int32_t socktype,
 			int32_t proto, int32_t flags) {
 		//XXX
-		if (handle != -1)
-			throw CPollException(
-					"Socket::connect(string, ...) creates a socket, but the socket is already initialized");
+		if (handle != -1) throw CPollException(
+				"Socket::connect(string, ...) creates a socket, but the socket is already initialized");
 		auto hosts = EndPoint::lookupHost(hostname, port, 0, socktype, proto);
 		unsigned int i;
 		for (i = 0; i < hosts.size(); i++) {
@@ -1688,8 +1715,8 @@ namespace CP
 			bool d(false);
 			this->deletionFlag = &d;
 			int i;
-			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp) && cb != nullptr)
-				cb((int) tmp);
+			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp) && cb != nullptr) cb(
+					(int) tmp);
 			else if (i < 0 && isWouldBlock()) {
 				this->deletionFlag = NULL;
 				dispatching = false;
@@ -2203,8 +2230,8 @@ namespace CP
 		return l;
 	}
 	void FixedMemoryStream::flushBuffer(int minBufferAllocation) {
-		if (minBufferAllocation > this->len - this->bufferPos)
-			throw runtime_error("overflowed FixedMemoryStream");
+		if (minBufferAllocation > this->len - this->bufferPos) throw runtime_error(
+				"overflowed FixedMemoryStream");
 	}
 	BufferedOutput* FixedMemoryStream::getBufferedOutput() {
 		return this;
@@ -2437,15 +2464,14 @@ namespace CP
 		}
 	}
 	void* MemoryPool::alloc(int s) {
-		if (s != size)
-			throw CPollException(
-					"attempting to allocate an object of the wrong size from a MemoryPool");
+		if (s != size) throw CPollException(
+				"attempting to allocate an object of the wrong size from a MemoryPool");
 		return alloc();
 	}
 	void MemoryPool::dealloc(void* obj) {
 		_item* o = ((_item*) obj) - 1;
-		if (o->nextFree != (_item*) this)
-			throw runtime_error("MemoryPool::free(): double free or corruption");
+		if (o->nextFree != (_item*) this) throw runtime_error(
+				"MemoryPool::free(): double free or corruption");
 		if (items > maxItems) {
 			::free(o);
 		} else {
