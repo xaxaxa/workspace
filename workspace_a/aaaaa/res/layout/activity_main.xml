@@ -13,9 +13,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/hello_world" />
-
+	<TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+		android:layout_below="@+id/textView1"
+        android:text="0" />
+	
     <Button
         android:id="@+id/button2"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/button3"
+        android:layout_alignParentTop="true"
+        android:onClick="test3"
+        android:text="internal" />
+	<Button
+        android:id="@+id/button3"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -58,7 +73,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/button2"
         android:layout_alignBottom="@+id/button2"
-        android:layout_toLeftOf="@+id/button1"
+        android:layout_toLeftOf="@+id/button2"
         android:text="CheckBox" />
 
 </RelativeLayout>
