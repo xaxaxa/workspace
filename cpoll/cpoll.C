@@ -18,12 +18,12 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
-#include "cpoll.H"
-#include "cpoll_internal.H"
+#include "include/cpoll.H"
+#include "include/cpoll_internal.H"
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
-#include "statemachines.H"
+#include "include/statemachines.H"
 #include <dirent.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -323,6 +323,13 @@ namespace CP
 			This->_readvAll.cb(This->_readvAll.br);
 		}
 	}
+	static inline void Stream_beginReadAll(Stream* This) {
+		if (This->_readAll.i < This->_readAll.len) This->read(This->_readAll.buf + This->_readAll.i,
+				This->_readAll.len - This->_readAll.i, { &Stream::_readAllCB, This });
+		else {
+			This->_readAll.cb(This->_readAll.i);
+		}
+	}
 	void Stream::_readvCB(int r) {
 		if (r <= 0) {
 			_readvAll.cb(_readvAll.br);
@@ -342,12 +349,28 @@ namespace CP
 		}
 		Stream_beginReadv(this);
 	}
+	void Stream::_readAllCB(int r) {
+		if (r <= 0) {
+			_readAll.cb(_readAll.i);
+			return;
+		}
+		_readAll.i += r;
+		Stream_beginReadAll(this);
+	}
 	static inline void Stream_beginWritev(Stream* This) {
 		if (This->_writevAll.i < This->_writevAll.iovcnt) This->writev(
 				This->_writevAll.iov + This->_writevAll.i, This->_writevAll.iovcnt - This->_writevAll.i,
 				{ &Stream::_writevCB, This });
 		else {
 			This->_writevAll.cb(This->_writevAll.br);
+		}
+	}
+	static inline void Stream_beginWriteAll(Stream* This) {
+		if (This->_writeAll.i < This->_writeAll.len) This->write(
+				This->_writeAll.buf + This->_writeAll.i, This->_writeAll.len - This->_writeAll.i, {
+						&Stream::_writeAllCB, This });
+		else {
+			This->_writeAll.cb(This->_writeAll.i);
 		}
 	}
 	void Stream::_writevCB(int r) {
@@ -368,6 +391,14 @@ namespace CP
 			}
 		}
 		Stream_beginWritev(this);
+	}
+	void Stream::_writeAllCB(int r) {
+		if (r <= 0) {
+			_writeAll.cb(_writeAll.i);
+			return;
+		}
+		_writeAll.i += r;
+		Stream_beginWriteAll(this);
 	}
 
 	int Stream::readToEnd(BufferedOutput& out, int32_t bufSize) {
@@ -415,9 +446,17 @@ namespace CP
 		_readvAll= {cb,iov,iovcnt,0,0};
 		Stream_beginReadv(this);
 	}
+	void Stream::readAll(void* buf, int32_t len, const Callback& cb) {
+		_readAll= {cb,(uint8_t*)buf,len,0};
+		Stream_beginReadAll(this);
+	}
 	void Stream::writevAll(iovec* iov, int iovcnt, const Callback& cb) {
 		_writevAll= {cb,iov,iovcnt,0,0};
 		Stream_beginWritev(this);
+	}
+	void Stream::writeAll(const void* buf, int32_t len, const Callback& cb) {
+		_writeAll= {cb,(const uint8_t*)buf,len,0};
+		Stream_beginWriteAll(this);
 	}
 
 	StreamWriter::StreamWriter(BufferedOutput& s) :
@@ -437,7 +476,7 @@ namespace CP
 	}
 	StreamWriter::~StreamWriter() {
 		flush();
-		if(buffer==&sb) sb.~StreamBuffer();
+		if (buffer == &sb) sb.~StreamBuffer();
 	}
 
 	StreamBuffer::StreamBuffer() {
@@ -449,8 +488,16 @@ namespace CP
 	}
 	void StreamBuffer::flushBuffer(int minBufferAllocation) {
 		if (bufferPos <= 0) return;
-		if (minBufferAllocation > bufferSize) throw overflow_error(
-				"write operation would overflow StreamBuffer. try increasing the buffer size of your StreamBuffer instance.");
+		if (minBufferAllocation > bufferSize) {
+			int bs = bufferSize;
+			do {
+				bs *= 2;
+			} while (minBufferAllocation > bs);
+			void* newbuffer = realloc(buffer, bs);
+			if (newbuffer == NULL) throw bad_alloc();
+			buffer = (uint8_t*) newbuffer;
+			bufferSize = bs;
+		}
 		output->write(buffer, bufferPos);
 		bufferPos = 0;
 	}
@@ -980,12 +1027,12 @@ namespace CP
 		//an error or hang-up condition
 		if ((r <= 0 && op != Operations::none) /*|| evtd.error || evtd.hungUp*/) {
 			//invalidate the current event listener
-			ed.state = EventHandlerData::States::invalid;
+			asdf: ed.state = EventHandlerData::States::invalid;
 		}
-		asdf: bool* del = deletionFlag;
+		bool* del = deletionFlag;
 		if (ed.cb != nullptr) ed.cb(r);
 		if (*del) return true;
-		if (oldstate == EventHandlerData::States::repeat) {
+		if (ed.state == EventHandlerData::States::repeat) {
 			confident = false;
 			goto redo;
 		}
@@ -1024,7 +1071,7 @@ namespace CP
 				EventHandlerData& ed = eventData[i];
 				if (ed.state == EventHandlerData::States::invalid) continue;
 				if (ed.opcb != nullptr) {
-					ed.opcb(e, ed, evtd, (confident & e) == e);
+					if (ed.opcb(e, ed, evtd, (confident & e) == e)) ret |= e;
 					if (d) break;
 					continue;
 				}
@@ -1033,9 +1080,10 @@ namespace CP
 						EventHandlerData::States::invalid;
 				try {
 					if (doOperation(e, ed, evtd, oldstate, (confident & e) == e)) {
-						if (d) break;
 						ret |= e;
+						if (d) break;
 					} else {
+						if (d) break;
 						ed.state = oldstate;
 					}
 				} catch (const CancelException& ex) {
@@ -1176,7 +1224,6 @@ namespace CP
 		//if(handle<0)throw runtime_error("asdf");
 		if (onClose != nullptr) onClose(*this);
 		::close(handle);
-		handle = -1;
 		deinit();
 	}
 	void File::flush() {
@@ -1346,7 +1393,7 @@ namespace CP
 		bind((sockaddr*) tmp, size);
 	}
 	void Socket::bind(const char* hostname, const char* port, int32_t family, int32_t socktype,
-			int32_t proto, int32_t flags) {
+			int32_t proto, int32_t flags, Callback initsock) {
 		//XXX
 		if (handle != -1) throw CPollException(
 				"Socket::bind(string, ...) creates a socket, but the socket is already initialized");
@@ -1357,6 +1404,7 @@ namespace CP
 			if (_f < 0) continue;
 			int32_t tmp12345 = 1;
 			setsockopt(_f, SOL_SOCKET, SO_REUSEADDR, &tmp12345, sizeof(tmp12345));
+			if (initsock != nullptr) initsock(_f);
 			int size = hosts[i]->getSockAddrSize();
 			uint8_t tmp[size];
 			hosts[i]->getSockAddr((sockaddr*) tmp);
@@ -1628,7 +1676,8 @@ namespace CP
 			bool d(false);
 			this->deletionFlag = &d;
 			int i;
-			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp)) cb((int) tmp);
+			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp) && cb != nullptr) cb(
+					(int) tmp);
 			else if (i < 0 && isWouldBlock()) {
 				this->deletionFlag = NULL;
 				dispatching = false;
@@ -1873,14 +1922,12 @@ namespace CP
 			if (likely(curEvents!=NULL)) for (int i = curIndex; i < curLength; i++) {
 				if (curEvents[i].data.ptr == (void*) &h) curEvents[i].data.ptr = NULL;
 			}
-			//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
-			//XXX: see previous comment about EPOLL_CTL_DEL
-			epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
-
-			//h.release();
-			//tmp_deleted.insert(&h);
-			//has_deleted = true;
-			active--;
+			if (h.handle >= 0) {
+				//checkError(epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1));
+				//XXX: see previous comment about EPOLL_CTL_DEL
+				epoll_ctl(this->handle, EPOLL_CTL_DEL, h.handle, (epoll_event*) 1);
+				active--;
+			}
 		}
 		h.onEventsChange = nullptr;
 		h.onClose = nullptr;
@@ -1983,35 +2030,35 @@ namespace CP
 		evt = evt & (event_t) h->getEvents();
 		evtd.hungUp = (event.events & EPOLLHUP);
 		evtd.error = (event.events & EPOLLERR);
-		Events old_e = h->getEvents();
 		Events events = h->dispatchMultiple((Events) evt, (Events) evt, evtd);
 		if (_dispatchingDeleted) goto aaa;
-		Events new_e;
+		event_t failed;
+		failed = 0;
 		while (true) {
-			new_e = h->getEvents();
-			events = (events | (old_e ^ new_e)) & new_e;
-			old_e = new_e;
+			events = Events((event_t) h->getEvents() & ~failed);
 			if (events == Events::none) break;
-			events = h->dispatchMultiple(events, Events::none, evtd);
+			event_t res = (event_t) h->dispatchMultiple(events, Events::none, evtd);
+			failed |= event_t(events) & ~res;
 			if (_dispatchingDeleted) goto aaa;
 		}
 		//_applyHandle(*h, old_e);
 		aaa: _dispatchingHandle = NULL;
 	}
 	void NewEPoll::_drainHandle(Handle& h, Events new_e) {
-		Events old_e = h.getEvents();
 		if (new_e != Events::none) {
 			EventData evtd;
 			evtd.hungUp = evtd.error = false;
 			_dispatchingDeleted = false;
 			_dispatchingHandle = &h;
-			do {
-				new_e = h.dispatchMultiple(new_e, Events::none, evtd);
+			event_t failed;
+			failed = 0;
+			while (true) {
+				Events events = Events((event_t) h.getEvents() & ~failed);
+				if (events == Events::none) break;
+				event_t res = (event_t) h.dispatchMultiple(events, Events::none, evtd);
+				failed |= event_t(events) & ~res;
 				if (_dispatchingDeleted) goto out;
-				Events newest_e = h.getEvents();
-				new_e = (new_e | (old_e ^ newest_e)) & newest_e;
-				old_e = newest_e;
-			} while (new_e != Events::none);
+			}
 		}
 		out: _dispatchingHandle = NULL;
 	}

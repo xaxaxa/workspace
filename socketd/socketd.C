@@ -500,7 +500,7 @@ namespace socketd
 		virtual void shutDown() {
 			if (!down) {
 				down = true;
-				unixsock->close(nullptr);
+				unixsock->close();
 				kill(pid, 15);
 			}
 		}
@@ -641,9 +641,6 @@ namespace socketd
 			return 1;
 		}
 		virtual ~appConnection_unix() {
-			p.del(*unixsock);
-			//printf("asdfg %i\n", --asdf);
-			//throw runtime_error("fuck");
 		}
 
 	};

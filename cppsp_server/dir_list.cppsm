@@ -31,7 +31,7 @@ extern "C" void deinitModule() {
 	<title>Index of <% htmlEscape(request->path,output); %></title>
 </head>
 <body>
-<h1>Index of <% htmlEscape(request->path,output); %></h1>
+<h1 style="margin-top: 2px;">Index of <% htmlEscape(request->path,output); %></h1>
 <table>
 	<tr>
 		<th>Name</th>

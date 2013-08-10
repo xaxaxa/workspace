@@ -47,6 +47,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 }
 int main(int argc, char** argv) {
 	cout << "started child #" << getpid() << endl;
+	srand(int(getpid())^(int)time(NULL));
 	{
 		char cwd[255];
 		if(getcwd(cwd,255)==NULL) throw runtime_error(strerror(errno));
@@ -85,11 +86,21 @@ int main(int argc, char** argv) {
 			hdlr->allocator=&mp;
 		}
 	} cb {p, mp, srv};
-	socketd_client cl(p, &cb);
 	
-	
+	int modsLeft;
+	struct {
+		int& modsLeft;
+		CP::Poll& p;
+		Delegate<void(socketd_client& cl, Socket* s, int64_t id)> cb;
+		void operator()() {
+			if(--modsLeft == 0) {
+				new socketd_client(p,cb);
+			}
+		}
+	} afterModuleLoad {modsLeft,p,&cb};
 	struct {
 		const char* s;
+		Delegate<void()> afterModuleLoad;
 		void operator()(void*,exception* ex) {
 			if(ex!=NULL) {
 				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
@@ -98,13 +109,16 @@ int main(int argc, char** argv) {
 					printf("%s\n",ce->compilerOutput.c_str());
 				}
 			}
+			afterModuleLoad();
 		}
 	} moduleCB[modules.size()];
+	modsLeft=modules.size();
 	for(int ii=0;ii<(int)modules.size();ii++) {
 		moduleCB[ii].s=modules[ii];
+		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
 		srv.loadModule(p,modules[ii],&moduleCB[ii]);
 	}
-	
+	if(modules.size()==0) new socketd_client(p,&cb);
 	
 	p.loop();
 }

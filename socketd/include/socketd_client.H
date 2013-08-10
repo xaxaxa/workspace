@@ -55,7 +55,7 @@ namespace socketd
 		}
 		int32_t read(void* buf, int32_t len) {
 			int32_t r;
-			if ((r = tryFixRead(buf, len)) == -1) CP::Socket::read(buf, len);
+			if ((r = tryFixRead(buf, len)) == -1) return CP::Socket::read(buf, len);
 			else return r;
 		}
 		int32_t recv(void* buf, int32_t len, int32_t flags = 0) {

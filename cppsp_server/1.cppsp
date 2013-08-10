@@ -5,26 +5,12 @@
 #include <stdexcept>
 #include <cppsp/common.H>
 #include <delegate.H>
-#include "1_cppsp.H"
 #include <iostream>
-int aaaaa=0;
 %>
-<%@ class sss inherits _1_cppsp %>
 <%$
 void init() {
 	doReadPost=true;
 }
-void test() {
-	cout << aaaaa << endl;
-}
-/*
-void finalize() {
-	const char* tmp="fsck";
-	response->outputStream->write(tmp,4,{&sss::_cb1,this});
-}
-void _cb1(int i) {
-	finalizeCB();
-}*/
 %>
 form:
 <table border="1">

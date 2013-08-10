@@ -119,8 +119,11 @@ namespace cppspServer
 		String loadStaticPageFromFile(String path) override {
 			return cppsp::loadStaticPage(mgr,path);
 		}
-		String rootDir() {
+		String rootDir() override {
 			return root;
+		}
+		cppspManager* manager() override {
+			return mgr;
 		}
 		//this function needs to be called periodically to check for file modifications
 		//otherwise auto re-compile will not work
@@ -170,7 +173,8 @@ namespace cppspServer
 			auto it=req.headers.find("connection");
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
-			resp.headers.add("Connection", keepAlive?"keep-alive":"close");
+			resp.headers.insert({"Connection", keepAlive?"keep-alive":"close"});
+			resp.headers.insert({"Date", sp.addString(thr.mgr->curRFCTime)});
 			
 			thr.handleRequest(req,resp,{&handler::finalize,this});
 		}
@@ -183,7 +187,7 @@ namespace cppspServer
 		static inline int itoa(int i, char* b) {
 			static char const digit[] = "0123456789";
 			char* p = b;
-			p += int(log10f(i)) + 1;
+			p += (i==0?0:int(log10f(i))) + 1;
 			*p = '\0';
 			int l = p - b;
 			do { //Move back, inserting digits as u go
@@ -201,7 +205,7 @@ namespace cppspServer
 					char* tmps = sp.beginAdd(16);
 					int l = itoa(data.length(), tmps);
 					sp.endAdd(l);
-					resp.headers.add("Content-Length", { tmps, l });
+					resp.headers.insert({"Content-Length", { tmps, l }});
 					StreamWriter sw(resp.buffer);
 					resp.serializeHeaders(sw);
 				}

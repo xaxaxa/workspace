@@ -29,7 +29,7 @@
 namespace cppsp
 {
 	using namespace CP;
-	struct HTTPParser
+	struct HTTPParser: public virtual RGC::Object
 	{
 		static inline char tolower(char c) {
 			if (c <= 'Z' && c >= 'A') c = c - 'A' + 'a';
@@ -99,7 +99,7 @@ namespace cppsp
 					auto* items=hc->beginReplace(headercount);
 					for(int i=0;i<headercount;i++) {
 						int pos1=headerpos[i];
-						int end=i+1<headercount?headerpos[i+1]:this->pos-2;
+						int end=(i+1<headercount?headerpos[i+1]:this->pos)-2;
 						lineBuf=buf+pos1;
 						lineBufLen=end-pos1;
 						tmp = memchr(lineBuf, ':', lineBufLen);
@@ -108,18 +108,16 @@ namespace cppsp
 						} else {
 							headerContainer::item it;
 							uint8_t* tmp1 = (uint8_t*) tmp - 1;
-							while (tmp1 >= lineBuf && *tmp1 == ' ')
-							tmp1--;
+							while (tmp1 >= lineBuf && *tmp1 == ' ') tmp1--;
 							it.name = (char*)lineBuf;
 							it.nameLength = (int) (tmp1 - lineBuf + 1);
 							tmp1 = (uint8_t*) tmp + 1;
-							while (tmp1 < (buf + newpos) && *tmp1 == ' ')
-							tmp1++;
+							while (tmp1 < (buf + newpos) && *tmp1 == ' ') tmp1++;
 							it.value = (char*)tmp1;
 							it.valueLength = (int) (lineBuf + lineBufLen - tmp1);
 
 							if (_ctLen == 0
-							&& ci_equals( {(char*) lineBuf, it.nameLength}, "content-length")) {
+									&& ci_equals( {(char*) lineBuf, it.nameLength}, "content-length")) {
 								_ctLen = atoi( {(char*) tmp1, it.valueLength});
 							}
 							*(items++)=it;
@@ -164,6 +162,11 @@ namespace cppsp
 		inline String getHistory(bool includeUnprocessed = true) {
 			return {(char*)ms.buffer, includeUnprocessed ? ms.length() : pos};
 		}
+		void skip(int length) {
+			pos+=length;
+			if(rpos<pos)rpos=pos;
+		}
+
 		//free up buffer space
 		void reset() {
 			if (pos > 0) {
@@ -175,6 +178,75 @@ namespace cppsp
 				ms.bufferPos = ms.len;
 			}
 		}
-	};}
+	};
+	class HTTPStream: public CP::Stream
+	{
+	public:
+		HTTPParser* parser;
+		Stream* stream;
+		int32_t tryFixRead(void* buf, int32_t len) {
+			int& bufPos = parser->pos;
+			int bufLen = parser->ms.length();
+			if (bufPos >= bufLen) return -1;
+			int32_t l = len > (bufLen - bufPos) ? (bufLen - bufPos) : len;
+			if (l <= 0) return 0;
+			memcpy(buf, parser->ms.buffer + bufPos, l);
+			bufPos += l;
+			if (parser->rpos < bufPos) parser->rpos = bufPos;
+			return l;
+		}
+		int32_t read(void* buf, int32_t len) {
+			int32_t r;
+			if ((r = tryFixRead(buf, len)) == -1) return stream->read(buf, len);
+			else return r;
+		}
+		int32_t write(const void* buf, int32_t len) {
+			return stream->write(buf, len);
+		}
+		void read(void* buf, int32_t len, const Callback& cb, bool repeat = false) {
+			int32_t r;
+			if ((r = tryFixRead(buf, len)) == -1) stream->read(buf, len, cb, repeat);
+			else {
+				cb(r);
+				if (repeat && r > 0) stream->read(buf, len, cb, true);
+			}
+		}
+		void write(const void* buf, int32_t len, const Callback& cb, bool repeat = false) override {
+			stream->write(buf, len, cb, repeat);
+		}
+		//sync
+		void close() override {
+		}
+		void flush() override {
+			stream->flush();
+		}
+
+		//async
+		void close(const Callback& cb) override {
+		}
+		void flush(const Callback& cb) override {
+			stream->flush(cb);
+		}
+		void cancelRead() override {
+			stream->cancelRead();
+		}
+		void cancelWrite() override {
+			stream->cancelWrite();
+		}
+		int32_t readBuffer(void*& buf, int32_t maxlen) override {
+			int& bufPos = parser->pos;
+			int bufLen = parser->ms.length();
+			if (bufPos >= bufLen) return 0;
+			if (bufLen - bufPos < maxlen) maxlen = bufLen - bufPos;
+			buf = parser->ms.buffer + bufPos;
+			return maxlen;
+		}
+		void freeBuffer(void* buf, int32_t len) override {
+			int& bufPos = parser->pos;
+			bufPos += len;
+			if (parser->rpos < bufPos) parser->rpos = bufPos;
+		}
+	};
+}
 
 #endif /* HTTPPARSER_H_ */

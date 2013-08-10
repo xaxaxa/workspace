@@ -7,14 +7,12 @@
 #include <delegate.H>
 #include <dirent.h>
 
-#include "1_cppsp.H"
 int aaaaa=0;
 %>
 <%@ class p %>
 <%#
 void listDir(string dir,const function<void(dirent&)>& cb)
 {
-	//cout << "scanning " << dir << endl;
 	DIR* d=opendir(dir.c_str());
 	if(d==NULL) {
 		throw runtime_error(strerror(errno));
@@ -30,45 +28,6 @@ void listDir(string dir,const function<void(dirent&)>& cb)
 	}
 	closedir(d);
 }
-%>
-<%$
-
-string asdf() {
-	return "zzz";
-}
-void doInit() {
-	//initCB();
-	//throw runtime_error("aaaaaa");
-	loadNestedPage("1.cppsp", {&p::cb1,this});
-}
-
-Page* p=NULL;
-
-void cb1(Page* p, exception* ex) {
-	if(ex!=NULL) {
-		cancelLoad(ex);
-		return;
-	}
-	this->p=p;
-	initCB();
-}
-/*
-CP::Timer t;
-bool added=false;
-void finalize() {
-	if(!added)poll->add(t);
-	added=true;
-	t.setInterval(500);
-	printf("setInterval: handle=%i\n",t.handle);
-	t.setCallback({&p::timercb,this});
-}
-void timercb(int count) {
-	printf("timercb\n");
-	t.setInterval(0);
-	render(response->output);
-	flush();
-	//finalizeCB();
-}*/
 %>
 <html>
 	<head>
@@ -104,23 +63,17 @@ void timercb(int count) {
 		//throw runtime_error("aaaaa");
 		%>
 		<%=(++aaaaa)%><br />
-		<%=mapPath("fdshjk/")%>
 		<br />=============================<br />
 		<table border="1">
 		<%
-		/*listDir(server->mapPath("/"), [&](dirent& d) {
+		listDir(server->mapPath("/"), [&](dirent& d) {
 			%>
 			<tr>
 				<td><%=htmlEscape(d.d_name)%></td>
 			</tr>
 			<%
-		});*/
+		});
 		%>
 		</table>
-		
-		<%
-		p->render(output);
-		p->release();
-		%>
 	</body>
 </html>

@@ -249,6 +249,75 @@ namespace cppsp
 		}
 		if (inLen > last_i) sw.write(in + last_i, inLen - last_i);
 	}
-
+	int ci_compare(String s1, String s2) {
+		if (s1.length() > s2.length()) return 1;
+		if (s1.length() < s2.length()) return -1;
+		if (s1.length() == 0) return 0;
+		char a, b;
+		for (int i = 0; i < s1.length(); i++) {
+			a = tolower(s1.data()[i]);
+			b = tolower(s2.data()[i]);
+			if (a < b) return -1;
+			if (a > b) return 1;
+		}
+		return 0;
+	}
+	static inline int itoa1(int i, char* b) {
+		static char const digit[] = "0123456789";
+		char* p = b;
+		//negative detection is not needed for this specific use-case
+		//(writing the content-length header)
+		p += (i == 0 ? 0 : int(log10f(i))) + 1;
+		*p = '\0';
+		int l = p - b;
+		do { //Move back, inserting digits as u go
+			*--p = digit[i % 10];
+			i = i / 10;
+		} while (i);
+		return l;
+	}
+	//pads beginning with 0s
+	//i: input number
+	//d: # of digits
+	static inline int itoa2(int i, int d, char* b) {
+		static char const digit[] = "0123456789";
+		for (int x = d - 1; x >= 0; x--) {
+			b[x] = digit[i % 10];
+			i /= 10;
+		}
+		return d;
+	}
+	int rfctime(const tm& time, char* c) {
+		static const char* days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+		static const char* months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+				"Oct", "Nov", "Dec" };
+		char* s = c;
+		//AAA, AA AAA ???? AA:AA:AA GMT\0
+		const char* day = days[time.tm_wday];
+		//copy 4 bytes (includes extra null byte)
+		*(int*) c = (*(int*) day) | int(',') << 24;
+		c += 4;
+		*(c++) = ' ';
+		c += itoa1(time.tm_mday, c);
+		*(c++) = ' ';
+		const char* month = months[time.tm_mon];
+		*(c++) = *(month++);
+		*(c++) = *(month++);
+		*(c++) = *(month++);
+		*(c++) = ' ';
+		c += itoa1(time.tm_year + 1900, c);
+		*(c++) = ' ';
+		c += itoa2(time.tm_hour, 2, c);
+		*(c++) = ':';
+		c += itoa2(time.tm_min, 2, c);
+		*(c++) = ':';
+		c += itoa2(time.tm_sec, 2, c);
+		*(c++) = ' ';
+		*(c++) = 'G';
+		*(c++) = 'M';
+		*(c++) = 'T';
+		*(c++) = '\0';
+		return int(c - s) - 1;
+	}
 }
 
