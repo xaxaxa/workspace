@@ -3,7 +3,8 @@
 TARGET="$1"
 mkdir -p "$TARGET"
 cp -a common_headers include "$TARGET"/
-rm -f cppsp_server/*.cppsp.C
+find -L "$TARGET"/include -type l -delete
+rm -f cppsp_server/*.cppsp.C cppsp_server/*.cppsm.C
 for x in cpoll cppsp cppsp_server socketd; do
 	mkdir -p "$TARGET"/$x;
 	cp -a $x/*.C $x/*.H $x/include "$TARGET"/$x/;
