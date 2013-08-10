@@ -1,5 +1,5 @@
 
-CFLAGS := -Ofast -march=native
+CFLAGS := -Ofast -march=native 
 CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions --std=c++0x -fPIC $(CFLAGS)
 CC := gcc
 CXX := g++
@@ -113,4 +113,10 @@ lib/libcpoll.so:
 	$(CXX) cpoll/all.C --shared -o lib/libcpoll.so $(CFLAGS1)
 lib/libcppsp.so:
 	$(CXX) cppsp/all.C --shared -o lib/libcppsp.so $(CFLAGS1)
+lib/libcplib.a:
+	$(CXX) cplib/all.C -c -o lib/libcplib.o $(CFLAGS1)
+	ar rcs lib/libcplib.a lib/libcplib.o
+lib/libcpoll.a:
+	$(CXX) cpoll/all.C -c -o lib/libcpoll.o $(CFLAGS1)
+	ar rcs lib/libcpoll.a lib/libcpoll.o
 
