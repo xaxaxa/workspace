@@ -247,6 +247,7 @@ namespace cppspServer
 		}
 		void handleStatic(staticPage* Sp) {
 			Response& resp(*this->resp);
+			Sp->retain();
 			try {
 				int bufferL = resp.buffer.length();
 				if(Sp->mime.length()>0)resp.headers["Content-Type"]=Sp->mime;
@@ -270,11 +271,13 @@ namespace cppspServer
 				resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
 #endif
 			} catch(exception& ex) {
+				Sp->release();
 				thr.handleError(req,resp,ex,{&handler::finalize,this});
 			}
 		}
 		void sendHeadersCB(int r) {
 			if(r<=0) {
+				Sp->release();
 				destruct();
 				return;
 			}
@@ -285,8 +288,10 @@ namespace cppspServer
 		}
 		void sendFileCB(int r) {
 			if(r<0) {
+				Sp->release();
 				destruct();
 			} else if(r==0) {
+				Sp->release();
 				finalize();
 			} else {
 				_sendFileOffset+=(int64_t)r;
