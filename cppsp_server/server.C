@@ -296,6 +296,9 @@ namespace cppspServer
 		void handleDynamic(loadedPage* lp) {
 			Response& resp(*this->resp);
 			Page* p=lp->doCreate(&sp);
+			//hold a strong reference to lp so that if cleanCache() etc is called by application code,
+			//the application does not unload itself, causing a segfault
+			p->lp=lp;
 			p->sp=&sp;
 			p->request=&req;
 			p->response=&resp;

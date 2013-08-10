@@ -434,6 +434,7 @@ namespace cppsp
 		bool updateTime(bool noCleanCache = false) override;
 		bool cleanCache() override;
 	};
+	struct loadedPage;
 	/**
 	 Base class for all cppsp pages.
 	 */
@@ -450,6 +451,7 @@ namespace cppsp
 		 Object representing the HTTP response.
 		 */
 		RGC::Ref<Response> response;
+		RGC::Ref<loadedPage> lp;
 		/**
 		 Poll instance for the current thread. Can be used for asynchronous I/O, timers, etc.
 		 */
