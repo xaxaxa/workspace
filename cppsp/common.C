@@ -432,7 +432,10 @@ namespace cppsp
 		ScopeLock sl(dlMutex);
 		//printf("doLoad(\"%s\");\n",path.c_str());
 		struct stat st;
-		checkError(stat(txtPath.c_str(), &st));
+		if (stat(txtPath.c_str(), &st) == -1) {
+			if (errno == ENOENT) return;
+			checkError(-1);
+		}
 		stringTableLen = st.st_size;
 		stringTableFD = checkError(open(txtPath.c_str(), O_RDONLY));
 		stringTable = (const uint8_t*) checkError(
@@ -529,7 +532,10 @@ namespace cppsp
 	}
 	void staticPage::doLoad(bool keepFD, bool map) {
 		struct stat st;
-		checkError(stat(path.c_str(), &st));
+		if (stat(path.c_str(), &st) == -1) {
+			if (errno == ENOENT) return;
+			checkError(-1);
+		}
 		data.len = int32_t(fileLen = (int64_t) st.st_size);
 		fd = checkError(open(path.c_str(), O_RDONLY));
 		if (map) data.d = (char*) checkError(mmap(NULL, data.len, PROT_READ, MAP_SHARED, fd, 0));
@@ -566,11 +572,15 @@ namespace cppsp
 	staticPage::~staticPage() {
 		doUnload();
 	}
-	static inline void precheckPage(String path) {
+	static inline bool precheckPage(String path) {
 		struct stat st;
 		TO_C_STR(path.data(), path.length(), s1);
-		checkError(stat(s1, &st));
+		if (stat(s1, &st) != 0) {
+			if (errno == ENOENT) return false;
+			checkError(-1);
+		}
 		if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) pageErr_isDir();
+		return true;
 	}
 	cppspManager::cppspManager() :
 			threadID(0), staticPage_keepFD(false), staticPage_map(true) {
@@ -579,7 +589,7 @@ namespace cppsp
 		staticPage* lp1;
 		auto it = staticCache.find(path);
 		if (it == staticCache.end()) {
-			precheckPage(path);
+			if (!precheckPage(path)) return nullptr;
 			lp1 = new staticPage();
 			lp1->path = path.toSTDString();
 			int i = path.lastIndexOf('.');
@@ -600,7 +610,7 @@ namespace cppsp
 			lp.doUnload();
 		}
 		if (!lp.loaded) lp.doLoad(staticPage_keepFD, staticPage_map);
-		return &lp;
+		return lp.loaded ? &lp : nullptr;
 	}
 	bool cppspManager::shouldCheck(loadedPage& p) {
 		timespec tmp1 = curTime;
@@ -623,7 +633,7 @@ namespace cppsp
 		loadedPage* lp1;
 		auto it = cache.find(path);
 		if (unlikely(int(it == cache.end()))) {
-			precheckPage(path);
+			if (!precheckPage(path)) return nullptr;
 			lp1 = new loadedPage();
 			lp1->tmpDir = this->tmpDir;
 			lp1->path = path.toSTDString();
@@ -657,7 +667,9 @@ namespace cppsp
 			lp.doUnload();
 		}
 		lp.doLoad();
-		goto xxx;
+		if (lp.loaded)
+			goto xxx;
+		else return nullptr;
 	}
 	bool cppspManager::cleanCache(int minAge) {
 		timespec tmp1 = curTime;
@@ -702,7 +714,8 @@ namespace cppsp
 		while (true) {
 			s = in.readLine();
 			if (s.length() <= 0) {
-				if (in.eof) break;
+				if (in.eof)
+					break;
 				else continue;
 			}
 			String tmp = s;
@@ -716,9 +729,16 @@ namespace cppsp
 		}
 	}
 	void handleError(exception* ex, cppsp::Response& resp, String path) {
+		HTTPException* ex1 = dynamic_cast<HTTPException*>(ex);
+
 		resp.clear();
-		resp.statusCode = 500;
-		resp.statusName = "Internal server error";
+		if (ex1 != nullptr) {
+			resp.statusCode = ex1->code;
+			resp.statusName = ex1->what();
+		} else {
+			resp.statusCode = 500;
+			resp.statusName = "Internal server error";
+		}
 		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
 		//resp.writeHeaders();
 		string title = "Server error in " + path.toSTDString();

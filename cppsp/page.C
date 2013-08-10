@@ -52,6 +52,25 @@ namespace cppsp
 		for (int i = 0; i < len; i++)
 			((char*) dst)[i] = ((const char*) src)[i];
 	}
+	HTTPException::HTTPException() :
+			code(200) {
+		itoa(code, tmp);
+	}
+	HTTPException::HTTPException(int code) :
+			code(code) {
+		itoa(code, tmp);
+	}
+	HTTPException::~HTTPException() throw () {
+	}
+	const char* HTTPException::what() const throw () {
+		switch (code) {
+			case 404:
+				return strerror(ENOENT);
+				break;
+			default:
+				return tmp;
+		}
+	}
 	Page::Page(Request& req, Response& resp, CP::StringPool* sp) :
 			request(&req), response(&resp), sp(sp), doRender(true) {
 	}

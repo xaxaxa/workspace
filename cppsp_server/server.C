@@ -366,6 +366,7 @@ namespace cppspServer
 	
 	AsyncValue<Handler> Server::routeStaticRequestFromFile(String path) {
 		staticPage* sp=mgr->loadStaticPage(path);
+		if(sp==nullptr) throw HTTPException(404);
 		return Handler(&staticHandler,sp);
 	}
 	struct requestRouterState
@@ -379,7 +380,10 @@ namespace cppspServer
 	};
 	AsyncValue<Handler> Server::routeDynamicRequestFromFile(String path) {
 		auto lp=mgr->loadPage(*p,root,path);
-		if(lp) return Handler(&dynamicHandler,lp());
+		if(lp) {
+			if(lp()==nullptr) throw HTTPException(404);
+			return Handler(&dynamicHandler,lp());
+		}
 		requestRouterState* st=new requestRouterState();
 		lp.wait(st);
 		return Future<Handler>(&st->cb);

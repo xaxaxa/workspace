@@ -34,6 +34,17 @@ using CP::AsyncValue;
 namespace cppsp
 {
 	class cppspManager;
+	class HTTPException: public std::exception
+	{
+	public:
+		int code;
+		char tmp[5];
+		HTTPException();
+		HTTPException(int32_t number);
+		HTTPException(string message, int32_t number = 0);
+		~HTTPException() throw ();
+		const char* what() const throw ();
+	};
 	/**
 	 Represents an HTTP request and contains data from the request such as HTTP headers, querystrings, and HTTP POST data.
 	 */
