@@ -394,7 +394,10 @@ namespace cppsp
 		 Purges expired cache items.
 		 @returns whether or not there are items left that could be purged in the future.
 		 */
-		virtual bool cleanCache();
+		virtual bool cleanCache(int minAge);
+		virtual bool cleanCache() {
+			return cleanCache(routeCacheCleanInterval);
+		}
 	};
 	//cppspManager based Server
 	class DefaultServer: public Server

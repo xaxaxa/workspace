@@ -358,7 +358,7 @@ namespace cppsp
 		Response* resp;
 		Delegate<void()> cb;
 		String path;
-		void operator()(Handler h, exception* ex) {
+		void operator()(Handler& h, exception* ex) {
 			if (h != nullptr) {
 				try {
 					if (unlikely(s!=nullptr)) {
@@ -470,14 +470,14 @@ namespace cppsp
 		}
 		return true;
 	}
-	bool Server::cleanCache() {
+	bool Server::cleanCache(int minAge) {
 		timespec tmp1 = curTime;
-		tmp1.tv_sec -= routeCacheCleanInterval;
+		tmp1.tv_sec -= minAge;
 		auto it = routeCache.begin();
 		int del = 0;
 		bool ret = false;
 		while (it != routeCache.end()) {
-			if (tsCompare((*it).second->lastUpdate, tmp1) < 0) {
+			if (tsCompare((*it).second->lastUpdate, tmp1) <= 0) {
 				delete (*it).second;
 				auto tmp = it;
 				it++;
@@ -562,7 +562,7 @@ namespace cppsp
 		return mgr->loadStaticPage(path)->data;
 	}
 	bool DefaultServer::updateTime(bool noCleanCache) {
-		bool b=Server::updateTime(noCleanCache);
+		bool b = Server::updateTime(noCleanCache);
 		mgr->curTime = curTime;
 		return b;
 	}

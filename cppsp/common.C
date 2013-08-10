@@ -663,7 +663,7 @@ namespace cppsp
 			auto it = cache.begin();
 			while (it != cache.end()) {
 				if (!(*it).second->persistent) {
-					if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) < 0) {
+					if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) <= 0) {
 						delete (*it).second;
 						auto tmp = it;
 						it++;
@@ -678,7 +678,7 @@ namespace cppsp
 		{
 			auto it = staticCache.begin();
 			while (it != staticCache.end()) {
-				if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) < 0) {
+				if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) <= 0) {
 					delete (*it).second;
 					auto tmp = it;
 					it++;
