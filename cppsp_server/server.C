@@ -277,7 +277,7 @@ namespace cppspServer
 		}
 		void sendHeadersCB(int r) {
 			if(r<=0) {
-				Sp->release();
+				_staticPage->release();
 				destruct();
 				return;
 			}
@@ -288,10 +288,10 @@ namespace cppspServer
 		}
 		void sendFileCB(int r) {
 			if(r<0) {
-				Sp->release();
+				_staticPage->release();
 				destruct();
 			} else if(r==0) {
-				Sp->release();
+				_staticPage->release();
 				finalize();
 			} else {
 				_sendFileOffset+=(int64_t)r;
