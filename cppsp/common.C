@@ -128,7 +128,8 @@ namespace cppsp
 						switch (nextopt) {
 							case 0:
 							{
-								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0) nextopt = 1;
+								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0)
+									nextopt = 1;
 								else if (l1 == 5 && memcmp(s1, "class", 5) == 0) nextopt = 2;
 								continue;
 							}
@@ -262,10 +263,14 @@ namespace cppsp
 		return NULL;
 	}
 	int tsCompare(struct timespec time1, struct timespec time2) {
-		if (time1.tv_sec < time2.tv_sec) return (-1); /* Less than. */
-		else if (time1.tv_sec > time2.tv_sec) return (1); /* Greater than. */
-		else if (time1.tv_nsec < time2.tv_nsec) return (-1); /* Less than. */
-		else if (time1.tv_nsec > time2.tv_nsec) return (1); /* Greater than. */
+		if (time1.tv_sec < time2.tv_sec)
+			return (-1); /* Less than. */
+		else if (time1.tv_sec > time2.tv_sec)
+			return (1); /* Greater than. */
+		else if (time1.tv_nsec < time2.tv_nsec)
+			return (-1); /* Less than. */
+		else if (time1.tv_nsec > time2.tv_nsec)
+			return (1); /* Greater than. */
 		else return (0); /* Equal. */
 	}
 
@@ -547,8 +552,8 @@ namespace cppsp
 		{
 			TO_C_STR(path.data(), path.length(), s1);
 			checkError(stat(s1, &st));
-			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException(
-					"requested path is a directory or socket");
+			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode))
+				throw ParserException("requested path is a directory or socket");
 		}
 		if (!loaded) return true;
 		timespec modif_cppsp = st.st_mtim;
