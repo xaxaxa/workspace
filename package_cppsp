@@ -40,7 +40,21 @@ EOF
 cat >"$TARGET"/run_application <<EOF
 #!/bin/bash
 # usage: run_application /ABSOLUTE/PATH/TO/APPLICATION
+
 ./cppsp_standalone -f -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -pthread -c -Ofast -c -march=native -c "\$(pwd)"/cpoll.o -c "\$(pwd)"/cppsp.o -r "\$@"
+EOF
+cat >"$TARGET"/run_cppsp <<EOF
+#!/usr/bin/env python
+import os,sys
+path=os.path.split(sys.argv[0])[0];
+os.execv(path+"/cppsp_standalone",[path+"/cppsp_standalone","-c","-fPIC","-c","-I"+path+"/include","-c","-lpthread","-c",path+"/cpoll.o","-c",path+"/cppsp.o"]+sys.argv[1:]);
+
+EOF
+cat >"$TARGET"/cppsp_clean <<EOF
+#!/bin/bash
+rm -f *.cppsp.C *.cppsp.so *.cppsp.txt *.cppsp.*.C *.cppsp.*.txt
+rm -f *.cppsm.C *.cppsm.so *.cppsm.txt *.cppsm.*.C *.cppsm.*.txt
+
 EOF
 cat >"$TARGET"/run_socketd_example <<EOF
 #!/bin/bash
@@ -87,7 +101,7 @@ vhost vh2 {
 EOF1
 EOF
 chmod +x "$TARGET"/run_example "$TARGET"/run_application "$TARGET"/run_socketd_example "$TARGET"/socketd_exampleconf
-
+chmod +x "$TARGET"/run_cppsp chmod +x "$TARGET"/cppsp_clean
 mkdir "$TARGET"/www
 cp -a cppsp_server/*.cppsp cppsp_server/*.cppsm cppsp_server/*.html test/*.cppsp "$TARGET"/www/
 
