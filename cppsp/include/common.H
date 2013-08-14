@@ -38,8 +38,8 @@ namespace cppsp
 		string message;
 		int32_t number;
 		ParserException();
-		ParserException(int32_t number);
-		ParserException(string message, int32_t number = 0);
+		ParserException(string message);
+		ParserException(string message, int line);
 		~ParserException() throw ();
 		const char* what() const throw ();
 	};
@@ -119,6 +119,8 @@ namespace cppsp
 		string path;
 		int fd;
 		bool loaded;
+		void _loadFD();
+		void _loadMap();
 		/**
 		 @param keepFD whether to keep file descriptor open (if false, it will be closed before returning)
 		 @param map whether to map the file into virtual memory
@@ -146,10 +148,9 @@ namespace cppsp
 		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		string tmpDir;
 		int threadID;
-		bool staticPage_keepFD, staticPage_map;
 		cppspManager();
 		AsyncValue<loadedPage*> loadPage(CP::Poll& p, String wd, String path);
-		staticPage* loadStaticPage(String path);
+		staticPage* loadStaticPage(String path, bool fd = false, bool map = true);
 		/**
 		 Delete old cache entries.
 		 @param minAge the minimum age (in seconds since the entry was last accessed) for an entry to be deleted

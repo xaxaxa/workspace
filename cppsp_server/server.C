@@ -128,10 +128,6 @@ namespace cppspServer
 		}
 		Server(Poll* p, string root):DefaultServer(root),p(p),
 			_responsePool(128) {
-#ifdef CPPSP_USE_SENDFILE
-			this->mgr->staticPage_keepFD=true;
-			this->mgr->staticPage_map=false;
-#endif
 			updateTime();
 			t.setCallback({&Server::timerCB,this});
 			p->add(t);
@@ -365,8 +361,11 @@ namespace cppspServer
 	}
 	
 	AsyncValue<Handler> Server::routeStaticRequestFromFile(String path) {
+#ifdef CPPSP_USE_SENDFILE
+		staticPage* sp=mgr->loadStaticPage(path,true,false);
+#else
 		staticPage* sp=mgr->loadStaticPage(path);
-		if(sp==nullptr) throw HTTPException(404);
+#endif
 		return Handler(&staticHandler,sp);
 	}
 	struct requestRouterState
@@ -381,7 +380,6 @@ namespace cppspServer
 	AsyncValue<Handler> Server::routeDynamicRequestFromFile(String path) {
 		auto lp=mgr->loadPage(*p,root,path);
 		if(lp) {
-			if(lp()==nullptr) throw HTTPException(404);
 			return Handler(&dynamicHandler,lp());
 		}
 		requestRouterState* st=new requestRouterState();
