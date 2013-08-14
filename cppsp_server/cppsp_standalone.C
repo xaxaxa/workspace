@@ -173,6 +173,7 @@ int main(int argc, char** argv) {
 	bool f0rk=false;
 	bool reusePort=true;
 	bool setAffinity=false;
+	bool debug=false;
 	try {
 		parseArgs(argc, argv,
 				[&](char* name, const std::function<char*()>& getvalue)
@@ -198,6 +199,8 @@ int main(int argc, char** argv) {
 						setAffinity=true;
 					} else if(strcmp(name,"b")==0) {
 						tmpDir=getvalue();
+					} else if(strcmp(name,"d")==0) {
+						debug=true;
 					} else {
 					help:
 						fprintf(stderr,"usage: %s [options]...\noptions:\n"
@@ -276,6 +279,7 @@ int main(int argc, char** argv) {
 		newsock->release();
 		tmp.srv.mgr->cxxopts=cxxopts;
 		tmp.srv.mgr->tmpDir=tmpDir;
+		tmp.srv.mgr->debug=debug;
 		tmp.modules=modules;
 		tmp.srv.threadID=i;
 		if(threads==1) {

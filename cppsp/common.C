@@ -343,7 +343,7 @@ namespace cppsp
 
 			//keep a copy of the compiled page
 			if (status == 0) {
-				unlink(cPath.c_str());
+				if (!manager->debug) unlink(cPath.c_str());
 				string dll1 = dllPath + ".1";
 				link(dllPath.c_str(), dll1.c_str());
 				string txt1 = txtPath + ".1";
@@ -363,8 +363,10 @@ namespace cppsp
 		beginRead();
 	}
 	void loadedPage::deleteTmpfiles() {
-		unlink(txtPath.c_str());
-		unlink(dllPath.c_str());
+		if (!manager->debug) {
+			unlink(txtPath.c_str());
+			unlink(dllPath.c_str());
+		}
 	}
 	void loadedPage::afterCompile(bool success) {
 		if (!success) {

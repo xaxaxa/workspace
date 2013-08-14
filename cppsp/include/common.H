@@ -151,6 +151,8 @@ namespace cppsp
 		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		string tmpDir;
 		int threadID;
+		//if true, do not delete temporary .C and .so files
+		bool debug;
 		cppspManager();
 		AsyncValue<loadedPage*> loadPage(CP::Poll& p, String wd, String path);
 		staticPage* loadStaticPage(String path, bool fd = false, bool map = true);
