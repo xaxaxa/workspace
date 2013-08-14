@@ -50,6 +50,35 @@ namespace CP
 		return message.c_str();
 	}
 
+	UNIXException::UNIXException() :
+			runtime_error(strerror(errno)), number(errno) {
+	}
+	UNIXException::UNIXException(int32_t number) :
+			runtime_error(strerror(number)), number(number) {
+	}
+	UNIXException::UNIXException(int32_t number, string objName) :
+			runtime_error(string(strerror(number)) + ": " + objName), number(number) {
+	}
+	UNIXException::~UNIXException() throw () {
+	}
+
+	FileNotFoundException::FileNotFoundException() :
+			UNIXException(ENOENT) {
+	}
+	FileNotFoundException::FileNotFoundException(string filename) :
+			UNIXException(ENOENT, filename) {
+	}
+	FileNotFoundException::~FileNotFoundException() throw () {
+	}
+	void throwUNIXException() {
+		if (errno == ENOENT) throw FileNotFoundException();
+		throw UNIXException(errno);
+	}
+	void throwUNIXException(string fn) {
+		if (errno == ENOENT) throw FileNotFoundException(fn);
+		throw UNIXException(errno, fn);
+	}
+
 	AbortException::AbortException() {
 	}
 	AbortException::~AbortException() throw () {

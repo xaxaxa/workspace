@@ -111,6 +111,24 @@ namespace CP
 		~CPollException() throw ();
 		const char* what() const throw ();
 	};
+	class UNIXException: public std::runtime_error
+	{
+	public:
+		int32_t number;
+		UNIXException();
+		UNIXException(int32_t number);
+		UNIXException(int32_t number, string objName);
+		~UNIXException() throw ();
+	};
+	class FileNotFoundException: public UNIXException
+	{
+	public:
+		FileNotFoundException();
+		FileNotFoundException(string filename);
+		~FileNotFoundException() throw ();
+	};
+	void throwUNIXException();
+	void throwUNIXException(string filename);
 	class AbortException: public std::exception
 	{ //used for aborting the event loop
 	public:
