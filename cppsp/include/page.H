@@ -27,6 +27,7 @@
 #include <string>
 #include "stringutils.H"
 #include "headercontainer.H"
+#include "common.H"
 #define CPPSP_VERSION 20130705
 using namespace std;
 using CP::String;
@@ -445,7 +446,6 @@ namespace cppsp
 		bool updateTime(bool noCleanCache = false) override;
 		bool cleanCache() override;
 	};
-	struct loadedPage;
 	/**
 	 Base class for all cppsp pages.
 	 */
@@ -462,7 +462,7 @@ namespace cppsp
 		 Object representing the HTTP response.
 		 */
 		RGC::Ref<Response> response;
-		RGC::Ref<loadedPage> lp;
+		RGC::Ref<cppsp::loadedPage> lp;
 		/**
 		 Poll instance for the current thread. Can be used for asynchronous I/O, timers, etc.
 		 */
@@ -532,6 +532,18 @@ namespace cppsp
 		 Load and instantiate dynamic page from "path". path is absolute. Returned Page object is allocated from "a".
 		 */
 		AsyncValue<Page*> loadNestedPageFromFile(String path, RGC::Allocator& a);
+		/**
+		 Load static page from "path". path is relative to the current page.
+		 */
+		String loadNestedStaticPage(String path);
+		/**
+		 Load static page from "path". path is absolute.
+		 */
+		String loadNestedStaticPageFromFile(String path);
+		//perform SSI from "path". path is relative to the current page.
+		void staticInclude(String path);
+		//perform SSI from "path". path is absolute.
+		void staticIncludeFromFile(String path);
 		/**
 		 Called by the web server immediately after instantiating the current page. The page calls "cb" when it is done processing, to signal the web server that it can clean up the StringPool and all request-related data. The object pointed to by fields "request" and "response" may be recycled.
 		 */

@@ -95,7 +95,13 @@ namespace cppsp
 		while (true) {
 			if (s >= end) break;
 			const char* old_s = s;
-			s = (const char*) memmem(s, end - s, "<%", 2);
+			s = (const char*) memmem(old_s, end - old_s, "<%", 2);
+			const char* s_2 = (const char*) memmem(old_s, end - old_s, "<!--#include", 12);
+			bool is_ssi = false;
+			if (s_2 != NULL && (s_2 < s || s == NULL)) {
+				s = s_2;
+				is_ssi = true;
+			}
 
 			if (s > old_s) {
 				st_out.write(old_s, s - old_s);
@@ -109,12 +115,35 @@ namespace cppsp
 			}
 			for (const char* ch = old_s; ch < s; ch++)
 				if (*ch == '\n') line++;
-			s += 2;
-			if (s >= end) throw ParserException("reached EOF when looking past \"<%\"");
-			const char* s1 = (const char*) memmem(s, end - s, "%>", 2);
-			if (s1 == NULL) throw ParserException("reached EOF when looking for matching \"%>\"");
+			s += is_ssi ? 12 : 2;
+			if (s >= end)
+				throw ParserException(
+						"reached EOF when looking past " + is_ssi ? "<!--#include" : "\"<%\"", line);
+			const char* s1;
+			if (is_ssi)
+				s1 = (const char*) memmem(s, end - s, "-->", 3);
+			else s1 = (const char*) memmem(s, end - s, "%>", 2);
+			if (s1 == NULL)
+				throw ParserException(
+						"reached EOF when looking for matching " + is_ssi ? "-->" : "\"%>\"", line);
 
-			switch (*s) {
+			if (is_ssi) {
+				const char* s_f = (const char*) memmem(s, s1 - s, "file=", 5);
+				if (s_f == nullptr) throw ParserException("SSI without 'file=' parameter", line);
+				s_f += 5;
+				if (s_f >= end || *s_f != '"')
+					throw ParserException("SSI filenames must be surrounded with '\"'", line);
+				s_f++;
+				const char* e_f = (const char*) memchr(s_f, '"', end - s_f);
+				if (e_f == NULL)
+					throw ParserException("reached EOF when looking for matching '\"'", line);
+				sw3.writeF("__writeStringTable(%i,%i);\n", st_pos, st_len - st_pos);
+				st_pos = st_len;
+				sw3.writeF("#line %i\n", line);
+				sw3.writeF("staticInclude(\"");
+				sw3.write(s_f, e_f - s_f);
+				sw3.write("\");\n");
+			} else switch (*s) {
 				case '!':
 				{ //compiler option
 					c_opts.push_back(string(s + 1, s1 - s - 1));
@@ -185,7 +214,7 @@ namespace cppsp
 			}
 			for (const char* ch = s; ch < s1; ch++)
 				if (*ch == '\n') line++;
-			s = s1 + 2;
+			s = s1 + int(is_ssi ? 3 : 2);
 		}
 		sw2.flush();
 		sw3.flush();

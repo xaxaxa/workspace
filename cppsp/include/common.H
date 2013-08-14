@@ -24,13 +24,16 @@
 #include <cpoll/cpoll.H>
 #include <vector>
 #include <unordered_map>
-#include "page.H"
 #include "stringutils.H"
 using namespace std;
 using CP::AsyncValue;
 using CP::Future;
 namespace cppsp
 {
+	struct Page;
+	struct ModuleParams;
+	struct Server;
+	struct Response;
 	extern const char* gxx;
 	class ParserException: public std::exception
 	{

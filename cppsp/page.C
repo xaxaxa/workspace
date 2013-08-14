@@ -182,6 +182,19 @@ namespace cppsp
 		tmpv.wait(st);
 		return Future<Page*>(&st->cb);
 	}
+	String Page::loadNestedStaticPage(String path) {
+		String tmp = mapRelativePath(path);
+		return server->loadStaticPage(tmp);
+	}
+	String Page::loadNestedStaticPageFromFile(String path) {
+		return server->loadStaticPageFromFile(path);
+	}
+	void Page::staticInclude(String path) {
+		this->response->output.write(loadNestedStaticPage(path));
+	}
+	void Page::staticIncludeFromFile(String path) {
+		this->response->output.write(loadNestedStaticPageFromFile(path));
+	}
 	void Page::_flushCB(Response& r) {
 		flushCB();
 	}
