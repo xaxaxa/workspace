@@ -2,5 +2,6 @@
 #include "cppsp_cpoll.C"
 #include "page.C"
 #include "stringutils.C"
+#include "websocket.C"
 
 
