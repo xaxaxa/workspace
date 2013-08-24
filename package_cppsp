@@ -101,7 +101,8 @@ vhost vh2 {
 EOF1
 EOF
 chmod +x "$TARGET"/run_example "$TARGET"/run_application "$TARGET"/run_socketd_example "$TARGET"/socketd_exampleconf
-chmod +x "$TARGET"/run_cppsp chmod +x "$TARGET"/cppsp_clean
+chmod +x "$TARGET"/run_cppsp
+chmod +x "$TARGET"/cppsp_clean
 mkdir "$TARGET"/www
 cp -a cppsp_server/*.cppsp cppsp_server/*.cppsm cppsp_server/*.html test/*.cppsp "$TARGET"/www/
 
