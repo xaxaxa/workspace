@@ -305,7 +305,9 @@ namespace CP
 			return *this;
 		}
 		AsyncValue<T>& operator=(const AsyncValue<T>& other) {
-			if (!(async = other.async)) value = other.value;
+			if (!(async = other.async))
+				value = other.value;
+			else cbAddr = other.cbAddr;
 			return *this;
 		}
 		AsyncValue<T>& operator=(Undefined) {
@@ -317,7 +319,7 @@ namespace CP
 			async = false;
 		}
 		AsyncValue(const AsyncValue<T>& other) :
-				value(other.value), async(other.async) {
+				value(other.value), cbAddr(other.cbAddr), async(other.async) {
 		}
 		AsyncValue(Future<T> f) :
 				cbAddr(f.cbAddr), async(true) {
