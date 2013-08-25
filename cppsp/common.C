@@ -353,7 +353,7 @@ namespace cppsp
 				rename(dll1.c_str(), (binPath + ".so").c_str());
 				rename(txt1.c_str(), (binPath + ".txt").c_str());
 			}
-			afterCompile(status == 0);
+			afterCompile(status == 0, false);
 			compile_fd = nullptr;
 			//if (compileCB != nullptr) compileCB(*this);
 			return;
@@ -368,7 +368,7 @@ namespace cppsp
 			unlink(dllPath.c_str());
 		}
 	}
-	void loadedPage::afterCompile(bool success) {
+	void loadedPage::afterCompile(bool success, bool sync) {
 		if (!success) {
 			rename(cPath.c_str(), (loadedPage_getBinPath(this) + ".C").c_str());
 			deleteTmpfiles();
@@ -378,6 +378,7 @@ namespace cppsp
 			loadCB.clear();
 			for (int i = 0; i < (int) tmpcb.size(); i++)
 				if (tmpcb[i].cb) tmpcb[i].cb(nullptr, &exc);
+			if (sync) throw exc;
 			return;
 		}
 		try {
@@ -389,6 +390,7 @@ namespace cppsp
 			loadCB.clear();
 			for (int i = 0; i < (int) tmpcb.size(); i++)
 				if (tmpcb[i].cb) tmpcb[i].cb(nullptr, &ex);
+			if (sync) throw;
 			return;
 		}
 		deleteTmpfiles();
@@ -402,7 +404,7 @@ namespace cppsp
 		compile_fd->read(ms.buffer + ms.bufferPos, ms.bufferSize - ms.bufferPos,
 				CP::Callback(&loadedPage::readCB, this));
 	}
-	void loadedPage::doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
+	bool loadedPage::doCompile(Poll& p, string wd, const vector<string>& cxxopts) {
 		string tmp;
 		char sss[32];
 		snprintf(sss, 32, "%i", rand());
@@ -439,8 +441,8 @@ namespace cppsp
 		if (tsCompare(modif_cppsp, modif_txt) <= 0 && tsCompare(modif_cppsp, modif_so) <= 0) {
 			if (link(txt1.c_str(), txtPath.c_str()) < 0) goto do_comp;
 			if (link(dll1.c_str(), dllPath.c_str()) < 0) goto do_comp;
-			afterCompile(true);
-			return;
+			afterCompile(true, true);
+			return true;
 		}
 		do_comp: deleteTmpfiles();
 		CP::File* f;
@@ -468,6 +470,7 @@ namespace cppsp
 		f->release();
 		beginRead();
 		compiling = true;
+		return false;
 	}
 	void loadedPage::doLoad() {
 		ScopeLock sl(dlMutex);
@@ -681,7 +684,6 @@ namespace cppsp
 			cache.insert( { lp1->path, lp1 });
 		} else lp1 = (*it).second;
 		loadedPage& lp(*lp1);
-
 		int c = 0;
 		if (unlikely(lp1->compiling)) {
 			lp.loadCB.push_back( { nullptr });
@@ -693,14 +695,15 @@ namespace cppsp
 		c = lp.shouldCompile();
 		if (likely(lp1->loaded && c==0)) goto xxx;
 		if (c >= 2) {
-			lp.loadCB.push_back( { nullptr });
 			try {
-				lp.doCompile(p, wd.toSTDString(), cxxopts);
+				if (lp.doCompile(p, wd.toSTDString(), cxxopts)) return lp1;
 			} catch (exception& ex) {
-				lp.loadCB.resize(lp.loadCB.size() - 1);
 				throw;
 			}
-			if (lp.compiling) return Future<loadedPage*>(&lp.loadCB[lp.loadCB.size() - 1].cb);
+			if (lp.compiling) {
+				lp.loadCB.push_back( { nullptr });
+				return Future<loadedPage*>(&lp.loadCB[lp.loadCB.size() - 1].cb);
+			}
 			return &lp;
 		}
 		if (c >= 1) {

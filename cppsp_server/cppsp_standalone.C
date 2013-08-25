@@ -141,6 +141,7 @@ void* thread1(void* v) {
 				if (ce != NULL) {
 					printf("%s\n",ce->compilerOutput.c_str());
 				}
+				exit(1);
 			}
 			afterModuleLoad();
 		}
@@ -149,7 +150,13 @@ void* thread1(void* v) {
 	for(int ii=0;ii<(int)thr.modules.size();ii++) {
 		moduleCB[ii].s=thr.modules[ii];
 		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
-		auto tmp=thr.srv.loadModule(p,thr.modules[ii]);
+		AsyncValue<void*> tmp;
+		try {
+			tmp=thr.srv.loadModule(p,thr.modules[ii]);
+		} catch(exception& ex) {
+			moduleCB[ii](NULL,&ex);
+			exit(1);
+		}
 		if(tmp) moduleCB[ii](tmp(),NULL);
 		else tmp.wait(&moduleCB[ii]);
 	}

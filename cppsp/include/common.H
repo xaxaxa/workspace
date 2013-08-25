@@ -98,9 +98,10 @@ namespace cppsp
 		bool persistent;
 		void readCB(int r);
 		void deleteTmpfiles();
-		void afterCompile(bool success);
+		void afterCompile(bool success, bool sync);
 		void beginRead();
-		void doCompile(CP::Poll& p, string wd, const vector<string>& cxxopts);
+		//returns whether compilation was completed synchronously
+		bool doCompile(CP::Poll& p, string wd, const vector<string>& cxxopts);
 		void doLoad();
 		void doUnload();
 		Page* doCreate(RGC::Allocator* a);
