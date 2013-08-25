@@ -111,7 +111,6 @@ namespace cppspServer
 	};
 	class Server: public cppsp::DefaultServer {
 	public:
-		Poll* p;
 		Timer t;
 		ObjectPool<Response> _responsePool;
 		int _lastRequests=0;
@@ -126,8 +125,9 @@ namespace cppspServer
 			}
 			_lastRequests=performanceCounters.totalRequestsReceived;
 		}
-		Server(Poll* p, string root):DefaultServer(root),p(p),
+		Server(Poll* p, string root):DefaultServer(root),
 			_responsePool(128) {
+			this->poll=p;
 			updateTime();
 			t.setCallback({&Server::timerCB,this});
 			p->add(t);
@@ -378,7 +378,7 @@ namespace cppspServer
 		}
 	};
 	AsyncValue<Handler> Server::routeDynamicRequestFromFile(String path) {
-		auto lp=mgr->loadPage(*p,root,path);
+		auto lp=mgr->loadPage(*poll,root,path);
 		if(lp) {
 			return Handler(&dynamicHandler,lp());
 		}

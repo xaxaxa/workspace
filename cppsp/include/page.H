@@ -244,6 +244,7 @@ namespace cppsp
 		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		timespec curClockTime { 0, 0 }; //CLOCK_REALTIME
 		String curRFCTime;
+		CP::Poll* poll;
 		int threadID;
 		Server();
 		~Server();

@@ -373,7 +373,7 @@ namespace cppsp
 	}
 
 	Server::Server() :
-			threadID(0) {
+			poll(nullptr), threadID(0) {
 		handleRequest.attach( { &Server::defaultHandleRequest, this });
 		handleError.attach( { &Server::defaultHandleError, this });
 		routeRequest.attach( { &Server::defaultRouteRequest, this });
