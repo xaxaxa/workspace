@@ -260,13 +260,13 @@ namespace cppsp
 		vector<string> c_opts { gxx, gxx, "--std=c++0x", "--shared", "-o", output, cPath };
 		c_opts.insert(c_opts.end(), cxxopts.begin(), cxxopts.end());
 		{
-			File inp(open(path.c_str(), O_RDONLY));
+			File inp(open(path.c_str(), O_RDONLY | O_CLOEXEC));
 			MemoryStream ms;
 			inp.readToEnd(ms);
 			ms.flush();
 			//unlink((path + ".C").c_str());
-			File out_c(open(cPath.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
-			File out_s(open(txtPath.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666));
+			File out_c(open(cPath.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0666));
+			File out_s(open(txtPath.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0666));
 			cppsp::doParse(NULL, (const char*) ms.data(), ms.length(), out_c, out_s, c_opts);
 		}
 
@@ -475,7 +475,7 @@ namespace cppsp
 		struct stat st;
 		checkError(stat(txtPath.c_str(), &st), txtPath);
 		stringTableLen = st.st_size;
-		stringTableFD = checkError(open(txtPath.c_str(), O_RDONLY), txtPath);
+		stringTableFD = checkError(open(txtPath.c_str(), O_RDONLY | O_CLOEXEC), txtPath);
 		stringTable = (const uint8_t*) checkError(
 				mmap(NULL, stringTableLen, PROT_READ, MAP_SHARED, stringTableFD, 0));
 		dlHandle = dlopen(dllPath.c_str(), RTLD_LOCAL | RTLD_LAZY);
@@ -569,7 +569,7 @@ namespace cppsp
 		return i;
 	}
 	void staticPage::_loadFD() {
-		fd = checkError(open(path.c_str(), O_RDONLY), path);
+		fd = checkError(open(path.c_str(), O_RDONLY | O_CLOEXEC), path);
 	}
 	void staticPage::_loadMap() {
 		data.d = (char*) checkError(mmap(NULL, data.len, PROT_READ, MAP_SHARED, fd, 0));
