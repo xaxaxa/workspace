@@ -1281,6 +1281,7 @@ namespace CP
 		}
 		void setLength(int l) {
 			len = l;
+			if (len < bufferPos) bufferPos = len;
 		}
 		void setPosition(int i) {
 			bufferPos = i;
