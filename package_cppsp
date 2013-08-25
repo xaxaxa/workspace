@@ -12,19 +12,23 @@ done;
 cp -a test/socketd_proxy.C "$TARGET"/
 cat >"$TARGET"/makefile <<EOF
 OPTFLAGS := -Ofast -march=native -flto
-CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -I./include
+CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -I./include 
 CXX := g++
-all: cppsp_standalone cpoll.o cppsp.o socketd_bin socketd_cppsp socketd_proxy.so
+all: cppsp_standalone libcpoll.so libcppsp.so socketd_bin socketd_cppsp socketd_proxy.so
 cppsp_standalone: 
-	\$(CXX) cppsp_server/cppsp_standalone.C cpoll/all.C cppsp/all.C -o cppsp_standalone -lpthread -ldl -lrt \$(CXXFLAGS)
+	\$(CXX) cppsp_server/cppsp_standalone.C cpoll/all.C cppsp/all.C -o cppsp_standalone -lpthread -ldl -lrt \$(CXXFLAGS) -Wl,--unresolved-symbols=ignore-all
 socketd_bin: 
-	\$(CXX) socketd/all.C cpoll/all.C -o socketd_bin -lpthread -ldl -lrt \$(CXXFLAGS) 
+	\$(CXX) socketd/all.C cpoll/all.C -o socketd_bin -lpthread -ldl -lrt \$(CXXFLAGS)
 socketd_cppsp: 
-	\$(CXX) cppsp_server/socketd_cppsp.C cpoll/all.C cppsp/all.C -o socketd_cppsp -lpthread -ldl -lrt \$(CXXFLAGS)
+	\$(CXX) cppsp_server/socketd_cppsp.C cpoll/all.C cppsp/all.C -o socketd_cppsp -lpthread -ldl -lrt \$(CXXFLAGS) -Wl,--unresolved-symbols=ignore-all
 cpoll.o:
 	\$(CXX) cpoll/all.C -c -o cpoll.o \$(CXXFLAGS) -fPIC
 cppsp.o:
 	\$(CXX) cppsp/all.C -c -o cppsp.o \$(CXXFLAGS) -fPIC
+libcpoll.so: cpoll.o
+	\$(CXX) cpoll.o -o libcpoll.so --shared \$(CXXFLAGS) -ldl -lpthread
+libcppsp.so: cppsp.o
+	\$(CXX) cppsp.o -o libcppsp.so --shared \$(CXXFLAGS) -lcryptopp -ldl -lpthread
 socketd_proxy.so: cpoll.o
 	\$(CXX) socketd_proxy.C cpoll.o -o socketd_proxy.so -ldl -lpthread --std=c++0x --shared -fPIC \$(CXXFLAGS) 
 clean:
@@ -35,19 +39,20 @@ clean:
 EOF
 cat >"$TARGET"/run_example <<EOF
 #!/bin/bash
-./cppsp_standalone -r "\$(pwd)"/www -m /dir_list.cppsm -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -pthread -c -Ofast -c -march=native -c "\$(pwd)"/cpoll.o -c "\$(pwd)"/cppsp.o -f \$@
+LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -r "\$(pwd)"/www -m /dir_list.cppsm -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -f \$@
 EOF
 cat >"$TARGET"/run_application <<EOF
 #!/bin/bash
 # usage: run_application /ABSOLUTE/PATH/TO/APPLICATION
 
-./cppsp_standalone -f -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -pthread -c -Ofast -c -march=native -c "\$(pwd)"/cpoll.o -c "\$(pwd)"/cppsp.o -r "\$@"
+LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -f -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -r "\$@"
 EOF
 cat >"$TARGET"/run_cppsp <<EOF
 #!/usr/bin/env python
 import os,sys
-path=os.path.split(sys.argv[0])[0];
-os.execv(path+"/cppsp_standalone",[path+"/cppsp_standalone","-c","-fPIC","-c","-I"+path+"/include","-c","-lpthread","-c",path+"/cpoll.o","-c",path+"/cppsp.o"]+sys.argv[1:]);
+path=os.path.abspath(os.path.split(sys.argv[0])[0]);
+os.environ["LD_LIBRARY_PATH"]=path;
+os.execv(path+"/cppsp_standalone",[path+"/cppsp_standalone","-c","-fPIC","-c","-I"+path+"/include","-c","-L"+path,"-c","-lpthread","-c","-lcpoll","-c","-lcppsp"]+sys.argv[1:]);
 
 EOF
 cat >"$TARGET"/cppsp_clean <<EOF
