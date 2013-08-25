@@ -411,13 +411,13 @@ namespace cppsp
 		string sss_(sss);
 		if (tmpDir.length() == 0) {
 			txtPath = path + "." + sss_ + ".txt";
-			dllPath = path + "." + sss_ + ".dll";
+			dllPath = path + "." + sss_ + ".so";
 			cPath = path + "." + sss_ + ".C";
 		} else {
 			string path1 = string(path.data(), path.length());
 			string p = basename((char*) path1.c_str());
 			txtPath = tmpDir + "/" + p + "." + sss_ + ".txt";
-			dllPath = tmpDir + "/" + p + "." + sss_ + ".dll";
+			dllPath = tmpDir + "/" + p + "." + sss_ + ".so";
 			cPath = tmpDir + "/" + p + "." + sss_ + ".C";
 		}
 
