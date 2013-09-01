@@ -409,7 +409,6 @@ namespace cppsp
 	DefaultHost::DefaultHost() :
 			mgr(new cppspManager()) {
 		char* tmp = getcwd(nullptr, 0);
-		printf("cwd: %s\n", tmp);
 		compilerWorkingDirectory = tmp;
 		free(tmp);
 	}
