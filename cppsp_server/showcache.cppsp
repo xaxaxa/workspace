@@ -102,7 +102,7 @@ void load() override {
 			strftime(buffer, sizeof(buffer), "%F %r", &time1);
 			const char* state=tmp->compiling?"compiling":tmp->loaded?"loaded":"unloaded";
 			%>
-			<tr<%=tmp->persistent?" class=\"persistent\" title=\"Persistent\"":""%>>
+			<tr<%=tmp->moduleCount>0?" class=\"persistent\" title=\"Module\"":""%>>
 				<td><%htmlEscape((*it).first,output);%></td>
 				<td><%=tmp->refCount%></td>
 				<td><%htmlEscape(buffer,output);%></td>
