@@ -175,6 +175,14 @@ public:
 	DelegateChain() {
 
 	}
+	~DelegateChain() {
+		item* it = last;
+		while (it != nullptr) {
+			item* tmp = it->prev;
+			delete it;
+			it = tmp;
+		}
+	}
 	item* attach(Delegate<R(P...)> func) {
 		item* it = new item { func, last, NULL };
 		if (last != NULL) last->next = it;
