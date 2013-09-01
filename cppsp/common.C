@@ -498,6 +498,9 @@ namespace cppsp
 			deleteTmpfiles();
 			throw;
 		}
+		tmp += "\n(in ";
+		tmp += wd;
+		tmp += ")";
 		tmp += "\n";
 		ms.write(tmp.data(), tmp.length());
 		p.add(*f);
