@@ -185,6 +185,8 @@ namespace cppspServer
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t* buf;
+		bool readLoopRunning;
+		bool shouldContinueReading;
 		union {
 			iovec iov[2];
 			struct {
@@ -199,9 +201,16 @@ namespace cppspServer
 			req._handler=this;
 			poll.add(this->s);
 			s.retain();
-			if(req.readRequest({&handler::readCB, this})) readCB(true);
+			readLoop();
+		}
+		void readLoop() {
+			readLoopRunning=true;
+			shouldContinueReading=true;
+			while(shouldContinueReading && req.readRequest({&handler::readCB, this})) readCB(true);
+			readLoopRunning=false;
 		}
 		void readCB(bool success) {
+			shouldContinueReading=false;
 			if(unlikely(!success)) {
 				destruct();
 				return;
@@ -235,7 +244,6 @@ namespace cppspServer
 			} catch(exception& ex) {
 				server->handleError(req,*resp,ex,{&handler::finalize,this});
 			}
-			
 		}
 		static inline int itoa64(int64_t i, char* b) {
 			static char const digit[] = "0123456789";
@@ -282,7 +290,7 @@ namespace cppspServer
 		void sendHeadersCB(int r) {
 			if(r<=0) {
 				_staticPage->release();
-				destruct();
+				end();
 				return;
 			}
 			_beginSendFile();
@@ -293,7 +301,7 @@ namespace cppspServer
 		void sendFileCB(int r) {
 			if(r<0) {
 				_staticPage->release();
-				destruct();
+				end();
 			} else if(r==0) {
 				_staticPage->release();
 				finalize();
@@ -336,24 +344,34 @@ namespace cppspServer
 			finalize();
 		}
 		void finalize() {
-			server->performanceCounters.totalRequestsFinished++;
-			thr.performanceCounters.totalRequestsFinished++;
 			if(resp->closed) {
-				destruct(); return;
+				end(); return;
 			}
-			req.reset();
-			resp->reset();
-			thr._responsePool.put(resp);
-			resp=nullptr;
-			sp.clear();
+			cleanup();
 			if(keepAlive) {
 				req.init(s,&sp);
-				if(req.readRequest({&handler::readCB,this})) readCB(true);
+				if(readLoopRunning) shouldContinueReading=true;
+				else readLoop();
 			} else {
 				s.shutdown(SHUT_WR);
 				buf=(uint8_t*)malloc(4096);
 				s.repeatRead(buf,4096,{&handler::sockReadCB,this});
 			}
+		}
+		//cleanup and terminate the connection
+		void end() {
+			cleanup();
+			destruct();
+		}
+		//deallocate resources after a request has been completed
+		void cleanup() {
+			server->performanceCounters.totalRequestsFinished++;
+			thr.performanceCounters.totalRequestsFinished++;
+			req.reset();
+			resp->reset();
+			thr._responsePool.put(resp);
+			resp=nullptr;
+			sp.clear();
 		}
 		~handler() {
 			//printf("~handler()\n");
