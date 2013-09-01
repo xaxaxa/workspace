@@ -951,9 +951,10 @@ namespace CP
 	}
 	bool File::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate, bool confident) {
-		Operations op = ed.op;
+		Operations op;
 		int32_t r;
-		redo: r = 0;
+		redo: op = ed.op;
+		r = 0;
 		if (unlikely(handle<0)) {
 			r = -1;
 			goto asdf;
