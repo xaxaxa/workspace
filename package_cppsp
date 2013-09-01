@@ -3,12 +3,12 @@
 TARGET="$1"
 mkdir -p "$TARGET"
 cp -a common_headers include "$TARGET"/
-find -L "$TARGET"/include -type l -delete
 rm -f cppsp_server/*.cppsp.C cppsp_server/*.cppsm.C
 for x in cpoll cppsp cppsp_server socketd; do
 	mkdir -p "$TARGET"/$x;
 	cp -a $x/*.C $x/*.H $x/include "$TARGET"/$x/;
 done;
+find -L "$TARGET"/include -type l -delete
 cp -a test/socketd_proxy.C "$TARGET"/
 cat >"$TARGET"/makefile <<EOF
 OPTFLAGS := -Ofast -march=native -flto
