@@ -1,11 +1,12 @@
 
 CFLAGS := -Ofast -march=native 
-CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions --std=c++0x -fPIC $(CFLAGS)
+CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions \
+	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC $(CFLAGS)
 CC := gcc
 CXX := g++
 all: server123 termchat tmp1 tmp2 nc.xaxaxa email_extract tcpfuck bitflip_proxy \
 	generic_ui generic_struct cplib cpoll cppsp cppsp_standalone socketd_cppsp \
-	socketd fbdump http_simplebench buffer jackfft dedup benchmark
+	socketd fbdump http_simplebench buffer jackfft dedup benchmark tcpsdump
 install: termchat_install nc.xaxaxa_install
 clean:
 	rm -rf termchat servertroll tmp tmp1 tmp2 nc.xaxaxa server123 lib/* bin/*
@@ -112,7 +113,7 @@ lib/libcplib.so:
 lib/libcpoll.so:
 	$(CXX) cpoll/all.C --shared -o lib/libcpoll.so $(CFLAGS1)
 lib/libcppsp.so:
-	$(CXX) cppsp/all.C --shared -o lib/libcppsp.so $(CFLAGS1)
+	$(CXX) cppsp/all.C --shared -o lib/libcppsp.so  -lcryptopp $(CFLAGS1)
 lib/libcplib.a:
 	$(CXX) cplib/all.C -c -o lib/libcplib.o $(CFLAGS1)
 	ar rcs lib/libcplib.a lib/libcplib.o
