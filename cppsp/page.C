@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
 
 using namespace CP;
 using namespace std;
@@ -160,7 +161,7 @@ namespace cppsp
 	}
 	AsyncValue<Page*> Page::loadNestedPage(String path, RGC::Allocator& a) {
 		String tmp = mapRelativePath(path, a);
-		auto tmpv = server->loadPage(*poll, tmp, a);
+		auto tmpv = server->loadPage(tmp, a);
 		if (tmpv) {
 			_setupPage(this, tmpv());
 			return tmpv();
@@ -173,7 +174,7 @@ namespace cppsp
 		return loadNestedPageFromFile(path, *sp);
 	}
 	AsyncValue<Page*> Page::loadNestedPageFromFile(String path, RGC::Allocator& a) {
-		auto tmpv = server->loadPageFromFile(*poll, path, a);
+		auto tmpv = server->loadPageFromFile(path, a);
 		if (tmpv) {
 			_setupPage(this, tmpv());
 			return tmpv();
@@ -372,16 +373,75 @@ namespace cppsp
 		outputStream = nullptr;
 	}
 
-	Server::Server() :
-			poll(nullptr), threadID(0) {
-		handleRequest.attach( { &Server::defaultHandleRequest, this });
-		handleError.attach( { &Server::defaultHandleError, this });
-		routeRequest.attach( { &Server::defaultRouteRequest, this });
+	Host::Host() :
+			poll(NULL), threadID(0), defaultServer(NULL) {
+		preRouteRequest.attach( { &Host::defaultPreRouteRequest, this });
 		curRFCTime.d = (char*) malloc(32);
 		curRFCTime.len = 0;
 	}
-	Server::~Server() {
+	Host::~Host() {
 		free(curRFCTime.d);
+	}
+	void Host::addServer(Server* srv) {
+		servers.insert(srv);
+		srv->host = this;
+		srv->poll = poll;
+		srv->threadID = this->threadID;
+	}
+	void Host::removeServer(Server* srv) {
+		servers.erase(srv);
+	}
+	Server* Host::defaultPreRouteRequest(Request& req) {
+		return defaultServer;
+	}
+	bool Host::updateTime(bool noCleanCache) {
+		clock_gettime(CLOCK_MONOTONIC, &curTime);
+		clock_gettime(CLOCK_REALTIME, &curClockTime);
+		tm time;
+		gmtime_r(&curClockTime.tv_sec, &time);
+		curRFCTime.len = rfctime(time, curRFCTime.d);
+		bool ret = noCleanCache;
+		for (auto it = servers.begin(); it != servers.end(); it++) {
+			ret |= (*it)->updateTime(noCleanCache);
+		}
+		return ret;
+	}
+	DefaultHost::DefaultHost() :
+			mgr(new cppspManager()) {
+		char* tmp = getcwd(nullptr, 0);
+		printf("cwd: %s\n", tmp);
+		compilerWorkingDirectory = tmp;
+		free(tmp);
+	}
+	DefaultHost::~DefaultHost() {
+		delete mgr;
+	}
+	bool DefaultHost::updateTime(bool noCleanCache) {
+		bool b = Host::updateTime(noCleanCache);
+		mgr->curTime = curTime;
+		if (!noCleanCache) b |= cleanCache();
+		return b;
+	}
+	bool DefaultHost::cleanCache() {
+		return mgr->cleanCache(this->fileCacheCleanInterval);
+	}
+	cppspManager* DefaultHost::manager() {
+		return mgr;
+	}
+	AsyncValue<loadedPage*> DefaultHost::loadPage(String path) {
+		return mgr->loadPage(*poll, compilerWorkingDirectory, path);
+	}
+	staticPage* DefaultHost::loadStaticPage(String path, bool fd, bool map) {
+		return mgr->loadStaticPage(path, fd, map);
+	}
+
+	Server::Server() :
+			host(nullptr), poll(nullptr), threadID(0) {
+		handleRequest.attach( { &Server::defaultHandleRequest, this });
+		handleError.attach( { &Server::defaultHandleError, this });
+		routeRequest.attach( { &Server::defaultRouteRequest, this });
+	}
+	Server::~Server() {
 	}
 	struct requestHandlerState
 	{
@@ -397,11 +457,11 @@ namespace cppsp
 						auto it = s->routeCache.find(path);
 						if (it == s->routeCache.end()) {
 							Server::RouteCacheEntry* ce = new Server::RouteCacheEntry { h,
-									path.toSTDString(), s->curTime };
+									path.toSTDString(), s->curTime() };
 							s->routeCache.insert( { ce->path, ce });
 						} else {
 							(*it).second->handler = h;
-							(*it).second->lastUpdate = s->curTime;
+							(*it).second->lastUpdate = s->curTime();
 						}
 					}
 					h(*req, *resp, cb);
@@ -441,7 +501,7 @@ namespace cppsp
 	void Server::handleRoutedRequest(String path, Request& req, Response& resp,
 			Delegate<void()> cb) {
 		auto it = routeCache.find(path);
-		timespec tmp1 = curTime;
+		timespec tmp1 = curTime();
 		tmp1.tv_sec -= routeCacheDuration;
 		if (likely(it != routeCache.end() && tsCompare((*it).second->lastUpdate, tmp1) > 0)) {
 			(*it).second->handler(req, resp, cb);
@@ -479,58 +539,6 @@ namespace cppsp
 			return routeDynamicRequest(path);
 		else return routeStaticRequest(path);
 	}
-	String Server::mapPath(String path, RGC::Allocator& a) {
-		String r = rootDir();
-		char* tmp = (char*) a.alloc(path.length() + r.length());
-		int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
-		return String(tmp, l);
-	}
-	
-	bool Server::updateTime(bool noCleanCache) {
-		clock_gettime(CLOCK_MONOTONIC, &curTime);
-		clock_gettime(CLOCK_REALTIME, &curClockTime);
-		tm time;
-		gmtime_r(&curClockTime.tv_sec, &time);
-		curRFCTime.len = rfctime(time, curRFCTime.d);
-		if (noCleanCache) return true;
-		timespec tmp1 = curTime;
-		tmp1.tv_sec -= routeCacheCleanInterval;
-		//printf("%i\n",tsCompare(_lastClean, tmp1));
-		if (tsCompare(_lastClean, tmp1) < 0) {
-			_lastClean = curTime;
-			return cleanCache();
-		}
-		return true;
-	}
-	bool Server::cleanCache(int minAge) {
-		timespec tmp1 = curTime;
-		tmp1.tv_sec -= minAge;
-		auto it = routeCache.begin();
-		int del = 0;
-		bool ret = false;
-		while (it != routeCache.end()) {
-			if (tsCompare((*it).second->lastUpdate, tmp1) <= 0) {
-				delete (*it).second;
-				auto tmp = it;
-				it++;
-				routeCache.erase(tmp);
-				del++;
-			} else {
-				it++;
-				ret = true;
-			}
-		}
-		if (del > 0) printf("%i route cache entries purged\n", del);
-		return ret;
-	}
-
-	DefaultServer::DefaultServer(string root) :
-			mgr(new cppspManager()), root(root) {
-		mgr->srv = this;
-	}
-	DefaultServer::~DefaultServer() {
-		delete mgr;
-	}
 	struct pageLoaderState
 	{
 		RGC::Allocator* a;
@@ -551,15 +559,15 @@ namespace cppsp
 			ret: a->del(this);
 		}
 	};
-	AsyncValue<Page*> DefaultServer::loadPage(CP::Poll& p, String path, RGC::Allocator& a) {
-		auto tmp = mgr->loadPage(p, rootDir(), mapPath(path.toSTDString()));
+	AsyncValue<Page*> Server::loadPage(String path, RGC::Allocator& a) {
+		auto tmp = host->loadPage(mapPath(path.toSTDString()));
 		if (tmp) return tmp()->doCreate(&a);
 		auto* st = a.New<pageLoaderState>(pageLoaderState { &a });
 		tmp.wait(st);
 		return Future<Page*>(&st->cb);
 	}
-	AsyncValue<Page*> DefaultServer::loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a) {
-		auto tmp = mgr->loadPage(p, rootDir(), path);
+	AsyncValue<Page*> Server::loadPageFromFile(String path, RGC::Allocator& a) {
+		auto tmp = host->loadPage(path);
 		if (tmp) return tmp()->doCreate(&a);
 		auto* st = a.New<pageLoaderState>(pageLoaderState { &a });
 		tmp.wait(st);
@@ -567,40 +575,104 @@ namespace cppsp
 	}
 	struct moduleLoaderState
 	{
-		Delegate<void(void*, exception* ex)> cb;
+		Server* s;
+		Delegate<void(ModuleInstance, exception* ex)> cb;
 		void operator()(loadedPage* lp, exception* ex) {
-			cb(lp == nullptr ? nullptr : lp->dlHandle, ex);
+			cb(lp == nullptr ? nullptr : s->insertModule(lp), ex);
 			delete this;
 		}
 	};
-	AsyncValue<void*> DefaultServer::loadModule(CP::Poll& p, String path) {
-		auto tmp = mgr->loadPage(p, rootDir(), mapPath(path.toSTDString()));
-		if (tmp) return tmp()->dlHandle;
-		auto* st = new moduleLoaderState();
+	AsyncValue<ModuleInstance> Server::loadModule(String path) {
+		auto tmp = host->loadPage(mapPath(path.toSTDString()));
+		if (tmp) return insertModule(tmp());
+		auto* st = new moduleLoaderState { this };
 		tmp.wait(st);
-		return Future<void*>(&st->cb);
+		return Future<ModuleInstance>(&st->cb);
 	}
-	AsyncValue<void*> DefaultServer::loadModuleFromFile(CP::Poll& p, String path) {
-		auto tmp = mgr->loadPage(p, rootDir(), path);
-		if (tmp) return tmp()->dlHandle;
-		auto* st = new moduleLoaderState();
+	AsyncValue<ModuleInstance> Server::loadModuleFromFile(String path) {
+		auto tmp = host->loadPage(path);
+		if (tmp) return insertModule(tmp());
+		auto* st = new moduleLoaderState { this };
 		tmp.wait(st);
-		return Future<void*>(&st->cb);
+		return Future<ModuleInstance>(&st->cb);
 	}
-	String DefaultServer::loadStaticPage(String path) {
-		return mgr->loadStaticPage(mapPath(path.toSTDString()))->data;
+
+	ModuleInstance Server::insertModule(loadedPage* lp) {
+		ModuleInstance inst;
+		inst.instance = nullptr;
+		inst.origin = lp;
+		ModuleParams mp;
+		mp.filePath = lp->path;
+		mp.server = this;
+		mp.page = lp;
+		mp.host = host;
+		lp->retain();
+		lp->moduleCount++;
+		try {
+			inst.instance = lp->initModule(mp);
+			this->modules.insert(inst);
+		} catch (...) {
+			if (inst.instance != nullptr) lp->deinitModule(inst.instance);
+			lp->release();
+			lp->moduleCount--;
+			throw;
+		}
+		return inst;
 	}
-	String DefaultServer::loadStaticPageFromFile(String path) {
-		return mgr->loadStaticPage(path)->data;
+	void Server::removeModule(ModuleInstance inst) {
+		inst.origin->deinitModule(inst.instance);
+		this->modules.erase(inst);
+		inst.origin->release();
 	}
-	bool DefaultServer::updateTime(bool noCleanCache) {
-		bool b = Server::updateTime(noCleanCache);
-		mgr->curTime = curTime;
-		return b;
+	String Server::loadStaticPage(String path) {
+		return host->loadStaticPage(mapPath(path.toSTDString()))->data;
 	}
-	bool DefaultServer::cleanCache() {
-		bool b = Server::cleanCache();
-		return b | mgr->cleanCache(this->fileCacheCleanInterval);
+	String Server::loadStaticPageFromFile(String path) {
+		return host->loadStaticPage(path)->data;
+	}
+	String Server::mapPath(String path, RGC::Allocator& a) {
+		String r = rootDir();
+		char* tmp = (char*) a.alloc(path.length() + r.length());
+		int l = cppsp::combinePathChroot(r.data(), r.length(), path.data(), path.length(), tmp);
+		return String(tmp, l);
+	}
+	cppspManager* Server::manager() {
+		DefaultHost* h = dynamic_cast<DefaultHost*>(host);
+		if (h == nullptr) return nullptr;
+		return h->mgr;
+	}
+	
+	bool Server::updateTime(bool noCleanCache) {
+		if (noCleanCache) return true;
+		timespec tmp1 = curTime();
+		tmp1.tv_sec -= routeCacheCleanInterval;
+		//printf("%i\n",tsCompare(_lastClean, tmp1));
+		if (tsCompare(_lastClean, tmp1) < 0) {
+			_lastClean = curTime();
+			return cleanCache();
+		}
+		return true;
+	}
+	bool Server::cleanCache(int minAge) {
+		timespec tmp1 = curTime();
+		tmp1.tv_sec -= minAge;
+		auto it = routeCache.begin();
+		int del = 0;
+		bool ret = false;
+		while (it != routeCache.end()) {
+			if (tsCompare((*it).second->lastUpdate, tmp1) <= 0) {
+				delete (*it).second;
+				auto tmp = it;
+				it++;
+				routeCache.erase(tmp);
+				del++;
+			} else {
+				it++;
+				ret = true;
+			}
+		}
+		if (del > 0) printf("%i route cache entries purged\n", del);
+		return ret;
 	}
 
 } /* namespace cppsp */

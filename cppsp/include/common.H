@@ -73,11 +73,13 @@ namespace cppsp
 		typedef int (*getObjectSize_t)();
 		typedef Page* (*createObject_t)(void* mem);
 		typedef Page* (*createObject1_t)(RGC::Allocator* alloc);
-		typedef void (*initModule_t)(ModuleParams& p);
-		typedef void (*deinitModule_t)();
+		typedef void* (*initModule_t)(ModuleParams& p);
+		typedef void (*deinitModule_t)(void*);
 		int (*getObjectSize)();
 		createObject_t createObject;
 		createObject1_t createObject1;
+		initModule_t initModule;
+		deinitModule_t deinitModule;
 		RGC::Ref<CP::File> compile_fd;
 		CP::MemoryStream ms;
 		//Delegate<void(loadedPage&)> compileCB;
@@ -93,9 +95,9 @@ namespace cppsp
 		string dllPath;
 		int stringTableFD;
 		pid_t compilerPID;
+		int moduleCount;
 		bool loaded;
 		bool compiling;
-		bool persistent;
 		void readCB(int r);
 		void deleteTmpfiles();
 		void afterCompile(bool success, bool sync);
@@ -141,10 +143,6 @@ namespace cppsp
 	class cppspManager
 	{
 	public:
-		/**
-		 Server instance that is passed to initModule() of all modules
-		 */
-		Server* srv;
 		unordered_map<String, loadedPage*> cache;
 		unordered_map<String, staticPage*> staticCache;
 		unordered_map<string, string> mimeTypes; //only for static pages

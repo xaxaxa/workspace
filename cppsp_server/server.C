@@ -109,8 +109,9 @@ namespace cppspServer
 			}
 		}
 	};
-	class Server: public cppsp::DefaultServer {
+	class Host: public cppsp::DefaultHost {
 	public:
+		cppsp::Server server;
 		Timer t;
 		ObjectPool<Response> _responsePool;
 		int _lastRequests=0;
@@ -125,13 +126,14 @@ namespace cppspServer
 			}
 			_lastRequests=performanceCounters.totalRequestsReceived;
 		}
-		Server(Poll* p, string root):DefaultServer(root),
-			_responsePool(128) {
+		Host(Poll* p, string root): _responsePool(128) {
 			this->poll=p;
+			defaultServer=&server;
+			addServer(&server);
+			server.root=root;
 			updateTime();
-			t.setCallback({&Server::timerCB,this});
+			t.setCallback({&Host::timerCB,this});
 			p->add(t);
-			handleRequest.attach( { &Server::_defaultHandleRequest, this });
 		}
 		void loadDefaultMimeDB() {
 			File f("/usr/share/mime/globs",O_RDONLY);
@@ -141,12 +143,12 @@ namespace cppspServer
 		}
 		void enableTimer() {
 			if(timerState==0) printf("enabling timer\n");
-			t.setInterval(routeCacheDuration*1000);
+			t.setInterval(timerShortInterval*1000);
 			timerState=2;
 			updateTime(true); //true indicates to inhibit cache cleaning
 		}
 		void slowTimer() {
-			t.setInterval(routeCacheCleanInterval*1000);
+			t.setInterval(timerLongInterval*1000);
 			timerState=1;
 		}
 		void disableTimer() {
@@ -154,13 +156,14 @@ namespace cppspServer
 			t.setInterval(0);
 			timerState=0;
 		}
-		void _defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
+		inline void _requestReceived() {
 			if(unlikely(timerState<2)) enableTimer();
-			defaultHandleRequest(req,resp,cb);
+			performanceCounters.totalRequestsReceived++;
 		}
-		AsyncValue<Handler> routeStaticRequestFromFile(String path) override;
-		AsyncValue<Handler> routeDynamicRequestFromFile(String path) override;
+		AsyncValue<Handler> routeStaticRequest(String path) override;
+		AsyncValue<Handler> routeDynamicRequest(String path) override;
 	};
+	typedef Host Server;
 	class Request:public cppsp::CPollRequest
 	{
 	public:
@@ -172,11 +175,12 @@ namespace cppspServer
 	//handles a single connection
 	//just instantiate-and-forget; it will self-destruct when connection is closed
 	struct handler:public RGC::Object {
-		Server& thr;
+		Host& thr;
 		CP::Poll& p;
 		Socket& s;
 		StringPool sp;
 		Request req;
+		cppsp::Server* server;
 		cppsp::Response* resp;
 		//Page* p;
 		//MemoryStream ms;
@@ -189,7 +193,7 @@ namespace cppspServer
 			};
 		};
 		bool keepAlive;
-		handler(Server& thr,CP::Poll& poll,Socket& s):thr(thr),
+		handler(Host& thr,CP::Poll& poll,Socket& s):thr(thr),
 			p(poll),s(s),sp(2048),req(this->s,&sp) {
 			//printf("handler()\n");
 			req._handler=this;
@@ -206,6 +210,8 @@ namespace cppspServer
 			if((resp=thr._responsePool.tryGet())) resp->init(this->s,&sp);
 			else resp=new Response(this->s,&sp);
 			
+			thr._requestReceived();
+			
 			//keepAlive=true;
 			auto it=req.headers.find("connection");
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
@@ -221,11 +227,13 @@ namespace cppspServer
 			*/
 			resp->headers.insert({"Date", sp.addString(thr.curRFCTime)});
 			
-			thr.performanceCounters.totalRequestsReceived++;
+			//perform vhost routing
+			server=thr.preRouteRequest(req);
+			server->performanceCounters.totalRequestsReceived++;
 			try {
-				thr.handleRequest(req,*resp,{&handler::finalize,this});
+				server->handleRequest(req,*resp,{&handler::finalize,this});
 			} catch(exception& ex) {
-				thr.handleError(req,*resp,ex,{&handler::finalize,this});
+				server->handleError(req,*resp,ex,{&handler::finalize,this});
 			}
 			
 		}
@@ -268,7 +276,7 @@ namespace cppspServer
 #endif
 			} catch(exception& ex) {
 				Sp->release();
-				thr.handleError(req,resp,ex,{&handler::finalize,this});
+				server->handleError(req,resp,ex,{&handler::finalize,this});
 			}
 		}
 		void sendHeadersCB(int r) {
@@ -304,7 +312,7 @@ namespace cppspServer
 			p->request=&req;
 			p->response=&resp;
 			p->poll=&this->p;
-			p->server=&thr;
+			p->server=server;
 			p->handleRequest({&handler::handleRequestCB,this});
 		}
 		void sockReadCB(int r) {
@@ -328,6 +336,7 @@ namespace cppspServer
 			finalize();
 		}
 		void finalize() {
+			server->performanceCounters.totalRequestsFinished++;
 			thr.performanceCounters.totalRequestsFinished++;
 			if(resp->closed) {
 				destruct(); return;
@@ -360,11 +369,11 @@ namespace cppspServer
 		(*(handler*)r._handler).handleDynamic(v);
 	}
 	
-	AsyncValue<Handler> Server::routeStaticRequestFromFile(String path) {
+	AsyncValue<Handler> Host::routeStaticRequest(String path) {
 #ifdef CPPSP_USE_SENDFILE
-		staticPage* sp=mgr->loadStaticPage(path,true,false);
+		staticPage* sp=loadStaticPage(path,true,false);
 #else
-		staticPage* sp=mgr->loadStaticPage(path);
+		staticPage* sp=loadStaticPage(path);
 #endif
 		return Handler(&staticHandler,sp);
 	}
@@ -377,8 +386,8 @@ namespace cppspServer
 			delete this;
 		}
 	};
-	AsyncValue<Handler> Server::routeDynamicRequestFromFile(String path) {
-		auto lp=mgr->loadPage(*poll,root,path);
+	AsyncValue<Handler> Host::routeDynamicRequest(String path) {
+		auto lp=loadPage(path);
 		if(lp) {
 			return Handler(&dynamicHandler,lp());
 		}

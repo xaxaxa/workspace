@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 	struct {
 		const char* s;
 		Delegate<void()> afterModuleLoad;
-		void operator()(void*,exception* ex) {
+		void operator()(ModuleInstance inst,exception* ex) {
 			if(ex!=NULL) {
 				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
 				cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
 	for(int ii=0;ii<(int)modules.size();ii++) {
 		moduleCB[ii].s=modules[ii];
 		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
-		auto res=srv.loadModule(p,modules[ii]);
+		auto res=srv.defaultServer->loadModule(modules[ii]);
 		if(res) moduleCB[ii](res(),nullptr);
 		else res.wait(&moduleCB[ii]);
 	}

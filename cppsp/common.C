@@ -489,14 +489,9 @@ namespace cppsp
 		getObjectSize = (getObjectSize_t) checkDLError(dlsym(dlHandle, "getObjectSize"));
 		createObject = (createObject_t) checkDLError(dlsym(dlHandle, "createObject"));
 		createObject1 = (createObject1_t) checkDLError(dlsym(dlHandle, "createObject1"));
-		initModule_t initModule = (initModule_t) dlsym(dlHandle, "initModule");
+		initModule = (initModule_t) dlsym(dlHandle, "initModule");
+		deinitModule = (deinitModule_t) dlsym(dlHandle, "deinitModule");
 		if (initModule != NULL) {
-			ModuleParams p;
-			p.server = manager->srv;
-			p.filePath = this->path;
-			p.page = this;
-			this->persistent = true;
-			initModule(p);
 			fprintf(stderr, "module %s loaded\n", path.c_str());
 		}
 		loaded = true;
@@ -511,7 +506,6 @@ namespace cppsp
 		if (dlHandle != NULL) {
 			deinitModule_t deinitModule = (deinitModule_t) dlsym(dlHandle, "deinitModule");
 			if (deinitModule != NULL) {
-				deinitModule();
 				fprintf(stderr, "module %s unloaded\n", path.c_str());
 			}
 			ScopeLock sl(dlMutex);
@@ -532,7 +526,7 @@ namespace cppsp
 		return tmp;
 	}
 	loadedPage::loadedPage() :
-			dlHandle(NULL), stringTable(NULL), stringTableFD(-1), persistent(false) {
+			dlHandle(NULL), stringTable(NULL), stringTableFD(-1), moduleCount(0) {
 		//printf("loadedPage()\n");
 		compiling = false;
 		doUnload();
@@ -541,7 +535,7 @@ namespace cppsp
 		//printf("~loadedPage()\n");
 		doUnload();
 	}
-	//returns: 0: no-op; 1: should reload; 2: should recompile
+	//returns: 0: no-op; 2: should reload/recompile
 	int loadedPage::shouldCompile() {
 		struct stat st;
 		{
@@ -550,6 +544,7 @@ namespace cppsp
 			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) pageErr_isDir();
 		}
 		if (!loaded) return 2;
+		if (moduleCount > 0) return 0;
 		timespec modif_cppsp = st.st_mtim;
 		/*{
 		 CONCAT_TO(path.data(), path.length(), s1, ".txt");
@@ -723,16 +718,14 @@ namespace cppsp
 		{
 			auto it = cache.begin();
 			while (it != cache.end()) {
-				if (!(*it).second->persistent) {
-					if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) <= 0) {
-						delete (*it).second;
-						auto tmp = it;
-						it++;
-						cache.erase(tmp);
-						del++;
-						continue;
-					} else ret = true;
-				}
+				if ((*it).second->refCount <= 1 && tsCompare((*it).second->lastCheck, tmp1) <= 0) {
+					delete (*it).second;
+					auto tmp = it;
+					it++;
+					cache.erase(tmp);
+					del++;
+					continue;
+				} else ret = true;
 				it++;
 			}
 		}

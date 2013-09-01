@@ -41,7 +41,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 struct workerThread
 {
 	Poll p;
-	cppspServer::Server srv;
+	cppspServer::Server srv; //host
 	vector<const char*> modules;
 	Ref<CP::Socket> listenSock;
 	union {
@@ -49,8 +49,9 @@ struct workerThread
 		pthread_t thread;
 	};
 	int cpu;	//id of cpu to pin to, or -1
-	workerThread(Socket& sock): srv(&p,rootDir.c_str()),
-		listenSock(sock),cpu(-1){}
+	workerThread(Socket& sock): srv(&p,rootDir),
+		listenSock(sock),cpu(-1){
+	}
 };
 class handler1: public RGC::Allocator
 {
@@ -134,7 +135,7 @@ void* thread1(void* v) {
 	struct {
 		const char* s;
 		Delegate<void()> afterModuleLoad;
-		void operator()(void*,exception* ex) {
+		void operator()(ModuleInstance inst,exception* ex) {
 			if(ex!=NULL) {
 				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
 				cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
@@ -150,9 +151,9 @@ void* thread1(void* v) {
 	for(int ii=0;ii<(int)thr.modules.size();ii++) {
 		moduleCB[ii].s=thr.modules[ii];
 		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
-		AsyncValue<void*> tmp;
+		AsyncValue<ModuleInstance> tmp;
 		try {
-			tmp=thr.srv.loadModule(p,thr.modules[ii]);
+			tmp=thr.srv.defaultServer->loadModule(thr.modules[ii]);
 		} catch(exception& ex) {
 			moduleCB[ii](NULL,&ex);
 			exit(1);

@@ -23,6 +23,7 @@
 #define PAGE_H_
 #include <rgc.H>
 #include <map>
+#include <set>
 #include <cpoll/cpoll.H>
 #include <string>
 #include "stringutils.H"
@@ -35,6 +36,9 @@ using CP::AsyncValue;
 namespace cppsp
 {
 	class cppspManager;
+	class loadedPage;
+	class staticPage;
+	class Host;
 	class HTTPException: public std::exception
 	{
 	public:
@@ -224,30 +228,124 @@ namespace cppsp
 	 Represents a request handler callback.
 	 */
 	typedef DelegateRef<void(Request&, Response&, Delegate<void()> cb)> Handler;
+	struct ModuleInstance
+	{
+		loadedPage* origin;
+		void* instance;
+		bool operator<(const ModuleInstance& other) const {
+			if (origin < other.origin) return true;
+			if (origin > other.origin) return false;
+			return instance < other.instance;
+		}
+		bool operator==(const ModuleInstance& other) const {
+			return origin == other.origin && instance == other.instance;
+		}
+		ModuleInstance() {
+		}
+		ModuleInstance(loadedPage* origin, void* instance) :
+				origin(origin), instance(instance) {
+		}
+		ModuleInstance(nullptr_t) :
+				origin(nullptr), instance(nullptr) {
+		}
+	};
+	struct PerformanceCounters
+	{ //to be incremented by the web server implementation
+		int totalRequestsReceived;
+		int totalRequestsFinished;
+		PerformanceCounters() :
+				totalRequestsReceived(0), totalRequestsFinished(0) {
+		}
+	};
+	class Host: public RGC::Object
+	{
+	public:
+		typedef DelegateChain<Server*(Request&)> PreRouteRequestChain;
+		CP::Poll* poll;
+		PerformanceCounters performanceCounters;
+		set<Server*> servers;
+		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
+		timespec curClockTime { 0, 0 }; //CLOCK_REALTIME
+		String curRFCTime;
+		int threadID;
+		//timer interval when the web server is active
+		int timerShortInterval = 2;
+		//timer interval when the web server is idle (no requests received since the last timer tick)
+		int timerLongInterval = 120;
+		Server* defaultServer;
+		Host();
+		~Host();
+		void addServer(Server* srv);
+		void removeServer(Server* srv);
+		Server* defaultPreRouteRequest(Request& req);
+		PreRouteRequestChain preRouteRequest;
+		/**
+		 should be called during every timer tick
+		 @returns whether or not the timer still need to run
+		 */
+		virtual bool updateTime(bool noCleanCache = false);
+		/**
+		 Returns the cppspManager instance for this Host instance; may be NULL if the underlying server does not use cppspManager.
+		 */
+		virtual cppspManager* manager() {
+			return NULL;
+		}
+		/**
+		 Load static file from "path". path is absolute.
+		 */
+		virtual AsyncValue<Handler> routeStaticRequest(String path)=0;
+		/**
+		 Load dynamic page from "path". path is absolute.
+		 */
+		virtual AsyncValue<Handler> routeDynamicRequest(String path)=0;
+		virtual AsyncValue<loadedPage*> loadPage(String path)=0;
+		virtual staticPage* loadStaticPage(String path, bool fd = false, bool map = true)=0;
+	};
+	class DefaultHost: public Host
+	{
+	public:
+		cppspManager* mgr;
+		string compilerWorkingDirectory;
+		/**
+		 Time (in seconds) before considering purging a cached cppspManager managed page.
+		 For static pages, each cache entry contains an mmap()ed area backed by that file.
+		 For dynamic pages, each cache entry contains an mmap()ed area backed by the page's string
+		 table, and a dynamic linker handle from dlopen().
+		 */
+		int fileCacheCleanInterval = 600; //10 min.
+		DefaultHost();
+		~DefaultHost();
+		bool updateTime(bool noCleanCache = false) override;
+		bool cleanCache();
+		cppspManager* manager() override;
+		AsyncValue<loadedPage*> loadPage(String path) override;
+		staticPage* loadStaticPage(String path, bool fd = false, bool map = true) override;
+	};
 	/**
 	 Represents a cppsp web server instance.
 	 */
 	class Server: public RGC::Object
 	{
 	public:
-		struct PerformanceCounters
-		{ //to be incremented by the web server
-			int totalRequestsReceived;
-			int totalRequestsFinished;
-			PerformanceCounters() :
-					totalRequestsReceived(0), totalRequestsFinished(0) {
-			}
-		} performanceCounters;
-
+		Host* host;
+		string root;
+		PerformanceCounters performanceCounters;
+		set<ModuleInstance> modules;
 		typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
 		typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
-		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
-		timespec curClockTime { 0, 0 }; //CLOCK_REALTIME
-		String curRFCTime;
 		CP::Poll* poll;
 		int threadID;
 		Server();
 		~Server();
+		inline timespec curTime() {
+			return host->curTime;
+		}
+		inline timespec curClockTime() {
+			return host->curClockTime;
+		}
+		inline String curRFCTime() {
+			return host->curRFCTime;
+		}
 
 		/**
 		 The handle request callback. It is called for every request right after reading in all the request data and instantiating the Request and Response objects.
@@ -311,8 +409,8 @@ namespace cppsp
 		/**
 		 Load static file from "path". path is absolute.
 		 */
-		virtual AsyncValue<Handler> routeStaticRequestFromFile(String path) {
-			throw logic_error("routeStaticRequestFromFile() not implemented");
+		AsyncValue<Handler> routeStaticRequestFromFile(String path) {
+			return host->routeStaticRequest(path);
 		}
 		/**
 		 Load dynamic page from "path". path is relative to server root.
@@ -323,8 +421,8 @@ namespace cppsp
 		/**
 		 Load dynamic page from "path". path is absolute.
 		 */
-		virtual AsyncValue<Handler> routeDynamicRequestFromFile(String path) {
-			throw logic_error("routeDynamicRequestFromFile() not implemented");
+		AsyncValue<Handler> routeDynamicRequestFromFile(String path) {
+			return host->routeDynamicRequest(path);
 		}
 		/**
 		 Default request router. Calls either routeStaticRequest() or routeDynamicRequest() based on
@@ -350,7 +448,9 @@ namespace cppsp
 		 */
 		int routeCacheDuration = 2;
 		/**
-		 Time (in seconds) before considering purging a cached routing decision.
+		 Time (in seconds) before considering purging a routing entry from the routeCache map.
+		 Although routes expire after routeCacheDuration seconds, deleting and reinserting the same key
+		 into a map is expensive, so we keep the entry itself around for longer by default.
 		 Increasing this may increase performance, but may increase memory usage.
 		 */
 		int routeCacheCleanInterval = 120;
@@ -358,32 +458,36 @@ namespace cppsp
 		/**
 		 Returns absolute path of server root directory.
 		 */
-		virtual String rootDir()=0;
+		String rootDir() {
+			return root;
+		}
 		/**
 		 Load and instantiate dynamic page from "path". path is relative to server root.
 		 */
-		virtual AsyncValue<Page*> loadPage(CP::Poll& p, String path, RGC::Allocator& a)=0;
+		virtual AsyncValue<Page*> loadPage(String path, RGC::Allocator& a);
 		/**
 		 Load and instantiate dynamic page from "path". path is absolute.
 		 */
-		virtual AsyncValue<Page*> loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a)=0;
+		virtual AsyncValue<Page*> loadPageFromFile(String path, RGC::Allocator& a);
 
 		/**
 		 Load cppsp module from "path". path is relative to server root.
 		 */
-		virtual AsyncValue<void*> loadModule(CP::Poll& p, String path)=0;
+		virtual AsyncValue<ModuleInstance> loadModule(String path);
 		/**
 		 Load cppsp module from "path". path is absolute.
 		 */
-		virtual AsyncValue<void*> loadModuleFromFile(CP::Poll& p, String path)=0;
+		virtual AsyncValue<ModuleInstance> loadModuleFromFile(String path);
+		virtual ModuleInstance insertModule(loadedPage* lp);
+		virtual void removeModule(ModuleInstance inst);
 		/**
 		 Load static page from "path". path is relative to server root.
 		 */
-		virtual String loadStaticPage(String path)=0;
+		virtual String loadStaticPage(String path);
 		/**
 		 Load static page from "path". path is absolute.
 		 */
-		virtual String loadStaticPageFromFile(String path)=0;
+		virtual String loadStaticPageFromFile(String path);
 		/**
 		 Given a path relative to the server root, returns the absolute path.
 		 */
@@ -395,10 +499,9 @@ namespace cppsp
 		/**
 		 Returns the cppspManager instance for this Server instance; may be NULL if the underlying server does not use cppspManager.
 		 */
-		virtual cppspManager* manager() {
-			return NULL;
-		}
+		virtual cppspManager* manager();
 		/**
+		 should be called every time after you update Host::curTime or Host::curClockTime
 		 @returns whether or not the timer still need to run
 		 */
 		virtual bool updateTime(bool noCleanCache = false);
@@ -411,41 +514,6 @@ namespace cppsp
 		virtual bool cleanCache() {
 			return cleanCache(routeCacheCleanInterval);
 		}
-	};
-	//cppspManager based Server
-	class DefaultServer: public Server
-	{
-	public:
-		cppspManager* mgr;
-		string root;
-		/**
-		 Time (in seconds) before considering purging a cached cppspManager managed page.
-		 For static pages, each cache entry contains an mmap()ed area backed by that file.
-		 For dynamic pages, each cache entry contains an mmap()ed area backed by the page's string
-		 table, and a dynamic linker handle from dlopen().
-		 */
-		int fileCacheCleanInterval = 600; //10 min.
-		DefaultServer(string root);
-		~DefaultServer();
-
-		AsyncValue<Page*> loadPage(CP::Poll& p, String path, RGC::Allocator& a) override;
-		AsyncValue<Page*> loadPageFromFile(CP::Poll& p, String path, RGC::Allocator& a) override;
-		AsyncValue<void*> loadModule(CP::Poll& p, String path);
-		AsyncValue<void*> loadModuleFromFile(CP::Poll& p, String path) override;
-		String loadStaticPage(String path) override;
-		String loadStaticPageFromFile(String path);
-		String rootDir() override {
-			return root;
-		}
-		cppspManager* manager() override {
-			return mgr;
-		}
-		//this function needs to be called periodically to check for file modifications
-		//otherwise auto re-compile will not work
-		//generally call it every 2 seconds
-
-		bool updateTime(bool noCleanCache = false) override;
-		bool cleanCache() override;
 	};
 	/**
 	 Base class for all cppsp pages.
@@ -595,12 +663,12 @@ namespace cppsp
 		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
 	};
-	class loadedPage;
 	//the ModuleParams struct itself (passed in to modules at initialization time) is not
 	//guaranteed to exist after initModule() returns
 	struct ModuleParams
 	{
-		Server* server; //guaranteed to exist until after deinitModule() returns
+		Host* host; //guaranteed to exist until after deinitModule() returns
+		Server* server; //guaranteed to exist until after deinitModule() returns, if not null
 		String filePath; //guaranteed to exist until after deinitModule() returns
 		loadedPage* page;
 	};
