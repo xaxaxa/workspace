@@ -49,6 +49,7 @@ benchmark: fftbench fibbench
 fftbench: bin/fftbench
 fibbench: bin/fibbench
 iptsocks_new: bin/iptsocks_new
+cppsp_embedded_example: bin/cppsp_embedded_example
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -84,6 +85,8 @@ bin/cppsp_standalone: cppsp cpoll
 	$(CXX) cppsp_server/cppsp_standalone.C -o bin/cppsp_standalone -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/socketd_cppsp: cppsp cpoll
 	$(CXX) cppsp_server/socketd_cppsp.C -o bin/socketd_cppsp -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
+bin/cppsp_embedded_example: cppsp cpoll
+	$(CXX) cppsp_server/example_embedded.C -o bin/cppsp_embedded_example -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/socketd: cpoll
 	$(CXX) socketd/all.C -o bin/socketd -lcpoll -lrt $(CFLAGS1)
 bin/tcpsdump:
