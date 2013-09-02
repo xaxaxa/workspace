@@ -3,16 +3,16 @@
 using namespace CP;
 using namespace cppsp;
 int main() {
+	Poll p;
 	//create server instance
-	cppspServer::Server srv("/");
+	cppspEmbedded::Server srv(&p,"/");
 	
 	//per-request state machine
-	struct handler {
-		Request& req; Response& resp; Delegate<void()> cb;
+	struct handler: public HandlerBase {
 		void process() {
-			resp.write("aaaaa");
+			response->write("aaaaa");
 			//flush content and headers; when writeback is done, flushCB() is called
-			resp.flush({&handler::flushCB,this});
+			response->finalize({&handler::flushCB,this});
 		}
 		void flushCB(Response&) {
 			cb();
@@ -20,31 +20,13 @@ int main() {
 	};
 	
 	//attach a custom request router
-	struct {
-		void operator()(Request& req, Response& resp, Delegate<void()> cb) {
-			//allocate an instance of handler in the StringPool allocator
-			req.sp->New<handler>(handler{req,resp,cb})->process();
-		}
-	} router;
-	srv.handleRequest.attach(&router);
+	srv.attachHandler(makeHandler<handler>());
 	
 	//bind, listen, and accept, passing received sockets to the server
-	Poll p;
 	Socket s;
 	s.bind("0.0.0.0","16971",AF_INET,SOCK_STREAM);
 	s.listen();
-	
-	//callback function that's called for every accept()ed connection
-	auto acceptCB=[&](Socket* clientSock) {
-		//create a new connection handler
-		new cppspServer::handler(srv,p,*clientSock);
-		
-		//release our reference to the socket; the connection handler also holds
-		//a reference, which it will automatically release when the connection is finished
-		clientSock->release();
-	};
-	s.repeatAccept(&acceptCB);
-	
+	srv.listen(s);
 	//add socket to epoll, and run the event loop
 	p.add(s);
 	p.loop();
