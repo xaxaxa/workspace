@@ -19,13 +19,15 @@
 #include <cppsp/page.H>
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
+#include <sys/stat.h>
+
 using namespace std;
 using namespace CP;
 using namespace cppsp;
 using namespace RGC;
 #define rmb() /**/
 #define wmb() /**/
-#define CPPSP_USE_SENDFILE
+#define CPPSP_SENDFILE_MIN_SIZE (1024*1024)
 #define CPPSP_SENDFILE_BUFSIZE (1024*16)
 
 namespace cppspServer
@@ -271,17 +273,17 @@ namespace cppspServer
 					StreamWriter sw(resp.buffer);
 					resp.serializeHeaders(sw);
 				}
-#ifdef CPPSP_USE_SENDFILE
-				_staticPage=Sp;
-				_sendFileOffset=0;
-				s.sendAll(resp.buffer.data()+bufferL,resp.buffer.length()-bufferL,
-					MSG_MORE, { &handler::sendHeadersCB, this });
-#else
-				String data=Sp->data;
-				iov[0]= {resp.buffer.data()+bufferL, (size_t)(resp.buffer.length()-bufferL)};
-				iov[1]= {data.data(), (size_t)data.length()};
-				resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
-#endif
+				if(Sp->fileLen>=CPPSP_SENDFILE_MIN_SIZE) {
+					_staticPage=Sp;
+					_sendFileOffset=0;
+					s.sendAll(resp.buffer.data()+bufferL,resp.buffer.length()-bufferL,
+						MSG_MORE, { &handler::sendHeadersCB, this });
+				} else {
+					String data=Sp->data;
+					iov[0]= {resp.buffer.data()+bufferL, (size_t)(resp.buffer.length()-bufferL)};
+					iov[1]= {data.data(), (size_t)data.length()};
+					resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
+				}
 			} catch(exception& ex) {
 				Sp->release();
 				server->handleError(req,resp,ex,{&handler::finalize,this});
@@ -388,11 +390,14 @@ namespace cppspServer
 	}
 	
 	AsyncValue<Handler> Host::routeStaticRequest(String path) {
-#ifdef CPPSP_USE_SENDFILE
-		staticPage* sp=loadStaticPage(path,true,false);
-#else
-		staticPage* sp=loadStaticPage(path);
-#endif
+		struct stat st;
+		string tmps=path.toSTDString();
+		if(::stat(tmps.c_str(), &st)!=0) throwUNIXException(tmps);
+		staticPage* sp;
+		if(st.st_size>=CPPSP_SENDFILE_MIN_SIZE)
+			sp=loadStaticPage(path,true,false);
+		else
+			sp=loadStaticPage(path);
 		return Handler(&staticHandler,sp);
 	}
 	struct requestRouterState
