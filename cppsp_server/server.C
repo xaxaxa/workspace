@@ -419,3 +419,53 @@ namespace cppspServer
 		return Future<Handler>(&st->cb);
 	}
 }
+namespace cppsp {
+	struct HandlerBase
+	{
+		Request* request; Response* response; Delegate<void()> cb;
+	};
+	template<class T>
+	Handler makeHandler() {
+		struct H: public RGC::Object
+		{
+			T* construct(RGC::Allocator& alloc) {
+				return alloc.New<T>();
+			}
+			void operator()(Request& req, Response& resp, Delegate<void()> cb) {
+				T* tmp=construct(*req.sp);
+				tmp->request=&req;
+				tmp->response=&resp;
+				tmp->cb=cb;
+				tmp->process();
+			}
+		};
+		return newObj<H>();
+	}
+};
+namespace cppspEmbedded
+{
+	class Server
+	{
+	public:
+		cppspServer::Host host;
+		Server(Poll* p, string root):host(p,root) {
+		}
+		void listen(Socket& s) {
+			struct CB: public RGC::Object {
+				Server* s;
+				CB(Server* s):s(s){}
+				void operator()(Socket* clientSock) {
+					new cppspServer::handler(s->host,*s->host.poll,*clientSock);
+					clientSock->release();
+				}
+			};
+			s.repeatAccept(newObj<CB>(this));
+		}
+		HandleRequestChain::item* attachHandler(const Handler& h) {
+			return host.defaultServer->handleRequest.attach(h);
+		}
+		void detachHandler(HandleRequestChain::item* it) {
+			return host.defaultServer->handleRequest.detach(it);
+		}
+	};
+};
