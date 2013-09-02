@@ -5,11 +5,10 @@
 #include <stdexcept>
 #include <cppsp/common.H>
 #include <delegate.H>
-#include "1_cppsp.H"
 #include <iostream>
 int aaaaa=0;
 %>
-<%@ class sss inherits "public _1_cppsp" %>
+<%@ class sss %>
 <%$
 void init() {
 	doReadPost=true;
