@@ -313,7 +313,9 @@ namespace CP
 	static void Stream_readCB(Stream* This, int i) {
 		auto& tmp = This->_readToEnd;
 		if (i <= 0) {
-			tmp.cb(tmp.br);
+			Callback tmpcb = tmp.cb;
+			tmp.cb.deinit();
+			tmpcb(tmp.br);
 			return;
 		}
 		tmp.out->bufferPos += i;
@@ -327,7 +329,9 @@ namespace CP
 		auto* out = tmp.out;
 		int x = (tmp.len - tmp.br) > tmp.bufSize ? tmp.bufSize : (tmp.len - tmp.br);
 		if (x <= 0) {
-			tmp.cb(tmp.br);
+			Callback tmpcb = tmp.cb;
+			tmp.cb.deinit();
+			tmpcb(tmp.br);
 			return;
 		}
 		if (out->bufferSize - out->bufferPos < x) out->flushBuffer(x);
@@ -336,7 +340,9 @@ namespace CP
 	static void Stream_readCB1(Stream* This, int i) {
 		auto& tmp = This->_readChunked;
 		if (i <= 0) {
-			tmp.cb(tmp.br);
+			Callback tmpcb = tmp.cb;
+			tmp.cb.deinit();
+			tmpcb(tmp.br);
 			return;
 		}
 		tmp.out->bufferPos += i;
@@ -345,23 +351,30 @@ namespace CP
 	}
 
 	static inline void Stream_beginReadv(Stream* This) {
-		if (This->_readvAll.i < This->_readvAll.iovcnt) This->readv(
-				This->_readvAll.iov + This->_readvAll.i, This->_readvAll.iovcnt - This->_readvAll.i, {
-						&Stream::_readvCB, This });
+		if (This->_readvAll.i < This->_readvAll.iovcnt)
+			This->readv(This->_readvAll.iov + This->_readvAll.i,
+					This->_readvAll.iovcnt - This->_readvAll.i, { &Stream::_readvCB, This });
 		else {
-			This->_readvAll.cb(This->_readvAll.br);
+			Callback tmpcb = This->_readvAll.cb;
+			This->_readvAll.cb.deinit();
+			tmpcb(This->_readvAll.br);
 		}
 	}
 	static inline void Stream_beginReadAll(Stream* This) {
-		if (This->_readAll.i < This->_readAll.len) This->read(This->_readAll.buf + This->_readAll.i,
-				This->_readAll.len - This->_readAll.i, { &Stream::_readAllCB, This });
+		if (This->_readAll.i < This->_readAll.len)
+			This->read(This->_readAll.buf + This->_readAll.i, This->_readAll.len - This->_readAll.i, {
+					&Stream::_readAllCB, This });
 		else {
-			This->_readAll.cb(This->_readAll.i);
+			Callback tmpcb = This->_readAll.cb;
+			This->_readAll.cb.deinit();
+			tmpcb(This->_readAll.i);
 		}
 	}
 	void Stream::_readvCB(int r) {
 		if (r <= 0) {
-			_readvAll.cb(_readvAll.br);
+			Callback tmpcb = _readvAll.cb;
+			_readvAll.cb.deinit();
+			tmpcb(_readvAll.br);
 			return;
 		}
 		_readvAll.br += r;
@@ -380,31 +393,39 @@ namespace CP
 	}
 	void Stream::_readAllCB(int r) {
 		if (r <= 0) {
-			_readAll.cb(_readAll.i);
+			Callback tmpcb = _readAll.cb;
+			_readAll.cb.deinit();
+			tmpcb(_readAll.i);
 			return;
 		}
 		_readAll.i += r;
 		Stream_beginReadAll(this);
 	}
 	static inline void Stream_beginWritev(Stream* This) {
-		if (This->_writevAll.i < This->_writevAll.iovcnt) This->writev(
-				This->_writevAll.iov + This->_writevAll.i, This->_writevAll.iovcnt - This->_writevAll.i,
-				{ &Stream::_writevCB, This });
+		if (This->_writevAll.i < This->_writevAll.iovcnt)
+			This->writev(This->_writevAll.iov + This->_writevAll.i,
+					This->_writevAll.iovcnt - This->_writevAll.i, { &Stream::_writevCB, This });
 		else {
-			This->_writevAll.cb(This->_writevAll.br);
+			Callback tmpcb = This->_writevAll.cb;
+			This->_writevAll.cb.deinit();
+			tmpcb(This->_writevAll.br);
 		}
 	}
 	static inline void Stream_beginWriteAll(Stream* This) {
-		if (This->_writeAll.i < This->_writeAll.len) This->write(
-				This->_writeAll.buf + This->_writeAll.i, This->_writeAll.len - This->_writeAll.i, {
-						&Stream::_writeAllCB, This });
+		if (This->_writeAll.i < This->_writeAll.len)
+			This->write(This->_writeAll.buf + This->_writeAll.i,
+					This->_writeAll.len - This->_writeAll.i, { &Stream::_writeAllCB, This });
 		else {
-			This->_writeAll.cb(This->_writeAll.i);
+			Callback tmpcb = This->_writeAll.cb;
+			This->_writeAll.cb.deinit();
+			tmpcb(This->_writeAll.i);
 		}
 	}
 	void Stream::_writevCB(int r) {
 		if (r <= 0) {
-			_writevAll.cb(_writevAll.br);
+			Callback tmpcb = _writevAll.cb;
+			_writevAll.cb.deinit();
+			tmpcb(_writevAll.br);
 			return;
 		}
 		_writevAll.br += r;
@@ -423,7 +444,9 @@ namespace CP
 	}
 	void Stream::_writeAllCB(int r) {
 		if (r <= 0) {
-			_writeAll.cb(_writeAll.i);
+			Callback tmpcb = _writeAll.cb;
+			_writeAll.cb.deinit();
+			tmpcb(_writeAll.i);
 			return;
 		}
 		_writeAll.i += r;
@@ -454,14 +477,14 @@ namespace CP
 	}
 
 	void Stream::readToEnd(BufferedOutput& out, const Callback& cb, int32_t bufSize) {
-		_readToEnd.cb = cb;
+		_readToEnd.cb.init(cb);
 		_readToEnd.bufSize = bufSize;
 		_readToEnd.out = &out;
 		_readToEnd.br = 0;
 		Stream_beginRead(this);
 	}
 	void Stream::readChunked(BufferedOutput& out, int32_t len, const Callback& cb, int32_t bufSize) {
-		_readChunked.cb = cb;
+		_readChunked.cb.init(cb);
 		_readChunked.bufSize = bufSize;
 		_readChunked.out = &out;
 		_readChunked.len = len;
@@ -724,7 +747,11 @@ namespace CP
 				tmp_i += it.data.length();
 				if (it.delimReached) {
 					r = false;
-					if (cb_s != nullptr) cb_s(tmp_i);
+					if (cb_s != nullptr) {
+						StreamCallback tmpcb = cb_s;
+						cb_s.deinit();
+						tmpcb(tmp_i);
+					}
 					goto ret;
 				}
 			} else {
@@ -732,7 +759,9 @@ namespace CP
 				if (it.delimReached) {
 					r = false;
 					if (cb != nullptr) {
-						cb(tmp);
+						Callback tmpcb = cb;
+						cb.deinit();
+						tmpcb(tmp);
 						tmp.clear();
 					}
 					goto ret;
@@ -758,12 +787,20 @@ namespace CP
 				if (out_s == NULL) {
 					this->tmp.append(tmp.data(), tmp.length());
 					_sr.reset();
-					if (cb) cb(this->tmp);
+					if (cb) {
+						Callback tmpcb = cb;
+						cb.deinit();
+						tmpcb(this->tmp);
+					}
 				} else {
 					out_s->write(tmp.data(), tmp.length());
 					tmp_i += tmp.length();
 					_sr.reset();
-					if (cb_s) cb_s(tmp_i);
+					if (cb_s) {
+						StreamCallback tmpcb = cb_s;
+						cb_s.deinit();
+						tmpcb(tmp_i);
+					}
 				}
 				return;
 			} else {
@@ -778,12 +815,16 @@ namespace CP
 			if (out_s == NULL) {
 				this->tmp.append(tmp.data(), tmp.length());
 				_sr.reset();
-				cb(this->tmp);
+				Callback tmpcb = cb;
+				cb.deinit();
+				tmpcb(this->tmp);
 			} else {
 				out_s->write(tmp.data(), tmp.length());
 				tmp_i += tmp.length();
 				_sr.reset();
-				cb_s(tmp_i);
+				StreamCallback tmpcb = cb_s;
+				cb_s.deinit();
+				tmpcb(tmp_i);
 			}
 		} else {
 			_sr.endPutData(i);
@@ -1574,12 +1615,22 @@ namespace CP
 		endAddEvent(e, false);
 	}
 	void Socket_acceptStub(Socket* th, int32_t i) {
-		Socket* s = new Socket((HANDLE) i, th->addressFamily, th->type, th->protocol);
-		th->_acceptCB(s);
+		Socket* s = i < 0 ? NULL : new Socket((HANDLE) i, th->addressFamily, th->type, th->protocol);
+		DelegateBase<void(Socket*)> tmpcb = th->_acceptCB;
+		if (s == NULL
+				|| th->eventData[eventToIndex(Events::in)].state != EventHandlerData::States::repeat) {
+			th->_acceptCB.deinit();
+		}
+		tmpcb(s);
 	}
 	void Socket_acceptHandleStub(Socket* th, int32_t i) {
 		HANDLE h = i;
-		th->_acceptHandleCB(h);
+		DelegateBase<void(HANDLE)> tmpcb = th->_acceptHandleCB;
+		if (i < 0
+				|| th->eventData[eventToIndex(Events::in)].state != EventHandlerData::States::repeat) {
+			th->_acceptHandleCB.deinit();
+		}
+		tmpcb(h);
 	}
 //user must eventually release() or free() the received object
 	void Socket::accept(const Delegate<void(Socket*)>& cb, bool repeat) {
@@ -1745,8 +1796,8 @@ namespace CP
 			bool d(false);
 			this->deletionFlag = &d;
 			int i;
-			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp) && cb != nullptr) cb(
-					(int) tmp);
+			if ((i = read(handle, &tmp, sizeof(tmp))) >= (int) sizeof(tmp) && cb != nullptr)
+				cb((int) tmp);
 			else if (i < 0 && isWouldBlock()) {
 				this->deletionFlag = NULL;
 				dispatching = false;
