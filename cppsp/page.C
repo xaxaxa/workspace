@@ -406,6 +406,50 @@ namespace cppsp
 		}
 		return ret;
 	}
+	struct moduleLoaderState
+	{
+		Server* s;
+		Host* h;
+		Delegate<void(ModuleInstance, exception* ex)> cb;
+		void operator()(loadedPage* lp, exception* ex) {
+			cb(lp == nullptr ? nullptr : (s ? s->insertModule(lp) : h->insertModule(lp)), ex);
+			delete this;
+		}
+	};
+	AsyncValue<ModuleInstance> Host::loadModule(String path) {
+		auto tmp = loadPage(path);
+		if (tmp) return insertModule(tmp());
+		auto* st = new moduleLoaderState { nullptr, this };
+		tmp.wait(st);
+		return Future<ModuleInstance>(&st->cb);
+	}
+	ModuleInstance Host::insertModule(loadedPage* lp) {
+		ModuleInstance inst;
+		inst.instance = nullptr;
+		inst.origin = lp;
+		ModuleParams mp;
+		mp.filePath = lp->path;
+		mp.server = nullptr;
+		mp.page = lp;
+		mp.host = this;
+		lp->retain();
+		lp->moduleCount++;
+		try {
+			inst.instance = lp->initModule(mp);
+			this->modules.insert(inst);
+		} catch (...) {
+			if (inst.instance != nullptr) lp->deinitModule(inst.instance);
+			lp->release();
+			lp->moduleCount--;
+			throw;
+		}
+		return inst;
+	}
+	void Host::removeModule(ModuleInstance inst) {
+		inst.origin->deinitModule(inst.instance);
+		this->modules.erase(inst);
+		inst.origin->release();
+	}
 	DefaultHost::DefaultHost() :
 			mgr(new cppspManager()) {
 		char* tmp = getcwd(nullptr, 0);
@@ -572,15 +616,7 @@ namespace cppsp
 		tmp.wait(st);
 		return Future<Page*>(&st->cb);
 	}
-	struct moduleLoaderState
-	{
-		Server* s;
-		Delegate<void(ModuleInstance, exception* ex)> cb;
-		void operator()(loadedPage* lp, exception* ex) {
-			cb(lp == nullptr ? nullptr : s->insertModule(lp), ex);
-			delete this;
-		}
-	};
+
 	AsyncValue<ModuleInstance> Server::loadModule(String path) {
 		auto tmp = host->loadPage(mapPath(path.toSTDString()));
 		if (tmp) return insertModule(tmp());

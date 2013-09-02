@@ -228,6 +228,8 @@ namespace cppsp
 	 Represents a request handler callback.
 	 */
 	typedef DelegateRef<void(Request&, Response&, Delegate<void()> cb)> Handler;
+	typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
+	typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
 	struct ModuleInstance
 	{
 		loadedPage* origin;
@@ -264,6 +266,7 @@ namespace cppsp
 		CP::Poll* poll;
 		PerformanceCounters performanceCounters;
 		set<Server*> servers;
+		set<ModuleInstance> modules;
 		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		timespec curClockTime { 0, 0 }; //CLOCK_REALTIME
 		String curRFCTime;
@@ -300,6 +303,12 @@ namespace cppsp
 		virtual AsyncValue<Handler> routeDynamicRequest(String path)=0;
 		virtual AsyncValue<loadedPage*> loadPage(String path)=0;
 		virtual staticPage* loadStaticPage(String path, bool fd = false, bool map = true)=0;
+		/**
+		 Load cppsp module from "path". path is absolute.
+		 */
+		virtual AsyncValue<ModuleInstance> loadModule(String path);
+		virtual ModuleInstance insertModule(loadedPage* lp);
+		virtual void removeModule(ModuleInstance inst);
 	};
 	class DefaultHost: public Host
 	{
@@ -331,8 +340,7 @@ namespace cppsp
 		string root;
 		PerformanceCounters performanceCounters;
 		set<ModuleInstance> modules;
-		typedef DelegateChain<void(Request&, Response&, Delegate<void()>)> HandleRequestChain;
-		typedef DelegateChain<void(Request&, Response&, exception& ex, Delegate<void()>)> HandleErrorChain;
+
 		CP::Poll* poll;
 		int threadID;
 		Server();
