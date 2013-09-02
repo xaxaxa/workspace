@@ -187,15 +187,13 @@ namespace cppspServer
 		//Page* p;
 		//MemoryStream ms;
 		uint8_t* buf;
-		bool readLoopRunning;
-		bool shouldContinueReading;
 		union {
 			iovec iov[2];
-			struct {
-				staticPage* _staticPage;
-				int64_t _sendFileOffset;
-			};
+			int64_t _sendFileOffset;
 		};
+		staticPage* _staticPage;
+		bool readLoopRunning;
+		bool shouldContinueReading;
 		bool keepAlive;
 		handler(Host& thr,CP::Poll& poll,Socket& s):thr(thr),
 			p(poll),s(s),sp(2048),req(this->s,&sp) {
@@ -261,7 +259,7 @@ namespace cppspServer
 		}
 		void handleStatic(staticPage* Sp) {
 			Response& resp(*this->resp);
-			Sp->retain();
+			(_staticPage=Sp)->retain();
 			try {
 				int bufferL = resp.buffer.length();
 				if(Sp->mime.length()>0)resp.headers["Content-Type"]=Sp->mime;
@@ -274,7 +272,6 @@ namespace cppspServer
 					resp.serializeHeaders(sw);
 				}
 				if(Sp->fileLen>=CPPSP_SENDFILE_MIN_SIZE) {
-					_staticPage=Sp;
 					_sendFileOffset=0;
 					s.sendAll(resp.buffer.data()+bufferL,resp.buffer.length()-bufferL,
 						MSG_MORE, { &handler::sendHeadersCB, this });
@@ -337,6 +334,7 @@ namespace cppspServer
 			finalize();
 		}
 		void writevCB(int i) {
+			_staticPage->release();
 			finalize();
 		}
 		void handleRequestCB() {
