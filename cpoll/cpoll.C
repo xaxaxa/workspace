@@ -1442,9 +1442,10 @@ namespace CP
 	}
 	bool Socket::doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
 			EventHandlerData::States oldstate, bool confident) {
-		Operations op = ed.op;
+		Operations op;
 		int r;
-		redo: r = 0;
+		redo: op = ed.op;
+		r = 0;
 		switch (op) {
 			case Operations::accept:
 			{
