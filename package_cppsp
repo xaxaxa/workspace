@@ -3,7 +3,8 @@
 TARGET="$1"
 mkdir -p "$TARGET"
 cp -a common_headers include "$TARGET"/
-rm -f cppsp_server/*.cppsp.C cppsp_server/*.cppsm.C
+rm -f cppsp_server/*.cpps*.C
+
 for x in cpoll cppsp cppsp_server socketd; do
 	mkdir -p "$TARGET"/$x;
 	cp -a $x/*.C $x/*.H $x/include "$TARGET"/$x/;
@@ -41,7 +42,7 @@ cat >"$TARGET"/makefile <<EOF
 all:
 	echo "makefile hasn't been generated yet. generating a default makefile and continuing build"
 	./configure
-	$(MAKE) all
+	\$(MAKE) all
 EOF
 cat >"$TARGET"/configure <<EOF
 #!/bin/bash
@@ -139,6 +140,6 @@ chmod +x "$TARGET"/run_cppsp
 chmod +x "$TARGET"/cppsp_clean
 mkdir "$TARGET"/www
 cp -a cppsp_server/*.cppsp cppsp_server/*.cppsm cppsp_server/*.html test/*.cppsp "$TARGET"/www/
-
+cp -a cppsp_server/*.H "$TARGET"/www/
 
 
