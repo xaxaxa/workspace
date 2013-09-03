@@ -491,8 +491,12 @@ namespace cppsp
 		createObject1 = (createObject1_t) checkDLError(dlsym(dlHandle, "createObject1"));
 		initModule = (initModule_t) dlsym(dlHandle, "initModule");
 		deinitModule = (deinitModule_t) dlsym(dlHandle, "deinitModule");
+		getModuleInfo = (getModuleInfo_t) dlsym(dlHandle, "getModuleInfo");
+		if (getModuleInfo != NULL) getModuleInfo(info);
 		if (initModule != NULL) {
-			fprintf(stderr, "module %s loaded\n", path.c_str());
+			if (info.name.length() == 0)
+				fprintf(stderr, "module %s loaded\n", path.c_str());
+			else fprintf(stderr, "module %s (%s) loaded\n", path.c_str(), info.name.c_str());
 		}
 		loaded = true;
 		clock_gettime(CLOCK_REALTIME, &lastLoad);
@@ -501,6 +505,7 @@ namespace cppsp
 	void loadedPage::doUnload() {
 		//printf("doUnload(\"%s\");\n",path.c_str());
 		loaded = false;
+		info.reset();
 		if (stringTable != NULL) munmap((void*) stringTable, stringTableLen);
 		if (stringTableFD != -1) close(stringTableFD);
 		if (dlHandle != NULL) {
