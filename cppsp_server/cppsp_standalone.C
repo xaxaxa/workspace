@@ -20,6 +20,7 @@
 #include <cppsp/cppsp_cpoll.H>
 #include <cppsp/common.H>
 #include <assert.h>
+#include <sys/wait.h>
 #include <sys/syscall.h>	//SYS_gettid
 #include "server.C"
 #define PRINTSIZE(x) printf("sizeof("#x") = %i\n",sizeof(x))
@@ -369,7 +370,14 @@ int main(int argc, char** argv) {
 		sigaction(SIGTERM, &sa, NULL);
 		sigaction(SIGSEGV, &sa, NULL);
 	}
-	while(1)sleep(3600);
+	union {
+		int status1;
+		void* status2;
+	};
+	for(int i=0;i<threads;i++) {
+		if(f0rk) waitpid(th[i].pid,&status1,0);
+		else pthread_join(th[i].thread,&status2);
+	}
 }
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
