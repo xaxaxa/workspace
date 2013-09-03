@@ -31,9 +31,10 @@ using CP::Future;
 namespace cppsp
 {
 	struct Page;
-	struct ModuleParams;
 	struct Server;
 	struct Response;
+	class loadedPage;
+	class Host;
 	extern const char* gxx;
 	class ParserException: public std::exception
 	{
@@ -57,6 +58,23 @@ namespace cppsp
 		const char* what() const throw ();
 	};
 	class cppspManager;
+	//the ModuleParams struct itself (passed in to modules at initialization time) is not
+	//guaranteed to exist after initModule() returns
+	struct ModuleParams
+	{
+		Host* host; //guaranteed to exist until after deinitModule() returns
+		Server* server; //guaranteed to exist until after deinitModule() returns, if not null
+		String filePath; //guaranteed to exist until after deinitModule() returns
+		loadedPage* page;
+	};
+	struct ModuleInfo
+	{
+		//module name, not filename
+		string name;
+		void reset() {
+			name = "";
+		}
+	};
 	/**
 	 Internal API.
 	 */
@@ -67,6 +85,7 @@ namespace cppsp
 		loadedPage& operator=(const loadedPage& other) = delete;
 		timespec lastLoad { 0, 0 }; //CLOCK_REALTIME
 		timespec lastCheck { 0, 0 }; //CLOCK_MONOTONIC
+		ModuleInfo info;
 		void* dlHandle;
 		const uint8_t* stringTable;
 		int stringTableLen;
@@ -74,12 +93,14 @@ namespace cppsp
 		typedef Page* (*createObject_t)(void* mem);
 		typedef Page* (*createObject1_t)(RGC::Allocator* alloc);
 		typedef void* (*initModule_t)(ModuleParams& p);
+		typedef void (*getModuleInfo_t)(ModuleInfo& inf);
 		typedef void (*deinitModule_t)(void*);
 		int (*getObjectSize)();
 		createObject_t createObject;
 		createObject1_t createObject1;
 		initModule_t initModule;
 		deinitModule_t deinitModule;
+		getModuleInfo_t getModuleInfo;
 		RGC::Ref<CP::File> compile_fd;
 		CP::MemoryStream ms;
 		//Delegate<void(loadedPage&)> compileCB;

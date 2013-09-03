@@ -251,6 +251,42 @@ namespace cppsp
 				origin(nullptr), instance(nullptr) {
 		}
 	};
+	class ModuleContainer
+	{
+	public:
+		set<ModuleInstance> modules;
+		struct moduleOrigin
+		{
+			loadedPage* origin;
+			set<void*> modules;
+		};
+		map<string, set<ModuleInstance> > moduleMap_fileName;
+		map<string, set<ModuleInstance> > moduleMap_path;
+		map<string, set<ModuleInstance> > moduleMap_name;
+		set<ModuleInstance>& findModulesByFileName(string fn);
+		set<ModuleInstance>& findModulesByPath(string p);
+		set<ModuleInstance>& findModulesByName(string n);
+		ModuleInstance findByFileName(string fn) {
+			return *findModulesByFileName(fn).begin();
+		}
+		ModuleInstance findByPath(string p) {
+			return *findModulesByPath(p).begin();
+		}
+		ModuleInstance findByName(string n) {
+			return *findModulesByName(n).begin();
+		}
+		ModuleInstance operator[](string name) {
+			return findByName(name);
+		}
+		set<ModuleInstance>::iterator begin() {
+			return modules.begin();
+		}
+		set<ModuleInstance>::iterator end() {
+			return modules.end();
+		}
+		ModuleInstance insertModule(loadedPage* lp, ModuleParams& mp);
+		void removeModule(ModuleInstance inst);
+	};
 	struct PerformanceCounters
 	{ //to be incremented by the web server implementation
 		int totalRequestsReceived;
@@ -266,7 +302,7 @@ namespace cppsp
 		CP::Poll* poll;
 		PerformanceCounters performanceCounters;
 		set<Server*> servers;
-		set<ModuleInstance> modules;
+		ModuleContainer modules;
 		timespec curTime { 0, 0 }; //CLOCK_MONOTONIC
 		timespec curClockTime { 0, 0 }; //CLOCK_REALTIME
 		String curRFCTime;
@@ -302,6 +338,10 @@ namespace cppsp
 		 */
 		virtual AsyncValue<Handler> routeDynamicRequest(String path)=0;
 		virtual AsyncValue<loadedPage*> loadPage(String path)=0;
+		/**
+		 @param fd whether to keep the file descriptor open
+		 @param map whether to map the file into virtual memory
+		 */
 		virtual staticPage* loadStaticPage(String path, bool fd = false, bool map = true)=0;
 		/**
 		 Load cppsp module from "path". path is absolute.
@@ -339,7 +379,7 @@ namespace cppsp
 		Host* host;
 		string root;
 		PerformanceCounters performanceCounters;
-		set<ModuleInstance> modules;
+		ModuleContainer modules;
 
 		CP::Poll* poll;
 		int threadID;
@@ -670,15 +710,6 @@ namespace cppsp
 
 		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
-	};
-	//the ModuleParams struct itself (passed in to modules at initialization time) is not
-	//guaranteed to exist after initModule() returns
-	struct ModuleParams
-	{
-		Host* host; //guaranteed to exist until after deinitModule() returns
-		Server* server; //guaranteed to exist until after deinitModule() returns, if not null
-		String filePath; //guaranteed to exist until after deinitModule() returns
-		loadedPage* page;
 	};
 } /* namespace cppsp */
 #endif /* PAGE_H_ */
