@@ -10,9 +10,9 @@ for x in cpoll cppsp cppsp_server socketd; do
 done;
 find -L "$TARGET"/include -type l -delete
 cp -a test/socketd_proxy.C "$TARGET"/
-cat >"$TARGET"/makefile <<EOF
+cat >"$TARGET"/_makefile <<EOF
 OPTFLAGS := -Ofast -march=native -flto
-CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -I./include 
+CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -I./include \$(CFGFLAGS)
 CXX := g++
 all: cppsp_standalone libcpoll.so libcppsp.so socketd_bin socketd_cppsp socketd_proxy.so
 cppsp_standalone: 
@@ -28,7 +28,7 @@ cppsp.o:
 libcpoll.so: cpoll.o
 	\$(CXX) cpoll.o -o libcpoll.so --shared \$(CXXFLAGS) -ldl -lpthread
 libcppsp.so: cppsp.o
-	\$(CXX) cppsp.o -o libcppsp.so --shared \$(CXXFLAGS) -lcryptopp -ldl -lpthread
+	\$(CXX) cppsp.o -o libcppsp.so --shared \$(CXXFLAGS) \$(CPPSP_LD) -ldl -lpthread
 socketd_proxy.so: cpoll.o
 	\$(CXX) socketd_proxy.C cpoll.o -o socketd_proxy.so -ldl -lpthread --std=c++0x --shared -fPIC \$(CXXFLAGS) 
 clean:
@@ -37,6 +37,35 @@ clean:
 	rm -f www/*.cppsm.so www/*.cppsm.C www/*.cppsm.txt
 	rm -f www/*.html.so www/*.html.C www/*.html.txt
 EOF
+cat >"$TARGET"/makefile <<EOF
+all:
+	echo "makefile hasn't been generated yet. generating a default makefile and continuing build"
+	./configure
+	$(MAKE) all
+EOF
+cat >"$TARGET"/configure <<EOF
+#!/bin/bash
+CFGFLAGS=""
+CPPSP_LD="-lcryptopp"
+for x in "\$@"; do
+	case "\$x" in
+	--help)
+		echo "usage: ./configure [--disable-websocket]"
+		exit 1
+		;;
+	--disable-websocket)
+		CFGFLAGS="-DCPPSP_DISABLE_WEBSOCKET"
+		CPPSP_LD=""
+		;;
+	esac
+done;
+rm -f makefile
+echo "CFGFLAGS := \$CFGFLAGS" >>makefile
+echo "CPPSP_LD := \$CPPSP_LD" >>makefile
+cat _makefile >>makefile
+echo done
+EOF
+chmod +x "$TARGET"/configure
 cat >"$TARGET"/run_example <<EOF
 #!/bin/bash
 LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -r "\$(pwd)"/www -m /dir_list.cppsm -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -f \$@
