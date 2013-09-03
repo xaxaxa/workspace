@@ -37,12 +37,16 @@ using namespace RGC;
 string rootDir;
 
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb);
-
+struct moduleLoad
+{
+	string path;
+	bool loaded;
+};
 struct workerThread
 {
 	Poll p;
 	cppspServer::Server srv; //host
-	vector<const char*> modules;
+	vector<moduleLoad> modules;
 	Ref<CP::Socket> listenSock;
 	union {
 		pid_t pid;
@@ -121,47 +125,77 @@ void* thread1(void* v) {
 	
 	p.add(*thr.listenSock);
 	
-	int modsLeft;
-	struct {
-		int& modsLeft;
-		workerThread& thr;
-		Delegate<void(HANDLE)> cb;
-		void operator()() {
-			if(--modsLeft == 0) {
-				thr.listenSock->repeatAcceptHandle(cb);
+	int nextModule=0;
+	struct ModuleLoader {
+		int& nextModule;
+		vector<moduleLoad>& modules;
+		Server* server;
+		Host* host;
+		Delegate<void(bool,exception*)> _cb;
+		void onError(const char* mod,exception& ex) {
+			fprintf(stderr,"error loading module %s: %s\n",mod,ex.what());
+			cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(&ex);
+			if (ce != NULL) {
+				printf("%s\n",ce->compilerOutput.c_str());
 			}
 		}
-	} afterModuleLoad {modsLeft,thr,&cb};
-	struct {
-		const char* s;
-		Delegate<void()> afterModuleLoad;
-		void operator()(ModuleInstance inst,exception* ex) {
-			if(ex!=NULL) {
-				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
-				cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
-				if (ce != NULL) {
-					printf("%s\n",ce->compilerOutput.c_str());
-				}
-				exit(1);
+		struct CB {
+			Delegate<void(bool,exception*)> cb;
+			void operator()(ModuleInstance inst, exception* ex) {
+				auto tmpcb=cb;
+				delete this;
+				tmpcb(ex?false:true,ex);
 			}
-			afterModuleLoad();
+		};
+		void loadCB(ModuleInstance inst, exception* ex) {
+			if(ex!=nullptr) {
+				onError(modules[nextModule].path.c_str(),*ex);
+				_cb(false,ex);
+				return;
+			}
+			nextModule++;
+			bool b;
+			try {
+				b=doLoad();
+			} catch(exception& ex) {
+				_cb(false,&ex);
+				return;
+			}
+			if(b)_cb(true,nullptr);
 		}
-	} moduleCB[thr.modules.size()];
-	modsLeft=thr.modules.size();
-	for(int ii=0;ii<(int)thr.modules.size();ii++) {
-		moduleCB[ii].s=thr.modules[ii];
-		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
-		AsyncValue<ModuleInstance> tmp;
-		try {
-			tmp=thr.srv.defaultServer->loadModule(thr.modules[ii]);
-		} catch(exception& ex) {
-			moduleCB[ii](NULL,&ex);
-			exit(1);
+		bool doLoad() {
+			AsyncValue<ModuleInstance> tmp;
+		repeat:
+			if(nextModule>=(int)modules.size()) return true;
+			try {
+				if(server==nullptr)
+					tmp=host->loadModule(modules[nextModule].path.c_str());
+				else tmp=server->loadModule(modules[nextModule].path.c_str());
+			} catch(exception& ex) {
+				onError(modules[nextModule].path.c_str(),ex);
+				throw;
+			}
+			if(tmp) {
+				nextModule++;
+				goto repeat;
+			}
+			CB* cb=new CB();
+			tmp.wait({&ModuleLoader::loadCB,this});
+			return false;
 		}
-		if(tmp) moduleCB[ii](tmp(),NULL);
-		else tmp.wait(&moduleCB[ii]);
-	}
-	if(thr.modules.size()==0) thr.listenSock->repeatAcceptHandle(&cb);
+		AsyncValue<bool> start() {
+			if(doLoad())return true;
+			return Future<bool>(&_cb);
+		}
+	} moduleLoader {nextModule,thr.modules,thr.srv.defaultServer};
+	
+	auto moduleLoadCB=[&](bool b, exception* ex){
+		if(!b)exit(1);
+		thr.listenSock->repeatAcceptHandle(&cb);
+	};
+	auto val=moduleLoader.start();
+	if(val) moduleLoadCB(val(),nullptr);
+	else val.wait(&moduleLoadCB);
 	p.loop();
 	return NULL;
 }
@@ -177,7 +211,7 @@ int main(int argc, char** argv) {
 	string tmpDir;
 	int threads=-1;
 	vector<string> cxxopts;
-	vector<const char*> modules;
+	vector<moduleLoad> modules;
 	bool f0rk=false;
 	bool reusePort=true;
 	bool setAffinity=false;
@@ -198,7 +232,7 @@ int main(int argc, char** argv) {
 					} else if(strcmp(name,"t")==0) {
 						threads=atoi(getvalue());
 					} else if(strcmp(name,"m")==0) {
-						modules.push_back(getvalue());
+						modules.push_back({getvalue(),false});
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
 					} else if(strcmp(name,"s")==0) {
