@@ -32,7 +32,7 @@ libcppsp.so: cppsp.o
 socketd_proxy.so: cpoll.o
 	\$(CXX) socketd_proxy.C cpoll.o -o socketd_proxy.so -ldl -lpthread --std=c++0x --shared -fPIC \$(CXXFLAGS) 
 clean:
-	rm -f cpoll.o cppsp.o cppsp_standalone socketd_bin socketd_cppsp socketd_proxy.so
+	rm -f cpoll.o cppsp.o cppsp_standalone socketd_bin socketd_cppsp *.so
 	rm -f www/*.cppsp.so www/*.cppsp.C www/*.cppsp.txt
 	rm -f www/*.cppsm.so www/*.cppsm.C www/*.cppsm.txt
 	rm -f www/*.html.so www/*.html.C www/*.html.txt
