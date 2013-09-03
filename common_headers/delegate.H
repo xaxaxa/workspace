@@ -24,32 +24,62 @@ struct GenericDelegate
 {
 	void* func;
 	void* data;
-	template<class R, class... P> R operator()(P && ...p) {
-		return ((R (*)(void* data, P...))func)(data,std::forward<P>(p)...);
+	template<class R, class ... P> R operator()(P && ...p) {
+		return ((R (*)(void* data, P...)) func)(data, std::forward<P>(p)...);
 	}
 	
 	void* operator=(void* func) {
-		return this->func=func;
+		return this->func = func;
 	}
 	operator bool() {
-		return func!=NULL;
+		return func != NULL;
 	}
 };
 
 template<class SIGNATURE> struct DelegateBase;
-template<class R, class... P>
-struct DelegateBase<R(P...)>:public GenericDelegate
+template<class R, class ... P>
+struct DelegateBase<R(P...)> : public GenericDelegate
 {
 	/*R (*func)(void* data, P...);
-	void* data;*/
-	template<class... P2>
-	R operator() (P2 && ...p) const {
-		return ((R (*)(void* data, P...))func)(data,std::forward<P2>(p)...);
+	 void* data;*/
+	template<class ... P2>
+	R operator()(P2 && ...p) const {
+		return ((R (*)(void* data, P...)) func)(data, std::forward<P2>(p)...);
 	}
-	
-	R (*operator=(R (*func)(void* data, P...)))(void* data, P...) {
+
+	template<class X> void init(R (*func)(X*, P...), X* th) {
+		this->func = (void*) (R (*)(void*, P...))func;this->data=th;
+	}
+	template<class X>void init(R (X::*func)(P...), X* th) {
+		this->func=(void*)(R(*)(void*,P...))func;
+		this->data=th;
+	}
+	void init(R (*func)(void*, P...)) {
 		this->func=(void*)func;
-		return func;
+		this->data=NULL;
+	}
+	void init(const GenericDelegate& other) {
+		this->func=other.func;
+		this->data=other.data;
+	}
+	template<class X>void init(X* th) {
+		this->func=(void*)(R(*)(void*,P...))&X::operator();
+		this->data=th;
+	}
+	void init(std::nullptr_t n) {
+		this->func=NULL;
+	}
+	void init() {
+		this->func=NULL;
+	}
+	void assign(const GenericDelegate& other) {
+		this->func=other.func;
+		this->data=other.data;
+	}
+	void assign(R (*func)(void* data, P...)) {
+		this->func=(void*)func;
+	}
+	void deinit() {
 	}
 	bool operator==(void* other) {
 		return (void*)func == other;
@@ -63,59 +93,61 @@ struct DelegateBase<R(P...)>:public GenericDelegate
 	bool operator!=(const DelegateBase<R(P...)>& other) {
 		return func != other.func && data==other.data;
 	}
+	template<class T>
+	DelegateBase<R(P...)>& operator=(T other) {
+		assign(other);
+		return *this;
+	}
 };
 
 template<class SIGNATURE> struct Delegate;
-template<class R, class... P>
-struct Delegate<R(P...)>:public DelegateBase<R(P...)>
+template<class R, class ... P>
+struct Delegate<R(P...)> : public DelegateBase<R(P...)>
 {
 	Delegate() {
-		this->func=NULL;
+		this->init();
+	}
+	~Delegate() {
+		this->deinit();
 	}
 	//Delegate(R (*func)(void* data, P... p...), void* data): DelegateBase<R(P...)>(func,data) {}
-	template<class X>Delegate(R (*func)(X*,P...), X* th) {
-		this->func=(void*)(R(*)(void*,P...))func;
-		this->data=th;
+	template<class X> Delegate(R (*func)(X*, P...), X* th) {
+		this->init(func, th);
 	}
-	template<class X>Delegate(R (X::*func)(P...), X* th) {
-		this->func=(void*)(R(*)(void*,P...))func;
-		this->data=th;
+	template<class X> Delegate(R (X::*func)(P...), X* th) {
+		this->init(func, th);
 	}
 	Delegate(R (*func)(void*, P...)) {
-		this->func=(void*)func;
-		this->data=NULL;
+		this->init(func);
 	}
-	explicit Delegate(const GenericDelegate& other) {
-		this->func=other.func;
-		this->data=other.data;
+	Delegate(const GenericDelegate& other) {
+		this->init(other);
 	}
-	template<class X>Delegate(X* th) {
-		this->func=(void*)(R(*)(void*,P...))&X::operator();
-		this->data=th;
+	template<class X> Delegate(X* th) {
+		this->init(th);
 	}
 	Delegate(std::nullptr_t n) {
-		this->func=NULL;
-	};
+		this->init(nullptr);
+	}
 	R (*operator=(R (*func)(void* data, P...)))(void* data, P...) {
-		this->func=(void*)func;
+		this->func = (void*) func;
 		return func;
 	}
 };
 template<class SIGNATURE> struct DelegateRef;
-template<class R, class... P>
-struct DelegateRef<R(P...)>:public Delegate<R(P...)>
+template<class R, class ... P>
+struct DelegateRef<R(P...)> : public Delegate<R(P...)>
 {
 	DelegateRef() {
-		this->func=NULL;
-		this->data=NULL;
+		this->func = NULL;
+		this->data = NULL;
 	}
 	~DelegateRef() {
-		if(this->data!=NULL) ((RGC::Object*)this->data)->release();
+		if (this->data != NULL) ((RGC::Object*) this->data)->release();
 	}
 	//Delegate(R (*func)(void* data, P... p...), void* data): DelegateBase<R(P...)>(func,data) {}
-	template<class X>DelegateRef(R (*func)(X*,P...), X* th) {
-		this->func=(void*)(R(*)(void*,P...))func;
-		this->data=static_cast<RGC::Object*>(th);
+	template<class X> DelegateRef(R (*func)(X*, P...), X* th) {
+		this->func = (void*) (R (*)(void*, P...))func;this->data=static_cast<RGC::Object*>(th);
 		if(this->data!=NULL)((RGC::Object*)this->data)->retain();
 	}
 	template<class X>DelegateRef(R (X::*func)(P...), X* th) {
@@ -147,12 +179,13 @@ struct DelegateRef<R(P...)>:public Delegate<R(P...)>
 		return *this;
 	}
 };
-template<class R, class... P> static Delegate<R(P...)> nullDelegate() {
-	struct {
-		R operator()(P... p...) {
+template<class R, class ... P> static Delegate<R(P...)> nullDelegate() {
+	struct
+	{
+		R operator()(P ... p...) {
 			return R();
 		}
-	} tmp;
+	}tmp;
 	return &tmp;
 }
 
@@ -195,7 +228,7 @@ public:
 		if (last == it) last = it->prev;
 		delete it;
 	}
-	inline R operator()(P... p) const {
+	inline R operator()(P ... p) const {
 		return (*last)(std::forward<P>(p)...);
 	}
 };
