@@ -382,6 +382,24 @@ namespace cppsp
 	set<ModuleInstance>& ModuleContainer::findModulesByName(string n) {
 		return moduleMap_name[n];
 	}
+	static void ModuleContainer_moduleNotFound(string n) {
+		throw runtime_error("Module " + n + " not found");
+	}
+	ModuleInstance ModuleContainer::findByFileName(string fn) {
+		auto& tmp = findModulesByFileName(fn);
+		if (tmp.begin() == tmp.end()) ModuleContainer_moduleNotFound("fileName=\"" + fn + "\"");
+		return *tmp.begin();
+	}
+	ModuleInstance ModuleContainer::findByPath(string p) {
+		auto& tmp = findModulesByPath(p);
+		if (tmp.begin() == tmp.end()) ModuleContainer_moduleNotFound("path=\"" + p + "\"");
+		return *tmp.begin();
+	}
+	ModuleInstance ModuleContainer::findByName(string n) {
+		auto& tmp = findModulesByName(n);
+		if (tmp.begin() == tmp.end()) ModuleContainer_moduleNotFound("name=\"" + n + "\"");
+		return *tmp.begin();
+	}
 	ModuleInstance ModuleContainer::insertModule(loadedPage* lp, ModuleParams& mp) {
 		mp.filePath = lp->path;
 		mp.page = lp;

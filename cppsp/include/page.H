@@ -266,15 +266,9 @@ namespace cppsp
 		set<ModuleInstance>& findModulesByFileName(string fn);
 		set<ModuleInstance>& findModulesByPath(string p);
 		set<ModuleInstance>& findModulesByName(string n);
-		ModuleInstance findByFileName(string fn) {
-			return *findModulesByFileName(fn).begin();
-		}
-		ModuleInstance findByPath(string p) {
-			return *findModulesByPath(p).begin();
-		}
-		ModuleInstance findByName(string n) {
-			return *findModulesByName(n).begin();
-		}
+		ModuleInstance findByFileName(string fn);
+		ModuleInstance findByPath(string p);
+		ModuleInstance findByName(string n);
 		ModuleInstance operator[](string name) {
 			return findByName(name);
 		}
