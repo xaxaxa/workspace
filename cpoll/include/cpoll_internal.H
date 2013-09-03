@@ -88,6 +88,11 @@ namespace CP
 		if (unlikely(unlikely(err < 0) && errno != EINTR && errno != EINPROGRESS)) throw CPollException();
 		return err;
 	}
+	static inline int checkError(int err, const char* filename) {
+		if (unlikely(unlikely(err < 0) && errno != EINTR && errno != EINPROGRESS))
+			throwUNIXException(filename);
+		return err;
+	}
 	//disable the retarded SIGHUP and SIGPIPE
 	static void disableSignals() {
 		struct sigaction sa;

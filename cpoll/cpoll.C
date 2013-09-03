@@ -916,7 +916,7 @@ namespace CP
 	}
 	File::File(const char* name, int flags, int perms) :
 			deletionFlag(NULL), dispatching(false) {
-		init(open(name, flags, perms));
+		init(checkError(open(name, flags, perms), name));
 	}
 	void File::init(HANDLE handle) {
 		Handle::init(handle);
