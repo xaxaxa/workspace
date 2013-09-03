@@ -373,6 +373,56 @@ namespace cppsp
 		outputStream = nullptr;
 	}
 
+	set<ModuleInstance>& ModuleContainer::findModulesByFileName(string fn) {
+		return moduleMap_fileName[fn];
+	}
+	set<ModuleInstance>& ModuleContainer::findModulesByPath(string p) {
+		return moduleMap_path[p];
+	}
+	set<ModuleInstance>& ModuleContainer::findModulesByName(string n) {
+		return moduleMap_name[n];
+	}
+	ModuleInstance ModuleContainer::insertModule(loadedPage* lp, ModuleParams& mp) {
+		mp.filePath = lp->path;
+		mp.page = lp;
+		ModuleInstance inst;
+		inst.instance = nullptr;
+		inst.origin = lp;
+
+		string filename;
+		size_t i = lp->path.rfind('/');
+		if (i != string::npos) {
+			filename = lp->path.substr(i + 1);
+		} else filename = lp->path;
+
+		lp->retain();
+		lp->moduleCount++;
+		try {
+			inst.instance = lp->initModule(mp);
+			modules.insert(inst);
+			moduleMap_name[lp->info.name].insert(inst);
+			moduleMap_path[lp->path].insert(inst);
+			moduleMap_fileName[filename].insert(inst);
+		} catch (...) {
+			if (inst.instance != nullptr) {
+				lp->deinitModule(inst.instance);
+				modules.erase(inst);
+				moduleMap_name[lp->info.name].erase(inst);
+				moduleMap_path[lp->path].erase(inst);
+				moduleMap_fileName[filename].erase(inst);
+			}
+			lp->release();
+			lp->moduleCount--;
+			throw;
+		}
+		return inst;
+	}
+	void ModuleContainer::removeModule(ModuleInstance inst) {
+		inst.origin->deinitModule(inst.instance);
+		this->modules.erase(inst);
+		inst.origin->release();
+	}
+
 	Host::Host() :
 			poll(NULL), threadID(0), defaultServer(NULL) {
 		preRouteRequest.attach( { &Host::defaultPreRouteRequest, this });
@@ -424,32 +474,15 @@ namespace cppsp
 		return Future<ModuleInstance>(&st->cb);
 	}
 	ModuleInstance Host::insertModule(loadedPage* lp) {
-		ModuleInstance inst;
-		inst.instance = nullptr;
-		inst.origin = lp;
 		ModuleParams mp;
-		mp.filePath = lp->path;
-		mp.server = nullptr;
-		mp.page = lp;
 		mp.host = this;
-		lp->retain();
-		lp->moduleCount++;
-		try {
-			inst.instance = lp->initModule(mp);
-			this->modules.insert(inst);
-		} catch (...) {
-			if (inst.instance != nullptr) lp->deinitModule(inst.instance);
-			lp->release();
-			lp->moduleCount--;
-			throw;
-		}
-		return inst;
+		mp.server = NULL;
+		return modules.insertModule(lp, mp);
 	}
 	void Host::removeModule(ModuleInstance inst) {
-		inst.origin->deinitModule(inst.instance);
-		this->modules.erase(inst);
-		inst.origin->release();
+		return modules.removeModule(inst);
 	}
+
 	DefaultHost::DefaultHost() :
 			mgr(new cppspManager()) {
 		char* tmp = getcwd(nullptr, 0);
@@ -633,31 +666,13 @@ namespace cppsp
 	}
 
 	ModuleInstance Server::insertModule(loadedPage* lp) {
-		ModuleInstance inst;
-		inst.instance = nullptr;
-		inst.origin = lp;
 		ModuleParams mp;
-		mp.filePath = lp->path;
-		mp.server = this;
-		mp.page = lp;
 		mp.host = host;
-		lp->retain();
-		lp->moduleCount++;
-		try {
-			inst.instance = lp->initModule(mp);
-			this->modules.insert(inst);
-		} catch (...) {
-			if (inst.instance != nullptr) lp->deinitModule(inst.instance);
-			lp->release();
-			lp->moduleCount--;
-			throw;
-		}
-		return inst;
+		mp.server = this;
+		return modules.insertModule(lp, mp);
 	}
 	void Server::removeModule(ModuleInstance inst) {
-		inst.origin->deinitModule(inst.instance);
-		this->modules.erase(inst);
-		inst.origin->release();
+		return modules.removeModule(inst);
 	}
 	String Server::loadStaticPage(String path) {
 		return host->loadStaticPage(mapPath(path.toSTDString()))->data;
