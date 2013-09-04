@@ -725,7 +725,7 @@ namespace cppsp
 					cache.erase(tmp);
 					del++;
 					continue;
-				} else ret = true;
+				} else if((*it).second->moduleCount == 0) ret = true;
 				it++;
 			}
 		}
