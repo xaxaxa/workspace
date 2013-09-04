@@ -1,0 +1,19 @@
+<%#
+#include "globaldata.H"
+class mymodule: public mydata
+{
+public:
+  mymodule() {
+    this->aaaaa="test ghvfdshjgh fhgfdh gsdfgsfdvfd gfsdg vfds bfgnd";
+  }
+};
+extern "C" void getModuleInfo(ModuleInfo& info) {
+	info.name="mymodulename";
+}
+extern "C" void* initModule(ModuleParams& p) {
+    return new mymodule();
+}
+extern "C" void deinitModule(void* mod) {
+    delete (mymodule*)mod;
+}
+%>
