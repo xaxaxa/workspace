@@ -30,6 +30,7 @@
 #define SO_REUSEPORT	15
 #endif
 #define CPPSP_LISTEN_BACKLOG 256
+#define tprintf(s,...) fprintf(stderr,"[thread %i] " s,curThreadID,##__VA_ARGS__)
 
 using namespace std;
 using namespace CP;
@@ -41,6 +42,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 struct moduleLoad
 {
 	string path;
+	bool host;
 	bool loaded;
 };
 struct workerThread
@@ -84,6 +86,7 @@ void pinToCPU(int cpu) {
 void* thread1(void* v) {
 	workerThread& thr=*(workerThread*)v;
 	cppspServer::Server& srv=thr.srv;
+	int curThreadID=thr.srv.threadID;
 	srv.loadDefaultMimeDB();
 	Poll& p=thr.p;
 	if(thr.cpu>=0) pinToCPU(thr.cpu);
@@ -132,12 +135,14 @@ void* thread1(void* v) {
 		vector<moduleLoad>& modules;
 		Server* server;
 		Host* host;
+		int curThreadID;
+		
 		Delegate<void(bool,exception*)> _cb;
 		void onError(const char* mod,exception& ex) {
-			fprintf(stderr,"error loading module %s: %s\n",mod,ex.what());
+			tprintf("error loading module %s: %s\n",mod,ex.what());
 			cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(&ex);
 			if (ce != NULL) {
-				printf("%s\n",ce->compilerOutput.c_str());
+				tprintf("compiler output:\n%s\n",ce->compilerOutput.c_str());
 			}
 		}
 		struct CB {
@@ -148,12 +153,19 @@ void* thread1(void* v) {
 				tmpcb(ex?false:true,ex);
 			}
 		};
+		void printSuccess(ModuleInstance inst) {
+			if (inst.origin->info.name.length() == 0)
+				tprintf("module %s loaded\n", inst.origin->path.c_str());
+			else tprintf("module %s (%s) loaded\n", inst.origin->path.c_str(),
+					inst.origin->info.name.c_str());
+		}
 		void loadCB(ModuleInstance inst, exception* ex) {
 			if(ex!=nullptr) {
 				onError(modules[nextModule].path.c_str(),*ex);
 				_cb(false,ex);
 				return;
 			}
+			printSuccess(inst);
 			nextModule++;
 			bool b;
 			try {
@@ -169,7 +181,7 @@ void* thread1(void* v) {
 		repeat:
 			if(nextModule>=(int)modules.size()) return true;
 			try {
-				if(server==nullptr)
+				if(modules[nextModule].host)
 					tmp=host->loadModule(modules[nextModule].path.c_str());
 				else tmp=server->loadModule(modules[nextModule].path.c_str());
 			} catch(exception& ex) {
@@ -177,6 +189,7 @@ void* thread1(void* v) {
 				throw;
 			}
 			if(tmp) {
+				printSuccess(tmp());
 				nextModule++;
 				goto repeat;
 			}
@@ -188,10 +201,16 @@ void* thread1(void* v) {
 			if(doLoad())return true;
 			return Future<bool>(&_cb);
 		}
-	} moduleLoader {nextModule,thr.modules,thr.srv.defaultServer};
+	} moduleLoader {nextModule,thr.modules,thr.srv.defaultServer,&thr.srv,curThreadID};
 	
+	if(thr.modules.size()>0) {
+		tprintf("loading modules...\n");
+	}
 	auto moduleLoadCB=[&](bool b, exception* ex){
 		if(!b)exit(1);
+		if(thr.modules.size()>0) {
+			tprintf("...done. starting listening socket.\n");
+		}
 		thr.listenSock->repeatAcceptHandle(&cb);
 	};
 	auto val=moduleLoader.start();
@@ -233,7 +252,9 @@ int main(int argc, char** argv) {
 					} else if(strcmp(name,"t")==0) {
 						threads=atoi(getvalue());
 					} else if(strcmp(name,"m")==0) {
-						modules.push_back({getvalue(),false});
+						modules.push_back({getvalue(),false,false});
+					} else if(strcmp(name,"M")==0) {
+						modules.push_back({getvalue(),true,false});
 					} else if(strcmp(name,"f")==0) {
 						f0rk=true;
 					} else if(strcmp(name,"s")==0) {
@@ -251,6 +272,7 @@ int main(int argc, char** argv) {
 						"\t-g <option>: specify the C++ compiler (default: g++)\n"
 						"\t-c <option>: specify a compiler option to be passed to g++\n"
 						"\t-m <path>: load a cppsp module (path is relative to root)\n"
+						"\t-M <path>: load a cppsp module into the host (path is absolute or relative to CWD; if relative then \"./\" must be used)\n"
 						"\t-r <root>: set root directory (must be absolute) (default: $(pwd))\n"
 						"\t-t <threads>: # of worker processes/threads to start up (default: sysconf(_SC_NPROCESSORS_CONF))\n"
 						"\t-f: use multi-processing (forking) instead of multi-threading (pthreads)\n"

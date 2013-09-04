@@ -493,11 +493,6 @@ namespace cppsp
 		deinitModule = (deinitModule_t) dlsym(dlHandle, "deinitModule");
 		getModuleInfo = (getModuleInfo_t) dlsym(dlHandle, "getModuleInfo");
 		if (getModuleInfo != NULL) getModuleInfo(info);
-		if (initModule != NULL) {
-			if (info.name.length() == 0)
-				fprintf(stderr, "module %s loaded\n", path.c_str());
-			else fprintf(stderr, "module %s (%s) loaded\n", path.c_str(), info.name.c_str());
-		}
 		loaded = true;
 		clock_gettime(CLOCK_REALTIME, &lastLoad);
 		//printf("loaded: dlHandle=%p; createObject=%p\n",dlHandle,(void*)createObject);
