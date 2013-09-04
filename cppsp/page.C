@@ -317,7 +317,7 @@ namespace cppsp
 				outputStream->writevAll(iov, 3, { &Response::_writeCB, this });
 			} else {
 				iov[1]= {buffer.data(), (size_t)bufferL};
-				outputStream->writevAll(iov, 2, {&Response::_writeCB, this});
+				outputStream->writevAll(iov, bufferL<=0?1:2, {&Response::_writeCB, this});
 			}
 			_bufferPos = buffer.length();
 			return;

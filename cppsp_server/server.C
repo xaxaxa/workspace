@@ -279,7 +279,7 @@ namespace cppspServer
 					String data=Sp->data;
 					iov[0]= {resp.buffer.data()+bufferL, (size_t)(resp.buffer.length()-bufferL)};
 					iov[1]= {data.data(), (size_t)data.length()};
-					resp.outputStream->writevAll(iov, 2, { &handler::writevCB, this });
+					resp.outputStream->writevAll(iov, data.length()<=0?1:2, { &handler::writevCB, this });
 				}
 			} catch(exception& ex) {
 				Sp->release();
@@ -287,7 +287,7 @@ namespace cppspServer
 			}
 		}
 		void sendHeadersCB(int r) {
-			if(r<=0) {
+			if(r<0) {
 				_staticPage->release();
 				end();
 				return;
@@ -335,7 +335,8 @@ namespace cppspServer
 		}
 		void writevCB(int i) {
 			_staticPage->release();
-			finalize();
+			if(likely(i>=0)) finalize();
+			else end();
 		}
 		void handleRequestCB() {
 			//s->shutdown(SHUT_WR);
