@@ -263,12 +263,41 @@ namespace cppsp
 		map<string, set<ModuleInstance> > moduleMap_fileName;
 		map<string, set<ModuleInstance> > moduleMap_path;
 		map<string, set<ModuleInstance> > moduleMap_name;
+		/**
+		 Find all inserted modules with a file name of fn.
+		 @param fn the file name (not path) e.g. module1.cppsm
+		 */
 		set<ModuleInstance>& findModulesByFileName(string fn);
+		/**
+		 Find all inserted modules with a path of p.
+		 @param p the path.
+		 */
 		set<ModuleInstance>& findModulesByPath(string p);
+		/**
+		 Find all inserted modules with a module name (not filename) of n.
+		 A module can declare its name by declaring a getModuleInfo(ModuleInfo&) function
+		 and setting the "name" field in the ModuleInfo to the desired name in that function.
+		 @param n the module name.
+		 */
 		set<ModuleInstance>& findModulesByName(string n);
+		/**
+		 see findModulesByFileName().
+		 @returns the first item in the set. The ordering of the set is undefined, so only use this if you are sure the result set only contains one item.
+		 */
 		ModuleInstance findByFileName(string fn);
+		/**
+		 see findModulesByPath().
+		 @returns the first item in the set. The ordering of the set is undefined, so only use this if you are sure the result set only contains one item.
+		 */
 		ModuleInstance findByPath(string p);
+		/**
+		 see findModulesByName().
+		 @returns the first item in the set. The ordering of the set is undefined, so only use this if you are sure the result set only contains one item.
+		 */
 		ModuleInstance findByName(string n);
+		/**
+		 Same as findByName()
+		 */
 		ModuleInstance operator[](string name) {
 			return findByName(name);
 		}
@@ -341,7 +370,13 @@ namespace cppsp
 		 Load cppsp module from "path". path is absolute.
 		 */
 		virtual AsyncValue<ModuleInstance> loadModule(String path);
+		/**
+		 Instantiate and insert a loaded module into this Host instance.
+		 */
 		virtual ModuleInstance insertModule(loadedPage* lp);
+		/**
+		 Remove an inserted module instance from this Host instance.
+		 */
 		virtual void removeModule(ModuleInstance inst);
 	};
 	class DefaultHost: public Host
