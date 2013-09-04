@@ -396,10 +396,14 @@ int main(int argc, char** argv) {
 		int status1;
 		void* status2;
 	};
-	for(int i=0;i<threads;i++) {
-		if(f0rk) waitpid(th[i].pid,&status1,0);
-		else pthread_join(th[i].thread,&status2);
-	}
+	int ret=0;
+	if(f0rk) while(true) {
+		pid_t child=wait(&status1);
+		if(child<=0)return ret;
+		printf("child %i exited with code %i\n",(int)child,status1);
+		if(status1!=0)ret=status1;
+	} else for(int i=0;i<threads;i++)
+		pthread_join(th[i].thread,&status2);
 }
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
