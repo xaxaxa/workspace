@@ -145,14 +145,6 @@ void* thread1(void* v) {
 				tprintf("compiler output:\n%s\n",ce->compilerOutput.c_str());
 			}
 		}
-		struct CB {
-			Delegate<void(bool,exception*)> cb;
-			void operator()(ModuleInstance inst, exception* ex) {
-				auto tmpcb=cb;
-				delete this;
-				tmpcb(ex?false:true,ex);
-			}
-		};
 		void printSuccess(ModuleInstance inst) {
 			if (inst.origin->info.name.length() == 0)
 				tprintf("module %s loaded\n", inst.origin->path.c_str());
@@ -193,7 +185,6 @@ void* thread1(void* v) {
 				nextModule++;
 				goto repeat;
 			}
-			CB* cb=new CB();
 			tmp.wait({&ModuleLoader::loadCB,this});
 			return false;
 		}
