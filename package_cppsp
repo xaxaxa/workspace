@@ -28,8 +28,8 @@ cppsp.o:
 	\$(CXX) cppsp/all.C -c -o cppsp.o \$(CXXFLAGS) -fPIC
 libcpoll.so: cpoll.o
 	\$(CXX) cpoll.o -o libcpoll.so --shared \$(CXXFLAGS) -ldl -lpthread
-libcppsp.so: cppsp.o
-	\$(CXX) cppsp.o -o libcppsp.so --shared \$(CXXFLAGS) \$(CPPSP_LD) -ldl -lpthread
+libcppsp.so: cppsp.o libcpoll.so
+	\$(CXX) cppsp.o -o libcppsp.so --shared \$(CXXFLAGS) \$(CPPSP_LD) -ldl -lpthread -L. -lcpoll
 socketd_proxy.so: cpoll.o
 	\$(CXX) socketd_proxy.C cpoll.o -o socketd_proxy.so -ldl -lpthread --std=c++0x --shared -fPIC \$(CXXFLAGS) 
 clean:
