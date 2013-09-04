@@ -1,0 +1,10 @@
+<%#
+//example cppsp page that access data in a module
+//load the globaldata.cppsm module before running (-m /globaldata.cppsm)
+#include "globaldata.H"
+%>
+<%
+mydata* d=(mydata*)server->modules["mymodulename"].instance;
+%>
+testing: <br />
+<%=d->aaaaa%>
