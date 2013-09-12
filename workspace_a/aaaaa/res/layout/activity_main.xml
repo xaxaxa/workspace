@@ -53,8 +53,8 @@
         android:id="@+id/radioGroup1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/editText1"
-        android:layout_below="@+id/editText1" >
+        android:layout_alignLeft="@+id/editText2"
+        android:layout_below="@+id/editText2" >
     </RadioGroup>
 
     <EditText
@@ -75,5 +75,24 @@
         android:layout_alignBottom="@+id/button2"
         android:layout_toLeftOf="@+id/button2"
         android:text="CheckBox" />
+
+    <Button
+        android:id="@+id/Button01"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/editText2"
+        android:layout_below="@+id/editText2"
+        android:onClick="test6"
+        android:text="load" />
+
+    <EditText
+        android:id="@+id/editText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/editText1"
+        android:ems="10" />
 
 </RelativeLayout>
