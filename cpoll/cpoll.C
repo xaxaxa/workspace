@@ -1655,7 +1655,7 @@ namespace CP
 		uint8_t addr[size];
 		//ep->GetSockAddr((sockaddr*)tmp);
 		int tmp = recvfrom(handle, buf, len, flags, (sockaddr*) addr, &size);
-		if (tmp == 0) ep.setSockAddr((sockaddr*) addr);
+		if (tmp >= 0) ep.setSockAddr((sockaddr*) addr);
 		return tmp;
 	}
 	int32_t Socket::sendTo(const void* buf, int32_t len, int32_t flags, const EndPoint& ep) {
@@ -2362,6 +2362,7 @@ namespace CP
 		bufferPos = 0;
 	}
 	void MemoryStream::flushBuffer(int minBufferAllocation) {
+		if(buffer==NULL) return;
 		if (this->bufferPos > this->len) this->len = this->bufferPos;
 		ensureCapacity(this->len + minBufferAllocation);
 	}
