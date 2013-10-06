@@ -82,7 +82,7 @@ lib/fbdump_cui.so:
 	$(CXX) js/fbdump_cui.C --shared -o lib/fbdump_cui.so \
 		`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
 bin/cppsp_standalone: cppsp cpoll
-	$(CXX) cppsp_server/cppsp_standalone.C -o bin/cppsp_standalone -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
+	$(CXX) cppsp_server/cppsp_standalone.C -o bin/cppsp_standalone -lcpoll -lcppsp -ldl -lrt -lpthread $(CFLAGS1)
 bin/socketd_cppsp: cppsp cpoll
 	$(CXX) cppsp_server/socketd_cppsp.C -o bin/socketd_cppsp -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/cppsp_embedded_example: cppsp cpoll
