@@ -1,12 +1,37 @@
 package com.example.aaaaa;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.security.AlgorithmParameters;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.crypto.AsymmetricBlockCipher;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.encodings.OAEPEncoding;
+import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +39,7 @@ import android.os.Environment;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.view.Display;
@@ -34,12 +60,6 @@ import android.view.WindowManager;
 
 public class MainActivity extends Activity implements Camera.PictureCallback,
 		Camera.AutoFocusCallback {
-	static {
-		System.loadLibrary("ndk1");
-	}
-
-	public native void helloLog(String logThis);
-
 	public java.util.Hashtable<Object, Integer> ht;
 
 	@Override
@@ -60,10 +80,20 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 			if (i == 0)
 				rb.setChecked(true);
 		}
-		helloLog("This will log to LogCat via the native call.");
 		rnd = new java.util.Random();
 
 		test3(null);
+		try {
+			kgen = KeyGenerator.getInstance("AES");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		kgen.init(256);
+		android.widget.EditText txt2 = (android.widget.EditText) this
+				.findViewById(R.id.editText2);
+		txt2.setText(Environment.getExternalStorageDirectory().getPath()
+				+ "/public.pem");
+		test6(null);
 	}
 
 	@Override
@@ -105,6 +135,14 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 	int zxcvb;
 	int n = 3;
 	boolean ddddd = false;
+	KeyGenerator kgen;
+	SubjectPublicKeyInfo pk;
+
+	public void alert(String s) {
+		(new AlertDialog.Builder(this)).setMessage(s)
+				.setPositiveButton("OK", null).show();
+
+	}
 
 	public void test1(View v) {
 		start();
@@ -115,12 +153,40 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 				.findViewById(R.id.editText1);
 		txt.setText("/storage/extSdCard/zxcvb");
 	}
+
 	public void test3(View v) {
 		String dir = Environment.getExternalStorageDirectory().getPath()
-			+ "/zxcvb";
+				+ "/zxcvb";
 		android.widget.EditText txt = (android.widget.EditText) this
-			.findViewById(R.id.editText1);
+				.findViewById(R.id.editText1);
 		txt.setText(dir);
+	}
+
+	public SubjectPublicKeyInfo test5(String path) throws java.lang.Exception {
+		FileReader fileReader = new FileReader(path);
+		PEMParser p = new PEMParser(fileReader);
+		try {
+			// JcaPEMKeyConverter converter = new JcaPEMKeyConverter()
+			// .setProvider("BC");
+			// return converter
+			// .getPublicKey((SubjectPublicKeyInfo) p.readObject());
+			return (SubjectPublicKeyInfo) p.readObject();
+		} finally {
+			try {
+				fileReader.close();
+			} catch (java.lang.Exception ex) {
+			}
+		}
+	}
+
+	public void test6(View v) {
+		android.widget.EditText txt = (android.widget.EditText) this
+				.findViewById(R.id.editText2);
+		try {
+			pk = test5(txt.getText().toString());
+		} catch (Exception e) {
+			alert(e.toString());
+		}
 	}
 
 	public void start() {
@@ -154,9 +220,10 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 		return ((android.widget.EditText) this.findViewById(R.id.editText1))
 				.getText().toString();
 	}
+
 	public void updateLabel() {
-		TextView t=(TextView)this.findViewById(R.id.textView2);
-		t.setText(Integer.toString(asdfg)+"/"+Integer.toString(zxcvb));
+		TextView t = (TextView) this.findViewById(R.id.textView2);
+		t.setText(Integer.toString(asdfg) + "/" + Integer.toString(zxcvb));
 	}
 
 	public void prepare() {
@@ -210,24 +277,63 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 		}
 	}
 
-	public void save(byte[] data) throws IOException {
+	public void dosave(byte[] data) throws java.lang.Exception {
 		java.util.Date d = new java.util.Date();
 		SimpleDateFormat dt = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss",
 				Locale.getDefault());
 		dt.setTimeZone(TimeZone.getTimeZone("UTC"));
 		String s = dt.format(d);
 
-		s += "_" + Integer.toString(rnd.nextInt(10000));
+		SecretKey key1;
+		synchronized (kgen) {
+			key1 = kgen.generateKey();
+			s += "_" + Integer.toString(rnd.nextInt(10000));
+		}
+		byte[] aeskey = key1.getEncoded();
+		/* Encrypt the message. */
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, key1);
+		AlgorithmParameters params = cipher.getParameters();
+		byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+		byte[] ciphertext = cipher.doFinal(data);
+
+		AsymmetricKeyParameter param = PublicKeyFactory.createKey(pk);
+		AsymmetricBlockCipher rsa = new OAEPEncoding(new RSAEngine(),
+				new SHA1Digest());
+		rsa.init(true, param);
+
+		byte[] enckey = rsa.processBlock(aeskey, 0, aeskey.length);
+
 		java.io.FileOutputStream fs = new java.io.FileOutputStream(this.dir()
-				+ "/" + s + ".jpg", false);
-		fs.write(data);
-		fs.flush();
+				+ "/" + s + ".asdfg", false);
+		fs.write(ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
+				.putInt(enckey.length).array());
+		fs.write(ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN)
+				.putInt(iv.length).array());
+		fs.write(enckey);
+		fs.write(iv);
+		fs.write(ciphertext);
 		fs.close();
+	}
+
+	public void save(final byte[] data) throws java.lang.Exception {
+		Thread th = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					dosave(data);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		th.setPriority(Thread.MIN_PRIORITY);
+		th.start();
 	}
 
 	@Override
 	public void onPictureTaken(byte[] data, Camera c) {
-		Log.e("error", "data: " + (data == null ? "null" : data.toString()));
+		Log.e("error", "data received");
 		if (data == null)
 			return;
 		try {
