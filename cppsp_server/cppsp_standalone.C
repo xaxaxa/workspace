@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	printinfo("specify -? for help");
-	auto i=listen.find(':');
+	auto i=listen.rfind(':');
 	if(i==string::npos) throw runtime_error("expected \":\" in listen");
 	
 	int cpus=(int)sysconf(_SC_NPROCESSORS_CONF);
