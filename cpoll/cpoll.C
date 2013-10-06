@@ -245,7 +245,7 @@ namespace CP
 		addr_in->sin6_scope_id = scopeID;
 	}
 	int32_t IPv6EndPoint::getSockAddrSize() const {
-		return sizeof(sockaddr_in);
+		return sizeof(sockaddr_in6);
 	}
 	void IPv6EndPoint::clone(EndPoint& to) const {
 		if (to.addressFamily != addressFamily) throw CPollException(
