@@ -50,6 +50,7 @@ fftbench: bin/fftbench
 fibbench: bin/fibbench
 iptsocks_new: bin/iptsocks_new
 cppsp_embedded_example: bin/cppsp_embedded_example
+decode_aaaaa: bin/decode_aaaaa
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -106,6 +107,8 @@ bin/fibbench:
 	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
 bin/iptsocks_new: cpoll
 	$(CXX) iptsocks_new/all.C -o bin/iptsocks_new -lcpoll -lpthread $(CFLAGS1)
+bin/decode_aaaaa:
+	$(CXX) test/decode_aaaaa.C -o bin/decode_aaaaa -lpthread -lcryptopp $(CFLAGS1)
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)

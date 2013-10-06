@@ -37,9 +37,11 @@
 #include "histcontrol.C"
 #include <cplib/cplib.hpp>
 #include <math.h>
+#include <atomic_ops.h>
 
 using namespace std;
-
+#define rmb() AO_nop_read()
+#define wmb() AO_nop_write()
 
 
 vector<jack_port_t *> inputs;
@@ -72,7 +74,9 @@ Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
 bool do_mux=false;
 double v_mux=0.5;
-double spectrogramOutputPhase[SPECTRUM2_POINTS];
+static const int TOTAL_NOTES=7;
+static const int OUTPUT_NOTES=14;
+double spectrogramOutputPhase[OUTPUT_NOTES];
 
 template<class t> inline double complex_to_real(const t& x)
 {
@@ -90,7 +94,7 @@ inline double abs1(double d)
 void asdasdasd(double* out, fftw_complex* in, int len, int maxfreq, int accuracy, double multiplier=1) {
 	static const int base=268; //Hz
 	int max_exponent=(int)floor(log2(double(maxfreq)/base));
-	if(max_exponent>4)max_exponent=4;	//ignore frequencies >= 3520Hz
+	if(max_exponent>5)max_exponent=5;	//ignore frequencies >= 3520Hz
 	int maxf=base*pow(2,max_exponent);
 	for(int i=0;i<accuracy;i++) {
 		//out[i]=0;
@@ -223,21 +227,34 @@ int process(jack_nframes_t length, void *arg)
 				out_samples[ii][i]=2*(avg*(1.-v_mux)+(out_samples[ii][i]-avg)*v_mux);
 		}
 	if(output_spectrogram && spectrum2) {
+		rmb();
 		jack_default_audio_sample_t *out = (jack_default_audio_sample_t *)
 			jack_port_get_buffer(outputs2, length);
+		if(out==NULL) goto aaaaa;
 		for(int t=0;t<length;t++) out[t]=0;
-		double min=-1;
-		for(int i=0;i<SPECTRUM2_POINTS;i++)
-			if(min==-1 || c2->data[i]<min)min=c2->data[i];
-		for(int i=0;i<SPECTRUM2_POINTS;i++) {
-			double freq=268*pow(2,double(i)/SPECTRUM2_POINTS);
+		for(int i=0;i<OUTPUT_NOTES;i++) {
+			double freq=268*pow(2,double(i)/TOTAL_NOTES);
+			double freq2=268*8*pow(2,double(i)/TOTAL_NOTES);
+			double freq3=268*16*pow(2,double(i)/TOTAL_NOTES);
+			int start=i*SPECTRUM2_POINTS/TOTAL_NOTES;
+			int end=(i+1)*SPECTRUM2_POINTS/TOTAL_NOTES;
+			double val=0;
+			for(int x=start;x<end;x++)
+				if(c2->data[x]>val)val=c2->data[x];
 			for(int t=0;t<length;t++) {
-				out[t]+=(c2->data[i]-min)*sin(spectrogramOutputPhase[i]+2*M_PI*freq*t/srate)/SPECTRUM2_POINTS;
+				out[t]+=val*sin(spectrogramOutputPhase[i]+2*M_PI*freq*t/srate)/2/TOTAL_NOTES;
+			}
+			for(int t=0;t<length;t++) {
+				out[t]+=val*sin(spectrogramOutputPhase[i]+2*M_PI*freq2*t/srate)/7/TOTAL_NOTES;
+			}
+			for(int t=0;t<length;t++) {
+				out[t]+=val*sin(spectrogramOutputPhase[i]+2*M_PI*freq3*t/srate)/12/TOTAL_NOTES;
 			}
 			spectrogramOutputPhase[i]=
 				xaxaxa::modulus(spectrogramOutputPhase[i]+2*M_PI*freq*length/srate,double(2*M_PI));
 		}
 	}
+aaaaa:
 	for(size_t i = 0; i < inputs.size(); i++)
 	{
 		if(filt[i] != NULL)goto asdfghjkl;
@@ -579,7 +596,7 @@ jack_client_t *client;
 void enableSpectrogramOutput() {
 	outputs2=(jack_port_register(client, "spectrogram",
 		JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
-	for(int i=0;i<SPECTRUM2_POINTS;i++)
+	for(int i=0;i<OUTPUT_NOTES;i++)
 		spectrogramOutputPhase[i]=0;
 }
 void disableSpectrogramOutput() {
@@ -837,6 +854,7 @@ hhhhh:
 		} else if(!output_spectrogram && c_spectrogram1->get_active()) {
 			enableSpectrogramOutput();
 		}
+		wmb();
 		output_spectrogram=c_spectrogram1->get_active();
 	});
 	

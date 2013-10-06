@@ -187,7 +187,6 @@ namespace xaxaxa
 			//fftw_execute(p1);
 			//cout << this->PeriodSize() << endl;
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
-			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(fftw_complex));
 #ifdef CEPSTRUM
 			for(UInt i=0;i<complexsize;i++) {
 				auto sine=fft.Data_c[i][1];
@@ -302,6 +301,7 @@ namespace xaxaxa
 				fft.Data_c[i+shift][0]=fft.Data_c[i][0]*coefficients[i+shift];
 				fft.Data_c[i+shift][1]=fft.Data_c[i][1]*coefficients[i+shift];
 			}*/
+			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(fftw_complex));
 			double* d=fft.Reverse(this->PeriodSize());
 			memcpy(this->tmpbuffer,d,sizeof(double)*this->PeriodSize());
 			Int ps=this->PeriodSize();

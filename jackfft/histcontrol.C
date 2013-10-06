@@ -72,8 +72,16 @@ namespace xaxaxa
 				if(fIndex<0)fIndex+=frames;
 				else fIndex=fIndex%frames;
 				double* frame=getFrame(fIndex);
+				double pointsPerPx=double(frameLen)/h;
 				for(int y=0;y<h;y++) {
-					double v=getPoint(frame,(h-y)*frameLen/h,frameLen);
+					double v;
+					if(pointsPerPx<2)v=getPoint(frame,(h-y)*frameLen/h,frameLen);
+					else {
+						v=0;
+						int start=(h-y)*frameLen/h;
+						int end=(int)ceil(double(h-y+1)*frameLen/h);
+						for(int i=start;i<=end;i++) if(frame[i]>v)v=frame[i];
+					}
 					if(v>1)v=1;
 					int V=(int)(unsigned char)(v*255);
 					img[y*w+i]=255<<24 | V<<16 | V<<8 | V;
