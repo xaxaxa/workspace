@@ -1,7 +1,7 @@
 
 CFLAGS := -Ofast -march=native 
 CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions \
-	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC $(CFLAGS)
+	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC -D_FILE_OFFSET_BITS=64 $(CFLAGS)
 CC := gcc
 CXX := g++
 all: server123 termchat tmp1 tmp2 nc.xaxaxa email_extract tcpfuck bitflip_proxy \
@@ -51,6 +51,7 @@ fibbench: bin/fibbench
 iptsocks_new: bin/iptsocks_new
 cppsp_embedded_example: bin/cppsp_embedded_example
 decode_aaaaa: bin/decode_aaaaa
+randomread: bin/randomread
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -105,10 +106,12 @@ bin/fftbench:
 	$(CXX) benchmark/fftbench.C -o bin/fftbench -lpthread -lfftw3 $(CFLAGS1)
 bin/fibbench:
 	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
-bin/iptsocks_new: cpoll
+bin/iptsocks_new: cpoll iptsocks_new/all.C
 	$(CXX) iptsocks_new/all.C -o bin/iptsocks_new -lcpoll -lpthread $(CFLAGS1)
-bin/decode_aaaaa:
+bin/decode_aaaaa: test/decode_aaaaa.C
 	$(CXX) test/decode_aaaaa.C -o bin/decode_aaaaa -lpthread -lcryptopp $(CFLAGS1)
+bin/randomread: test/randomread.C
+	$(CXX) test/randomread.C -o bin/randomread $(CFLAGS1)
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)
