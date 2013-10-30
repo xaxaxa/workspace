@@ -52,6 +52,7 @@ iptsocks_new: bin/iptsocks_new
 cppsp_embedded_example: bin/cppsp_embedded_example
 decode_aaaaa: bin/decode_aaaaa
 randomread: bin/randomread
+pie_exec: bin/pie_exec
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -112,6 +113,8 @@ bin/decode_aaaaa: test/decode_aaaaa.C
 	$(CXX) test/decode_aaaaa.C -o bin/decode_aaaaa -lpthread -lcryptopp $(CFLAGS1)
 bin/randomread: test/randomread.C
 	$(CXX) test/randomread.C -o bin/randomread $(CFLAGS1)
+bin/pie_exec: test/pie_exec.C test/handle_syscall.S
+	$(CXX) test/pie_exec.C test/handle_syscall.S -o bin/pie_exec $(CFLAGS1)
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)
