@@ -13,7 +13,6 @@
 #include <vector>
 #include <sys/syscall.h>
 #include <linux/unistd.h>
-#include <asm/ldt.h>
 
 using namespace std;
 typedef uint8_t u8;
@@ -74,31 +73,42 @@ u8* mapExecutable(ELFHeader* header, int fdToMap, int fdOffset=0) {
 			u8* mapToUnaligned=(u8*)(base+(size_t)pHeaders[i].p_vaddr);
 			u8* mapTo=(u8*)ALIGNDOWN(mapToUnaligned,pgsz);
 			u8* mappingEnd=mapToUnaligned+PTR(pHeaders[i].p_memsz);
+			u8* dataEnd=mapToUnaligned+PTR(pHeaders[i].p_filesz);
 			mappingEnd=(u8*)ROUNDUP((PTR)mappingEnd,pgsz);
+			u8* fileMappingEnd=(u8*)ROUNDUP((PTR)dataEnd,pgsz);
 			size_t offset=ALIGNDOWN(pHeaders[i].p_offset,pgsz);
 			//size_t size=pHeaders[i].p_memsz+size_t(mapToUnaligned-mapTo);
+			size_t fileMappingSize=fileMappingEnd-mapTo;
 			size_t size=mappingEnd-mapTo;
 			printf("mapping segment of size 0x%x to %p\n",size,mapTo);
-			
-			printf("%p 0x%x %i %i %i %i\n",mapTo,pHeaders[i].p_memsz,getProtectionFlags(pHeaders[i].p_flags),
-					MAP_PRIVATE|MAP_FIXED,fdToMap,fdOffset+pHeaders[i].p_offset);
-			void* tmp=mmap(mapTo,size,
+			void* tmp=mmap(mapTo,fileMappingSize,
 				PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_FIXED,
 				fdToMap,fdOffset+offset);
-			printf("res=%p\n",tmp);
 			if(tmp==MAP_FAILED) {
 				int tmp1=errno;
 				munmap(base,(size_t)mappingSize);
 				errno=tmp1;
 				return NULL;
 			}
-			
+			if(size>fileMappingSize) {
+				//leftover memory range not covered by the backing file
+				tmp=mmap(mapTo+fileMappingSize,size-fileMappingSize,PROT_READ|PROT_WRITE,
+					MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS,-1,0);
+				if(tmp==MAP_FAILED) {
+					int tmp1=errno;
+					munmap(base,(size_t)mappingSize);
+					errno=tmp1;
+					return NULL;
+				}
+			}
 			//int zerosz=pHeaders[i].p_memsz-pHeaders[i].p_filesz;
-			u8* dataEnd=mapToUnaligned+PTR(pHeaders[i].p_filesz);
 			
-			int zerosz=int(mappingEnd-dataEnd);
-			if(zerosz>0)
-				memset((void*)dataEnd,0,zerosz);
+			
+			int zerosz=int(fileMappingEnd-dataEnd);
+			if(zerosz>0) {
+				//memset((void*)dataEnd,0,zerosz);
+				for(int i=0;i<zerosz;i++) dataEnd[i]=0;
+			}
 			mprotect(mapTo,size,getProtectionFlags(pHeaders[i].p_flags));
 			//brk(mapToUnaligned+pHeaders[i].p_memsz);
 		}
@@ -267,7 +277,8 @@ u8* setupStack(u8* top, int argc,int envc,int auxc,const char** argv,
 	return sp;
 }
 extern "C" void _set_esp_and_jmp(void* sp, void* addr);
-void instantiateExecutable(const executableInfo& inf, int auxc, const ELFAUXV* auxv, int envc, const char** envv) {
+void instantiateExecutable(const executableInfo& inf, int argc,int envc,int auxc,
+	const char** argv, const char** envv, const ELFAUXV* auxv) {
 	u8* base;
 	u8* loaderBase;
 	if((loaderBase=base=mapExecutable((ELFHeader*)inf.image,inf.fd,0))==NULL) throwUNIXException();
@@ -287,14 +298,14 @@ void instantiateExecutable(const executableInfo& inf, int auxc, const ELFAUXV* a
 	stack+=stackSize;
 	printf("stack top: %p\n",stack);
 	
-	const char* argv[1];
-	argv[0]="aaaaa";
+	//const char* argv[1];
+	//argv[0]="aaaaa";
 	//argv[1]="/home/xaxaxa/hello";
 	const char* env[1];
 	env[0]="LD_SHOW_AUXV=1";
 	//XXX: assumes that the virtAddr of the first segment is 0, and that the file offset
 	//of the first segment is 0
-	u8* sp=setupStack(stack,sizeof(argv)/sizeof(*argv),sizeof(env)/sizeof(*env),
+	u8* sp=setupStack(stack,argc,sizeof(env)/sizeof(*env),
 		auxc,argv,env,auxv,PTR(base)+PTR(header->e_entry),
 		PTR(base)+PTR(header->e_phoff),header->e_phnum,(PTR)loaderBase);
 	
@@ -326,22 +337,16 @@ PTR _getauxv1(ELFAUXV* auxv, int type) {
 u8* tcb=NULL;
 void* realVSyscall=NULL;
 extern "C" int _handle_syscall();
-extern "C" int do_handle_syscall(int a,int b,int c,int d,int e,int f) {
+extern "C" int do_handle_syscall(int a,int b,int c,int d,int e,int f,int g) {
 	//asm("hlt");
-	printf("syscall %i,%i,%i\n",a,b,c);
+	printf("syscall %i\t%08x  %08x  %08x  %08x  %08x  %08x\n",a,b,c,d,e,f,g);
+	return syscall(a,b,c,d,e,f,g);
+	if(a==252) {
+		exit(b);
+	}
 	return -1;
 }
-/*int _handle_syscall() {
-	asm("mov $0x63, %eax");
-	asm("mov %eax, %gs");
-	//void* oldVSyscall=*(void**)(tcb+0x10);
-	// *(void**)(tcb+0x10)=realVSyscall;
-	printf("syscall called\n");
-	asm("mov $0x62, %eax");
-	asm("mov %eax, %gs");
-	printf("syscall called.\n");
-	return -1;
-}*/
+
 extern "C" void doprint1() {
 	printf("syscall called\n");
 }
@@ -442,7 +447,8 @@ int main(int argc, char** argv) {
 	
 	
 	
-	instantiateExecutable(inf,myAuxv.size(),&myAuxv[0],envEnd-env,(const char**)env);
+	instantiateExecutable(inf,argc-1,envEnd-env,myAuxv.size(),(const char**)argv+1,
+		(const char**)env,&myAuxv[0]);
 	
 	//*/
 	
