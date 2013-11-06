@@ -12,7 +12,7 @@ namespace ukernel
 {
 	namespace FS
 	{
-		class HostFS: public Filesystem
+		struct HostFS: public Filesystem
 		{
 			AsyncValue<FSInstance*> mount(string dev, string opts) override;
 		};

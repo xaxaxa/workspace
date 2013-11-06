@@ -227,20 +227,26 @@ struct Delegate<R(P...)> : public DelegateBase<R(P...)>
 		this->init(nullptr);
 	}
 };
+
 template<class T>
 struct Future
 {
-	Delegate<void(T, std::exception*)>* cbAddr;
-	Future(Delegate<void(T, std::exception*)>* cbAddr) :
+	Delegate<void(T, int)>* cbAddr;
+	Future(Delegate<void(T, int)>* cbAddr) :
 			cbAddr(cbAddr) {
 	}
 };
-template<class T> class AsyncValue
+struct ErrorValue
 {
-public:
+	int e;
+	ErrorValue(int e) :
+			e(e) {
+	}
+};
+template<class T> struct WithError
+{
 	T value;
-	Delegate<void(T, std::exception*)>* cbAddr;
-	bool async;
+	int error;
 	T& operator()() {
 		return value;
 	}
@@ -251,32 +257,82 @@ public:
 		return &value;
 	}
 	operator bool() {
-		return !async;
+		return error == 0;
+	}
+	WithError(ErrorValue e) :
+			error(e.e) {
+	}
+	WithError(const T& value) :
+			value(value), error(0) {
+	}
+};
+
+//this version of AsyncValue is VERY DIFFERENT FROM THE ONE IN CPOLL;
+//it uses error codes instead of exceptions, and has a different api
+
+//an AsyncValue represents a value that is either available right away (synchronous),
+//or will be available in the future; generally use case is an async function that might
+//sometimes be able to return the data right away (for example, an async read() function
+//might search a cache first, and return immediately if found); this avoids stack blowup
+//that could happen if the function were to call the callback within itself
+
+//when you get an AsyncValue from a function invocation, you should check if it is
+//immediately available or not; if it is not, you must call wait(), and pass in your
+//callback; failure to call wait() on an async AsyncValue will result in a segfault
+template<class T> class AsyncValue
+{
+public:
+	//when the callback is called, err should NEVER be -1
+	Delegate<void(T val, int err)>* cbAddr;
+	T value;
+	int error; //0=completed synchronously; -1=completing asynchronously;
+	//other values: user defined error codes
+
+	T& operator()() {
+		return value;
+	}
+	T& operator*() {
+		return value;
+	}
+	T* operator->() {
+		return &value;
+	}
+	//returns whether or not a value or error is immediately available (synchronous)
+	operator bool() {
+		return error != -1;
 	}
 	AsyncValue<T>& operator=(const T& other) {
 		value = other;
+		error = 0;
 		return *this;
 	}
 	AsyncValue<T>& operator=(const AsyncValue<T>& other) {
-		if (!(async = other.async)) value = other.value;
+		if (-1 != (error = other.error)) value = other.value;
 		else cbAddr = other.cbAddr;
 		return *this;
 	}
+	//construct a immediately-available AsyncValue
 	AsyncValue(const T& other) :
-			value(other) {
-		async = false;
+			value(other), error(0) {
+	}
+	AsyncValue(const WithError<T>& other) :
+			value(other.value), error(other.error) {
 	}
 	AsyncValue(const AsyncValue<T>& other) :
-			value(other.value), cbAddr(other.cbAddr), async(other.async) {
+			cbAddr(other.cbAddr), value(other.value), error(other.error) {
 	}
+	//construct an asynchronously available AsyncValue
 	AsyncValue(Future<T> f) :
-			cbAddr(f.cbAddr), async(true) {
+			cbAddr(f.cbAddr), error(-1) {
+	}
+	AsyncValue(ErrorValue e) :
+			error(e.e) {
 	}
 	struct _placeholder1
 	{
 	};
 	template<class ... A> AsyncValue(_placeholder1, A&&... a) :
-			value(std::forward<A>(a)...), async(false) {
+			value(std::forward<A>(a)...), error(0) {
 
 	}
 	template<class ... A>
@@ -284,9 +340,10 @@ public:
 		return AsyncValue<T>(_placeholder1(), std::forward<A>(a)...);
 	}
 	AsyncValue() :
-			async(true) {
+			error(0) {
 	}
-	void wait(Delegate<void(T, std::exception*)> cb) {
+	//wait for the asynchronous value to be available
+	void wait(Delegate<void(T, int)> cb) {
 		*cbAddr = cb;
 	}
 };
@@ -401,6 +458,10 @@ public:
 			return true;
 		}
 		return false;
+	}
+	void remove(u32 id) {
+		ScopeLock lck(lock);
+		items.erase(id);
 	}
 };
 template<class T>

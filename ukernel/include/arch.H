@@ -6,7 +6,6 @@ namespace ukernel
 {
 	namespace arch
 	{
-		class ProcessImage;
 	/*
 	 ProcessImage interface:
 	 class ProcessImage

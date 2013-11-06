@@ -35,6 +35,7 @@ namespace ukernel
 			virtual ~Object() {
 			}
 		};
+		//represents all fs objects except directories
 		struct File: public Object
 		{
 			virtual ~File() {
@@ -68,9 +69,20 @@ namespace ukernel
 			void initRootDentry() {
 				rootDentry.target = root;
 			}
+			s32 flags;
+			enum
+			{
+				F_SUPPORTS_MMAP = 1 //mmap passthrough
+			};
 			virtual AsyncValue<Object*> lookup(Directory* parent, string name)=0;
+			//FILESYSTEM IMPLEMENTATIONS MUST NEVER DO PARTIAL READS/WRITES UNLESS AN
+			//EXCEPTIONAL SITUATION IS ENCOUNTERED (i/o error, eof, etc)
 			virtual AsyncValue<int> read(File* f, u8* buffer, s64 offset, s64 length)=0;
 			virtual AsyncValue<int> write(File* f, u8* buffer, s64 offset, s64 length)=0;
+			virtual WithError<u8*> mmap(File* f, u8* addr, ptr_int length, s64 offset, int prot, int flags) {
+				return ErrorValue(ENOSYS);
+			}
+			FSInstance();
 			virtual ~FSInstance() {
 			}
 		};
@@ -87,8 +99,11 @@ namespace ukernel
 			List<DirectoryEntry> unreferencedDentries;
 			map<DirectoryEntry*, Path> mountPoints;
 			AsyncValue<Path> lookup(Path d, string name);
+			AsyncValue<Path> iterativeLookup(Path root, Path cwd, string path);
 			AsyncValue<int> read(Path f, u8* buffer, s64 offset, s64 length);
 			AsyncValue<int> write(Path f, u8* buffer, s64 offset, s64 length);
+			int stat(Path p, struct stat& st);
+			u8* mmap(Path f, u8* addr, ptr_int length, s64 offset, int prot, int flags);
 			void retainObject(Object* o) {
 				if (o->retain() == 2) {
 					unreferencedObjects.remove(o);
