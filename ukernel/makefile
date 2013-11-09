@@ -13,8 +13,8 @@ libukernel.so: bin/libukernel.so
 	
 ukernel_test: bin/ukernel_test
 	
-bin/libukernel.so: arch_includes bin/arch.o
-	$(CXX) all.C bin/arch.o --shared -o $@ $(CFLAGS1) -lpthread
+bin/libukernel.so: arch_includes bin/arch.a
+	$(CXX) all.C bin/arch.a --shared -o $@ $(CFLAGS1) -lpthread
 bin/ukernel_test: bin/libukernel.so ukernel_test.C
 	$(CXX) ukernel_test.C -o $@ $(CFLAGS1) -L./bin -lukernel
 
@@ -23,6 +23,6 @@ arch/include/process.H:
 	echo "#include \"../$(ARCH)/process.H\"" > $@
 arch/include/misc.H:
 	echo "#include \"../$(ARCH)/misc.H\"" > $@
-bin/arch.o:
+bin/arch.a:
 	$(MAKE) -C arch/$(ARCH) CFLAGS1="$(CFLAGS1)"
-	mv arch/$(ARCH)/all.o bin/arch.o
+	mv arch/$(ARCH)/all.a bin/arch.a

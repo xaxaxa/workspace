@@ -10,11 +10,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <vector>
 
 namespace ukernel
 {
 	namespace FS
 	{
+		using namespace std;
 		class HostFSI: public FSInstance
 		{
 		public:
@@ -23,6 +25,8 @@ namespace ukernel
 			{
 				string path;
 				int fd;
+				vector<string> dirents;
+				bool hasDirents;
 			};
 			struct HostFS_File: public File
 			{
@@ -32,6 +36,14 @@ namespace ukernel
 					close(fd);
 				}
 			};
+			inline void __setupObject(FS::Object& o) {
+				o.info.st_uid = 0;
+				o.info.st_gid = 0;
+			}
+			inline void __setupObject(HostFS_Directory& o) {
+				__setupObject((FS::Object&) o);
+				o.hasDirents = false;
+			}
 			HostFS_Directory _root;
 			AsyncValue<Object*> lookup(Directory* parent, string name) override {
 				HostFS_Directory* d = (HostFS_Directory*) parent;
@@ -47,6 +59,7 @@ namespace ukernel
 						newDir->path = p + "/";
 						newDir->fd = fd;
 						newDir->info = st;
+						__setupObject(*newDir);
 						return newDir;
 					} else {
 						int fd = openat(d->fd, name.c_str(), O_RDWR);
@@ -57,6 +70,7 @@ namespace ukernel
 						f->path = p;
 						f->fd = fd;
 						f->info = st;
+						__setupObject(*f);
 						return f;
 					}
 				}
@@ -77,11 +91,35 @@ namespace ukernel
 				u8* tmp = (u8*) ::mmap(addr, length, prot, flags, file->fd, (off_t) offset);
 				return tmp == nullptr ? ErrorValue(errno) : WithError<u8*>(tmp);
 			}
+			AsyncValue<int> readDir(Directory* d, DirectoryEntry* buf, u64 previousID, int bufLength)
+					override {
+				HostFS_Directory* dir = (HostFS_Directory*) d;
+				if (!dir->hasDirents) {
+					DIR* tmp = fdopendir(dir->fd);
+					struct dirent ent;
+					struct dirent* res;
+					while (readdir_r(tmp, &ent, &res) == 0) {
+						if (res == nullptr) break;
+						dir->dirents.push_back(res->d_name);
+					}
+					dir->hasDirents = true;
+				}
+				int l = int(dir->dirents.size()) - previousID;
+				if (bufLength < l) l = bufLength;
+				for (int i = 0; i < l; i++) {
+					buf[i].id = u64(i) + previousID + 1;
+					buf[i].name = dir->dirents[i + previousID];
+				}
+				return l;
+			}
 			int init() {
 				if (hostRoot.length() == 0 || hostRoot[hostRoot.length() - 1] != '/') hostRoot += '/';
 				_root.path = hostRoot;
-				if (stat(hostRoot.c_str(), &_root.info) < 0) return errno;
-				if ((_root.fd = open(hostRoot.c_str(), O_RDONLY)) < 0) return errno;
+				_root.type = Object::T_Directory;
+				if (stat(hostRoot.c_str(), &_root.info) < 0) return -errno;
+				if (statfs(hostRoot.c_str(), &info) < 0) return -errno;
+				if ((_root.fd = open(hostRoot.c_str(), O_RDONLY)) < 0) return -errno;
+				__setupObject(_root);
 				root = &_root;
 				this->initRootDentry();
 				this->flags = F_SUPPORTS_MMAP;
@@ -92,7 +130,7 @@ namespace ukernel
 			HostFSI* fsi = New<HostFSI>();
 			fsi->hostRoot = dev;
 			int i;
-			if ((i = fsi->init()) != 0) return ErrorValue(i);
+			if ((i = fsi->init()) < 0) return ErrorValue(-i);
 			return fsi;
 		}
 	}

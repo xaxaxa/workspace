@@ -1,5 +1,5 @@
-all: all.o
+all: all.a
 	
-all.o:
-	$(CXX) process.C -o all.o -c $(CFLAGS1)
-
+all.a:
+	$(CXX) process.C misc.S -c $(CFLAGS1)
+	ar rcs all.a process.o misc.o

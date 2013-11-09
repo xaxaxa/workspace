@@ -13,17 +13,17 @@ namespace ukernel
 	namespace FS
 	{
 		struct FSInstance;
-		struct DirectoryEntry;
+		struct DEntry;
 		struct Path
 		{
 			FSInstance* fsi;
-			DirectoryEntry* dentry;
+			DEntry* dentry;
 			Path() {
 			}
 			Path(nullptr_t) :
 					fsi(nullptr), dentry(nullptr) {
 			}
-			Path(FSInstance* fsi, DirectoryEntry* dentry) :
+			Path(FSInstance* fsi, DEntry* dentry) :
 					fsi(fsi), dentry(dentry) {
 			}
 			bool operator==(nullptr_t) const {

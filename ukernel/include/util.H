@@ -31,6 +31,13 @@ template<class T, class ... ARGS> inline T* New(ARGS&&... args) {
 	new (tmp) T(std::forward<ARGS>(args)...);
 	return tmp;
 }
+//create an object and release it (without freeing it)
+template<class T, class ... ARGS> inline T* RNew(ARGS&&... args) {
+	T* tmp = (T*) malloc(sizeof(T));
+	new (tmp) T(std::forward<ARGS>(args)...);
+	tmp->refCount--;
+	return tmp;
+}
 template<class T> inline void Delete(T* obj) {
 	obj->~T();
 	free(obj);
