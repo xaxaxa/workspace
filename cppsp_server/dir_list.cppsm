@@ -49,7 +49,7 @@ struct DirListModule: public RGC::Object {
 		struct stat st;
 		string s=server->mapPath(path.toSTDString());
 		if(::stat(s.c_str(),&st)>=0 && S_ISDIR(st.st_mode)) {
-			if(path.data()[path.length()-1]!='/') {
+			if(path.length()>0 && path.data()[path.length()-1]!='/') {
 				Handler h({&DirListModule::handleRedirect,this});
 				return h;
 			}
