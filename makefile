@@ -103,7 +103,7 @@ bin/jackfft: cplib cpoll bin/main2.ui
 	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3f -lSoundTouch \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT $(CFLAGS1)
 bin/jackffts: cplib cpoll bin/main2.ui
-	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lSoundTouch \
+	$(CXX) jackfft/jackfft.C -o bin/jackffts -lcpoll -lcplib -lpthread -ljack -lSoundTouch \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT \
 	/usr/local/lib/libffts.a -DJACKFFT_USE_FFTS $(CFLAGS1)
 bin/main2.ui:
