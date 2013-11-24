@@ -98,9 +98,14 @@ bin/tcpsdump:
 	$(CXX) tcpsdump/main.cxx -o bin/tcpsdump -lpcap -lpthread $(CFLAGS1)
 bin/rmhttphdr: cplib
 	$(CXX) tcpsdump/rmhttphdr.cxx -o bin/rmhttphdr -lcplib -lpthread $(CFLAGS1)
-bin/jackfft: cplib cpoll
+bin/jackfft: cplib cpoll bin/main2.ui
 	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3f -lSoundTouch \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT $(CFLAGS1)
+bin/jackffts: cplib cpoll bin/main2.ui
+	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lSoundTouch \
+	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT \
+	/usr/local/lib/libffts.a $(CFLAGS1)
+bin/main2.ui:
 	cp -f jackfft/main2.ui bin/
 	cp -f trollface200.png bin/
 bin/dedup:
