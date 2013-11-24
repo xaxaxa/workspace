@@ -22,6 +22,8 @@
  */
 #define WARNLEVEL 3
 #define cplib_glib_wrappers
+#define JACKFFT_USE_SOUNDTOUCH
+
 #include <iostream>
 #include <jack/jack.h>
 #include <memory.h>
@@ -37,11 +39,14 @@
 #include "histcontrol.C"
 #include <cplib/cplib.hpp>
 #include <math.h>
-#include <atomic_ops.h>
+#ifdef JACKFFT_USE_SOUNDTOUCH
+#include <soundtouch/SoundTouch.h>
+#endif
+//#include <atomic_ops.h>
 
 using namespace std;
-#define rmb() AO_nop_read()
-#define wmb() AO_nop_write()
+#define rmb() /*AO_nop_read()*/
+#define wmb() /*AO_nop_write()*/
 
 
 vector<jack_port_t *> inputs;
@@ -62,6 +67,10 @@ using namespace std;
 File efd(eventfd(0,0));
 FFTFilter<jack_default_audio_sample_t>* filt[CHANNELS];
 FFTFilter<jack_default_audio_sample_t>** filt2 = NULL;
+#ifdef JACKFFT_USE_SOUNDTOUCH
+soundtouch::SoundTouch soundTouch[CHANNELS];
+bool apply_soundTouch=false;
+#endif
 struct timespec last_refreshed;
 #define EQ_POINTS 10000
 #define SPECTRUM2_POINTS 128
@@ -91,7 +100,7 @@ inline double abs1(double d)
 	return d<0?-d:d;
 }
 //accuracy is the # of output samples
-void asdasdasd(double* out, fftw_complex* in, int len, int maxfreq, int accuracy, double multiplier=1) {
+void asdasdasd(double* out, jackfft_complex* in, int len, int maxfreq, int accuracy, double multiplier=1) {
 	static const int base=268; //Hz
 	int max_exponent=(int)floor(log2(double(maxfreq)/base));
 	if(max_exponent>5)max_exponent=5;	//ignore frequencies >= 3520Hz
@@ -195,6 +204,13 @@ int process(jack_nframes_t length, void *arg)
 	{
 		jack_default_audio_sample_t *out = out_samples[i];
 		jack_default_audio_sample_t *in = in_samples[i];
+#ifdef JACKFFT_USE_SOUNDTOUCH
+		if(apply_soundTouch) {
+			soundTouch[i].putSamples(in,length);
+			soundTouch[i].receiveSamples(out,length);
+			in=out;
+		}
+#endif
 
 		if(filt2 != NULL && filt2[i] != NULL)
 		{
@@ -313,7 +329,7 @@ void* thread1(void* v)
 					gdk_threads_leave();
 				}
 				
-				fftw_complex* data=fftf->lastSpectrum;
+				jackfft_complex* data=fftf->lastSpectrum;
 				if(spectrum2) {
 					asdasdasd(c2->data, data, complexsize, srate/2, c2->datalen, 1.d/inputs.size()/complexsize * 100);
 				}
@@ -325,6 +341,10 @@ void* thread1(void* v)
 					}
 				//
 			}
+			/*for(decltype(c2->datalen) i = 0; i < c2->datalen; i++) {
+				if(c2->data[i]<1./pow(2,8)) c2->data[i]=0;
+				else c2->data[i]=((log(c2->data[i])/log(2))+8.)/8;
+			}*/
 			for(int i=0;i<3;i++)
 				c3->addFrames(c2->data,1);
 			gdk_threads_enter();
@@ -558,6 +578,17 @@ void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
 		//b->get_widget("t_pitch2", e);
 		//asdf /= strtod(e->get_text().c_str(), NULL);
 	}
+#ifdef JACKFFT_USE_SOUNDTOUCH
+	if(asdf==1.) {
+		apply_soundTouch=false;
+	} else {
+		for(int i=0;i<CHANNELS;i++) {
+			soundTouch[i].setPitch(asdf);
+		}
+		wmb();
+		apply_soundTouch=true;
+	}
+#else
 	if(filt2 != NULL)
 	{
 		for(size_t i = 0; i < inputs.size(); i++)
@@ -569,6 +600,7 @@ void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
 	}
 	for(size_t i = 0; i < inputs.size(); i++)
 		((FFTFilter<jack_default_audio_sample_t>*)filt[i])->freq_scale = asdf;
+#endif
 }
 void apply_pitchshift()
 {
@@ -644,6 +676,10 @@ int main(int argc, char *argv[])
 						JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
 		outputs.push_back(jack_port_register(client, CONCAT("output_" << i).c_str(),
 						JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
+#ifdef JACKFFT_USE_SOUNDTOUCH
+		soundTouch[i].setSampleRate(srate);
+		soundTouch[i].setChannels(1);
+#endif
 	}
 
 //aaaaa:
