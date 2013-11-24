@@ -48,6 +48,7 @@ dedup: bin/dedup
 benchmark: fftbench fibbench
 fftbench: bin/fftbench
 fftfbench: bin/fftfbench
+fftsbench: bin/fftsbench
 fibbench: bin/fibbench
 iptsocks_new: bin/iptsocks_new
 cppsp_embedded_example: bin/cppsp_embedded_example
@@ -108,6 +109,8 @@ bin/fftbench:
 	$(CXX) benchmark/fftbench.C -o bin/fftbench -lpthread -lfftw3 $(CFLAGS1)
 bin/fftfbench:
 	$(CXX) benchmark/fftbench.C -o bin/fftfbench -lpthread -lfftw3f -DUSE_FFTWF $(CFLAGS1)
+bin/fftsbench:
+	$(CXX) benchmark/fftsbench.C -o bin/fftsbench -lpthread /usr/local/lib/libffts.a $(CFLAGS1)
 bin/fibbench:
 	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
 bin/iptsocks_new: cpoll iptsocks_new/all.C
