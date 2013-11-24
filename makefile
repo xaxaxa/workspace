@@ -44,6 +44,7 @@ bitflip_proxy: bin/bitflip_proxy
 	
 tcpsdump: bin/tcpsdump bin/rmhttphdr
 jackfft: bin/jackfft
+jackffts: bin/jackffts
 dedup: bin/dedup
 benchmark: fftbench fibbench
 fftbench: bin/fftbench
@@ -104,7 +105,7 @@ bin/jackfft: cplib cpoll bin/main2.ui
 bin/jackffts: cplib cpoll bin/main2.ui
 	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lSoundTouch \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT \
-	/usr/local/lib/libffts.a $(CFLAGS1)
+	/usr/local/lib/libffts.a -DJACKFFT_USE_FFTS $(CFLAGS1)
 bin/main2.ui:
 	cp -f jackfft/main2.ui bin/
 	cp -f trollface200.png bin/
