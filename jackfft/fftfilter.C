@@ -59,8 +59,8 @@ namespace xaxaxa
 		{
 			Data=(jackfft_float*)FFTWFUNC(malloc)(sizeof(jackfft_float)*size);
 			Data_c=(jackfft_complex*)FFTWFUNC(malloc)(sizeof(jackfft_complex)*size_c);
-			p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_ESTIMATE); //FFTW_UNALIGNED
-			p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_ESTIMATE);
+			p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_MEASURE); //FFTW_UNALIGNED
+			p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_MEASURE);
 		}
 		void Forward()
 		{
@@ -90,8 +90,8 @@ namespace xaxaxa
 		{
 			Data=(jackfft_float*)FFTWFUNC(malloc)(sizeof(jackfft_float)*size);
 			Data_c=(jackfft_complex*)FFTWFUNC(malloc)(sizeof(jackfft_complex)*size_c);
-			p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_ESTIMATE); //FFTW_UNALIGNED
-			p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_ESTIMATE);
+			p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_MEASURE); //FFTW_UNALIGNED
+			p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_MEASURE);
 		}
 		void Forward(jackfft_float* data, int length)
 		{
