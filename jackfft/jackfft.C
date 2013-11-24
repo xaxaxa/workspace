@@ -651,7 +651,7 @@ int main(int argc, char *argv[])
 	{
 		FFTFilter<jack_default_audio_sample_t>* trololo = new FFTFilter<jack_default_audio_sample_t>
 		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	paddingL,paddingR,	fftsize
-		(1024, 20,			20,			2,		12,					4,		 0,			8192 * 2);
+		(1024, 12,			12,			2,		8,					0,		 0,			8192);
 
 		//trololo->freq_scale=9./10.;
 		setFilterParams(*trololo);

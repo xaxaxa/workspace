@@ -125,7 +125,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">&#x2022;</property>
-                            <property name="text" translatable="yes">12</property>
+                            <property name="text" translatable="yes">8</property>
                             <property name="invisible_char_set">True</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
@@ -170,7 +170,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">&#x2022;</property>
-                            <property name="text" translatable="yes">4</property>
+                            <property name="text" translatable="yes">0</property>
                             <property name="invisible_char_set">True</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
@@ -187,7 +187,7 @@ note: if the period size(buffersize * (buffersperperiod + paddingL + paddingR)) 
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">&#x2022;</property>
-                            <property name="text" translatable="yes">16384</property>
+                            <property name="text" translatable="yes">8192</property>
                             <property name="invisible_char_set">True</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
