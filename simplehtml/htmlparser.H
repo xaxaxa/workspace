@@ -1,6 +1,6 @@
 #include <string.h>
 
-static const char* tokenTypes[]={"none","beginTag","attribute","afterBegin","text","endTag","fastEnd"};
+static const char* tokenTypes[]={"none","beginTag","attribute","afterBegin","text","endTag","fastEnd","comment"};
 //low level html parser
 struct HTMLParser
 {
@@ -24,7 +24,9 @@ struct HTMLParser
 						//   ^^^^
 		T_fastEnd,		//<a />
 						//   ^^
-	} currentToken;
+		T_comment,		//<!-- ghkjfgds -->
+						//^^^^^^^^^^^^^^^^^
+	} tokenType;
 	struct TokenInfo {
 		char* data;
 		int dataLen;
@@ -42,10 +44,10 @@ struct HTMLParser
 			struct {
 				char* text;
 				int textLen;
-			} text;
+			} text,comment;
 			struct {} fastEnd;
 		};
-	} tokenInfo;
+	} token;
 	char* buffer;		//set by user; user may increase the size of the buffer
 						//at any time other than concurrently with a function call;
 						//buffer may also be relocated (e.g. realloc)
@@ -60,7 +62,7 @@ struct HTMLParser
 	void reset() {
 		pos=rpos=0;
 		state=S_normal;
-		currentToken=T_none;
+		tokenType=T_none;
 		eof=false;
 	}
 	int dataLeft() {
@@ -139,7 +141,7 @@ struct HTMLParser
 		if(pos>=bufferLength) return false;
 		switch(state) {
 			case S_normal: {
-				tokenInfo.data=buffer+pos;
+				token.data=buffer+pos;
 				if(buffer[pos]=='<') {
 					if(dataLeft()<2) return false;
 					switch(_match("<![CDATA[",9)) {
@@ -147,9 +149,22 @@ struct HTMLParser
 						case 1: {
 							int i=_doSearch(pos+9,"]]>");
 							if(i==-1) return false;
-							currentToken=T_text;
-							tokenInfo.dataLen=i-pos+3;
-							tokenInfo.text={buffer+pos+9,i-(pos+9)};
+							tokenType=T_text;
+							token.dataLen=i-pos+3;
+							token.text={buffer+pos+9,i-(pos+9)};
+							rpos=pos=i+3;
+							return true;
+						} break;
+						default: break;
+					}
+					switch(_match("<!--",4)) {
+						case -1: return false;
+						case 1: {
+							int i=_doSearch(pos+4,"-->");
+							if(i==-1) return false;
+							tokenType=T_comment;
+							token.dataLen=i-pos+3;
+							token.comment={buffer+pos+4,i-(pos+4)};
 							rpos=pos=i+3;
 							return true;
 						} break;
@@ -158,66 +173,66 @@ struct HTMLParser
 					if(buffer[pos+1]=='/') {
 						int i=_doSearch(pos+2,'>');
 						if(i==-1) return false;
-						currentToken=T_endTag;
-						tokenInfo.dataLen=i-pos+1;
-						tokenInfo.endTag={buffer+pos+2,i-(pos+2)};
+						tokenType=T_endTag;
+						token.dataLen=i-pos+1;
+						token.endTag={buffer+pos+2,i-(pos+2)};
 						rpos=pos=i+1;
 					} else {
 						int i=_doSearch_beginTag(pos+1);
 						if(i==-1) return false;
-						currentToken=T_beginTag;
-						tokenInfo.dataLen=i-pos;
-						tokenInfo.beginTag={buffer+pos+1,i-(pos+1)};
+						tokenType=T_beginTag;
+						token.dataLen=i-pos;
+						token.beginTag={buffer+pos+1,i-(pos+1)};
 						rpos=pos=i;
 						state=S_attribute;
 					}
 				} else {
 					int i=_doSearch(pos,'<');
 					if(i==-1) return false;
-					currentToken=T_text;
-					tokenInfo.dataLen=i-pos;
-					tokenInfo.text={buffer+pos,i-pos};
+					tokenType=T_text;
+					token.dataLen=i-pos;
+					token.text={buffer+pos,i-pos};
 					rpos=pos=i;
 				}
 				return true;
 			} break;
 			case S_attribute: {
 				while(pos<bufferLength && isWhiteSpace(buffer[pos])) pos++;
-				tokenInfo.data=buffer+pos;
+				token.data=buffer+pos;
 				rpos=pos;
 				if(pos>=bufferLength) return false;
 				if(buffer[pos]=='/') {
 					if(dataLeft()<2) return false;
 					if(buffer[pos+1]=='>') {
 						//found: />
-						currentToken=T_fastEnd;
-						tokenInfo.dataLen=2;
+						tokenType=T_fastEnd;
+						token.dataLen=2;
 						rpos=pos=pos+2;
 						state=S_normal;
 						return true;
-					}
+					} else rpos=(++pos);
 				}
 				if(buffer[pos]=='>') {
-					currentToken=T_afterBegin;
-					tokenInfo.dataLen=1;
+					tokenType=T_afterBegin;
+					token.dataLen=1;
 					rpos=pos=pos+1;
 					state=S_normal;
 					return true;
 				}
-				int i=_doSearch_attribute(pos+1);
+				int i=_doSearch_attribute(pos);
 				if(i==-1) return false;
-				currentToken=T_attribute;
-				tokenInfo.dataLen=i-pos;
+				tokenType=T_attribute;
+				token.dataLen=i-pos;
 				int ii=strFind(pos,i-pos,'=');
 				if(ii==-1) {
-					tokenInfo.attribute={buffer+pos,NULL,i-pos,0};
+					token.attribute={buffer+pos,NULL,i-pos,0};
 				} else {
-					tokenInfo.attribute={buffer+pos,buffer+ii+1,ii-pos,i-ii-1};
-					if(tokenInfo.attribute.valueLen>=2) {
+					token.attribute={buffer+pos,buffer+ii+1,ii-pos,i-ii-1};
+					if(token.attribute.valueLen>=2) {
 						if((buffer[ii+1]=='"' && buffer[i-1]=='"')
 							|| (buffer[ii+1]=='\'' && buffer[i-1]=='\'')) {
-							tokenInfo.attribute.value++;
-							tokenInfo.attribute.valueLen-=2;
+							token.attribute.value++;
+							token.attribute.valueLen-=2;
 						}
 					}
 				}
@@ -227,12 +242,13 @@ struct HTMLParser
 		}
 	}
 	//remove unneeded data from buffer
-	void clean() {
+	int clean() {
 		int shift=pos;
-		if(shift<=0) return;
+		if(shift<=0) return 0;
 		memmove(buffer,buffer+shift,bufferLength-shift);
 		pos-=shift;
 		rpos-=shift;
 		bufferLength-=shift;
+		return shift;
 	}
 };

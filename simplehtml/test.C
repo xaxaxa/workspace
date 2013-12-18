@@ -21,21 +21,22 @@ int main() {
 		int br=read(0,p.buffer+p.bufferLength,bufferSize-p.bufferLength);
 		if(!(p.eof=(br<=0))) p.bufferLength+=br;
 		while(p.read()) {
-			string tmp(p.tokenInfo.data,p.tokenInfo.dataLen);
-			printf("token \"%s\": %s\n",tokenTypes[p.currentToken],tmp.c_str());
-			switch(p.currentToken) {
+			string tmp(p.token.data,p.token.dataLen);
+			printf("token \"%s\": %s\n",tokenTypes[p.tokenType],tmp.c_str());
+			switch(p.tokenType) {
 				case HTMLParser::T_beginTag:
 				case HTMLParser::T_endTag: {
-					tmp=string(p.tokenInfo.beginTag.tagName,p.tokenInfo.beginTag.tagNameLen);
+					tmp=string(p.token.beginTag.tagName,p.token.beginTag.tagNameLen);
 					printf("\ttagName: %s\n",tmp.c_str());
 				} break;
 				case HTMLParser::T_attribute: {
-					string tmp1(p.tokenInfo.attribute.name,p.tokenInfo.attribute.nameLen);
-					string tmp2(p.tokenInfo.attribute.value,p.tokenInfo.attribute.valueLen);
+					string tmp1(p.token.attribute.name,p.token.attribute.nameLen);
+					string tmp2(p.token.attribute.value,p.token.attribute.valueLen);
 					printf("\tname: %s\n\tvalue: %s\n",tmp1.c_str(),tmp2.c_str());
 				} break;
-				case HTMLParser::T_text: {
-					tmp=string(p.tokenInfo.text.text,p.tokenInfo.text.textLen);
+				case HTMLParser::T_text:
+				case HTMLParser::T_comment: {
+					tmp=string(p.token.text.text,p.token.text.textLen);
 					printf("\ttext: %s\n",tmp.c_str());
 				} break;
 			}
