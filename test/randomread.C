@@ -70,22 +70,32 @@ void submitReads(aio_context_t ctx,int fd,int blockSize,s64 fileSize,int count) 
 	}
 	checkError(io_submit(ctx,count,cbs_));
 }
+int doSyncReads(int fd,int blockSize,s64 fileSize,int count) {
+	for(int i=0;i<count;i++) {
+		s64 offset=randRange(0,fileSize/blockSize)*blockSize;
+		checkError(pread(fd,bufferPool[0],blockSize,(off_t)offset));
+	}
+	return count;
+}
 extern int optind;
 int main(int argc, char** argv) {
 	int concurrency=1,requestSize=4096;
 	s64 requestCount=1024;
+	bool synchronous=false;
 	while(true) {
 		int opt;
-		switch((opt=getopt(argc,argv,"?hc:n:s:"))) {
+		switch((opt=getopt(argc,argv,"?hc:n:s:S"))) {
 			case '?':
 			case 'h':
 			print_usage:
-				printf("usage: %s [-c concurrency] [-n requestCount] [-s requestSize] file\n",argv[0]);
+				printf("usage: %s [-c concurrency] [-n requestCount] [-s requestSize] [-S] file\n"
+				"-S: use synchronous I/O\n",argv[0]);
 				return 1;
 			case -1: goto _break;
 			case 'c': concurrency=atoi(optarg); break;
 			case 'n': requestCount=(s64)atoll(optarg); break;
 			case 's': requestSize=atoi(optarg); break;
+			case 'S': synchronous=true; break;
 		}
 	}
 _break:
@@ -98,7 +108,7 @@ _break:
 		checkError(ioctl(fd, BLKGETSIZE64, &fileSize));
 	} else fileSize=st.st_size;
 	aio_context_t ctx=0;
-	checkError(io_setup(concurrency,&ctx));
+	if(!synchronous) checkError(io_setup(concurrency,&ctx));
 	int inTransit=0;
 	io_event events[concurrency];
 	s64 requestsDone=0;
@@ -110,18 +120,26 @@ _break:
 	srand48(time(NULL));
 	timespec time1,time2;
 	checkError(clock_gettime(CLOCK_MONOTONIC,&time1));
-	while(true) {
-		int tmp=concurrency-inTransit;
-		if(requestCount-requestsDone-inTransit<tmp)tmp=int(requestCount-requestsDone-inTransit);
-		if(tmp>0) submitReads(ctx,fd,requestSize,fileSize,tmp);
-		else if(inTransit<=0) break;
-		inTransit+=tmp;
-		int n=checkError(io_getevents(ctx,1,concurrency,events,NULL));
-		for(int i=0;i<n;i++) {
-			bufferPool[bufferPoolLength++]=(u8*)events[i].data;
+	if(synchronous) {
+		if(concurrency!=1) {
+			printf("concurrency other than 1 is not supported in synchronous mode\n");
+			return 1;
 		}
-		requestsDone+=n;
-		inTransit-=n;
+		requestsDone=doSyncReads(fd,requestSize,fileSize,requestCount);
+	} else {
+		while(true) {
+			int tmp=concurrency-inTransit;
+			if(requestCount-requestsDone-inTransit<tmp)tmp=int(requestCount-requestsDone-inTransit);
+			if(tmp>0) submitReads(ctx,fd,requestSize,fileSize,tmp);
+			else if(inTransit<=0) break;
+			inTransit+=tmp;
+			int n=checkError(io_getevents(ctx,1,concurrency,events,NULL));
+			for(int i=0;i<n;i++) {
+				bufferPool[bufferPoolLength++]=(u8*)events[i].data;
+			}
+			requestsDone+=n;
+			inTransit-=n;
+		}
 	}
 	checkError(clock_gettime(CLOCK_MONOTONIC,&time2));
 	double seconds=(time2.tv_sec-time1.tv_sec)+double(time2.tv_nsec-time1.tv_nsec)/1000000000;
