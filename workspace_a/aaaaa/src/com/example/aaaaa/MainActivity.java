@@ -293,8 +293,7 @@ public class MainActivity extends Activity implements Camera.PictureCallback,
 		/* Encrypt the message. */
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, key1);
-		AlgorithmParameters params = cipher.getParameters();
-		byte[] iv = params.getParameterSpec(IvParameterSpec.class).getIV();
+		byte[] iv = cipher.getIV();
 		byte[] ciphertext = cipher.doFinal(data);
 
 		AsymmetricKeyParameter param = PublicKeyFactory.createKey(pk);
