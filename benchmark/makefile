@@ -11,4 +11,5 @@ fftbench: fftbench.C
 	$(CXX) fftbench.C -o fftbench -lfftw3 $(LIBS)
 fibbench: fibbench.C
 	$(CXX) fibbench.C -o fibbench $(LIBS)
-
+memcpybench: memcpybench.C
+	$(CXX) memcpybench.C -o memcpybench $(LIBS)
