@@ -36,53 +36,44 @@ namespace cppsp
 			return i + '0';
 		else return i - 10 + 'A';
 	}
-	void urlDecode(const char* in, int inLen, StreamWriter& sw) {
-		const char* end = in + inLen;
-		const char* ptr = in;
-		while (true) {
-			if (ptr >= end) goto E;
+	int doURLDecode(const char* in, int inLen, char* out) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
+		char* c = out; //points to next byte to be written
+		const char* end = in + inLen; //end of input array
+		const char* ptr = in; //current read position
+		while (ptr < end) {
 			const char* next = (const char*) memchr(ptr, '%', end - ptr);
-			if (next == NULL) break;
-			sw.write(ptr, next - ptr);
-			if (next + 2 >= end) {
-				sw.write(next, end - next);
-				goto E;
+			if (next == NULL) {
+				memcpy(c, ptr, end - ptr);
+				c += (end - ptr);
+				break;
 			}
-			char tmp = hexCharToInt(next[1]) << 4 | hexCharToInt(next[2]);
-			sw.write(tmp);
-			ptr = next + 3;
-		}
-		if (ptr < end) sw.write(ptr, end - ptr);
-		E: ;
-	}
-	String urlDecode(const char* in, int inLen, StringPool& sp) {
-		char* ch = sp.beginAdd(inLen); //output size will never exceed input size
-		char* c = ch;
-		const char* end = in + inLen;
-		const char* ptr = in;
-		while (true) {
-			if (ptr >= end) goto E;
-			const char* next = (const char*) memchr(ptr, '%', end - ptr);
-			if (next == NULL) break;
-			memcpy(c, ptr, next - ptr);
+			memcpy(c, ptr, next - ptr); //write out everything between the read position and the '%'
 			c += (next - ptr);
-			if (next + 2 >= end) {
+			if (next + 2 >= end) { //there isn't 2 bytes after the '%'
 				memcpy(c, next, end - next);
 				c += (end - next);
-				goto E;
+				break;
 			}
 			*c = hexCharToInt(next[1]) << 4 | hexCharToInt(next[2]);
 			c++;
 			ptr = next + 3;
 		}
-		if (ptr < end) {
-			memcpy(c, ptr, end - ptr);
-			c += (end - ptr);
-		}
-		sp.endAdd(c - ch);
-		return {ch,c-ch};
-		E: ;
-		return {(char*)nullptr,0};
+		return int(c - out);
+	}
+	int urlDecode(const char* in, int inLen, StreamWriter& sw) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
+		char* ch = sw.beginWrite(inLen);
+		int len = doURLDecode(in, inLen, ch);
+		sw.endWrite(len);
+		return len;
+	}
+	String urlDecode(const char* in, int inLen, StringPool& sp) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
+		char* ch = sp.beginAdd(inLen); //output size will never exceed input size
+		int len = doURLDecode(in, inLen, ch);
+		E: sp.endAdd(len);
+		return {ch,len};
 	}
 	void urlEncode(const char* in, int inLen, CP::StreamWriter& sw) {
 		int last_i = 0;
