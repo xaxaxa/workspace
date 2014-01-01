@@ -783,12 +783,13 @@ namespace cppsp
 			}
 		}
 		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
-		//resp.writeHeaders();
-		string title = "Server error in " + path.toSTDString();
-		resp.output.writeF("<html><head><title>%s</title>"
-				"<style></style></head>", title.c_str());
-		resp.output.writeF("<body><h1 style=\"color: #aa1111\">%s</h1><hr />"
-				"<h2 style=\"color: #444\">%s</h2>", title.c_str(), ex->what());
+		resp.output.write("<html><head><title>Server error</title></head>\n");
+		resp.output.write("<body><h1 style=\"color: #aa1111\">Server error in ");
+		htmlEscape(path, resp.output);
+		resp.output.write("</h1><hr />"
+				"<h2 style=\"color: #444\">");
+		htmlEscape(ex->what(), resp.output);
+		resp.output.write("</h2>");
 		cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
 		if (ce != NULL) {
 			resp.output.write("<pre style=\"color: #000; background: #ffc; padding: 8px;\">");
