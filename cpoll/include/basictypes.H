@@ -93,6 +93,18 @@ namespace CP
 				return 0;
 			else return memcmp(d, other.d, len);
 		}
+		int alphabeticalCompare(const String& other) const {
+			int l = len;
+			if (other.len < l) l = other.len;
+			for (int i = 0; i < l; i++) {
+				char c1 = d[i], c2 = other.d[i];
+				if (c1 < c2) return -1;
+				if (c1 > c2) return 1;
+			}
+			if (len < other.len) return -1;
+			else if (len > other.len) return 1;
+			else return 0;
+		}
 		inline bool operator<(const String& other) const {
 			return compare(other) < 0;
 		}
