@@ -34,13 +34,13 @@ namespace cppsp
 	}
 #endif
 
-	void urlDecode(const char* in, int inLen, CP::StreamWriter& sw);
-	static inline void urlDecode(CP::String in, CP::StreamWriter& sw) {
-		urlDecode(in.data(), in.length(), sw);
+	int urlDecode(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline int urlDecode(CP::String in, CP::StreamWriter& sw) {
+		return urlDecode(in.data(), in.length(), sw);
 	}
 	CP::String urlDecode(const char* in, int inLen, CP::StringPool& sp);
-	void urlEncode(const char* in, int inLen, CP::StreamWriter& sw);
-	static inline void urlEncode(CP::String in, CP::StreamWriter& sw) {
+	int urlEncode(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline int urlEncode(CP::String in, CP::StreamWriter& sw) {
 		urlEncode(in.data(), in.length(), sw);
 	}
 	std::string urlDecode(const char* in, int inLen);
