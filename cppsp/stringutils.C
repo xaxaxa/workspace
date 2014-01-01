@@ -75,11 +75,12 @@ namespace cppsp
 		E: sp.endAdd(len);
 		return {ch,len};
 	}
-	void urlEncode(const char* in, int inLen, CP::StreamWriter& sw) {
+	int urlEncode(const char* in, int inLen, CP::StreamWriter& sw) {
 		int last_i = 0;
 		const char* c = in;
 		char ch[3];
 		ch[0] = '%';
+		int asdf = 0;
 		for (int i = 0; i < inLen; i++) {
 			if ((48 <= c[i] && c[i] <= 57) || //0-9
 					(65 <= c[i] && c[i] <= 90) || //abc...xyz
@@ -91,8 +92,10 @@ namespace cppsp
 			ch[1] = intToHexChar(c[i] >> 4);
 			ch[2] = intToHexChar(c[i] & (char) 0xF);
 			sw.write(ch, 3);
+			asdf += 2;
 		}
 		if (inLen > last_i) sw.write(in + last_i, inLen - last_i);
+		return inLen + asdf;
 	}
 	std::string urlDecode(const char* in, int inLen) {
 		StringStream ss;
