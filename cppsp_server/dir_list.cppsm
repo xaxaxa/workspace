@@ -20,7 +20,9 @@
 #define TO_C_STR(in,inLen,out) char out[inLen+1];\
 		memcpy(out,in,inLen);\
 		out[inLen]=0;
-		
+bool compareString(String s1, String s2) {
+	return s1.alphabeticalCompare(s2)<0;
+}
 struct DirListModule: public RGC::Object {
 	DelegateChain<AsyncValue<Handler>(String)>::item* it;
 	Server* server;
@@ -94,17 +96,17 @@ string path=server->mapPath(request->path.toSTDString());
 	</tr>
 	
 <%
-vector<string> list;
+vector<String> list;
 auto tmp=[&](const char* name) {
-	list.push_back(name);
+	list.push_back(sp->addString(name));
 };
 listDirectory(path.c_str(), &tmp);
-std::sort(list.begin(),list.end());
+std::sort(list.begin(),list.end(),compareString);
 for(int i=0;i<list.size();i++) {
-	string name=list[i];
+	String name=list[i];
 	struct stat st;
 	char p[path.length()+name.length()+1];
-	p[combinePathChroot(path.c_str(),name.c_str(),p)]=0;
+	p[combinePathChroot(path.data(),path.length(),name.data(),name.length(),p)]=0;
 	if(stat(p,&st)<0) continue;
 	time_t rawtime=st.st_mtime;
 	struct tm * timeinfo;
@@ -114,8 +116,8 @@ for(int i=0;i<list.size();i++) {
 	%>
 	<tr>
 		<td>
-			<a href="<% htmlAttributeEscape(name.c_str(),output); %><%if(S_ISDIR(st.st_mode)){%>/<%}%>">
-				<% htmlEscape(name.c_str(),output); %><%if(S_ISDIR(st.st_mode)){%>/<%}%>
+			<a href="<% htmlAttributeEscape(name,output); %><%if(S_ISDIR(st.st_mode)){%>/<%}%>">
+				<% htmlEscape(name,output); %><%if(S_ISDIR(st.st_mode)){%>/<%}%>
 			</a>
 		</td>
 		<td align="right"><%=buffer%></td>
