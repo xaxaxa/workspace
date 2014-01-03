@@ -4,6 +4,7 @@ CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions \
 	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC -D_FILE_OFFSET_BITS=64 $(CFLAGS)
 CC := gcc
 CXX := g++
+
 all: server123 termchat tmp1 tmp2 nc.xaxaxa email_extract tcpfuck bitflip_proxy \
 	generic_ui generic_struct cplib cpoll cppsp cppsp_standalone socketd_cppsp \
 	socketd fbdump http_simplebench buffer jackfft dedup benchmark tcpsdump
@@ -134,8 +135,12 @@ lib/libgeneric_struct.so:
 	$(CXX) generic_struct/all.C --shared -o lib/libgeneric_struct.so $(CFLAGS1)
 lib/libcplib.so:
 	$(CXX) cplib/all.C --shared -o lib/libcplib.so $(CFLAGS1)
+	$(CXX) cplib/all.C -c -o lib/libcplib.o $(CFLAGS1)
+	ar rcs lib/libcplib.a lib/libcplib.o
 lib/libcpoll.so:
 	$(CXX) cpoll/all.C --shared -o lib/libcpoll.so $(CFLAGS1)
+	$(CXX) cpoll/all.C -c -o lib/libcpoll.o $(CFLAGS1)
+	ar rcs lib/libcpoll.a lib/libcpoll.o
 lib/libcppsp.so:
 	$(CXX) cppsp/all.C --shared -o lib/libcppsp.so  -lcryptopp $(CFLAGS1)
 lib/libcplib.a:
