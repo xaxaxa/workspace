@@ -12,21 +12,22 @@
 using namespace CP;
 %><%
 	struct {
+		StringPool& sp;
 		StreamWriter& output;
 		bool dirOnly;
 		string root;
 		void operator()(const char* name) {
 			if(dirOnly) {
-				string tmp=combinePath(root.c_str(),name);
+				String tmp=combinePath(root.c_str(),name,sp);
 				struct stat st;
-				if(stat(tmp.c_str(),&st)<0) return;
+				if(stat(tmp.toSTDString().c_str(),&st)<0) return;
 				if(!S_ISDIR(st.st_mode)) return;
 			}
 			%><%=htmlEscape(name)%><%
 			output.write('\n');
 		}
-	} cb {output,request->queryString["t"]=="d"};
-	cb.root=server->mapPath(request->queryString["p"]+"/");
+	} cb {*sp,output,request->queryString["t"]=="d"};
+	cb.root=server->mapPath(request->queryString["p"].toSTDString()+"/");
 	struct stat st;
 	if(stat((cb.root+"index.txt").c_str(),&st)>=0) {
 		try {
