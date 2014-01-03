@@ -14,6 +14,7 @@ _handle_syscall:
 	//restore eax
 	mov 0x04(%esp), %eax
 	//push arguments
+	push %ebp
 	push %edi
 	push %esi
 	push %edx
@@ -23,13 +24,14 @@ _handle_syscall:
 	//call syscall handler
 	call do_handle_syscall
 	
-	//restore registers and revert stack (24 bytes)
+	//restore registers and revert stack (28 bytes)
 	add $0x4,%esp
 	pop %ebx
 	pop %ecx
 	pop %edx
 	pop %esi
 	pop %edi
+	pop %ebp
 	
 	//put return value on the stack, overwriting
 	//previous saved eax
@@ -43,8 +45,6 @@ _handle_syscall:
 	ret
 
 _set_esp_and_jmp:
-	pop %eax
-	pop %eax
-	pop %ebx
-	mov %eax, %esp
-	jmp *%ebx
+	mov 0x8(%esp), %eax
+	mov 0x4(%esp), %esp
+	jmp *%eax
