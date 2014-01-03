@@ -22,54 +22,32 @@
 
 namespace RGC
 {
-	typedef volatile int atomic_t;
-#define atomic_read(v)                  v
-#define atomic_set(v,i)                 v = i
-#define atomic_add(i,v)                 v += i
-#define atomic_sub(i,v)                 v -= i
-#define atomic_sub_and_test(i,v)        (v -= i) == 0
-#define atomic_inc(v)                   v++
-#define atomic_dec(v)                   v--
-#define atomic_dec_and_test(v)          --v == 0
-#define atomic_inc_and_test(v)          ++v == 0
-#define atomic_add_negative(i,v)        (v += i) < 0
-	//static int objs=0;
 	class Allocator;
 	class Object
 	{
 	public:
 		Allocator* allocator;
-		atomic_t refCount; //reference counter
+		int refCount; //reference counter
 		Object() {
 			allocator = NULL;
 			refCount = 1;
-			/*objs++;
-			 cout << objs << " objects" << endl;*/
 		}
 		Object(const Object& other) {
 			refCount = 1;
 		}
 		virtual ~Object() {
-			/*objs--;
-			 cout << objs << " objects" << endl;*/
 		}
 		inline void retain(int n = 1) {
-			atomic_add(n, refCount);
+			__sync_fetch_and_add(&refCount, n);
 		}
 		inline void destruct();
 		inline bool release(int n = 1) { //returns whether or not destruction occurred
-			atomic_sub(n, refCount);
-			if (refCount <= 0) {
+			if(__sync_fetch_and_sub(&refCount, n) == n) {
 				destruct();
 				return true;
 			}
 			return false;
 		}
-		/*Object& operator=(const Object& other)
-		 {
-		 //refCount = 1;
-		 return *this;
-		 }*/
 	};
 	class Allocator: public virtual Object
 	{
