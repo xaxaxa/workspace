@@ -1,0 +1,4 @@
+#!/bin/bash
+./socketdconf > socketd.conf
+./lighttpdconf > lighttpd.conf
+../socketd/Debug/socketd socketd.conf

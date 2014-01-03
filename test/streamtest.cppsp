@@ -1,0 +1,115 @@
+<%!-lcryptopp%><%@ class p %><%#
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/base64.h>
+#include <cppsp/websocket.H>
+using namespace CryptoPP;
+
+
+%><%$
+WebSocketParser wsp;
+FrameWriter w;
+void doInit() {
+	if(ws_iswebsocket(*request)) {
+		//switch to websocket mode
+		ws_init(*this,{&p::ws_headersWritten,this});
+	} else Page::doInit();
+}
+void ws_headersWritten(int l) {
+	w.output=response->outputStream;
+	ws_readFrame();
+}
+void ws_readFrame() {
+	request->inputStream->read(wsp.beginPutData(4096),{&p::ws_readFrame1,this});
+}
+void ws_readFrame1(int l) {
+	//printf("read %i bytes from websocket socket\n",l);
+	if(l<=0) {
+		do_end(); return;
+	}
+	wsp.endPutData(l);
+	WebSocketParser::WSFrame f;
+	while(wsp.process(f)) {
+		handleFrame(f);
+	}
+	wsp.reset();
+	ws_readFrame();
+}
+
+void handleFrame(WebSocketParser::WSFrame f) {
+	//printf("websocket frame: opcode=%i fin=%i datalen=%i data:\n%s\n",f.opcode,f.fin?1:0,f.data.length(),f.data.toSTDString().c_str());
+	String s=ws_beginWriteFrame(w,f.data.length());
+	memcpy(s.data(),f.data.data(),f.data.length());
+	ws_endWriteFrame(w,s,f.opcode);
+	w.flush();
+}
+void do_end() {
+	response->closed=true;
+	finalize();
+}
+
+
+%>
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>WebSocket Test</title>
+		<script language="javascript" type="text/javascript">
+
+		var wsUri = "ws://"+window.location.host+window.location.pathname;
+		var output;
+		function init()
+		{
+			output = document.getElementById("output");
+			testWebSocket();
+		}
+		function testWebSocket()
+		{
+			websocket = new WebSocket(wsUri);
+			websocket.onopen = function(evt) { onOpen(evt) };
+			websocket.onclose = function(evt) { onClose(evt) };
+			websocket.onmessage = function(evt) { onMessage(evt) };
+			websocket.onerror = function(evt) { onError(evt) };
+		}
+		function onOpen(evt)
+		{
+			writeToScreen("CONNECTED");
+			doSend("WebSocket rocks");
+		}
+		function onClose(evt)
+		{
+			writeToScreen("DISCONNECTED");
+		}
+		function onMessage(evt)
+		{
+			writeToScreen('<span style="color: blue;">RESPONSE: ' + evt.data+'</span>');
+			//websocket.close();
+		}
+		function onError(evt)
+		{
+			writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+		}
+		function doSend(message)
+		{
+			writeToScreen("SENT: " + message); 
+			websocket.send(message);
+		}
+		function writeToScreen(message)
+		{
+			var pre = document.createElement("p");
+			pre.style.wordWrap = "break-word";
+			pre.innerHTML = message;
+			output.appendChild(pre);
+		}
+		window.addEventListener("load", init, false);
+		</script>
+	</head>
+	<body>
+		<h2>WebSocket Test</h2>
+		<textarea id="txt"></textarea>
+		<button type="button" onclick="doSend(document.getElementById('txt').value);">send</button>
+		<div id="output"></div>
+	</body>
+</html> 

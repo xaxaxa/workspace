@@ -22,97 +22,186 @@
  */
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <fftw3.h>
+#ifdef JACKFFT_USE_FFTS
+	#include <ffts/ffts.h>
+#else
+	#include <fftw3.h>
+#endif
 #include "filter.H"
+
+#ifdef JACKFFT_USE_FLOAT
+	typedef float jackfft_float;
+	#ifdef JACKFFT_USE_FFTS
+		typedef float jackfft_complex[2];
+	#else
+		typedef fftwf_complex jackfft_complex;
+		#define FFTWFUNC(x) fftwf_ ## x
+	#endif
+#else
+	typedef double jackfft_float;
+	#ifdef JACKFFT_USE_FFTS
+		typedef double jackfft_complex[2];
+	#else
+		typedef fftw_complex jackfft_complex;
+		#define FFTWFUNC(x) fftw_ ## x
+	#endif
+#endif
 
 namespace xaxaxa
 {
-	inline double modulus(double a, double b)
+	inline jackfft_float modulus(jackfft_float a, jackfft_float b)
 	{
 		int tmp=a/b;
 		return a-tmp*b;
+	}
+	inline double modulus(double a, double b)
+	{
+		int64_t tmp=int64_t(a/b);
+		return a-tmp*b;
+	}
+	void* fft_malloc(int sz) {
+		#ifdef JACKFFT_USE_FFTS
+			return aligned_alloc(128,sz);
+		#else
+			return FFTWFUNC(malloc)(sz);
+		#endif
+	}
+	void fft_free(void* v) {
+		#ifdef JACKFFT_USE_FFTS
+			return free(v);
+		#else
+			return FFTWFUNC(free)(v);
+		#endif
 	}
 	class FFT
 	{
 	public:
 		int size;
 		int size_c;
-		double* Data;
-		fftw_complex* Data_c;
-		fftw_plan p1, p2;
+		jackfft_float* Data;
+		jackfft_complex* Data_c;
+	#ifdef JACKFFT_USE_FFTS
+		ffts_plan_t *p1,*p2;
+	#else
+		FFTWFUNC(plan) p1, p2;
+	#endif
 		FFT(int size):size(size),size_c(size/2+1)
 		{
-			Data=(double*)fftw_malloc(sizeof(double)*size);
-			Data_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
-			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, 0); //FFTW_UNALIGNED
-			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, 0);
+			Data=(jackfft_float*)fft_malloc(sizeof(jackfft_float)*size);
+			Data_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
+			#ifdef JACKFFT_USE_FFTS
+				p1 = ffts_init_1d_real(size,-1);	//forward
+				p2 = ffts_init_1d_real(size,1);		//inverse
+			#else
+				p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_MEASURE); //FFTW_UNALIGNED
+				p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_MEASURE);
+			#endif
 		}
-		void Forward()
-		{
-			fftw_execute(p1);
+	#ifdef JACKFFT_USE_FFTS
+		void Forward() {
+			ffts_execute(p1,Data,Data_c);
 		}
-		void Reverse()
-		{
-			fftw_execute(p2);
+		void Reverse() {
+			ffts_execute(p2,Data_c,Data);
 		}
-		~FFT()
-		{
-			fftw_destroy_plan(p1);
-			fftw_destroy_plan(p2);
-			fftw_free(Data);
-			fftw_free(Data_c);
+	#else
+		void Forward() {
+			FFTWFUNC(execute)(p1);
+		}
+		void Reverse() {
+			FFTWFUNC(execute)(p2);
+		}
+	#endif
+		~FFT() {
+			#ifdef JACKFFT_USE_FFTS
+				ffts_free(p1);
+				ffts_free(p2);
+			#else
+				FFTWFUNC(destroy_plan)(p1);
+				FFTWFUNC(destroy_plan)(p2);
+			#endif
+			fft_free(Data);
+			fft_free(Data_c);
 		}
 	};
+	/*
+	#ifdef JACKFFT_USE_FFTS
+	#else
+	#endif
+	 */
 	class WindowedFFT
 	{
 	public:
 		int size;
 		int size_c;
-		double* Data;
-		fftw_complex* Data_c;
-		fftw_plan p1, p2;
+		jackfft_float* Data;
+		jackfft_complex* Data_c;
+	#ifdef JACKFFT_USE_FFTS
+		ffts_plan_t *p1,*p2;
+	#else
+		FFTWFUNC(plan) p1, p2;
+	#endif
 		WindowedFFT(int size):size(size),size_c(size/2+1)
 		{
-			Data=(double*)fftw_malloc(sizeof(double)*size);
-			Data_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
-			p1 = fftw_plan_dft_r2c_1d(size, Data, Data_c, 0); //FFTW_UNALIGNED
-			p2 = fftw_plan_dft_c2r_1d(size, Data_c, Data, 0);
+			Data=(jackfft_float*)fft_malloc(sizeof(jackfft_float)*size);
+			Data_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
+			#ifdef JACKFFT_USE_FFTS
+				p1 = ffts_init_1d_real(size,-1);	//forward
+				p2 = ffts_init_1d_real(size,1);		//inverse
+			#else
+				p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_MEASURE); //FFTW_UNALIGNED
+				p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_MEASURE);
+			#endif
 		}
-		void Forward(double* data, int length)
+		void Forward(jackfft_float* data, int length)
 		{
 			if(length>size)throw Exception("data length exceeds fft size");
 			int s=size/2-ceil((double)length/2);
-			memset(Data,0,size*sizeof(double));
-			memcpy(Data+s,data,length*sizeof(double));
-			fftw_execute(p1);
+			memset(Data,0,size*sizeof(jackfft_float));
+			memcpy(Data+s,data,length*sizeof(jackfft_float));
+			#ifdef JACKFFT_USE_FFTS
+				ffts_execute(p1,Data,Data_c);
+			#else
+				FFTWFUNC(execute)(p1);
+			#endif
 		}
-		double* Reverse(int length)
+		jackfft_float* Reverse(int length)
 		{
 			if(length>size)throw Exception("data length exceeds fft size");
 			int s=size/2-ceil((double)length/2);
-			fftw_execute(p2);
+			#ifdef JACKFFT_USE_FFTS
+				ffts_execute(p1,Data_c,Data);
+			#else
+				FFTWFUNC(execute)(p2);
+			#endif
 			return Data+s;
 		}
 		~WindowedFFT()
 		{
-			fftw_destroy_plan(p1);
-			fftw_destroy_plan(p2);
-			fftw_free(Data);
-			fftw_free(Data_c);
+			#ifdef JACKFFT_USE_FFTS
+				ffts_free(p1);
+				ffts_free(p2);
+			#else
+				FFTWFUNC(destroy_plan)(p1);
+				FFTWFUNC(destroy_plan)(p2);
+			#endif
+			fft_free(Data);
+			fft_free(Data_c);
 		}
 	};
-	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2<NUMTYPE, double>
+	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2<NUMTYPE, jackfft_float>
 	{
 	public:
 		//fftw_plan p1, p2;
 		//double* tmpdouble;
-		fftw_complex* tmpcomplex;
-		//fftw_complex* tmpcomplex2;
+		jackfft_complex* tmpcomplex;
+		jackfft_complex* lastSpectrum;
+		//jackfft_complex* tmpcomplex2;
 		double* coefficients;
 		double* coefficients2;
 		double freq_scale;
-		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->PeriodSize());}
-		virtual void free_buffer(){fftw_free(this->tmpbuffer);}
+		virtual void alloc_buffer(){this->tmpbuffer=(jackfft_float*)fft_malloc(sizeof(jackfft_float)*this->PeriodSize());}
+		virtual void free_buffer(){fft_free(this->tmpbuffer);}
 		//struct timespec last_refreshed;
 		WindowedFFT fft;
 #ifdef CEPSTRUM
@@ -127,7 +216,8 @@ namespace xaxaxa
 			return fft.size_c;
 		}
 		
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding1, Int padding2, UInt FFTSize): OverlappedFilter2<NUMTYPE, double>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
+		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding1, Int padding2, UInt FFTSize):
+			OverlappedFilter2<NUMTYPE, jackfft_float>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
 #ifdef CEPSTRUM
 		,fft2(ComplexSize())
 #endif
@@ -146,10 +236,11 @@ namespace xaxaxa
 				coefficients2[i] = 1.0;
 #endif
 			tmpcomplex=fft.Data_c;
-			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
+			lastSpectrum=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*l);
+			//tmpdouble = (double*)fft_malloc(sizeof(double)*buffersize);
 
-			//tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
-			/*tmpcomplex2 = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
+			//tmpcomplex = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
+			/*tmpcomplex2 = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
 
 			//cout << this->PeriodSize() << endl;
 			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
@@ -160,9 +251,10 @@ namespace xaxaxa
 		{
 			/*fftw_destroy_plan(p1);
 			fftw_destroy_plan(p2);
-			//fftw_free(tmpdouble);*/
-			//fftw_free(tmpcomplex);
-			//fftw_free(tmpcomplex2);
+			//fft_free(tmpdouble);*/
+			//fft_free(tmpcomplex);
+			//fft_free(tmpcomplex2);
+			fft_free(lastSpectrum);
 			delete[] coefficients;
 #ifdef CEPSTRUM
 			delete[] coefficients2;
@@ -177,7 +269,7 @@ namespace xaxaxa
 
 		virtual void DoProcess()
 		{
-			UInt complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
+			Int complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
 			//asdf++;
 			//if(asdf>1)
 			//{
@@ -230,7 +322,7 @@ namespace xaxaxa
 				tmpcomplex[i][0]=0;
 				tmpcomplex[i][1]=0;
 			}*/
-			//memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(fftw_complex));
+			//memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(jackfft_complex));
 			if(freq_scale==1.)
 			{
 				for(UInt i=0;i<complexsize;i++)
@@ -270,12 +362,17 @@ namespace xaxaxa
 				double cosine=(tmpcomplex[i2][0]*(1.0-trololo) + tmpcomplex[i2+1][0]*trololo);
 
 				double amplitude=sqrt(sine*sine+cosine*cosine);
+				
+				
 				double phase=atan2(cosine,sine);	//radians; [-pi,pi]
 				//double phase_delta1=(skip_samples%period1)/period1*(2*M_PI);
 				phase=phase*((double)period1);
 				//phase=phase/((double)(M_PI*2));
 				//phase=phase*((double)(M_PI*2));
 				phase=phase/((double)period2);
+				
+				//double phase=atan2(tmpcomplex[i][0],tmpcomplex[i][1]);
+				
 				//phase*=1.5;
 				//if(i==100)cout << phase << endl;
 				//else i2=i;
@@ -293,27 +390,28 @@ namespace xaxaxa
 				fft.Data_c[i+shift][0]=fft.Data_c[i][0]*coefficients[i+shift];
 				fft.Data_c[i+shift][1]=fft.Data_c[i][1]*coefficients[i+shift];
 			}*/
-			double* d=fft.Reverse(this->PeriodSize());
-			memcpy(this->tmpbuffer,d,sizeof(double)*this->PeriodSize());
+			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(jackfft_complex));
+			jackfft_float* d=fft.Reverse(this->PeriodSize());
+			memcpy(this->tmpbuffer,d,sizeof(jackfft_float)*this->PeriodSize());
 			Int ps=this->PeriodSize();
 			for(Int i=0;i<ps;i++)
 				this->tmpbuffer[i] /= fft.size;
 		}
 	};
-	template<class NUMTYPE>class FFTTransform: public OverlappedFilter3<NUMTYPE, double>
+	/*template<class NUMTYPE>class FFTTransform: public OverlappedFilter3<NUMTYPE, double>
 	{
 	public:
 		fftw_plan p1, p2;
 		//double* tmpdouble;
-		fftw_complex* tmpcomplex;
+		jackfft_complex* tmpcomplex;
 		//double* coefficients;
-		virtual void alloc_buffer(){this->tmpbuffer=(double*)fftw_malloc(sizeof(double)*this->PeriodSize());}
-		virtual void free_buffer(){fftw_free(this->tmpbuffer);}
+		virtual void alloc_buffer(){this->tmpbuffer=(double*)fft_malloc(sizeof(double)*this->PeriodSize());}
+		virtual void free_buffer(){fft_free(this->tmpbuffer);}
 		FFTTransform(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod): OverlappedFilter3<NUMTYPE, double>(buffersize, (buffersize*BuffersPerPeriod/2+1)*2, inbuffers, outbuffers, overlapcount, BuffersPerPeriod)
 		{
 			Int l=((UInt)(this->PeriodSize() / 2) + 1);
-			//tmpdouble = (double*)fftw_malloc(sizeof(double)*buffersize);
-			tmpcomplex = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * l);
+			//tmpdouble = (double*)fft_malloc(sizeof(double)*buffersize);
+			tmpcomplex = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
 			//coefficients = new double[l];
 			//cout << this->PeriodSize() << endl;
 			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
@@ -323,8 +421,8 @@ namespace xaxaxa
 		{
 			fftw_destroy_plan(p1);
 			//fftw_destroy_plan(p2);
-			//fftw_free(tmpdouble);
-			fftw_free(tmpcomplex);
+			//fft_free(tmpdouble);
+			fft_free(tmpcomplex);
 			//delete[] coefficients;
 		}
 		virtual UInt OutputSize()
@@ -361,24 +459,24 @@ namespace xaxaxa
 	public:
 		//double* phase;
 		double* buffer;
-		fftw_complex* buffer_c;
+		jackfft_complex* buffer_c;
 		double* buffer_out;
 		int size,size_c;
 		fftw_plan p1;
 		FFTStream_f(int size):size(size),size_c(size/2+1)
 		{
-			buffer=(double*)fftw_malloc(sizeof(double)*size);
-			buffer_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
-			buffer_out=(double*)fftw_malloc(sizeof(double)*size_c);
+			buffer=(double*)fft_malloc(sizeof(double)*size);
+			buffer_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
+			buffer_out=(double*)fft_malloc(sizeof(double)*size_c);
 			p1 = fftw_plan_dft_r2c_1d(size, buffer, buffer_c, 0); //FFTW_UNALIGNED
 			//p2 = fftw_plan_dft_c2r_1d(size, buffer_c, buffer, 0);
 		}
 		~FFTStream_f()
 		{
 			fftw_destroy_plan(p1);
-			fftw_free(buffer);
-			fftw_free(buffer_c);
-			fftw_free(buffer_out);
+			fft_free(buffer);
+			fft_free(buffer_c);
+			fft_free(buffer_out);
 		}
 		double* Process()
 		{
@@ -405,28 +503,28 @@ namespace xaxaxa
 	public:
 		double* phase;
 		double* buffer;
-		fftw_complex* buffer_c;
+		jackfft_complex* buffer_c;
 		double* buffer_out;
 		int size,size_c;
 		fftw_plan p1;
 		FFTStream_r(int size):size(size),size_c(size/2+1)
 		{
-			buffer=(double*)fftw_malloc(sizeof(double)*size);
-			buffer_c=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*size_c);
-			phase=(double*)fftw_malloc(sizeof(double)*size_c);
+			buffer=(double*)fft_malloc(sizeof(double)*size);
+			buffer_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
+			phase=(double*)fft_malloc(sizeof(double)*size_c);
 			for(int i=0;i<size_c;i++)
 				phase[i]=100;
-			buffer_out=(double*)fftw_malloc(sizeof(double)*size);
+			buffer_out=(double*)fft_malloc(sizeof(double)*size);
 			//p1 = fftw_plan_dft_r2c_1d(size, buffer, buffer_c, 0); //FFTW_UNALIGNED
 			p1 = fftw_plan_dft_c2r_1d(size, buffer_c, buffer_out, 0);
 		}
 		~FFTStream_r()
 		{
 			fftw_destroy_plan(p1);
-			fftw_free(buffer);
-			fftw_free(buffer_c);
-			fftw_free(phase);
-			fftw_free(buffer_out);
+			fft_free(buffer);
+			fft_free(buffer_c);
+			fft_free(phase);
+			fft_free(buffer_out);
 		}
 		double* Process()
 		{
@@ -444,10 +542,6 @@ namespace xaxaxa
 				//cosine
 				buffer_c[i][1]=sin(phase)*amplitude;
 
-				/*double period=(double)((size_c-1) * 2) / i;
-				double periods=size/period;
-				phase+=periods;
-				phase=modulus(phase,(2*M_PI));*/
 				//double period=1/freq;
 				//this->phase[i]=phase;
 			}
@@ -456,7 +550,7 @@ namespace xaxaxa
 				buffer_out[i]/=size;
 			return buffer_out;
 		}
-	};
+	};*/
 };
 
 

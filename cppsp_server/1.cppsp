@@ -1,0 +1,56 @@
+<%#
+#include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdexcept>
+#include <cppsp/common.H>
+#include <delegate.H>
+#include <iostream>
+int aaaaa=0;
+%>
+<%@ class sss %>
+<%$
+void init() {
+	doReadPost=true;
+}
+void test() {
+	cout << aaaaa << endl;
+}
+/*
+void finalize() {
+	const char* tmp="fsck";
+	response->outputStream->write(tmp,4,{&sss::_cb1,this});
+}
+void _cb1(int i) {
+	finalizeCB();
+}*/
+%>
+form:
+<table border="1">
+<%
+for(auto it=request->form.begin();it!=request->form.end();it++) {
+	%>
+	<tr>
+		<td><%=htmlEscape((*it).first.toSTDString())%></td>
+		<td><%=htmlEscape((*it).second.toSTDString())%></td>
+	</tr>
+	<%
+}
+%>
+</table>
+querystring:
+<table border="1">
+<%
+for(auto it=request->queryString.begin();it!=request->queryString.end();it++) {
+	%>
+	<tr>
+		<td><%=htmlEscape((*it).first.toSTDString())%></td>
+		<td><%=htmlEscape((*it).second.toSTDString())%></td>
+	</tr>
+	<%
+}
+%>
+</table>
+
+
+

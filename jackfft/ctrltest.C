@@ -23,7 +23,7 @@
 
 
 #include <iostream>
-#include "eqcontrol.C"
+#include "histcontrol.C"
 using namespace xaxaxa;
 
 int main(int argc, char **argv)
@@ -33,7 +33,12 @@ int main(int argc, char **argv)
 	b = Gtk::Builder::create_from_file("container.glade");
 	Gtk::Window* w;
 	b->get_widget("window1",w);
-	EQControl c(50);
+	HistoryControl c(200,50);
+	for(int i=0;i<200;i++) {
+		for(int x=0;x<50;x++)
+			c.data[i*50+x]=double(i+x)/250;
+	}
+	c.curFrame=190;
 	w->add(c);
 	//c.set_hexpand(true);
 	//c.set_vexpand(true);

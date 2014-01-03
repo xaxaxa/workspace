@@ -10,7 +10,7 @@ the workspace layout is currently quite messy; there are a lot of miscellaneous 
 
 
 the most interesting things and finished projects in there are:
-  * cpoll - epoll based asynchornous socket I/O library
+  * cpoll - epoll based asynchronous socket I/O library
   * dedup - simple file deduplicator
   * tcpsdump - like tcpdump, but extracts tcp streams instead of individual packets
   * socketd - web server multiplexer/web application host

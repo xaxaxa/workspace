@@ -1,4 +1,18 @@
 /*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
+/*
  * cppsp_socketd.C
  *
  *  Created on: Mar 8, 2013
@@ -14,6 +28,10 @@ namespace cppsp
 	//static int CPollRequest::bufSize=4096;
 	CPollRequest::CPollRequest(CP::Socket& s, CP::StringPool* sp) :
 			Request(s, sp), _parser(&headers), s(s) {
+		_stream.parser = &_parser;
+		_stream.stream = &s;
+		_stream.stream->retain();
+		this->inputStream = &_stream;
 	}
 	bool CPollRequest_parseReqLine(CPollRequest* This) {
 		uint8_t* lineBuf = (uint8_t*) This->_parser.reqLine.data();
@@ -35,26 +53,19 @@ namespace cppsp
 			struct
 			{
 				CPollRequest* This;
-				MemoryStream ms;
 				void operator()(const char* name, int nameLen, const char* value, int valueLen) {
 					String n, v;
-					{
-						CP::StreamWriter sw(ms);
-						cppsp::urlDecode(name, nameLen, sw);
-						sw.flush();
-						n= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
-						ms.clear();
-						if (value != NULL) {
-							cppsp::urlDecode(value, valueLen, sw);
-						}
-					}
-					v= {This->sp->add((const char*)ms.data(),ms.length()),ms.length()};
+					n=cppsp::urlDecode(name, nameLen, *This->sp);
+					if (value != NULL) {
+						v=cppsp::urlDecode(value, valueLen, *This->sp);
+					} else v= {(char*)nullptr,0};
 					This->queryString[n] = v;
 				}
 			}cb {This};
 			cppsp::parseQueryString(q + 1, path + pathLen - q - 1, &cb, false);
 			This->path = {path, q - path};
 		}
+		This->path = cppsp::urlDecode(This->path.d, This->path.len, *This->sp);
 		return true;
 	}
 	bool CPollRequest::readRequest(const Delegate<void(bool)>& cb) {
@@ -66,14 +77,14 @@ namespace cppsp
 			}
 		} else {
 			this->tmp_cb = cb;
-			//_parser.reset();
+			_parser.reset();
 			_beginRead();
 			return false;
 		}
 	}
 	void CPollRequest::_beginRead() {
 		String b = _parser.beginPutData(4096);
-		inputStream->read(b.data(), b.length(), { &CPollRequest::_readCB, this });
+		_stream.stream->read(b.data(), b.length(), { &CPollRequest::_readCB, this });
 	}
 	void CPollRequest::_readCB(int i) {
 		if (i <= 0) {
@@ -88,5 +99,6 @@ namespace cppsp
 		}
 	}
 	CPollRequest::~CPollRequest() {
+		_stream.stream->release();
 	}
 }

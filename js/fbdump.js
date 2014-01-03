@@ -36,6 +36,7 @@ fbobj.prototype.downloadField=function(fieldname)
 };
 function on_error(obj)
 {
+	lib.print(JSON.stringify(obj));
 	if(obj.error.type=="OAuthException") {
 		if((!(typeof noprompt === "undefined")) && noprompt) throw Error(obj.error.message);
 		else {
@@ -99,6 +100,7 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 	lib.get(url, function(s)
 	{
 		//lib.print(s);
+		try {
 		if(traps && "onresponse" in traps)traps.onresponse(url);
 		var d=JSON.parse(s);
 		if(d===false)return;
@@ -121,6 +123,7 @@ function do_dump(url, cb, follow, path, tmp_obj, traps)
 			if(cb) cb(new fbobj(d,null,s));
 		}
 		if(traps && "oncomplete" in traps)traps.oncomplete(url);
+		} catch(e){}
 	});
 }
 function dump(p,cb,follow,traps)

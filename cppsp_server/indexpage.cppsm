@@ -1,0 +1,70 @@
+<%#
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
+
+#include <sys/stat.h>
+DelegateChain<AsyncValue<Handler>(String)>::item* it;
+Server* server;
+String filePath;
+
+struct redirectHandler: public RGC::Object
+{
+	Delegate<void()> cb;
+	void handleRequest(Request& req, Response& resp, Delegate<void()> cb) {
+		this->cb=cb;
+		resp.headers["Location"]=concat(*req.sp,req.path,"/");
+		resp.statusName="Moved permanently";
+		resp.statusCode=301;
+		resp.finalize({&redirectHandler::flushCB,this});
+	}
+	void flushCB(Response& resp) {
+		auto Cb=cb;
+		destruct();
+		Cb();
+	}
+};
+void handleRedirect(void*,Request& req, Response& resp, Delegate<void()> cb) {
+	req.sp->New<redirectHandler>()->handleRequest(req,resp,cb);
+}
+
+AsyncValue<Handler> routeRequest(void*, String path) {
+	struct stat st;
+	string s=server->mapPath(path.toSTDString());
+	if(::stat(s.c_str(),&st)>=0 && S_ISDIR(st.st_mode)) {
+		if(path.data()[path.length()-1]!='/') {
+			Handler h(&handleRedirect);
+			return h;
+		}
+		//check for index.cppsp, index.html, and index.htm
+		const char* indexPages[3]={"index.cppsp","index.html","index.htm"};
+		for(int i=0;i<3;i++) {
+			string s2=s+"/"+indexPages[i];
+			if(::stat(s2.c_str(),&st)==0) {
+				string s3=path.toSTDString()+"/"+indexPages[i];
+				return (*it->prev)(s3);
+			}
+		}
+	}
+	return (*it->prev)(path);
+}
+extern "C" void initModule(ModuleParams& p) {
+	server=p.server;
+	filePath=p.filePath;
+	it=server->routeRequest.attach(&routeRequest);
+}
+extern "C" void deinitModule() {
+	server->routeRequest.detach(it);
+}
+%>

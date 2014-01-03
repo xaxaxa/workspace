@@ -1,0 +1,185 @@
+<%#
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
+
+#include <dlfcn.h>
+#include <cxxabi.h>
+%><html>
+<head>
+<title>show cache</title>
+<style>
+body,table,td,input {
+	font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+	font-size: 14px;
+}
+.cachelist {
+	border: solid 1px #777;
+	margin: 3px 0px 8px 0px;
+	border-spacing:0;
+	border-collapse:collapse;
+}
+.cachelist td {
+	padding: 2px 7px;
+}
+.cachelist thead {
+	background: #bff;
+}
+.persistent>td {
+	background: #ff0;
+}
+td.s_compiling {
+	background: #f33;
+}
+td.s_loaded {
+	background: #3f3;
+}
+td.s_unloaded {
+	background: #000;
+	color: #fff;
+}
+
+</style>
+</head>
+<%$
+//returns miliseconds
+double dateDiff(timespec t1, timespec t2) {
+	return double(t2.tv_sec-t1.tv_sec)*1000+double(t2.tv_nsec-t1.tv_nsec)/1000000;
+}
+const char* ifnull(const char* s, const char* n) {
+	return s==nullptr?n:s;
+}
+void writeAddr(StreamWriter& sw, void* addr) {
+	Dl_info inf; char* sname;
+	dladdr(addr,&inf);
+	if(inf.dli_sname==nullptr) sname=nullptr;
+	else sname=abi::__cxa_demangle(inf.dli_sname, 0, 0, nullptr);
+	sw.writeF("%s: %s (%p)",ifnull(inf.dli_fname,"?"), ifnull(sname,"?"), addr);
+	if(sname) free(sname);
+}
+cppspManager* cm;
+void init() {
+	doReadPost=true;
+}
+void load() override {
+	cm=server->manager();
+	if(cm==NULL) throw runtime_error("server is not managed by cppspManager");
+	
+}
+%>
+<body>
+	<h2>Worker #<%=server->threadID%></h2>
+	<%
+	auto it=request->form.find("act");
+	if(it!=request->form.end()) {
+		if((*it).second=="clear+cppsp+page+cache") {
+			cm->cleanCache(0);
+		} else if((*it).second=="clear+route+cache") {
+			server->cleanCache(0);
+		} else if((*it).second=="clear+all+caches") {
+			server->cleanCache(0);
+			cm->cleanCache(0);
+		}
+	}
+	%>
+	<form method="post">
+		<input type="submit" name="act" value="clear cppsp page cache" />
+		<input type="submit" name="act" value="clear route cache" />
+		<input type="submit" name="act" value="clear all caches" />
+	</form>
+	Dynamic page cache: <br />
+	<table class="cachelist">
+		<thead>
+			<tr>
+				<td>Path</td>
+				<td title="reference count">RC</td>
+				<td>Load time</td>
+				<td>Last access</td>
+				<td>State</td>
+			</tr>
+		</thead>
+		<%
+		for(auto it=cm->cache.begin();it!=cm->cache.end();it++) {
+			auto tmp=(*it).second;
+			char buffer[256];
+			tm time1; localtime_r(&tmp->lastLoad.tv_sec,&time1);
+			strftime(buffer, sizeof(buffer), "%F %r", &time1);
+			const char* state=tmp->compiling?"compiling":tmp->loaded?"loaded":"unloaded";
+			%>
+			<tr<%=tmp->moduleCount>0?" class=\"persistent\" title=\"Module\"":""%>>
+				<td><%htmlEscape((*it).first,output);%></td>
+				<td><%=tmp->refCount%></td>
+				<td><%htmlEscape(buffer,output);%></td>
+				<td><%=int64_t(-dateDiff(cm->curTime,tmp->lastCheck)/1000)%> seconds ago</td>
+				<td class="s_<%=state%>"><%=state%></td>
+			</tr>
+			<%
+		}
+		%>
+	</table>
+	Static page cache: <br />
+	<table class="cachelist">
+		<thead>
+			<tr>
+				<td>Path</td>
+				<td title="reference count">RC</td>
+				<td>Load time</td>
+				<td>Last access</td>
+			</tr>
+		</thead>
+		<%
+		for(auto it=cm->staticCache.begin();it!=cm->staticCache.end();it++) {
+			auto tmp=(*it).second;
+			char buffer[256];
+			tm time1; localtime_r(&(*it).second->lastLoad.tv_sec,&time1);
+			strftime(buffer, sizeof(buffer), "%F %r", &time1);
+			%>
+			<tr>
+				<td><%htmlEscape((*it).first,output);%></td>
+				<td><%=tmp->refCount%></td>
+				<td><%htmlEscape(buffer,output);%></td>
+				<td><%=int64_t(-dateDiff(cm->curTime,tmp->lastCheck)/1000)%> seconds ago</td>
+			</tr>
+			<%
+		}
+		%>
+	</table>
+	Route cache: <br />
+	<table class="cachelist">
+		<thead>
+			<tr>
+				<td>Path</td>
+				<td>Handler</td>
+				<td>Last update</td>
+			</tr>
+		</thead>
+		<%
+		for(auto it=server->routeCache.begin();it!=server->routeCache.end();it++) {
+			auto tmp=(*it).second;
+			%>
+			<tr>
+				<td><%htmlEscape((*it).first,output);%></td>
+				<td><%
+				writeAddr(output,(void*)tmp->handler.func);
+				output.writeF(", %p",tmp->handler.data);
+				%></td>
+				<td><%=int64_t(-dateDiff(cm->curTime,tmp->lastUpdate)/1000)%> seconds ago</td>
+			</tr>
+			<%
+		}
+		%>
+	</table>
+</body>
+</html>
+

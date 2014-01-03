@@ -15,10 +15,10 @@ using namespace CP;
 		StringPool& sp;
 		StreamWriter& output;
 		bool dirOnly;
-		string root;
+		String root;
 		void operator()(const char* name) {
 			if(dirOnly) {
-				String tmp=combinePath(root.c_str(),name,sp);
+				String tmp=combinePath(root,name,sp);
 				struct stat st;
 				if(stat(tmp.toSTDString().c_str(),&st)<0) return;
 				if(!S_ISDIR(st.st_mode)) return;
@@ -27,11 +27,11 @@ using namespace CP;
 			output.write('\n');
 		}
 	} cb {*sp,output,request->queryString["t"]=="d"};
-	cb.root=server->mapPath(request->queryString["p"].toSTDString()+"/");
+	cb.root=mapPath(concat(*sp,"../",request->queryString["p"],"/"));
 	struct stat st;
-	if(stat((cb.root+"index.txt").c_str(),&st)>=0) {
+	if(stat((cb.root.toSTDString()+"index.txt").c_str(),&st)>=0) {
 		try {
-			File f(open((cb.root+"index.txt").c_str(),O_RDONLY));
+			File f(open((cb.root.toSTDString()+"index.txt").c_str(),O_RDONLY));
 			f.readToEnd(*output.buffer);
 			return;
 		} catch(exception& ex) {}

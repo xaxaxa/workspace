@@ -1,0 +1,982 @@
+<!DOCTYPE html><%!-lrt%><%!-ljack%><%!-lfftw3%><%@ class p inherits "public Page, public sssss" %><%#
+
+#include <iostream>
+#include <jack/jack.h>
+#include <memory.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include "fftfilter.C"
+#include <cppsp/websocket.H>
+class sssss
+{
+public:
+	virtual void terminate()=0;
+};
+using namespace std;
+vector<jack_port_t *> inputs;
+vector<jack_port_t *> outputs;
+#define CHANNELS 2
+#define CONCAT(X) (((stringstream&)(stringstream()<<X)).str())
+double cur_index=0;
+int srate=44100;
+
+using namespace std;
+
+xaxaxa::Filter<jack_default_audio_sample_t>* filt[CHANNELS];
+#define EQ_POINTS 10000
+double eqData[EQ_POINTS];
+bool do_mux=false;
+double v_mux=0.5;
+
+inline double getPoint(double pos);
+
+int process (jack_nframes_t length, void *arg)
+{
+	jack_default_audio_sample_t* in_samples[inputs.size()];
+	jack_default_audio_sample_t* out_samples[inputs.size()];
+	for(size_t i = 0; i < inputs.size(); i++)
+	{
+		in_samples[i]=(jack_default_audio_sample_t *)
+			jack_port_get_buffer(inputs[i], length);
+		out_samples[i]=(jack_default_audio_sample_t *)
+			jack_port_get_buffer(outputs[i], length);
+	}
+	for(size_t i=0;i<inputs.size();i++)
+	{
+		jack_default_audio_sample_t *out = out_samples[i];
+		jack_default_audio_sample_t *in = in_samples[i];
+		filt[i]->Process(in, out, length);
+	}
+	if(do_mux)
+		for(size_t i=0; i<length; i++)
+		{
+			double avg=0;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				avg+=((double)out_samples[ii][i]);
+			avg/=CHANNELS;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				out_samples[ii][i]=2*(avg*(1.-v_mux)+(out_samples[ii][i]-avg)*v_mux);
+		}
+	return 0;
+}
+inline double scale_freq(double x)
+{
+	x=pow(2,x*10);
+	x=x-1;
+	if(x<0)return 0;
+	return x/1024;
+}
+inline double scale_freq_r(double x)
+{
+	x=x*1024+1;
+	x=log2(x)/10;
+	return x<0?-x:x;
+}
+
+//graph to coefficient
+//x: [0.0,2.0]
+static const int graph_range=7.;
+inline double scale_value(double x)
+{
+	double tmp = x - 1.;
+	tmp *= graph_range;
+	return pow(2, tmp);
+}
+inline double scale_value_r(double x)
+{
+	return log2(x) / graph_range + 1.;
+}
+struct stdoutCapture
+{
+	MemoryStream ms;
+	int old_o,old_e;
+	int p[2];
+	stdoutCapture() {
+		old_o=dup(1);
+		old_e=dup(2);
+		if(pipe2(p,O_NONBLOCK)<0) throw runtime_error(strerror(errno));
+		
+		dup2(p[1],1);
+		dup2(p[1],2);
+		close(p[1]);
+	}
+	String end() {
+		File f(p[0]);
+		f.readToEnd(ms);
+		dup2(old_o,1);
+		dup2(old_e,2);
+		close(old_o);
+		close(old_e);
+		return ms.String();
+	}
+};
+void update_fft(xaxaxa::FFTFilter<jack_default_audio_sample_t>** filt2 = NULL)
+{
+	if(filt2 != NULL)
+	{
+		for(int i = 0; i < CHANNELS; i++)
+		{
+			if(filt2[i] == NULL)continue;
+			auto f = filt2[i];
+			int complexsize = f->ComplexSize();
+			for(int n = 0; n < complexsize; n++)
+				f->coefficients[n] = scale_value(getPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
+		}
+		return;
+	}
+	for(int i = 0; i < CHANNELS; i++)
+	{
+		auto f = (xaxaxa::FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
+		int complexsize = f->ComplexSize();
+		for(int n = 0; n < complexsize; n++)
+			f->coefficients[n] = scale_value(getPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
+	}
+}
+void load(CP::Stream& fs, double* coeff, int coeffs)
+{
+	struct
+	{
+		double freq;
+		double val;
+	} buf;
+	String b(&buf, sizeof(buf));
+	int i1 = 0;
+	double last_v = 0.5;
+	while(fs.read(b) >= b.length())
+	{
+		//cout << buf.freq << endl;
+		int i2 = (int)round(scale_freq_r((double)buf.freq / (srate / 2)) * EQ_POINTS);
+		//cout << i2 << endl;
+		if(i2 > EQ_POINTS)break;
+		for(int i = i1; i < i2; i++)
+			eqData[i] = scale_value_r(last_v * (i2 - i) / (i2 - i1) + buf.val * (i - i1) / (i2 - i1)) / 2.0;
+		i1 = i2;
+		last_v = buf.val;
+	}
+	for(int i = i1; i < EQ_POINTS; i++)
+		eqData[i] = scale_value_r(last_v) / 2.0;
+	update_fft();
+}
+void save(CP::Stream& fs)
+{
+	struct
+	{
+		double freq;
+		double val;
+	} buf;
+	String b(&buf, sizeof(buf));
+	for(int i = 0; i < EQ_POINTS; i++)
+	{
+		buf.freq = scale_freq((double)i / EQ_POINTS) * srate / 2;
+		buf.val = scale_value(getPoint(i) * 2.0);
+		//cout << buf.val << endl;
+		fs.write(b);
+	}
+}
+bool pitchshift_enable=false;
+string pitchshift_value="0";
+void apply_pitchshift(xaxaxa::FFTFilter<jack_default_audio_sample_t>** filt2=NULL)
+{
+	double asdf = 1.;
+	if(pitchshift_enable)
+	{
+		asdf = strtod(pitchshift_value.c_str(), NULL);
+		asdf=pow(2,asdf/7.d);
+	}
+	if(filt2==NULL)filt2=(xaxaxa::FFTFilter<jack_default_audio_sample_t>**)filt;
+	for(int i = 0; i < (int)inputs.size(); i++) {
+		if(filt2[i] == NULL) continue;
+		filt2[i]->freq_scale = asdf;
+	}
+}
+jack_client_t *client=NULL;
+void error (const char *desc) {
+	fprintf (stderr, "JACK error: %s\n", desc);
+}
+void jack_shutdown (void *arg) {
+	client=NULL;
+}
+void start() {
+	if(client!=NULL)return;
+	
+	jack_set_error_function (error);
+	JackStatus st;
+	if ((client = jack_client_open ("jackfft",JackNoStartServer,&st)) == NULL) {
+		fprintf (stderr, "could not connect to server: status %i\n",st);
+		return;
+	}
+	jack_set_process_callback (client, process, 0);
+	jack_on_shutdown (client, jack_shutdown, 0);
+	printf ("engine sample rate: %u\n", srate=jack_get_sample_rate (client));
+
+	
+	/* create ports */
+	int i;
+	for(i=0;i<CHANNELS;i++)
+	{
+		inputs.push_back(jack_port_register (client, CONCAT("input_"<<i).c_str(),
+						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0));
+		outputs.push_back(jack_port_register (client, CONCAT("output_"<<i).c_str(),
+						 JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0));
+	}
+	if (jack_activate (client)) {
+		fprintf (stderr, "cannot activate client");
+		return;
+	}
+}
+void stop() {
+	if(client==NULL) return;
+	jack_client_close(client);
+	client=NULL;
+	inputs.clear();
+	outputs.clear();
+}
+#define TO_C_STR(in,inLen,out) char out[inLen+1];\
+	memcpy(out,in,inLen);\
+	out[inLen]=0;
+void doLoad(String fn) {
+	TO_C_STR(fn.data(),fn.length(),fn1);
+	CP::File fs(open(fn1,O_RDONLY));
+	auto* tmpf=(xaxaxa::FFTFilter<jack_default_audio_sample_t>*)filt[0];
+	int complexsize = (int)tmpf->ComplexSize();
+	load(fs,tmpf->coefficients,complexsize);
+	for(int i=1;i<CHANNELS;i++)
+	{
+		auto* f=(xaxaxa::FFTFilter<jack_default_audio_sample_t>*)filt[i];
+		memcpy(f->coefficients,tmpf->coefficients,sizeof(double)*complexsize);
+	}
+}
+void doSave(String fn) {
+	TO_C_STR(fn.data(),fn.length(),fn1);
+	CP::File fs(open(fn1,O_RDWR|O_CREAT|O_TRUNC,0666));
+	save(fs);
+}
+extern "C" void initModule(ModuleParams& p) {
+	for(int i=0;i<EQ_POINTS;i++) eqData[i]=0.5;
+	for(int i=0;i<CHANNELS;i++)
+	{
+		auto* trololo=new xaxaxa::FFTFilter<jack_default_audio_sample_t>
+		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	paddingL,paddingR,	fftsize
+		(1024, 20,			20,			2,		16,					0,		 0,			8192 * 2);
+
+		//trololo->freq_scale=9./10.;
+		filt[i]=trololo;
+	}
+	
+	//start();
+}
+list<sssss*> _clients;
+extern "C" void deinitModule() {
+	stop();
+	for(auto it=_clients.begin();it!=_clients.end();it++) {
+		(*it)->terminate();
+		printf("signaling client %p\n",(*it));
+	}
+}
+inline double getPoint(double pos)
+{
+	if(pos>=EQ_POINTS)return eqData[EQ_POINTS-1];
+	double p1, p2;
+	p1=floor(pos);
+	p2=p1+1;
+	if(p2>=EQ_POINTS)return eqData[(int)p1];
+	return eqData[(int)p1]*(p2-pos)+eqData[(int)p2]*(pos-p1);
+}
+void on_change(int i1, int i2)
+{
+	for(int i = 0; i < CHANNELS; i++)
+	{
+		auto f = (xaxaxa::FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
+#ifdef CEPSTRUM
+		int complexsize = c==c_eq2?f->ComplexSize2():f->ComplexSize();
+#else
+		int complexsize = f->ComplexSize();
+#endif
+		//complexsize /= 5;
+		int min_index = floor(scale_freq((double)i1 / EQ_POINTS) * (double)complexsize);
+		int max_index = ceil(scale_freq((double)i2 / EQ_POINTS) * (double)complexsize);
+		//cout << "i1="<<i1<<"; i2="<<i2<<"; scale_freq="<<scale_freq((double)i1/EQ_POINTS)<<endl;
+		//cout << "min_index="<<min_index<<"; max_index="<<max_index<<endl;
+		int max_n = floor(max_index);
+		if(max_n > complexsize)max_n = complexsize;
+		for(int n = min_index; n < max_n; n++)
+		{
+			double tmp = (getPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
+			//cout << c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS) << endl;
+			tmp = scale_value(tmp);
+			//if(tmp1>4)cout << tmp1 << " " << tmp << endl;
+#ifdef CEPSTRUM
+			if(c==c_eq2) f->coefficients2[n] = tmp;
+			else
+#endif
+			f->coefficients[n] = tmp;
+		}
+	}
+}
+%><%$
+//websocket
+
+WebSocketParser wsp;
+FrameWriter w;
+list<sssss*>::iterator stopEvent_it;
+void doInit() {
+	if(ws_iswebsocket(*request)) {
+		//switch to websocket mode
+		ws_init(*this,{&p::ws_headersWritten,this});
+	} else Page::doInit();
+}
+void ws_headersWritten(int l) {
+	w.output=response->outputStream;
+	_clients.push_back(this);
+	stopEvent_it=_clients.end();
+	stopEvent_it--;
+	
+	ws_readFrame();
+}
+void ws_readFrame() {
+	request->inputStream->read(wsp.beginPutData(4096),{&p::ws_readFrame1,this});
+}
+void ws_readFrame1(int l) {
+	//printf("read %i bytes from websocket socket\n",l);
+	if(l<=0) {
+		do_end(); return;
+	}
+	wsp.endPutData(l);
+	WebSocketParser::WSFrame f;
+	while(wsp.process(f)) {
+		handleFrame(f);
+	}
+	wsp.reset();
+	ws_readFrame();
+}
+void ws_writeFrame(String d) {
+	String s=ws_beginWriteFrame(w,d.length());
+	memcpy(s.data(),d.data(),d.length());
+	ws_endWriteFrame(w,s,1);
+}
+void updateClientData(int s, int l) {
+	MemoryStream ms;
+	StreamWriter sw(ms);
+	sw.writeF("u %i",s);
+	for(int i=s;i<(s+l);i++) {
+		sw.writeF(" %lf",eqData[i]);
+	}
+	sw.flush();
+	ws_writeFrame(ms.String());
+	w.flush();
+}
+void handleFrame(WebSocketParser::WSFrame f) {
+	//printf("websocket frame: opcode=%i fin=%i datalen=%i data:\n%s\n",f.opcode,f.fin?1:0,f.data.length(),f.data.toSTDString().c_str());
+	String d=f.data;
+	int i=d.indexOf(' ');
+	if(i!=1) return;
+	switch(d[0]) {
+		case 'u':
+		{	//update coefficients
+			int i1=d.indexOf(' ',i+1);
+			if(i1<0) break;
+			int ind=atoi(d.subString(i+1,i1-(i+1)));
+			int _ind=ind;
+			if(ind<0)break;
+			i1++;
+			while(true) {
+				int i2=d.indexOf(' ',i1);
+				if(i2<0) i2=d.length();
+				if(ind>=EQ_POINTS) break;
+				if(i2>i1)eqData[ind++]=atof(d.subString(i1,i2-i1));
+				if(i2>=d.length()) break;
+				i1=i2+1;
+			}
+			on_change(_ind,ind+1);
+			//broadcast the change to every other client
+			for(auto it=_clients.begin();it!=_clients.end();it++) {
+				p* tmp=(p*)*it;
+				if(tmp!=this) {
+					tmp->ws_writeFrame(d);
+					tmp->w.flush();
+				}
+			}
+			break;
+		}
+		case 's':
+		{
+			auto st=sp->saveState();
+			stdoutCapture cap;
+			start();
+			String s=cap.end();
+			if(client==NULL) {
+				ws_writeFrame(concat(*sp,"m Error initializing JACK client:\n",s));
+				w.flush();
+			}
+			sp->restoreState(st);
+			break;
+		}
+		case 'e':
+		{
+			stop();
+			break;
+		}
+		case 'r':
+		{	//read from file
+			auto st=sp->saveState();
+			try {
+				doLoad(mapPath(d.subString(i+1)));
+				updateClientData(0,EQ_POINTS);
+			} catch(exception& ex) {
+				String s=concat(*sp,"m ",ex.what());
+				ws_writeFrame(s);
+				w.flush();
+			}
+			sp->restoreState(st);
+			break;
+		}
+		case 'w':
+		{	//write to file
+			auto st=sp->saveState();
+			try {
+				doSave(mapPath(d.subString(i+1)));
+			} catch(exception& ex) {
+				String s=concat(*sp,"m ",ex.what());
+				ws_writeFrame(s);
+				w.flush();
+			}
+			sp->restoreState(st);
+			break;
+		}
+		case 'p':
+		{	//change pitchshift params
+			i++;
+			if(i>=d.length()) break;
+			if(d[i]=='e') pitchshift_enable=true;
+			else if(d[i]=='d') pitchshift_enable=false;
+			else {
+				pitchshift_value=d.subString(i).toSTDString();
+			}
+			apply_pitchshift();
+			break;
+		}
+		case 'x':
+		{	//change multiplexer params
+			i++;
+			if(i>=d.length()) break;
+			if(d[i]=='e') do_mux=true;
+			else if(d[i]=='d') do_mux=false;
+			else {
+				v_mux=atof(d.subString(i));
+			}
+			break;
+		}
+	}
+}
+void do_end() {
+	_clients.erase(stopEvent_it);
+	do_end1();
+}
+void terminate() {
+	printf("closing websocket connection due to module unload\n");
+	do_end1();
+}
+void do_end1() {
+	response->closed=true;
+	finalize();
+}
+%>
+<html>
+<head>
+	<title></title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<script>
+	function EQControl(canvas,datalen) {
+		this.canvas=canvas;
+		this.datalen=datalen;
+		if(window.devicePixelRatio==null)this.pr=1;
+		else this.pr=window.devicePixelRatio;
+		
+		this.data=new Array();
+		this.data.length=datalen;
+		for(var i=0;i<datalen;i++) {
+			this.data[i]=0.5;
+		}
+		this.last_i=-1;
+		this.last_v=-1;
+		this.d=false;
+		
+		canvas.onselectstart=function(){return false;};
+		canvas.style.cursor="default";
+		
+		this.getPoint=function(pos)
+		{
+			var data=this.data;
+			var datalen=this.datalen;
+			if(pos>=datalen)return data[datalen-1];
+			var p1, p2;
+			p1=Math.floor(pos);
+			p2=p1+1;
+			if(p2>=datalen)return data[p1];
+			return data[p1]*(p2-pos)+data[p2]*(pos-p1);
+		}
+		this.doDraw=function(ctx,xBegin,xEnd) {
+			var datalen=this.datalen;
+			
+			
+			ctx.lineWidth = 2;
+			
+			var w=ctx.canvas.width;
+			var h=ctx.canvas.height;
+			
+			var x1,y1;
+			x1=(xBegin==null?0:xBegin);
+			x2=(xEnd==null?w:xEnd);
+			
+			var gc=ctx;
+			//gc.strokeStyle = 'blue';
+			//gc.beginPath();
+			ctx.fillStyle="#0000FF";
+			for(var x=x1;x<=x2;x++)
+			{
+				var y=Math.round((1-this.getPoint(x*datalen/w))*h);
+				if(y>h)y=h;
+				else if(y<0)y=0;
+				//gc.moveTo(x,h);
+				//gc.lineTo(x,y);
+				gc.fillRect(x,y,1,h-y);
+			}
+			gc.stroke();
+			//gc.closePath();
+			//gc.strokeStyle = 'white';
+			//gc.beginPath();
+			ctx.fillStyle="#FFFFFF";
+			for(var x=x1;x<=x2;x++)
+			{
+				var y=Math.round((1-this.getPoint(x*datalen/w))*h);
+				if(y>h)y=h;
+				else if(y<0)y=0;
+				//gc.moveTo(x,0);
+				//gc.lineTo(x,y);
+				gc.fillRect(x,0,1,y);
+			}
+			//gc.stroke();
+			//gc.closePath();
+		};
+		
+		this._handleMouseMove=function(ev)
+		{
+			var e=ev?ev:event;
+			var data=this.data;
+			var datalen=this.datalen;
+			
+			
+			var eX=e.clientX-this.canvas.getBoundingClientRect().left;
+			var eY=e.clientY-this.canvas.getBoundingClientRect().top;
+			if(eY<0)eY=0;
+			if(eX<0)eX=0;
+			eX*=this.pr; eY*=this.pr;
+			
+			
+			var w=this.canvas.width;
+			if(this.onMouseMove)this.onMouseMove(eX*datalen/w);
+			if(!this.d)return true;
+			
+			var h=this.canvas.height;
+			
+			var v=(h-eY)/h;
+			var i1,i2;
+			i1=Math.round(eX*datalen/w);
+			i2=Math.round((eX+1)*datalen/w);
+			if(i1>=datalen)i1=datalen-1;
+			if(i2>datalen)i2=datalen;
+			var tmp_i=this.last_i;
+			var tmp_v=this.last_v;
+			this.last_v=v;
+			this.last_i=Math.floor(i1+((i2-i1)/2));
+			if(i2>datalen)i2=datalen;
+			if(i2<=i1)i2=i1+1;
+			if(tmp_i>=0 && (tmp_i<i1 || tmp_i>i2))
+			{
+				i1=tmp_i;
+				i2=this.last_i;
+				if(i2<i1)
+				{	//swap
+					var tmp=i1;
+					i1=i2;
+					i2=tmp;
+					var tmp_d=tmp_v;
+					tmp_v=v;
+					v=tmp_d;
+				}
+				for(var i=i1;i<i2;i++)
+					data[i]=v*(i-i1)/(i2-i1)+tmp_v*(i2-i)/(i2-i1);
+			}
+			else for(var i=i1;i<i2;i++)
+				data[i]=v;
+			var x1=i1*w/datalen;
+			var x2=i2*w/datalen;
+			if(x2<=x1)x2=x1+2;
+			//cout << x2-x1 << endl;
+			this.refresh(Math.floor(x1-(x2-x1)),Math.ceil(x1+(x2-x1)));
+			if(this.onChange)this.onChange(i1,i2);
+			return true;
+		}
+		canvas.__EQControl=this;
+		canvas.ontouchmove=function(event){
+			if (event.targetTouches.length >= 1) {
+				var ev=new Object();
+				var touch = event.targetTouches[0];
+				//document.getElementById("div1").textContent=event.targetTouches.length+" "+touch.pageX+", "+touch.pageY;
+				ev.clientX=touch.pageX;
+				ev.clientY=touch.pageY;
+				var eq=this.__EQControl;
+				eq._handleMouseMove(ev);
+				event.preventDefault();
+			}
+		};
+		canvas.ontouchstart=function(event) {
+			var eq=this.__EQControl;
+			eq.d=true;
+			eq.last_i=-1;
+			event.preventDefault();
+		};
+		canvas.ontouchend=function(event) {
+			var eq=this.__EQControl;
+			eq.d=false;
+			event.preventDefault();
+		};
+		var __EQControl=this;
+		this.canvas.onmousedown=function(ev) {
+			if(ev.button!=0) return;
+			this.__EQControl.d=true;
+			this.__EQControl.last_i=-1;
+			document.addEventListener("mousemove", __EQControl.handleMouseMove, false);
+			document.addEventListener("mouseup", __EQControl.handleMouseUp, false);
+			return true;
+		}
+		this.handleMouseUp=function() {
+			document.removeEventListener("mousemove", __EQControl.handleMouseMove, false);
+			document.removeEventListener("mouseup", __EQControl.handleMouseUp, false);
+			__EQControl.d=false;
+		};
+		this.handleMouseMove=function(ev) {
+			__EQControl._handleMouseMove(ev);
+		};
+		this.refresh=function(x1,x2) {
+			this.doDraw(this.canvas.getContext("2d"),x1,x2);
+		};
+		this.updateSize=function() {
+			//alert(this.canvas.clientWidth);
+			this.canvas.width=this.canvas.clientWidth*this.pr;
+			this.canvas.height=this.canvas.clientHeight*this.pr;
+			//alert(this.canvas.clientWidth+" "+this.canvas.clientHeight);
+			this.refresh();
+		};
+	}
+	function HScale(div) {
+		this.div=div;
+		div.onselectstart=function(){return false;};
+		div.unselectable="on";
+		this.inner=document.createElement("div");
+		div.appendChild(this.inner);
+		if(div.style.position!="absolute")div.style.position="relative";
+		this.inner.style.cssText="position:absolute; top:0px;left:0px;bottom:0px;padding:0px;margin:0px;";
+		this.inner.setAttribute("class","hscale_i");
+		this.value=this.range=0;
+		this.updateWidth=function() {
+			var w;
+			if(this.range==0)w=0;
+			else {
+				w=this.value*this.div.clientWidth/this.range;
+			}
+			this.inner.style.width=w+"px";
+		}
+		this.setRange=function(x) {
+			this.range=x;
+			this.updateWidth();
+		};
+		this.setValue=function(x) {
+			if(x>this.range)x=this.range;
+			if(x<0)x=0;
+			this.value=x;
+			this.updateWidth();
+			if(this.onChange)this.onChange(x);
+		};
+		this.updateWidth();
+		
+		this._handleMouseMove=function(ev)
+		{
+			var e=ev?ev:event;
+			var r=this.div.getBoundingClientRect();
+			var eX=e.clientX-(r.left+this.div.clientLeft);
+			this.setValue(eX*this.range/this.div.clientWidth);
+		}
+		
+		var __HScale=this;
+		this.handleSelectStart=function(){return false;};
+		this.div.onmousedown=function(ev) {
+			if(ev.button!=0) return;
+			__HScale._handleMouseMove(ev);
+			document.addEventListener("mousemove", __HScale.handleMouseMove, false);
+			document.addEventListener("mouseup", __HScale.handleMouseUp, false);
+			document.body.addEventListener("selectstart", __HScale.handleSelectStart, false);
+			return true;
+		}
+		this.handleMouseUp=function() {
+			document.removeEventListener("mousemove", __HScale.handleMouseMove, false);
+			document.removeEventListener("mouseup", __HScale.handleMouseUp, false);
+			document.body.removeEventListener("selectstart", __HScale.handleSelectStart, false);
+		};
+		this.handleMouseMove=function(ev) {
+			__HScale._handleMouseMove(ev);
+		};
+		
+		div.ontouchmove=function(event){
+			if (event.targetTouches.length >= 1) {
+				var ev=new Object();
+				var touch = event.targetTouches[0];
+				ev.clientX=touch.pageX;
+				ev.clientY=touch.pageY;
+				__HScale._handleMouseMove(ev);
+				event.preventDefault();
+			}
+		};
+		div.ontouchstart=function(event) {
+			var ev=new Object();
+			var touch = event.targetTouches[0];
+			ev.clientX=touch.pageX;
+			ev.clientY=touch.pageY;
+			__HScale._handleMouseMove(ev);
+		};
+	}
+	function toggle(e) {
+		if(e._active)e._active=false;
+		else e._active=true;
+		e.setAttribute("class",e._active?"_active":"");
+	}
+	</script>
+	<style>
+	body
+	{
+		padding: 0px;
+		margin: 0px;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		
+	}
+	body,input,td {
+		color: #000;
+		font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+		font-size: 11px;
+	}
+	.panel {
+		padding: 0px 0px;
+		display: table-cell;
+		vertical-align:middle;
+		-moz-user-select: -moz-none;
+	   -khtml-user-select: none;
+	   -webkit-user-select: none;
+	   overflow:hidden;
+	}
+	.selectable {
+		-moz-user-select: -moz-auto;
+		-khtml-user-select: auto;
+		-webkit-user-select: auto;
+	}
+	.panel>* {
+		display: inline-block;
+		vertical-align: middle;
+	}
+	.panel button,.panel input,.btn {
+		background: #fff;
+		border: solid 1px #BCBCBC;
+		padding: 0px 4px;
+		margin: 1px 0px;
+		min-width: 32px;
+		text-align: center;
+		height: 22px;
+	}
+	.panel input[type="text"] {
+		height:20px;
+	}
+	.panel .hscale {
+		height:20px;
+	}
+	.panel input[type="text"] {
+		text-align: left;
+		padding: 0px 4px;
+	}
+	input:hover {
+		border-color: #3333ff;
+	}
+	input._active {
+		background: #000000;
+		color: #ffff99;
+		border-color: #3333ff;
+	}
+	.panel input[type="button"]:active,.btn:active
+	{
+		background: #dfdfdf;
+		border-color: #3333ff;
+		color: #3333ff;
+	}
+	.hscale {
+		border: solid 1px #999999;
+	}
+	.hscale_i {
+		background: #0000ff;
+	}
+	</style>
+</head>
+<body style="overflow:hidden;">
+	<div style="position:absolute; top: 0px; right: 0px; bottom: 0px; left: 0px;">
+		<div style="position:absolute; top:0px; left:0px; right:0px; bottom:52px;">
+			<canvas id="c1" style="width: 100%; height: 100%;"></canvas>
+		</div>
+		<div style="position:absolute; left:2px; right:2px; bottom:26px; height:24px;" class="panel">
+			<input type="button" onclick="doSend('s ');" value="Start" />
+			<input type="button" onclick="doSend('e ');" value="Stop" />
+			<input type="text" id="t_fn" style="width: 85px;" value="default.jfft" />
+			<input type="button" onclick="doSend('r '+document.getElementById('t_fn').value);" value="Load" />
+			<input type="button" onclick="doSend('w '+document.getElementById('t_fn').value);" value="Save" />
+			<span id="s_freq">f: 0 Hz</span>
+		</div>
+		<div style="position:absolute; left:2px; right:2px; bottom:0px; height:26px;" class="panel">
+			<input type="button" id="b_p" onclick="toggle(this); update_pitchshift(); doSend('p '+(this._active?'e':'d'));" value="Pitch shift" />
+			<input type="text" id="t_p" style="width: 35px;" value="<%=pitchshift_value%>" />
+			<input type="button" onclick="update_pitchshift();" value="apply" />
+			<input type="button" id="b_mux" onclick="toggle(this); update_mux(); doSend('x '+(this._active?'e':'d'));" value="Multiplexer" />
+			<span id="hs_mux" style="width:50px;" class="hscale"></span>
+			<input type="button" onclick="var s=window.prompt('multiply each coefficient by 2^x; x:',0);if(s!=null)scaleValues(parseFloat(s));" value="Shift..." />
+		</div>
+	</div>
+<script>
+<%
+if(pitchshift_enable) {
+	%>toggle(document.getElementById("b_p"));<%
+}
+if(do_mux) {
+	%>toggle(document.getElementById("b_mux"));<%
+}
+%>
+var EQ_POINTS=<%=EQ_POINTS%>;
+websocket = new WebSocket("ws://"+window.location.host+window.location.pathname);
+
+function scale_freq(x)
+{
+	x=Math.pow(2,x*10);
+	x=x-1;
+	if(x<0)return 0;
+	return x/1024;
+}
+function scale_freq_r(x)
+{
+	x=x*1024+1;
+	x=Math.log2(x)/10;
+	return x<0?-x:x;
+}
+var graph_range=7.;
+function scale_value(x)
+{
+	var tmp = x - 1.;
+	tmp *= graph_range;
+	return Math.pow(2, tmp);
+}
+var __log_2=Math.log(2);
+function scale_value_r(x)
+{
+	return (Math.log(x)/__log_2) / graph_range + 1;
+}
+//initialize controls
+var eq=new EQControl(document.getElementById("c1"),EQ_POINTS);
+eq.data=[<%
+for(int i=0;i<EQ_POINTS;i++) {
+	if(i!=0) output.writeF(",%lf",eqData[i]);
+	else output.writeF("%lf",eqData[i]);
+}
+%>];
+var hs_mux=new HScale(document.getElementById("hs_mux"));
+hs_mux.setRange(1);
+hs_mux.setValue(<%=v_mux%>);
+
+
+function doSend(s) {
+	websocket.send(s);
+}
+function update_pitchshift() {
+	doSend("p "+document.getElementById("t_p").value);
+}
+function update_mux() {
+	doSend("x "+hs_mux.value);
+}
+function scaleValues(x) {
+	var s="u 0";
+	for(var i=0;i<EQ_POINTS;i++) {
+		eq.data[i]=scale_value_r(scale_value(eq.data[i])*Math.pow(2,x));
+		s+=" "+eq.data[i];
+	}
+	eq.refresh();
+	doSend(s);
+}
+hs_mux.onChange=update_mux;
+eq.onChange=function(i1,i2) {
+	//format: u STARTINDEX DATA[STARTINDEX] DATA[STARTINDEX+1] ...
+	var s="u "+i1;
+	for(var i=i1;i<=i2;i++) {
+		s+=" "+this.data[i];
+	}
+	doSend(s);
+};
+
+
+eq.canvas.addEventListener("mousemove",function(ev) {
+	var e=ev?ev:event;
+	var r=this.getBoundingClientRect();
+	var eX=e.clientX-(r.left+this.clientLeft);
+	document.getElementById("s_freq").textContent="f: "+parseInt(scale_freq(eX/this.clientWidth)*<%=srate/2%>)+" Hz";
+},false);
+
+document.body.onmouseup=function(){eq.d=false;};
+
+window.onresize=function() {
+	eq.updateSize();
+};
+eq.updateSize();
+
+websocket.onmessage = function(evt) {
+	var d=evt.data;
+	var i=d.indexOf(" ");
+	if(i<0)return;
+	var cmd=d.substring(0,i);
+	switch(cmd) {
+		case "u":
+		{	//update data
+			var i1=d.indexOf(' ',i+1);
+			if(i1<0) break;
+			var ind=parseInt(d.substring(i+1,i1));
+			var _ind=ind;
+			if(ind<0)break;
+			i1++;
+			while(true) {
+				var i2=d.indexOf(' ',i1);
+				if(i2<0) i2=d.length;
+				if(ind>=EQ_POINTS) break;
+				if(i2>i1)eq.data[ind++]=parseFloat(d.substring(i1,i2));
+				if(i2>=d.length) break;
+				i1=i2+1;
+			}
+			eq.refresh();
+			break;
+		}
+		case "m":
+		{
+			alert(d.substring(i+1));
+			break;
+		}
+	}
+};
+
+
+</script>
+</body>
+</html>

@@ -81,8 +81,8 @@ int main(int argc, char** argv)
 			write2(r);
 		}
 		
-		void write1(int i) { s2->write(buf1,i,Callback(&handler::write1cb,this)); }
-		void write2(int i) { s1->write(buf2,i,Callback(&handler::write2cb,this)); }
+		void write1(int i) { s2->writeAll(buf1,i,Callback(&handler::write1cb,this)); }
+		void write2(int i) { s1->writeAll(buf2,i,Callback(&handler::write2cb,this)); }
 		void write1cb(int r) {
 			if(r<=0) { stop(); return; }
 			read1();

@@ -142,7 +142,7 @@ namespace net
 		{
 		public:
 			
-			
+			virtual ~protoint() {}
 			DELEGATE(void,datadelegate,const Event& e);
 			EVENT(datadelegate) dataout;
 			virtual void HandleEvent(const Event& e)=0;

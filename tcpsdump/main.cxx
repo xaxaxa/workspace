@@ -76,9 +76,9 @@ int main(int argc, char **argv)
 		}
 	
 		pcap_set_promisc(cap,1);
-		pcap_set_timeout(cap,500);
-		pcap_set_snaplen(cap,65535);
-		pcap_set_buffer_size(cap,1024*1024*8);
+		pcap_set_timeout(cap,100);
+		pcap_set_snaplen(cap,65536);
+		pcap_set_buffer_size(cap,1024*1024*32);
 		int ret=pcap_activate(cap);
 		if(ret&PCAP_ERROR)
 		{

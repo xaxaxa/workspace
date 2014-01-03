@@ -6,16 +6,14 @@ function taskbar_init(e,wnd)
 	wnd.taskbar.element=e;
 	wnd.wnd_on_show=function(w)
 	{
+		try{
 		if(window.taskbar)
 		{
 			var b=wnd.document.createElement("input");
 			b.type="button";
-			b.style.padding="4px 10px";
+			//b.style.padding="4px 10px";
 			//b.style.border="1px outset";
-			b.style.borderLeft="#eaeaea 1px solid";
-			b.style.borderTop="#eaeaea 1px solid";
-			b.style.borderRight="#808080 1px solid";
-			b.style.borderBottom="#808080 1px solid";
+			b.setAttribute("class","windowbutton");
 			b.__w=w;
 			w.__b=b;
 			b.value=w.td_title.textContent;
@@ -28,6 +26,7 @@ function taskbar_init(e,wnd)
 			
 			//w.td_title.style.backgroundColor="#808080";
 		}
+		}catch(e){}
 	};
 	wnd.wnd_on_activate=function(w)
 	{
@@ -39,41 +38,38 @@ function taskbar_init(e,wnd)
 				if(obj[i].__b)
 				{
 					//obj[i].__b.style.border="1px outset";
-					obj[i].__b.style.borderLeft="#eaeaea 1px solid";
-					obj[i].__b.style.borderTop="#eaeaea 1px solid";
-					obj[i].__b.style.borderRight="#808080 1px solid";
-					obj[i].__b.style.borderBottom="#808080 1px solid";
+					obj[i].__b.setAttribute("class","windowbutton");
 				}
-				obj[i].td_title.style.backgroundColor="#808080";
+				obj[i].tr_title.setAttribute("class","windowtitle_i");
 			}
 		}
 		if(w.__b)
 		{
-			w.__b.style.borderLeft="#808080 1px solid";
-			w.__b.style.borderTop="#808080 1px solid";
-			w.__b.style.borderRight="#eaeaea 1px solid";
-			w.__b.style.borderBottom="#eaeaea 1px solid";
+			w.__b.setAttribute("class","windowbutton_a");
 		}
-		w.td_title.style.backgroundColor="#0a246a";
+		//w.tr_title.style.backgroundColor="#000000";
+		w.tr_title.setAttribute("class","windowtitle");
 	};
 	wnd.wnd_on_close=function(w)
 	{
-		/*var i;
-		for(i=0;i<window.obj.length;i++)
-		{
-			if(obj[i].type=="window")
+		try{
+			/*var i;
+			for(i=0;i<window.obj.length;i++)
 			{
-				if(obj[i].__b)obj[i].__b.style.border="1px outset";
-				obj[i].td_title.style.backgroundColor="#808080";
-			}
-		}*/
-		if(w.__b)
-		{
-			if(window.taskbar)
+				if(obj[i].type=="window")
+				{
+					if(obj[i].__b)obj[i].__b.style.border="1px outset";
+					obj[i].td_title.style.backgroundColor="#808080";
+				}
+			}*/
+			if(w.__b)
 			{
-				window.taskbar.element.removeChild(w.__b);
+				if(window.taskbar)
+				{
+					window.taskbar.element.removeChild(w.__b);
+				}
 			}
-		}
+		}catch(e){}
 	};
 	wnd.wnd_do_minimize=function(w)
 	{
@@ -82,10 +78,7 @@ function taskbar_init(e,wnd)
 			if(window.taskbar)
 			{
 				//w.__b.style.border="1px outset";
-				w.__b.style.borderLeft="#eaeaea 1px solid";
-				w.__b.style.borderTop="#eaeaea 1px solid";
-				w.__b.style.borderRight="#808080 1px solid";
-				w.__b.style.borderBottom="#808080 1px solid";
+				w.__b.setAttribute("class","windowbutton");
 				w.fr.style.display="none";
 				if(w.maximized)
 				{

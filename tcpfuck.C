@@ -1,4 +1,4 @@
-#include <cpoll.H>
+#include <cpoll/cpoll.H>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -21,8 +21,9 @@ int main(int argc, char** argv)
 	poll.add(s);
 	s.bind(CP::IPEndPoint(CP::IPAddress(listenAddr), port));
 	s.listen();
-	s.repeatAccept([&poll](CP::Socket* new_s) {
+	auto cb=[&poll](CP::Socket* new_s) {
 		
-	});
+	};
+	s.repeatAccept(&cb);
 	poll.loop();
 }

@@ -18,70 +18,72 @@
 #define __RGC_H
 #include <cstddef>
 #include <utility>
+#include <stdlib.h>
+
 namespace RGC
 {
-	typedef volatile int atomic_t;
-#define atomic_read(v)                  v
-#define atomic_set(v,i)                 v = i
-#define atomic_add(i,v)                 v += i
-#define atomic_sub(i,v)                 v -= i
-#define atomic_sub_and_test(i,v)        (v -= i) == 0
-#define atomic_inc(v)                   v++
-#define atomic_dec(v)                   v--
-#define atomic_dec_and_test(v)          --v == 0
-#define atomic_inc_and_test(v)          ++v == 0
-#define atomic_add_negative(i,v)        (v += i) < 0
-	//static int objs=0;
 	class Allocator;
 	class Object
 	{
 	public:
 		Allocator* allocator;
-		atomic_t refCount; //reference counter
+		int refCount; //reference counter
 		Object() {
 			allocator = NULL;
 			refCount = 1;
-			/*objs++;
-			 cout << objs << " objects" << endl;*/
 		}
 		Object(const Object& other) {
 			refCount = 1;
 		}
 		virtual ~Object() {
-			/*objs--;
-			 cout << objs << " objects" << endl;*/
 		}
-		inline void retain(int n=1) {
-			atomic_add(n,refCount);
+		inline void retain(int n = 1) {
+			__sync_fetch_and_add(&refCount, n);
 		}
 		inline void destruct();
-		inline bool release(int n=1) { //returns whether or not destruction occurred
-			atomic_sub(n,refCount);
-			if (refCount <= 0) {
+		inline bool release(int n = 1) { //returns whether or not destruction occurred
+			if(__sync_fetch_and_sub(&refCount, n) == n) {
 				destruct();
 				return true;
 			}
 			return false;
 		}
-		/*Object& operator=(const Object& other)
-		 {
-		 //refCount = 1;
-		 return *this;
-		 }*/
 	};
 	class Allocator: public virtual Object
 	{
 	public:
 		virtual void* alloc(int s)=0;
-		virtual void free(void* obj)=0;
+		virtual void dealloc(void* obj)=0;
+		void _setAllocator(void* v, Allocator* a) {
+		} //not inherited from Object; do nothing
+		void _setAllocator(Object* o, Allocator* a) {
+			o->allocator = a;
+		}
+		template<class T, class ... A>
+		T* New(A&&... a) {
+			T* tmp = new (alloc(sizeof(T))) T(std::forward<A>(a)...);
+			_setAllocator(tmp, this);
+			return tmp;
+		}
 		template<class T>
 		void del(T* obj) {
 			obj->~T();
-			free(obj);
+			dealloc(obj);
 		}
 	};
+	class DefaultAllocator: public Allocator
+	{
+		void* alloc(int s) override final {
+			return malloc(s);
+		}
+		void dealloc(void* obj) override final {
+			return free(obj);
+		}
+	};
+	static DefaultAllocator defaultAllocator;
 	void Object::destruct() {
-		if(allocator==NULL) delete this;
+		if (allocator == NULL)
+			delete this;
 		else allocator->del(this);
 	}
 	//template<class T> struct Ref;
@@ -149,58 +151,28 @@ namespace RGC
 		}
 	};
 	//creates a new instance, but disowns it
-	template<class T, class ... ARGS> inline T* newObj(ARGS&&... args)
-	{
+	template<class T, class ... ARGS> inline T* newObj(ARGS&&... args) {
 		T* tmp = new T(std::forward<ARGS>(args)...);
 		tmp->refCount--;
 		return tmp;
 	}
-/*template<class T> struct Ref
- {
- T* obj;
- template<class ... ARGS> inline Ref(ARGS&& ... args)
- :obj(new T(std::forward<ARGS>(args)...))
- {
- }
- Ref(const Property<T>& prop):obj(prop.obj)
- {
- obj->retain();
- }
- ~Ref()
- {
- obj->release();
- }
- inline T* operator()() const
- {
- return obj;
- }
- inline T* operator->() const
- {
- return obj;
- }
- inline T& operator*() const
- {
- return *obj;
- }
- inline T* get() const
- {
- return obj;
- }
- };*/
-
-//callback mechanism similar to .NET events
-			/*template<class funcType> class Event
-			 {
-			 public:
-			 vector<funcType> callbacks;
-			 void operator()() {
-			 for(int i=0;i<callbacks.size();i++)
-			 callbacks[i]();
-			 }
-			 void operator+=(const funcType& cb) {
-			 callbacks.push_back(cb);
-			 }
-
-			 };*/
-			}
+	
+	template<class T> struct FakePtr
+	{
+		T obj;
+		template<class ... ARGS>
+		FakePtr(ARGS&&... args): obj(std::forward<ARGS>(args)...) {}
+		FakePtr(const FakePtr<T>& other)=delete;
+		inline T& operator*() {
+			return obj;
+		}
+		inline T* operator->() {
+			return &obj;
+		}
+		inline T* get() const {
+			return &obj;
+		}
+		FakePtr operator=(const FakePtr& other)=delete;
+	};
+}
 #endif

@@ -1,0 +1,40 @@
+<%#
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
+
+//example cppsp error handler module
+
+Server::HandleErrorChain::item* it;
+Server* server;
+String filePath;
+void handleError(void*, Request& req, Response& resp, exception& ex, Delegate<void()> cb) {
+	const char* msg=ex.what();
+	char* s=(char*)malloc(strlen(msg));
+	if(s==nullptr) throw bad_alloc();
+	strcpy(s,msg);
+	req.customParams=s;
+	return server->handleDynamicRequestFromFile(filePath,req,resp,cb);
+}
+extern "C" void initModule(ModuleParams& p) {
+	server=p.server;
+	filePath=p.filePath;
+	printf("server=%p\n",server);
+	it=server->handleError.attach(&handleError);
+}
+extern "C" void deinitModule() {
+	server->handleError.detach(it);
+}
+%>
+error: <%=(const char*)request->customParams%>

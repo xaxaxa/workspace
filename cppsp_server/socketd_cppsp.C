@@ -1,3 +1,17 @@
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
 #include <cpoll/cpoll.H>
 #include <unistd.h>
 #include <iostream>
@@ -14,7 +28,6 @@ using namespace socketd;
 using namespace CP;
 using namespace cppsp;
 string rootDir;
-String globalHandler{(char*)nullptr,0};
 void parseArgs(int argc, char** argv, const function<void(char*, const function<char*()>&)>& cb) {
 	int i = 1;
 	function<char*()> func = [&]()->char*
@@ -34,6 +47,7 @@ void parseArgs(int argc, char** argv, const function<void(char*, const function<
 }
 int main(int argc, char** argv) {
 	cout << "started child #" << getpid() << endl;
+	srand(int(getpid())^(int)time(NULL));
 	{
 		char cwd[255];
 		if(getcwd(cwd,255)==NULL) throw runtime_error(strerror(errno));
@@ -41,6 +55,7 @@ int main(int argc, char** argv) {
 	}
 	CP::Poll p;
 	vector<string> cxxopts;
+	vector<const char*> modules;
 	parseArgs(argc, argv,
 			[&](char* name, const std::function<char*()>& getvalue)
 			{
@@ -48,14 +63,13 @@ int main(int argc, char** argv) {
 					rootDir=getvalue();
 				} else if(strcmp(name,"c")==0) {
 					cxxopts.push_back(getvalue());
-				} else if(strcmp(name,"h")==0) {
-					globalHandler=getvalue();
+				} else if(strcmp(name,"m")==0) {
+					modules.push_back(getvalue());
 				}
 			});
 	
-	cppspServer::Server srv(rootDir.c_str());
-	srv.globalHandler=globalHandler;
-	auto& v=CXXOpts(srv.mgr);
+	cppspServer::Server srv(&p,rootDir.c_str());
+	auto& v=srv.mgr->cxxopts;
 	v.insert(v.end(),cxxopts.begin(),cxxopts.end());
 	cxxopts.clear();
 	
@@ -72,6 +86,41 @@ int main(int argc, char** argv) {
 			hdlr->allocator=&mp;
 		}
 	} cb {p, mp, srv};
-	socketd_client cl(p, &cb);
+	
+	int modsLeft;
+	struct {
+		int& modsLeft;
+		CP::Poll& p;
+		Delegate<void(socketd_client& cl, Socket* s, int64_t id)> cb;
+		void operator()() {
+			if(--modsLeft == 0) {
+				new socketd_client(p,cb);
+			}
+		}
+	} afterModuleLoad {modsLeft,p,&cb};
+	struct {
+		const char* s;
+		Delegate<void()> afterModuleLoad;
+		void operator()(ModuleInstance inst,exception* ex) {
+			if(ex!=NULL) {
+				fprintf(stderr,"error loading module %s: %s\n",s,ex->what());
+				cppsp::CompileException* ce = dynamic_cast<cppsp::CompileException*>(ex);
+				if (ce != NULL) {
+					printf("%s\n",ce->compilerOutput.c_str());
+				}
+			}
+			afterModuleLoad();
+		}
+	} moduleCB[modules.size()];
+	modsLeft=modules.size();
+	for(int ii=0;ii<(int)modules.size();ii++) {
+		moduleCB[ii].s=modules[ii];
+		moduleCB[ii].afterModuleLoad=&afterModuleLoad;
+		auto res=srv.defaultServer->loadModule(modules[ii]);
+		if(res) moduleCB[ii](res(),nullptr);
+		else res.wait(&moduleCB[ii]);
+	}
+	if(modules.size()==0) new socketd_client(p,&cb);
+	
 	p.loop();
 }

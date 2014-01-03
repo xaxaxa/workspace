@@ -36,7 +36,7 @@ void init()
 		A argv=o.getArray()[1].getArray();
 		if(argc<2) {
 			cout << "usage: " << argv[0].getString() << 
-				" [-o a=access_token ...] [-c concurrency] filename.js [filename2.js ...]" << endl;
+				" -a access_token [-o JS_CODE]... [-c concurrency] filename.js [filename2.js ...]" << endl;
 			return O(1);
 		}
 		
@@ -48,6 +48,11 @@ void init()
 			if(strcmp(argv[i].getString(),"-o")==0 && (i+1)<argc) {
 				sb.Append(argv[i+1].getString());
 				sb.Append(";\n");
+				i++;
+			} else if(strcmp(argv[i].getString(),"-a")==0 && (i+1)<argc) {
+				sb.Append("a=\"");
+				sb.Append(argv[i+1].getString());
+				sb.Append("\";");
 				i++;
 			} else if(strcmp(argv[i].getString(),"-c")==0 && (i+1)<argc) {
 				concurrency=atoi(argv[i+1].getString());
