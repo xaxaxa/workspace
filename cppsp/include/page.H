@@ -99,7 +99,7 @@ namespace cppsp
 		/**
 		 You don't need to call this manually; POST data is automatically read for all HTTP POST requests.
 		 */
-		virtual void readPost(Delegate<void(Request&)> cb)=0;
+		virtual void readPost(Delegate<void(Request&)> cb) {cb(*this);}
 		/**
 		 internal method do not use.
 		 */

@@ -120,8 +120,7 @@ namespace cppsp
 				throw ParserException(
 						"reached EOF when looking past " + is_ssi ? "<!--#include" : "\"<%\"", line);
 			const char* s1;
-			if (is_ssi)
-				s1 = (const char*) memmem(s, end - s, "-->", 3);
+			if (is_ssi) s1 = (const char*) memmem(s, end - s, "-->", 3);
 			else s1 = (const char*) memmem(s, end - s, "%>", 2);
 			if (s1 == NULL)
 				throw ParserException(
@@ -159,8 +158,7 @@ namespace cppsp
 						switch (nextopt) {
 							case 0:
 							{
-								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0)
-									nextopt = 1;
+								if (l1 == 8 && memcmp(s1, "inherits", 8) == 0) nextopt = 1;
 								else if (l1 == 5 && memcmp(s1, "class", 5) == 0) nextopt = 2;
 								continue;
 							}
@@ -302,14 +300,10 @@ namespace cppsp
 		return NULL;
 	}
 	int tsCompare(struct timespec time1, struct timespec time2) {
-		if (time1.tv_sec < time2.tv_sec)
-			return (-1); /* Less than. */
-		else if (time1.tv_sec > time2.tv_sec)
-			return (1); /* Greater than. */
-		else if (time1.tv_nsec < time2.tv_nsec)
-			return (-1); /* Less than. */
-		else if (time1.tv_nsec > time2.tv_nsec)
-			return (1); /* Greater than. */
+		if (time1.tv_sec < time2.tv_sec) return (-1); /* Less than. */
+		else if (time1.tv_sec > time2.tv_sec) return (1); /* Greater than. */
+		else if (time1.tv_nsec < time2.tv_nsec) return (-1); /* Less than. */
+		else if (time1.tv_nsec > time2.tv_nsec) return (1); /* Greater than. */
 		else return (0); /* Equal. */
 	}
 
@@ -648,8 +642,7 @@ namespace cppsp
 			lp.doUnload();
 		}
 		if (!lp.loaded) lp.doLoad(fd, map);
-		if (fd && lp.fd < 0)
-			lp._loadFD();
+		if (fd && lp.fd < 0) lp._loadFD();
 		else if (map && lp.data.d == nullptr) lp._loadMap();
 		return &lp;
 	}
@@ -691,7 +684,7 @@ namespace cppsp
 			xxx: return lp1;
 		}
 		c = lp.shouldCompile();
-		if (likely(lp1->loaded && c==0)) goto xxx;
+		if (likely(lp1->loaded && c == 0)) goto xxx;
 		if (c >= 2) {
 			try {
 				if (lp.doCompile(p, wd.toSTDString(), cxxopts)) return lp1;
@@ -725,7 +718,7 @@ namespace cppsp
 					cache.erase(tmp);
 					del++;
 					continue;
-				} else if((*it).second->moduleCount == 0) ret = true;
+				} else if ((*it).second->moduleCount == 0) ret = true;
 				it++;
 			}
 		}
@@ -751,8 +744,7 @@ namespace cppsp
 		while (true) {
 			s = in.readLine();
 			if (s.length() <= 0) {
-				if (in.eof)
-					break;
+				if (in.eof) break;
 				else continue;
 			}
 			String tmp = s;

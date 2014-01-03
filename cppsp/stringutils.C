@@ -25,15 +25,12 @@ using namespace CP;
 namespace cppsp
 {
 	inline char hexCharToInt(char ch) {
-		if (ch <= '9')
-			return ch - '0';
-		else if (ch <= 'Z')
-			return ch - 'A' + 10;
+		if (ch <= '9') return ch - '0';
+		else if (ch <= 'Z') return ch - 'A' + 10;
 		else return ch - 'a' + 10;
 	}
 	inline char intToHexChar(char i) {
-		if (i < 10)
-			return i + '0';
+		if (i < 10) return i + '0';
 		else return i - 10 + 'A';
 	}
 	int doURLDecode(const char* in, int inLen, char* out) {
@@ -130,6 +127,7 @@ namespace cppsp
 		return ss.str();
 	}
 	void parseQueryString(const char* in, int inLen, queryStringCallback cb, bool decode) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
 		if (decode) {
 			MemoryStream ms;
 			StreamWriter sw(ms);
@@ -161,13 +159,13 @@ namespace cppsp
 				int l = spl.value.len;
 				const char* _end = s + l;
 				const char* tmp = (const char*) memchr(s, '=', l);
-				if (tmp == NULL)
-					cb(s, l, nullptr, 0);
+				if (tmp == NULL) cb(s, l, nullptr, 0);
 				else cb(s, tmp - s, tmp + 1, _end - tmp - 1);
 			}
 		}
 	}
 	void htmlEscape(const char* in, int inLen, CP::StreamWriter& sw) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
 		int sz = 0;
 		for (int i = 0; i < inLen; i++) {
 			switch (in[i]) {
@@ -219,6 +217,7 @@ namespace cppsp
 		sw.endWrite(sz);
 	}
 	void htmlAttributeEscape(const char* in, int inLen, CP::StreamWriter& sw) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
 		int last_i = 0;
 		const char* tmp;
 		for (int i = 0; i < inLen; i++) {
@@ -276,6 +275,7 @@ namespace cppsp
 	//the size of buf should be at least strlen(p1)+strlen(p2)
 	//returns the length of the string written to buf; does NOT write null byte
 	int combinePath(const char* p1, int l1, const char* p2, int l2, char* buf) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
 		if (l2 > 0 && p2[0] == '/') {
 			memcpy2(buf, p2, l2);
 			return l2;
@@ -318,6 +318,7 @@ namespace cppsp
 	//p1 is the "root" directory
 	//guarantees that the resulting path won't be outside of p1
 	int combinePathChroot(const char* p1, int l1, const char* p2, int l2, char* buf) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
 		int i = l1;
 		memcpy2(buf, p1, i);
 		static const uint16_t parentDir = *(const uint16_t*) "..";

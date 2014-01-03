@@ -77,6 +77,7 @@ namespace cppsp
 			else return (char*) memmem(tmp + 1, (char*) s + len - tmp - 1, "\r\n", 2);
 		}
 		bool _process_readingHeaders() {
+			//XXX: dangerous (potentially exploitable) codepath; please audit
 			uint8_t* buf = ms.data();
 			aaaaa: void* tmp = findCRLF(buf + rpos, ms.length() - rpos);
 			if (tmp == NULL) {
@@ -136,6 +137,7 @@ namespace cppsp
 			goto aaaaa;
 		}
 		bool _process_readingContent() {
+			//XXX: dangerous (potentially exploitable) codepath; please audit
 			uint8_t* buf = ms.data();
 			if (ms.length() - pos < _ctLen) return false;
 			content= {(char*)buf+pos,_ctLen};

@@ -85,12 +85,9 @@ namespace CP
 				d((char*) mb.data()), len(mb.length()) {
 		}
 		int compare(const String& other) const {
-			if (len < other.len)
-				return -1;
-			else if (len > other.len)
-				return 1;
-			else if (len == 0)
-				return 0;
+			if (len < other.len) return -1;
+			else if (len > other.len) return 1;
+			else if (len == 0) return 0;
 			else return memcmp(d, other.d, len);
 		}
 		int alphabeticalCompare(const String& other) const {
@@ -317,8 +314,7 @@ namespace CP
 			return *this;
 		}
 		AsyncValue<T>& operator=(const AsyncValue<T>& other) {
-			if (!(async = other.async))
-				value = other.value;
+			if (!(async = other.async)) value = other.value;
 			else cbAddr = other.cbAddr;
 			return *this;
 		}
