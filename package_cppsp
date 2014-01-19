@@ -13,7 +13,7 @@ find -L "$TARGET"/include -type l -delete
 cp -a test/socketd_proxy.C "$TARGET"/
 cat >"$TARGET"/_makefile <<EOF
 OPTFLAGS := -Ofast -march=native -flto
-CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -I./include \$(CFGFLAGS)
+CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -funsigned-char -fwrapv -fno-delete-null-pointer-checks -fno-strict-aliasing -I./include \$(CFGFLAGS)
 CXX := g++
 all: cppsp_standalone libcpoll.so libcppsp.so socketd_bin socketd_cppsp socketd_proxy.so
 cppsp_standalone: 
@@ -69,20 +69,20 @@ EOF
 chmod +x "$TARGET"/configure
 cat >"$TARGET"/run_example <<EOF
 #!/bin/bash
-LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -r "\$(pwd)"/www -m /dir_list.cppsm -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -f \$@
+LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -r "\$(pwd)"/www -m /dir_list.cppsm -l 0.0.0.0:16969 -c -funsigned-char -c -fwrapv -c -fno-delete-null-pointer-checks -c -fno-strict-aliasing -c -fPIC -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -f \$@
 EOF
 cat >"$TARGET"/run_application <<EOF
 #!/bin/bash
 # usage: run_application /ABSOLUTE/PATH/TO/APPLICATION
 
-LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -f -l 0.0.0.0:16969 -c -fPIC -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -r "\$@"
+LD_LIBRARY_PATH="\$(pwd)" ./cppsp_standalone -f -l 0.0.0.0:16969 -c -fPIC -c -funsigned-char -c -fwrapv -c -fno-delete-null-pointer-checks -c -fno-strict-aliasing -c -I"\$(pwd)"/include -c -L"\$(pwd)" -c -pthread -c -Ofast -c -march=native -c -lcpoll -c -lcppsp -r "\$@"
 EOF
 cat >"$TARGET"/run_cppsp <<EOF
 #!/usr/bin/env python
 import os,sys
 path=os.path.abspath(os.path.split(sys.argv[0])[0]);
 os.environ["LD_LIBRARY_PATH"]=path;
-os.execv(path+"/cppsp_standalone",[path+"/cppsp_standalone","-c","-fPIC","-c","-I"+path+"/include","-c","-L"+path,"-c","-lpthread","-c","-lcpoll","-c","-lcppsp"]+sys.argv[1:]);
+os.execv(path+"/cppsp_standalone",[path+"/cppsp_standalone","-c","-fPIC","-c","-funsigned-char","-c","-fwrapv","-c","-fno-delete-null-pointer-checks","-c","-fno-strict-aliasing","-c","-I"+path+"/include","-c","-L"+path,"-c","-lpthread","-c","-lcpoll","-c","-lcppsp"]+sys.argv[1:]);
 
 EOF
 cat >"$TARGET"/cppsp_clean <<EOF

@@ -1,6 +1,6 @@
 
 CFLAGS := -Ofast -march=native 
-CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions \
+CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions -funsigned-char -fwrapv -fno-delete-null-pointer-checks -fno-strict-aliasing \
 	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC -D_FILE_OFFSET_BITS=64 $(CFLAGS)
 CC := gcc
 CXX := g++
