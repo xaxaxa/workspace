@@ -73,7 +73,7 @@ namespace cppsp
 
 	//parses a cppsp page and generates code (to out) and string table (to st_out)
 	void doParse(const char* name, const char* in, int inLen, Stream& out, Stream& st_out,
-			vector<string>& c_opts) {
+			vector<string>& c_opts, const char* filename) {
 		const char* s = in;
 		const char* end = s + inLen;
 		string inherits = "public Page";
@@ -92,6 +92,7 @@ namespace cppsp
 		sw1.write("#include <rgc.H>\n");
 		sw1.write("using namespace cppsp;\nusing namespace CP;\n");
 		int line = 1;
+		sw1.writeF("#line 1 \"%s\"\n", filename);
 		while (true) {
 			if (s >= end) break;
 			const char* old_s = s;
@@ -265,7 +266,8 @@ namespace cppsp
 			//unlink((path + ".C").c_str());
 			File out_c(open(cPath.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0666));
 			File out_s(open(txtPath.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0666));
-			cppsp::doParse(NULL, (const char*) ms.data(), ms.length(), out_c, out_s, c_opts);
+			cppsp::doParse(NULL, (const char*) ms.data(), ms.length(), out_c, out_s, c_opts,
+					path.c_str());
 		}
 
 		const char* cmds[c_opts.size() + 1];
