@@ -117,26 +117,24 @@ namespace cppsp
 			for (const char* ch = old_s; ch < s; ch++)
 				if (*ch == '\n') line++;
 			s += is_ssi ? 12 : 2;
-			if (s >= end)
-				throw ParserException(
-						"reached EOF when looking past " + is_ssi ? "<!--#include" : "\"<%\"", line);
+			if (s >= end) throw ParserException(
+					"reached EOF when looking past " + is_ssi ? "<!--#include" : "\"<%\"", line);
 			const char* s1;
 			if (is_ssi) s1 = (const char*) memmem(s, end - s, "-->", 3);
 			else s1 = (const char*) memmem(s, end - s, "%>", 2);
-			if (s1 == NULL)
-				throw ParserException(
-						"reached EOF when looking for matching " + is_ssi ? "-->" : "\"%>\"", line);
+			if (s1 == NULL) throw ParserException(
+					"reached EOF when looking for matching " + is_ssi ? "-->" : "\"%>\"", line);
 
 			if (is_ssi) {
 				const char* s_f = (const char*) memmem(s, s1 - s, "file=", 5);
 				if (s_f == nullptr) throw ParserException("SSI without 'file=' parameter", line);
 				s_f += 5;
-				if (s_f >= end || *s_f != '"')
-					throw ParserException("SSI filenames must be surrounded with '\"'", line);
+				if (s_f >= end || *s_f != '"') throw ParserException(
+						"SSI filenames must be surrounded with '\"'", line);
 				s_f++;
 				const char* e_f = (const char*) memchr(s_f, '"', end - s_f);
-				if (e_f == NULL)
-					throw ParserException("reached EOF when looking for matching '\"'", line);
+				if (e_f == NULL) throw ParserException("reached EOF when looking for matching '\"'",
+						line);
 				sw3.writeF("__writeStringTable(%i,%i);\n", st_pos, st_len - st_pos);
 				st_pos = st_len;
 				sw3.writeF("#line %i\n", line);
@@ -340,9 +338,9 @@ namespace cppsp
 			//keep a copy of the compiled page
 			if (status == 0) {
 				if (!manager->debug) unlink(cPath.c_str());
-				string dll1 = dllPath + ".1";
+				string dll1 = dllPath + ".2";
 				link(dllPath.c_str(), dll1.c_str());
-				string txt1 = txtPath + ".1";
+				string txt1 = txtPath + ".2";
 				link(txtPath.c_str(), txt1.c_str());
 
 				string binPath = loadedPage_getBinPath(this);
@@ -596,8 +594,8 @@ namespace cppsp
 		{
 			TO_C_STR(path.data(), path.length(), s1);
 			checkError(stat(s1, &st), path);
-			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode))
-				throw ParserException("requested path is a directory or socket");
+			if (S_ISDIR(st.st_mode) || S_ISSOCK(st.st_mode)) throw ParserException(
+					"requested path is a directory or socket");
 		}
 		if (!loaded) return true;
 		timespec modif_cppsp = st.st_mtim;
@@ -759,10 +757,13 @@ namespace cppsp
 			mimeTypes.insert( { ext.toSTDString(), tmp.subString(0, i).toSTDString() });
 		}
 	}
-	void handleError(exception* ex, cppsp::Response& resp, String path) {
+	void handleError(exception* ex, cppsp::Server& server, cppsp::Response& resp, String path) {
 		HTTPException* ex1 = dynamic_cast<HTTPException*>(ex);
 
 		resp.clear();
+		//re-create response headers because the page may have scribbled on it
+		resp.headersExtraSpace = 0;
+		resp.addDefaultHeaders(server.host->curRFCTime, "text/html; charset=UTF-8");
 		if (ex1 != nullptr) {
 			resp.statusCode = ex1->code;
 			resp.statusName = ex1->what();
@@ -776,7 +777,6 @@ namespace cppsp
 				resp.statusName = "Internal server error";
 			}
 		}
-		resp.headers["Content-Type"] = "text/html; charset=UTF-8";
 		resp.output.write("<html><head><title>Server error</title></head>\n");
 		resp.output.write("<body><h1 style=\"color: #aa1111\">Server error in ");
 		htmlEscape(path, resp.output);

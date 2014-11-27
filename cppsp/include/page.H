@@ -82,6 +82,7 @@ namespace cppsp
 		 POST data.
 		 */
 		StringMap form;
+		Server* server;
 		/**
 		 can be used to pass custom parameters into a page (from a request router, etc)
 		 */
@@ -99,11 +100,12 @@ namespace cppsp
 		/**
 		 You don't need to call this manually; POST data is automatically read for all HTTP POST requests.
 		 */
-		virtual void readPost(Delegate<void(Request&)> cb) {cb(*this);}
+		virtual void parsePost() {
+		}
 		/**
 		 internal method do not use.
 		 */
-		void parsePost(String buf);
+		void doParsePost(String buf);
 		/**
 		 internal method do not use.
 		 See Response::reset().
@@ -145,12 +147,26 @@ namespace cppsp
 		typedef map<String, String, less<String>, CP::PoolAllocator<std::pair<const String, String> > > StringMap;
 		/**
 		 HTTP response headers.
+		 If you want to append your own headers, you can:
+		 1. in init(), set headersExtraSpace to the maximum number of bytes you think you'll append
+		 2. append your headers past the end of this string
+		 3. update the length of this string
+		 OR
+		 1. after init(), make a copy of headers (appending your own data into it in the process);
+		 	 when allocating space for your new string, allocate N extra bytes at the end, where N
+		 	 is strlen("Content-Length: 0000000000\r\n")
+ 	 	 2. update headers to point to your new string; headers.len should be set to the total length
+			 of the actual headers, not including the extra space at the end
+		 3. set _headersEnd to NULL.
+		 If you want to _replace_ the whole header string with your own, the same over-allocation
+		 rule applies.
 		 */
-		StringMap headers;
+		String headers;
 		/**
 		 HTTP response status (OK, Internal Server Error, etc).
 		 */
 		String statusName;
+		char* _headersEnd;
 		/**
 		 internal field do not use.
 		 */
@@ -159,6 +175,10 @@ namespace cppsp
 		 HTTP response status code (200, 500, etc).
 		 */
 		int statusCode;
+		/**
+		 Extra space to allocate (in bytes) for the headers string
+		 */
+		int headersExtraSpace;
 		/**
 		 internal field do not use.
 		 */
@@ -177,6 +197,7 @@ namespace cppsp
 		 TODO: chunked output not yet implemented.
 		 */
 		bool sendChunked;
+		bool keepAlive;
 		bool _writing;
 		bool _doWrite;
 		/*virtual void doWriteHeaders();
@@ -198,7 +219,7 @@ namespace cppsp
 		/**
 		 internal method do not use.
 		 */
-		void addDefaultHeaders();
+		void addDefaultHeaders(String time, String mime);
 		/**
 		 Serialize the HTTP response headers.
 		 */
@@ -210,6 +231,7 @@ namespace cppsp
 		void write(T&&... a) {
 			output.write(std::forward<T>(a)...);
 		}
+		void appendHeaders(String h);
 		/**
 		 internal method do not use.
 		 */
@@ -409,6 +431,7 @@ namespace cppsp
 		string root;
 		PerformanceCounters performanceCounters;
 		ModuleContainer modules;
+		string defaultMime;
 
 		CP::Poll* poll;
 		int threadID;
@@ -706,7 +729,16 @@ namespace cppsp
 
 		}
 		virtual void doInit();
-		virtual void initCB();
+		void prepareResponse() {
+			response->addDefaultHeaders(server->host->curRFCTime, server->defaultMime);
+		}
+		virtual void preRespond() {}
+		virtual void startResponse();
+		void initCB() {
+			preRespond();
+			prepareResponse();
+			startResponse();
+		}
 		virtual void cancelLoad(exception* ex = NULL);
 		/**
 		 To be overridden by derived class; called before headers are written. See init() for a description of the request life-cycle.
@@ -737,7 +769,6 @@ namespace cppsp
 		virtual ~Page() {
 		}
 
-		void _readPOSTCB(Request& r);
 		void _flushCB(Response& r);
 	};
 } /* namespace cppsp */

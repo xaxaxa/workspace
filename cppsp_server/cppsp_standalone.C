@@ -339,6 +339,7 @@ int main(int argc, char** argv) {
 		tmp.modules=modules;
 		tmp.srv.threadID=i;
 		if(threads==1) {
+			srand(int(getpid())^(int)time(NULL));
 			thread1(&tmp);
 			return 0;
 		}

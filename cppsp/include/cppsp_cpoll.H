@@ -42,9 +42,8 @@ namespace cppsp
 		CPollRequest(CP::Socket& s, CP::StringPool* sp);
 		//returns: true: request already in buffer; false: read is in progress
 		bool readRequest(const Delegate<void(bool success)>& cb);
-		void readPost(Delegate<void(Request&)> cb) override {
-			parsePost(_parser.content);
-			cb(*this);
+		void parsePost() override {
+			doParsePost(_parser.content);
 		}
 		void _beginRead();
 		void _readCB(int i);

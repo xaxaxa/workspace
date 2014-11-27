@@ -33,7 +33,11 @@ struct DirListModule: public RGC::Object {
 		Delegate<void()> cb;
 		void handleRequest(Request& req, Response& resp, Delegate<void()> cb) {
 			this->cb=cb;
-			resp.headers["Location"]=concat(*req.sp,req.path,"/");
+			resp.headersExtraSpace+=req.path.len+32;
+			resp.addDefaultHeaders(req.server->host->curRFCTime,req.server->defaultMime);
+			resp.appendHeaders("Location: ");
+			resp.appendHeaders(req.path);
+			resp.appendHeaders("/\r\n");
 			resp.statusName="Moved permanently";
 			resp.statusCode=301;
 			resp.finalize({&redirectHandler::flushCB,this});

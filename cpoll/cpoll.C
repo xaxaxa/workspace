@@ -550,7 +550,7 @@ namespace CP
 			buffer = (uint8_t*) newbuffer;
 			bufferSize = bs;
 		}
-		output->write(buffer, bufferPos);
+		output->writeAll(buffer, bufferPos);
 		bufferPos = 0;
 	}
 
@@ -1423,7 +1423,7 @@ namespace CP
 		protocol = p;
 	}
 //the caller must release() or free() the returned object
-	EndPoint* Socket::getLocalEndPoint() {
+	EndPoint* Socket::getLocalEndPoint() const {
 		EndPoint* ep = EndPoint::create(addressFamily);
 		socklen_t l = (socklen_t) (ep->getSockAddrSize());
 		char addr[l];
@@ -1432,7 +1432,7 @@ namespace CP
 		return ep;
 	}
 //the caller must release() or free() the returned object
-	EndPoint* Socket::getRemoteEndPoint() {
+	EndPoint* Socket::getRemoteEndPoint() const {
 		EndPoint* ep = EndPoint::create(addressFamily);
 		socklen_t l = (socklen_t) (ep->getSockAddrSize());
 		char addr[l];
@@ -1730,7 +1730,7 @@ namespace CP
 	}
 	void Timer::setInterval(struct timespec interval) {
 		bool r;
-		if (!dispatching) r = running();
+		r = running();
 		Timer_doSetInterval(this, interval);
 		if (!dispatching && running() != r) {
 			if (onEventsChange != nullptr) onEventsChange(*this, r ? Events::in : Events::none);
@@ -1738,7 +1738,7 @@ namespace CP
 	}
 	void Timer::setInterval(uint64_t interval_ms) {
 		bool r;
-		if (!dispatching) r = running();
+		r = running();
 		Timer_doSetInterval(this, interval_ms);
 		if (!dispatching && running() != r) {
 			if (onEventsChange != nullptr) onEventsChange(*this, r ? Events::in : Events::none);

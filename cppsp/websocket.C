@@ -66,10 +66,10 @@ namespace cppsp
 		fw.endInsert(hdrlen + buf.length());
 	}
 	void ws_init(Page& p, CP::Callback cb) {
+		p.response->headersExtraSpace = 0;
 		p.response->statusCode = 101;
 		p.response->statusName = "Switching Protocols";
-		p.response->headers["Connection"] = "Upgrade";
-		p.response->headers["Upgrade"] = "WebSocket";
+
 		//response->headers["Sec-WebSocket-Protocol"]="chat";
 		String s = concat(*p.sp, p.request->headers["Sec-WebSocket-Key"],
 				"258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
@@ -81,7 +81,11 @@ namespace cppsp
 		string encoded;
 		StringSource src(tmp, sizeof(tmp), true, new Base64Encoder(new StringSink(encoded), false));
 		//printf("Sec-WebSocket-Accept: %s\n",encoded.c_str());
-		p.response->headers["Sec-WebSocket-Accept"] = p.sp->addString(encoded);
+		p.response->headers = cppsp::serializeHeaders(*p.sp, 0, String("Connection"),
+				String("Upgrade"), String("Upgrade"), String("WebSocket"), String("Date"),
+				p.server->host->curRFCTime, String("Sec-WebSocket-Accept"), String(encoded),
+				String(nullptr));
+
 		p.response->serializeHeaders(p.response->output);
 		p.response->output.flush();
 		p.response->outputStream->write(p.response->buffer, cb);

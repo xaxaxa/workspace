@@ -209,6 +209,6 @@ namespace cppsp
 	 Internal function.
 	 @unmaintained_api
 	 */
-	void handleError(exception* ex, cppsp::Response& resp, String path);
+	void handleError(exception* ex, cppsp::Server& server, cppsp::Response& resp, String path);
 }
 #endif /* COMMON_H_ */

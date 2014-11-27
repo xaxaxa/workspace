@@ -21,6 +21,7 @@
 #include <cpoll/cpoll.H>
 #include "include/stringutils.H"
 #include "include/split.H"
+#include <stdarg.h>
 using namespace CP;
 namespace cppsp
 {
@@ -33,6 +34,42 @@ namespace cppsp
 		if (i < 10) return i + '0';
 		else return i - 10 + 'A';
 	}
+	CP::String serializeHeaders(CP::StringPool& sp, int extraSpace, ...) {
+		va_list a_list;
+		va_start(a_list, extraSpace);
+		int count = 0;
+		int len = 0;
+		while (true) {
+			String n = va_arg(a_list, String);
+			if (n == nullptr) break;
+			String v = va_arg(a_list, String);
+			len += n.len + 2 + v.len + 2;
+			count++;
+		}
+		char* s1 = sp.beginAdd(len + extraSpace);
+		char* s = s1;
+		va_start(a_list, extraSpace);
+		for (int i = 0; i < count; i++) {
+			String n = va_arg(a_list, String);
+			String v = va_arg(a_list, String);
+			memcpy(s, n.d, n.len);
+			s += n.len;
+			*(s++) = ':';
+			*(s++) = ' ';
+			memcpy(s, v.d, v.len);
+			s += v.len;
+			*(s++) = '\r';
+			*(s++) = '\n';
+		}
+		sp.endAdd(len + extraSpace);
+		return String(s1, len);
+	}
+	static inline void _urldecode_memcpy(void* dst, const void* src, int len) {
+		char* d = (char*) dst;
+		char* s = (char*) src;
+		for (int i = 0; i < len; i++)
+			d[i] = (s[i] == '+') ? ' ' : s[i];
+	}
 	int doURLDecode(const char* in, int inLen, char* out) {
 		//XXX: dangerous (potentially exploitable) codepath; please audit
 		char* c = out; //points to next byte to be written
@@ -41,14 +78,14 @@ namespace cppsp
 		while (ptr < end) {
 			const char* next = (const char*) memchr(ptr, '%', end - ptr);
 			if (next == NULL) {
-				memcpy(c, ptr, end - ptr);
+				_urldecode_memcpy(c, ptr, end - ptr);
 				c += (end - ptr);
 				break;
 			}
-			memcpy(c, ptr, next - ptr); //write out everything between the read position and the '%'
+			_urldecode_memcpy(c, ptr, next - ptr); //write out everything between the read position and the '%'
 			c += (next - ptr);
 			if (next + 2 >= end) { //there isn't 2 bytes after the '%'
-				memcpy(c, next, end - next);
+				_urldecode_memcpy(c, next, end - next);
 				c += (end - next);
 				break;
 			}
@@ -69,7 +106,7 @@ namespace cppsp
 		//XXX: dangerous (potentially exploitable) codepath; please audit
 		char* ch = sp.beginAdd(inLen); //output size will never exceed input size
 		int len = doURLDecode(in, inLen, ch);
-		E: sp.endAdd(len);
+		sp.endAdd(len);
 		return {ch,len};
 	}
 	int urlEncode(const char* in, int inLen, CP::StreamWriter& sw) {
@@ -246,6 +283,42 @@ namespace cppsp
 		}
 		if (inLen > last_i) sw.write(in + last_i, inLen - last_i);
 	}
+
+	void jsEscape(const char* in_, int inLen, CP::StreamWriter& sw) {
+		//XXX: dangerous (potentially exploitable) codepath; please audit
+		uint8_t* in = (uint8_t*) in_;
+		int sz = 0;
+		for (int i = 0; i < inLen; i++) {
+			if (isalnum(in[i])) sz++;
+			else sz += 6;
+		}
+
+		char* data = sw.beginWrite(sz);
+		char* c = data;
+		for (int i = 0; i < inLen; i++) {
+			uint8_t ch = (uint8_t) in[i];
+			if (isalnum(in[i])) *(c++) = in[i];
+			else {
+				c[0] = '\\';
+				c[1] = 'u';
+				c[2] = '0';
+				c[3] = '0';
+				c[4] = intToHexChar(in[i] >> 4);
+				c[5] = intToHexChar(in[i] & 0xF);
+				c += 6;
+			}
+		}
+		sw.endWrite(sz);
+	}
+	std::string jsEscape(const char* in, int inLen) {
+		StringStream ss;
+		{
+			StreamWriter sw(ss);
+			jsEscape(in, inLen, sw);
+		}
+		return ss.str();
+	}
+
 	int ci_compare(String s1, String s2) {
 		if (s1.length() > s2.length()) return 1;
 		if (s1.length() < s2.length()) return -1;

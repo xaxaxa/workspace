@@ -18,6 +18,7 @@ Timer t;
 int n=0;
 void doInit() {
 	response->sendChunked=true;
+	prepareResponse();
 	timerCB(1);
 	t.setInterval(500);
 	t.setCallback({&p::timerCB,this});

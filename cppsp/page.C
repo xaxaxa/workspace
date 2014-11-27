@@ -95,11 +95,10 @@ namespace cppsp
 	void Page::doInit() {
 		doReadPost = false;
 		init();
-		if (doReadPost && request->method.compare("POST") == 0)
-			request->readPost( { &Page::_readPOSTCB, this });
-		else initCB();
+		if (doReadPost && request->method.compare("POST") == 0) request->parsePost();
+		initCB();
 	}
-	void Page::initCB() {
+	void Page::startResponse() {
 		try {
 			load();
 			//response->writeHeaders();
@@ -117,12 +116,8 @@ namespace cppsp
 		} else server->handleError(*request, *response, *ex, cb);
 		destruct();
 	}
-	void Page::_readPOSTCB(Request& r) {
-		initCB();
-	}
 	void Page::flush() {
-		if (response->closed)
-			finalizeCB();
+		if (response->closed) finalizeCB();
 		else response->finalize( { &Page::_flushCB, this });
 	}
 	String Page::mapPath(String path) {
@@ -207,12 +202,13 @@ namespace cppsp
 	Request::Request(CP::Stream& inp, CP::StringPool* sp) :
 			inputStream(&inp), sp(sp), alloc(sp), headers(sp), queryString(less<String>(), alloc),
 					form(less<String>(), alloc) {
+		server = nullptr;
 	}
 	void Request::init(CP::Stream& inp, CP::StringPool* sp) {
 		new (&queryString) StringMap(less<String>(), alloc);
 		new (&form) StringMap(less<String>(), alloc);
 	}
-	void Request::parsePost(String buf) {
+	void Request::doParsePost(String buf) {
 		struct
 		{
 			Request* This;
@@ -230,51 +226,50 @@ namespace cppsp
 
 	Response::Response(CP::Stream& out, CP::StringPool* sp) :
 			outputStream(&out), buffer(), output((CP::BufferedOutput&) buffer), sp(sp), alloc(sp),
-					headers(less<String>(), alloc), _bufferPos(0), headersWritten(false), closed(false),
-					sendChunked(false), _writing(false) {
-		addDefaultHeaders();
+					headers((char*) nullptr), _bufferPos(0), headersWritten(false), closed(false),
+					sendChunked(false), keepAlive(true), _writing(false) {
+		headersExtraSpace = 0;
+		_headersEnd = nullptr;
 	}
 	void Response::init(CP::Stream& out, CP::StringPool* sp) {
 		outputStream = &out;
 		this->alloc.sp = sp;
 		this->sp = sp;
-		new (&headers) StringMap(less<String>(), alloc);
-		addDefaultHeaders();
+		headers = nullptr;
+		_headersEnd = nullptr;
 	}
-	void Response::addDefaultHeaders() {
+	void Response::addDefaultHeaders(String time, String mime) {
 		statusCode = 200;
 		statusName = "OK";
-		headers.insert( { "Content-Type", "text/html; charset=UTF-8" });
+		const char* filler = "Content-Length: 0000000000\r\n";
+		int l = strlen(filler);
+		if (sendChunked) {
+			headers = cppsp::serializeHeaders(*sp, l + headersExtraSpace, String("Content-Type"), mime,
+					String("Connection"), String(keepAlive ? "keep-alive" : "close"), String("Date"),
+					time, String("Transfer-Encoding"), String("chunked"), String(nullptr));
+		} else {
+			headers = cppsp::serializeHeaders(*sp, l + headersExtraSpace, String("Content-Type"), mime,
+					String("Connection"), String(keepAlive ? "keep-alive" : "close"), String("Date"),
+					time, String(nullptr));
+		}
+		_headersEnd = headers.d + headers.len + headersExtraSpace;
+	}
+	void Response_doWriteHeaderLine(Response* This, CP::StreamWriter& sw) {
+		char* s1 = sw.beginWrite(32);
+		memcpy(s1, "HTTP/1.1 ", 9);
+		int x = 9 + itoa(This->statusCode, s1 + 9);
+		s1[x] = ' ';
+		x++;
+		memcpy(s1 + x, This->statusName.data(), This->statusName.length());
+		x += This->statusName.length();
+		s1[x] = '\r';
+		s1[x + 1] = '\n';
+		x += 2;
+		sw.endWrite(x);
 	}
 	void Response_doWriteHeaders(Response* This, CP::StreamWriter& sw) {
-		//sw.writeF("HTTP/1.1 %i %s\r\n", This->statusCode, This->statusName);
-		{
-			char* s1 = sw.beginWrite(32);
-			memcpy(s1, "HTTP/1.1 ", 9);
-			int x = 9 + itoa(This->statusCode, s1 + 9);
-			s1[x] = ' ';
-			x++;
-			memcpy(s1 + x, This->statusName.data(), This->statusName.length());
-			x += This->statusName.length();
-			s1[x] = '\r';
-			s1[x + 1] = '\n';
-			x += 2;
-			sw.endWrite(x);
-		}
-		if (This->sendChunked) This->headers["Transfer-Encoding"] = "chunked";
-		for (auto it = This->headers.begin(); it != This->headers.end(); it++) {
-			int l1 = (*it).first.length();
-			int l2 = (*it).second.length();
-			char* tmp = sw.beginWrite(l1 + 4 + l2);
-			memcpy(tmp, (*it).first.data(), l1);
-			tmp[l1] = ':';
-			tmp[l1 + 1] = ' ';
-			memcpy(tmp + l1 + 2, (*it).second.data(), l2);
-			tmp[l1 + 2 + l2] = '\r';
-			tmp[l1 + 2 + l2 + 1] = '\n';
-			sw.endWrite(l1 + 4 + l2);
-			//sw.writeF("%s: %s\r\n", (*it).first.c_str(), (*it).second.c_str());
-		}
+		Response_doWriteHeaderLine(This, sw);
+		sw.write(This->headers);
 		sw.write("\r\n", 2);
 	}
 	void Response::serializeHeaders(CP::StreamWriter& sw) {
@@ -295,18 +290,20 @@ namespace cppsp
 			headersWritten = true;
 			int bufferL = buffer.length();
 			if (!sendChunked) {
-				char* tmps = sp->beginAdd(16);
-				int l = itoa(buffer.length(), tmps);
-				sp->endAdd(l);
-				this->headers.insert( { "Content-Length", { tmps, l } });
+				const char* tmph = "Content-Length: ";
+				int tmphL = strlen(tmph);
+				memcpy(headers.d + headers.len, tmph, tmphL);
+				headers.len += tmphL;
+				headers.len += itoa(buffer.length(), headers.d + headers.len);
+				(headers.d + headers.len)[0] = '\r';
+				(headers.d + headers.len)[1] = '\n';
+				headers.len += 2;
 			} else {
 				output.write("\r\n");
 				output.flush();
 			}
-			{
-				CP::StreamWriter sw(buffer);
-				Response_doWriteHeaders(this, sw);
-			}
+			Response_doWriteHeaders(this, output);
+			output.flush();
 			iov[0]= {buffer.data()+bufferL, (size_t)(buffer.length()-bufferL)};
 			if (sendChunked) {
 				int l2 = buffer.length();
@@ -339,6 +336,12 @@ namespace cppsp
 			}
 		}
 	}
+	void Response::appendHeaders(String h) {
+		if (headers.d + headers.len + h.len > _headersEnd) throw runtime_error(
+				"headers buffer overflowed");
+		memcpy(headers.d + headers.len, h.d, h.len);
+		headers.len += h.len;
+	}
 	void Response::finalize(Callback cb) {
 		flushCB = cb;
 		flush(true);
@@ -351,8 +354,7 @@ namespace cppsp
 	void Response::_writeCB(int r) {
 		if (r <= 0) closed = true;
 		_writing = false;
-		if (_doWrite)
-			flush();
+		if (_doWrite) flush();
 		else if (flushCB) flushCB(*this);
 	}
 	
@@ -363,7 +365,6 @@ namespace cppsp
 		this->inputStream = nullptr;
 	}
 	void Response::reset() {
-		headers.~map();
 		output.flush();
 		buffer.clear();
 		headersWritten = false;
@@ -534,6 +535,7 @@ namespace cppsp
 		handleRequest.attach( { &Server::defaultHandleRequest, this });
 		handleError.attach( { &Server::defaultHandleError, this });
 		routeRequest.attach( { &Server::defaultRouteRequest, this });
+		defaultMime = "text/html; charset=UTF-8";
 	}
 	Server::~Server() {
 	}
@@ -547,7 +549,7 @@ namespace cppsp
 		void operator()(Handler& h, exception* ex) {
 			if (h != nullptr) {
 				try {
-					if (unlikely(s!=nullptr)) {
+					if (unlikely(s != nullptr)) {
 						auto it = s->routeCache.find(path);
 						if (it == s->routeCache.end()) {
 							Server::RouteCacheEntry* ce = new Server::RouteCacheEntry { h,
@@ -575,8 +577,7 @@ namespace cppsp
 	void Server::handleStaticRequestFromFile(String path, Request& req, Response& resp,
 			Delegate<void()> cb) {
 		auto h = routeStaticRequestFromFile(path);
-		if (h)
-			h()(req, resp, cb);
+		if (h) h()(req, resp, cb);
 		else {
 			h.wait(
 					resp.sp->New<requestHandlerState>(requestHandlerState { nullptr, &req, &resp, cb }));
@@ -585,8 +586,7 @@ namespace cppsp
 	void Server::handleDynamicRequestFromFile(String path, Request& req, Response& resp,
 			Delegate<void()> cb) {
 		auto h = routeDynamicRequestFromFile(path);
-		if (h)
-			h()(req, resp, cb);
+		if (h) h()(req, resp, cb);
 		else {
 			h.wait(
 					resp.sp->New<requestHandlerState>(requestHandlerState { nullptr, &req, &resp, cb }));
@@ -605,8 +605,7 @@ namespace cppsp
 		auto* st = resp.sp->New<requestHandlerState>(
 				requestHandlerState { this, &req, &resp, cb, path });
 		auto h = routeRequest(path);
-		if (h)
-			(*st)(h(), nullptr);
+		if (h) (*st)(h(), nullptr);
 		else h.wait(st);
 	}
 	void Server::defaultHandleRequest(Request& req, Response& resp, Delegate<void()> cb) {
@@ -625,12 +624,12 @@ namespace cppsp
 	};
 	void Server::defaultHandleError(Request& req, Response& resp, exception& ex,
 			Delegate<void()> cb) {
-		cppsp::handleError(&ex, resp, req.path);
+		cppsp::handleError(&ex, *this, resp, req.path);
 		resp.finalize(resp.sp->New<flusher>(cb));
 	}
 	AsyncValue<Handler> Server::defaultRouteRequest(String path) {
-		if (path.length() > 6 && memcmp(path.data() + (path.length() - 6), ".cppsp", 6) == 0)
-			return routeDynamicRequest(path);
+		if (path.length() > 6 && memcmp(path.data() + (path.length() - 6), ".cppsp", 6) == 0) return routeDynamicRequest(
+				path);
 		else return routeStaticRequest(path);
 	}
 	struct pageLoaderState

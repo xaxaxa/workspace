@@ -1054,9 +1054,9 @@ namespace CP
 		virtual void init(int32_t d, int32_t t, int32_t p);
 
 		//the caller must release() or free() the returned object
-		EndPoint* getLocalEndPoint();
+		EndPoint* getLocalEndPoint() const;
 		//the caller must release() or free() the returned object
-		EndPoint* getRemoteEndPoint();
+		EndPoint* getRemoteEndPoint() const;
 		virtual bool doOperation(Events event, EventHandlerData& ed, const EventData& evtd,
 				EventHandlerData::States oldstate, bool confident) override;
 
@@ -1082,7 +1082,7 @@ namespace CP
 		void connect(const sockaddr *addr, int32_t addr_size, const Callback& cb);
 		void connect(const EndPoint &ep, const Callback& cb);
 		void connect(const char* hostname, const char* port, const Callback& cb, int32_t family =
-		AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
+				AF_UNSPEC, int32_t socktype = 0, int32_t proto = 0, int32_t flags = 0);
 
 		//callback function must release() or free() the received object
 		void accept(const Delegate<void(Socket*)>& cb, bool repeat = false);

@@ -221,24 +221,15 @@ namespace cppspServer
 			
 			thr._requestReceived();
 			
-			//keepAlive=true;
 			auto it=req.headers.find("connection");
 			if(it!=req.headers.end() && (*it).value=="close")keepAlive=false;
 			else keepAlive=true;
-			resp->headers.insert({"Connection", keepAlive?"keep-alive":"close"});
-			
-			/*char* date=sp.beginAdd(32);
-			tm time;
-			gmtime_r(&thr.curClockTime.tv_sec,&time);
-			int l=rfctime(time,date);
-			if(l>32)l=32;
-			sp.endAdd(l);
-			*/
-			resp->headers.insert({"Date", sp.addString(thr.curRFCTime)});
+			resp->keepAlive=keepAlive;
 			
 			//perform vhost routing
 			server=thr.preRouteRequest(req);
 			server->performanceCounters.totalRequestsReceived++;
+			req.server=server;
 			try {
 				server->handleRequest(req,*resp,{&handler::finalize,this});
 			} catch(exception& ex) {
@@ -262,12 +253,20 @@ namespace cppspServer
 			(_staticPage=Sp)->retain();
 			try {
 				int bufferL = resp.buffer.length();
-				if(Sp->mime.length()>0)resp.headers["Content-Type"]=Sp->mime;
+				String mime;
+				if(Sp->mime.length()>0)mime=Sp->mime;
+				else mime=server->defaultMime;
+				resp.addDefaultHeaders(thr.curRFCTime,mime);
 				{
-					char* tmps = sp.beginAdd(22);
-					int l = itoa64(Sp->fileLen, tmps);
-					sp.endAdd(l);
-					resp.headers.insert({"Content-Length", { tmps, l }});
+					const char* tmph = "Content-Length: ";
+					int tmphL = strlen(tmph);
+					memcpy(resp.headers.d + resp.headers.len, tmph, tmphL);
+					resp.headers.len += tmphL;
+					resp.headers.len += itoa64(Sp->fileLen, resp.headers.d + resp.headers.len);
+					(resp.headers.d + resp.headers.len)[0] = '\r';
+					(resp.headers.d + resp.headers.len)[1] = '\n';
+					resp.headers.len += 2;
+					
 					StreamWriter sw(resp.buffer);
 					resp.serializeHeaders(sw);
 				}

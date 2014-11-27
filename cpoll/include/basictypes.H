@@ -39,6 +39,14 @@
 #endif
 
 using namespace std;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
 namespace CP
 {
 	typedef int32_t HANDLE; //file descriptor or handle
@@ -127,19 +135,20 @@ namespace CP
 			return len;
 		}
 		inline std::string toSTDString() const {
+			if (d == nullptr) return "";
 			return std::string(d, len);
 		}
 		inline String subString(int i, int l) {
-			if (i < 0 || i + l > this->len || l < 0)
-				throw range_error("String::subString() out of range");
+			if (i < 0 || i + l > this->len || l < 0) throw range_error(
+					"String::subString() out of range");
 			return String(d + i, l);
 		}
 		inline String subString(int i) {
 			return subString(i, len - i);
 		}
 		inline void clip(int index, int length) {
-			if (index < 0 || index + length > this->len || length < 0)
-				throw range_error("String::clip() out of range");
+			if (index < 0 || index + length > this->len || length < 0) throw range_error(
+					"String::clip() out of range");
 			d += index;
 			len = length;
 		}
@@ -198,14 +207,20 @@ namespace CP
 														memcpy(tmp, str.d, str.len);\
 														tmp[str.len] = 0;\
 														return func(tmp);
-	static int atoi(String s) {
+	static s32 atoi(String s) {
 		__CPOLL_DO_ATOI(::atoi, s);
 	}
-	static long atol(String s) {
-		__CPOLL_DO_ATOI(::atol, s);
-	}
-	static long long atoll(String s) {
+	static s64 atoll(String s) {
 		__CPOLL_DO_ATOI(::atoll, s);
+	}
+	static u64 atoull(String s) {
+		char tmp[s.len + 1];
+		memcpy(tmp, s.d, s.len);
+		tmp[s.len] = 0;
+		return strtoull(tmp, nullptr, 0);
+	}
+	static u32 atou(String s) {
+		return (u32) atoull(s);
 	}
 	static double atof(String s) {
 		__CPOLL_DO_ATOI(::atof, s);
@@ -325,12 +340,21 @@ namespace CP
 		AsyncValue(const T& other) :
 				value(other) {
 			async = false;
+			cbAddr = nullptr;
 		}
 		AsyncValue(const AsyncValue<T>& other) :
 				value(other.value), cbAddr(other.cbAddr), async(other.async) {
 		}
 		AsyncValue(Future<T> f) :
 				cbAddr(f.cbAddr), async(true) {
+		}
+		AsyncValue() :
+				async(true) {
+			cbAddr = nullptr;
+		}
+		AsyncValue(const Undefined& u) :
+				async(true) {
+			cbAddr = nullptr;
 		}
 		struct _placeholder1
 		{
@@ -343,12 +367,7 @@ namespace CP
 		static AsyncValue<T> create(A&&... a) {
 			return AsyncValue<T>(_placeholder1(), std::forward<A>(a)...);
 		}
-		AsyncValue() :
-				async(true) {
-		}
-		AsyncValue(const Undefined& u) :
-				async(true) {
-		}
+
 		void wait(Delegate<void(T, exception*)> cb) {
 			*cbAddr = cb;
 		}

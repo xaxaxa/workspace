@@ -33,6 +33,8 @@ namespace cppsp
 		return c;
 	}
 #endif
+	//variable arg format: [String headername, String headervalue]..., String(nullptr)
+	CP::String serializeHeaders(CP::StringPool& sp, int extraSpace,...);
 
 	int urlDecode(const char* in, int inLen, CP::StreamWriter& sw);
 	static inline int urlDecode(CP::String in, CP::StreamWriter& sw) {
@@ -41,7 +43,7 @@ namespace cppsp
 	CP::String urlDecode(const char* in, int inLen, CP::StringPool& sp);
 	int urlEncode(const char* in, int inLen, CP::StreamWriter& sw);
 	static inline int urlEncode(CP::String in, CP::StreamWriter& sw) {
-		urlEncode(in.data(), in.length(), sw);
+		return urlEncode(in.data(), in.length(), sw);
 	}
 	std::string urlDecode(const char* in, int inLen);
 	std::string urlEncode(const char* in, int inLen);
@@ -83,6 +85,18 @@ namespace cppsp
 	}
 	static inline std::string htmlAttributeEscape(std::string in) {
 		return htmlAttributeEscape(in.data(), in.length());
+	}
+
+	void jsEscape(const char* in, int inLen, CP::StreamWriter& sw);
+	static inline void jsEscape(CP::String in, CP::StreamWriter& sw) {
+		jsEscape(in.data(), in.length(), sw);
+	}
+	std::string jsEscape(const char* in, int inLen);
+	static inline std::string jsEscape(const char* in) {
+		return jsEscape(in, strlen(in));
+	}
+	static inline std::string jsEscape(std::string in) {
+		return jsEscape(in.data(), in.length());
 	}
 
 	int ci_compare(CP::String s1, CP::String s2);
