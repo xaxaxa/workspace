@@ -38,7 +38,6 @@
 #include "eqcontrol.C"
 #include "histcontrol.C"
 #include <cplib/cplib.hpp>
-#include <math.h>
 #ifdef JACKFFT_USE_SOUNDTOUCH
 #include <soundtouch/SoundTouch.h>
 #endif
@@ -83,8 +82,8 @@ Glib::RefPtr<Gtk::Builder> b;
 string fname = ".default.jfft";
 bool do_mux=false;
 double v_mux=0.5;
-static const int TOTAL_NOTES=7;
-static const int OUTPUT_NOTES=14;
+static const int TOTAL_NOTES=12;
+static const int OUTPUT_NOTES=12;
 double spectrogramOutputPhase[OUTPUT_NOTES];
 
 template<class t> inline double complex_to_real(const t& x)
@@ -200,6 +199,16 @@ int process(jack_nframes_t length, void *arg)
 		out_samples[i]=(jack_default_audio_sample_t *)
 			jack_port_get_buffer(outputs[i], length);
 	}
+	if(do_mux)
+		for(size_t i=0; i<length; i++)
+		{
+			double avg=0;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				avg+=((double)in_samples[ii][i]);
+			avg/=CHANNELS;
+			for(register unsigned int ii=0;ii<CHANNELS;ii++)
+				in_samples[ii][i]=2*(avg*(1.-v_mux)+(in_samples[ii][i]-avg)*v_mux);
+		}
 	for(size_t i = 0; i < inputs.size(); i++)
 	{
 		jack_default_audio_sample_t *out = out_samples[i];
@@ -232,16 +241,7 @@ int process(jack_nframes_t length, void *arg)
 		//for(UInt i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
-	if(do_mux)
-		for(size_t i=0; i<length; i++)
-		{
-			double avg=0;
-			for(register unsigned int ii=0;ii<CHANNELS;ii++)
-				avg+=((double)out_samples[ii][i]);
-			avg/=CHANNELS;
-			for(register unsigned int ii=0;ii<CHANNELS;ii++)
-				out_samples[ii][i]=2*(avg*(1.-v_mux)+(out_samples[ii][i]-avg)*v_mux);
-		}
+	
 	if(output_spectrogram && spectrum2) {
 		rmb();
 		jack_default_audio_sample_t *out = (jack_default_audio_sample_t *)
@@ -574,7 +574,7 @@ void apply_pitchshift1(FFTFilter<jack_default_audio_sample_t>** filt2)
 	{
 		b->get_widget("t_pitch", e);
 		asdf = strtod(e->get_text().c_str(), NULL);
-		asdf=pow(2,asdf/7.d);
+		asdf=pow(2,asdf/12.d);
 		//b->get_widget("t_pitch2", e);
 		//asdf /= strtod(e->get_text().c_str(), NULL);
 	}
@@ -923,8 +923,9 @@ hhhhh:
 	
 	pthread_t thr;
 	pthread_create(&thr,NULL,&thread1,NULL);
+	gdk_threads_enter();
 	kit.run(*window1);
-
+	gdk_threads_leave();
 	jack_client_close(client);
 	return 0;
 }

@@ -80,11 +80,12 @@ namespace xaxaxa
 		}
 		virtual bool on_motion_notify_event(GdkEventMotion* event)
 		{
+			Gtk::DrawingArea::on_motion_notify_event(event);
 			if(event->y<0)event->y=0;
 			if(event->x<0)event->x=0;
 			UInt w=get_allocation().get_width();
 			RAISEEVENT(MouseMove,(double)event->x*datalen/w);
-			if(!d)return true;
+			if(!d)return false;
 			
 			//cout << "on_motion_notify_event" << endl;
 			
@@ -126,18 +127,20 @@ namespace xaxaxa
 			//cout << x2-x1 << endl;
 			queue_draw_area(x1-(x2-x1),0,(x2-x1)*2,h);
 			RAISEEVENT(Change,i1,i2);
-			return true;
+			return false;
 		}
 		virtual bool on_button_press_event(GdkEventButton* event)
 		{
+			Gtk::DrawingArea::on_button_press_event(event);
 			d=true;
 			last_i=-1;
-			return true;
+			return false;
 		}
 		virtual bool on_button_release_event(GdkEventButton* event)
 		{
+			Gtk::DrawingArea::on_button_release_event(event);
 			d=false;
-			return true;
+			return false;
 		}
 		void do_draw(GdkEventExpose* evt=NULL)
 		{
@@ -155,8 +158,13 @@ namespace xaxaxa
 		}
 		virtual bool on_expose_event(GdkEventExpose* evt)
 		{
+			printf("on_expose_event\n");
 			do_draw(evt);
-			return true;
+			return false;
+		}
+		virtual bool on_draw(const ::Cairo::RefPtr<::Cairo::Context>& cr) {
+			do_draw(cr);
+			return false;
 		}
 		EQControl(UInt datalen): Gtk::DrawingArea(), datalen(datalen), last_i(-1), last_v(-1.0), d(false)
 		{
@@ -168,12 +176,18 @@ namespace xaxaxa
 			set_app_paintable(true);
 			set_double_buffered(true);
 			set_redraw_on_allocate(true);
-			set_events(get_events()|POINTER_MOTION_MASK|BUTTON_MOTION_MASK|BUTTON_PRESS_MASK|BUTTON_RELEASE_MASK);
+			set_events(get_events()|EXPOSURE_MASK|POINTER_MOTION_MASK|BUTTON_MOTION_MASK|BUTTON_PRESS_MASK|BUTTON_RELEASE_MASK);
 		}
 		void resize(UInt newdatalen) {
+			double* newdata=new double[newdatalen];
+			if(newdatalen>datalen)
+				memcpy(newdata,data,sizeof(double)*datalen);
+			else memcpy(newdata,data,sizeof(double)*newdatalen);
+			for(UInt i=datalen;i<newdatalen;i++)
+				newdata[i] = 0.5;
 			datalen=newdatalen;
 			delete[] data;
-			data=new double[datalen];
+			data=newdata;
 		}
 	};
 }

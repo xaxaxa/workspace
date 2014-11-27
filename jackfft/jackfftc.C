@@ -132,7 +132,7 @@ void load(Stream& fs, double* coeff, UInt coeffs)
 			last_v=buf.val;
 		}
 		for(UInt i=i1;i<coeffs;i++)
-			coeff[i]=scale_value_r(last_v)/2.0;
+			coeff[i]=last_v;
 	}
 	catch(Exception& ex)
 	{

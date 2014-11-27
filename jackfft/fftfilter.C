@@ -24,14 +24,17 @@
 #include <math.h>
 #ifdef JACKFFT_USE_FFTS
 	#include <ffts/ffts.h>
+#elif defined JACKFFT_USE_SIMPLEFFT
+	#include "../test/simplefft.C"
 #else
 	#include <fftw3.h>
+	#define JACKFFT_USING_FFTW
 #endif
 #include "filter.H"
 
 #ifdef JACKFFT_USE_FLOAT
 	typedef float jackfft_float;
-	#ifdef JACKFFT_USE_FFTS
+	#ifndef JACKFFT_USING_FFTW
 		typedef float jackfft_complex[2];
 	#else
 		typedef fftwf_complex jackfft_complex;
@@ -39,7 +42,7 @@
 	#endif
 #else
 	typedef double jackfft_float;
-	#ifdef JACKFFT_USE_FFTS
+	#ifndef JACKFFT_USING_FFTW
 		typedef double jackfft_complex[2];
 	#else
 		typedef fftw_complex jackfft_complex;
@@ -49,7 +52,7 @@
 
 namespace xaxaxa
 {
-	inline jackfft_float modulus(jackfft_float a, jackfft_float b)
+	inline float modulus(float a, float b)
 	{
 		int tmp=a/b;
 		return a-tmp*b;
@@ -60,14 +63,14 @@ namespace xaxaxa
 		return a-tmp*b;
 	}
 	void* fft_malloc(int sz) {
-		#ifdef JACKFFT_USE_FFTS
+		#ifndef JACKFFT_USING_FFTW
 			return aligned_alloc(128,sz);
 		#else
 			return FFTWFUNC(malloc)(sz);
 		#endif
 	}
 	void fft_free(void* v) {
-		#ifdef JACKFFT_USE_FFTS
+		#ifndef JACKFFT_USING_FFTW
 			return free(v);
 		#else
 			return FFTWFUNC(free)(v);
@@ -82,41 +85,62 @@ namespace xaxaxa
 		jackfft_complex* Data_c;
 	#ifdef JACKFFT_USE_FFTS
 		ffts_plan_t *p1,*p2;
-	#else
+	#elif defined JACKFFT_USING_FFTW
 		FFTWFUNC(plan) p1, p2;
 	#endif
-		FFT(int size):size(size),size_c(size/2+1)
+		FFT(int size, bool preserveInput=false):size(size),size_c(size/2+1)
 		{
 			Data=(jackfft_float*)fft_malloc(sizeof(jackfft_float)*size);
 			Data_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
 			#ifdef JACKFFT_USE_FFTS
 				p1 = ffts_init_1d_real(size,-1);	//forward
 				p2 = ffts_init_1d_real(size,1);		//inverse
-			#else
-				p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_MEASURE); //FFTW_UNALIGNED
-				p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_MEASURE);
+			#elif defined JACKFFT_USING_FFTW
+				if(preserveInput) {
+					p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_ESTIMATE|FFTW_PRESERVE_INPUT); //FFTW_UNALIGNED
+					p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_ESTIMATE|FFTW_PRESERVE_INPUT);
+				} else {
+					p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_ESTIMATE); //FFTW_UNALIGNED
+					p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_ESTIMATE);
+				}
 			#endif
 		}
 	#ifdef JACKFFT_USE_FFTS
-		void Forward() {
-			ffts_execute(p1,Data,Data_c);
-		}
-		void Reverse() {
-			ffts_execute(p2,Data_c,Data);
-		}
+		void Forward() { ffts_execute(p1,Data,Data_c); }
+		void Reverse() { ffts_execute(p2,Data_c,Data); }
+	#elif defined JACKFFT_USING_FFTW
+		void Forward() { FFTWFUNC(execute)(p1); }
+		void Reverse() { FFTWFUNC(execute)(p2); }
 	#else
 		void Forward() {
-			FFTWFUNC(execute)(p1);
+			complex* datac=(complex*)Data_c;
+			switch(size) {
+				case 1024: fftN<1024>(Data,datac); break;
+				case 2048: fftN<2048>(Data,datac); break;
+				case 4096: fftN<4096>(Data,datac); break;
+				case 8192: fftN<8192>(Data,datac); break;
+				//case 8192: fftN2(Data,datac,8192); break;
+				case 16384: fftN<16384>(Data,datac); break;
+				default: throw logic_error("fft size not supported");
+			}
 		}
 		void Reverse() {
-			FFTWFUNC(execute)(p2);
+			complex* datac=(complex*)Data_c;
+			switch(size) {
+				case 1024: ifftN<1024>(datac,Data); break;
+				case 2048: ifftN<2048>(datac,Data); break;
+				case 4096: ifftN<4096>(datac,Data); break;
+				case 8192: ifftN<8192>(datac,Data); break;
+				case 16384: ifftN<16384>(datac,Data); break;
+				default: throw logic_error("fft size not supported");
+			}
 		}
 	#endif
 		~FFT() {
 			#ifdef JACKFFT_USE_FFTS
 				ffts_free(p1);
 				ffts_free(p2);
-			#else
+			#elif defined JACKFFT_USING_FFTW
 				FFTWFUNC(destroy_plan)(p1);
 				FFTWFUNC(destroy_plan)(p2);
 			#endif
@@ -136,22 +160,11 @@ namespace xaxaxa
 		int size_c;
 		jackfft_float* Data;
 		jackfft_complex* Data_c;
-	#ifdef JACKFFT_USE_FFTS
-		ffts_plan_t *p1,*p2;
-	#else
-		FFTWFUNC(plan) p1, p2;
-	#endif
-		WindowedFFT(int size):size(size),size_c(size/2+1)
+		FFT fft;
+		WindowedFFT(int size):size(size),size_c(size/2+1),fft(size)
 		{
-			Data=(jackfft_float*)fft_malloc(sizeof(jackfft_float)*size);
-			Data_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
-			#ifdef JACKFFT_USE_FFTS
-				p1 = ffts_init_1d_real(size,-1);	//forward
-				p2 = ffts_init_1d_real(size,1);		//inverse
-			#else
-				p1 = FFTWFUNC(plan_dft_r2c_1d)(size, Data, Data_c, FFTW_MEASURE); //FFTW_UNALIGNED
-				p2 = FFTWFUNC(plan_dft_c2r_1d)(size, Data_c, Data, FFTW_MEASURE);
-			#endif
+			Data=fft.Data;
+			Data_c=fft.Data_c;
 		}
 		void Forward(jackfft_float* data, int length)
 		{
@@ -159,34 +172,17 @@ namespace xaxaxa
 			int s=size/2-ceil((double)length/2);
 			memset(Data,0,size*sizeof(jackfft_float));
 			memcpy(Data+s,data,length*sizeof(jackfft_float));
-			#ifdef JACKFFT_USE_FFTS
-				ffts_execute(p1,Data,Data_c);
-			#else
-				FFTWFUNC(execute)(p1);
-			#endif
+			fft.Forward();
 		}
 		jackfft_float* Reverse(int length)
 		{
 			if(length>size)throw Exception("data length exceeds fft size");
 			int s=size/2-ceil((double)length/2);
-			#ifdef JACKFFT_USE_FFTS
-				ffts_execute(p1,Data_c,Data);
-			#else
-				FFTWFUNC(execute)(p2);
-			#endif
+			fft.Reverse();
 			return Data+s;
 		}
 		~WindowedFFT()
 		{
-			#ifdef JACKFFT_USE_FFTS
-				ffts_free(p1);
-				ffts_free(p2);
-			#else
-				FFTWFUNC(destroy_plan)(p1);
-				FFTWFUNC(destroy_plan)(p2);
-			#endif
-			fft_free(Data);
-			fft_free(Data_c);
 		}
 	};
 	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2<NUMTYPE, jackfft_float>
@@ -276,6 +272,7 @@ namespace xaxaxa
 			//fftw_execute(p1);
 			//cout << this->PeriodSize() << endl;
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
+			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(jackfft_complex));
 #ifdef CEPSTRUM
 			for(UInt i=0;i<complexsize;i++) {
 				auto sine=fft.Data_c[i][1];
@@ -390,7 +387,7 @@ namespace xaxaxa
 				fft.Data_c[i+shift][0]=fft.Data_c[i][0]*coefficients[i+shift];
 				fft.Data_c[i+shift][1]=fft.Data_c[i][1]*coefficients[i+shift];
 			}*/
-			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(jackfft_complex));
+			
 			jackfft_float* d=fft.Reverse(this->PeriodSize());
 			memcpy(this->tmpbuffer,d,sizeof(jackfft_float)*this->PeriodSize());
 			Int ps=this->PeriodSize();
