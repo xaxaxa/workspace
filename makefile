@@ -1,5 +1,5 @@
 
-CFLAGS := -Ofast -march=native 
+CFLAGS := -Ofast -march=native -ftree-vectorize
 CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions -funsigned-char -fwrapv -fno-delete-null-pointer-checks -fno-strict-aliasing \
 	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC -D_FILE_OFFSET_BITS=64 $(CFLAGS)
 CC := gcc
@@ -45,7 +45,9 @@ bitflip_proxy: bin/bitflip_proxy
 	
 tcpsdump: bin/tcpsdump bin/rmhttphdr
 jackfft: bin/jackfft
+jackrecord: bin/jackrecord
 jackffts: bin/jackffts
+convolve: bin/convolve
 dedup: bin/dedup
 benchmark: fftbench fibbench
 fftbench: bin/fftbench
@@ -57,6 +59,8 @@ cppsp_embedded_example: bin/cppsp_embedded_example
 decode_aaaaa: bin/decode_aaaaa
 randomread: bin/randomread
 pie_exec: bin/pie_exec
+lowlevel_http: bin/lowlevel_http
+fbdview_gen_index: bin/fbdview_gen_index
 # binary targets
 bin/email_extract: email_extract.C cplib
 	$(CXX) email_extract.C -o bin/email_extract -lcplib $(CFLAGS1)
@@ -91,18 +95,30 @@ lib/fbdump_cui.so:
 bin/cppsp_standalone: cppsp cpoll
 	$(CXX) cppsp_server/cppsp_standalone.C -o bin/cppsp_standalone -lcpoll -lcppsp -ldl -lrt -lpthread $(CFLAGS1)
 bin/socketd_cppsp: cppsp cpoll
-	$(CXX) cppsp_server/socketd_cppsp.C -o bin/socketd_cppsp -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
+	$(CXX) cppsp_server/socketd_cppsp.C -o bin/socketd_cppsp -lcpoll -lcppsp -ldl -lrt -lpthread $(CFLAGS1)
 bin/cppsp_embedded_example: cppsp cpoll
 	$(CXX) cppsp_server/example_embedded.C -o bin/cppsp_embedded_example -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/socketd: cpoll
-	$(CXX) socketd/all.C -o bin/socketd -lcpoll -lrt $(CFLAGS1)
+	$(CXX) socketd/all.C -o bin/socketd -lcpoll -lrt -lpthread $(CFLAGS1)
 bin/tcpsdump:
 	$(CXX) tcpsdump/main.cxx -o bin/tcpsdump -lpcap -lpthread $(CFLAGS1)
 bin/rmhttphdr: cplib
 	$(CXX) tcpsdump/rmhttphdr.cxx -o bin/rmhttphdr -lcplib -lpthread $(CFLAGS1)
 bin/jackfft: cplib cpoll bin/main2.ui
-	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3f -lSoundTouch \
-	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT $(CFLAGS1)
+	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3 -lSoundTouch \
+	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
+bin/jackfft_analyzer:
+	cp -af jackfft/jackfft_analyzer.ui bin/
+	$(CXX) jackfft/analyzer.C -o bin/jackfft_analyzer -lcpoll -lpthread -ljack -lfftw3 \
+	`pkg-config --cflags --libs gtkmm-3.0 glibmm-2.4 gdkmm-3.0 gthread-2.0` $(CFLAGS1)
+bin/jackrecord:
+	$(CXX) jackfft/jackrecord.C -o bin/jackrecord -lpthread -ljack $(CFLAGS1)
+bin/convolve:
+	$(CXX) jackfft/convolve.C -o bin/convolve -lpthread -ljack -lfftw3 $(CFLAGS1)
+bin/dsssreceiver:
+	$(CXX) jackfft/dsssreceiver.C -o bin/dsssreceiver -lpthread -ljack -lfftw3 $(CFLAGS1)
+bin/dsssgenerator:
+	$(CXX) jackfft/dsssgenerator.C -o bin/dsssgenerator -lpthread -lfftw3 $(CFLAGS1)
 bin/jackffts: cplib cpoll bin/main2.ui
 	$(CXX) jackfft/jackfft.C -o bin/jackffts -lcpoll -lcplib -lpthread -ljack -lSoundTouch \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` -DJACKFFT_USE_FLOAT \
@@ -128,6 +144,12 @@ bin/randomread: test/randomread.C
 	$(CXX) test/randomread.C -o bin/randomread $(CFLAGS1)
 bin/pie_exec: test/pie_exec.C test/handle_syscall.S
 	$(CXX) test/pie_exec.C test/handle_syscall.S -o bin/pie_exec $(CFLAGS1)
+bin/lowlevel_http: test/lowlevel_http.C
+	$(CXX) test/lowlevel_http.C -o bin/lowlevel_http -lpthread -lcpoll $(CFLAGS1)
+bin/pg_html_dump: pg_html_dump.C
+	$(CXX) pg_html_dump.C -o bin/pg_html_dump -lpq $(CFLAGS1)
+bin/fbdview_gen_index: fbdview/gen_index.C
+	$(CXX) fbdview/gen_index.C -o bin/fbdview_gen_index -ljsoncpp -lcpoll -lpthread $(CFLAGS1)
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)
