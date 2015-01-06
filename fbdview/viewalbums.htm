@@ -95,23 +95,25 @@
 		var e=start+pagesize;
 		if(window.a.length<e)e=window.a.length;
 		for(var i=start;i<e;i++) {
-			new Ajax.Request(u+a[i], {
-				onComplete: function(response) {
-					var obj=JSON.parse(response.responseText);
-					try {
-						var e=displayItem(obj);
-						for(x in cur_items)
-							if(x>i) {
-								d.insertBefore(e,cur_items[x]);
-								cur_items[i]=e;
-								return;
-							}
-						d.appendChild(displayItem(obj));
-						cur_items[i]=e;
-					} catch(e){alert(e.toString());}
-				},
-				method: "get"
-			});
+			(function(i) {
+				new Ajax.Request(u+a[i], {
+					onComplete: function(response) {
+						var obj=JSON.parse(response.responseText);
+						try {
+							var e=displayItem(obj);
+							for(x in cur_items)
+								if(x>i) {
+									d.insertBefore(e,cur_items[x]);
+									cur_items[i]=e;
+									return;
+								}
+							d.appendChild(e);
+							cur_items[i]=e;
+						} catch(ex){alert(ex.toString());}
+					},
+					method: "get"
+				});
+			})(i);
 		}
 		
 		set_page(start/pagesize);

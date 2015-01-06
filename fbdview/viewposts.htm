@@ -16,163 +16,176 @@
 
 	function displayPost(obj)
 	{
-			var tmp=obj;
-			var msg_header=document.createElement("div");
-			var pic=document.createElement("img");
-			var msg_innerheader=document.createElement("div");
-			var name=document.createElement("a");
-			var space=document.createTextNode(" ");
-			var msg_body=document.createElement("span");
-			var time=document.createElement("span");
-			msg_header.setAttribute("class","msg_header");
-			pic.setAttribute("class","pic");
-			msg_innerheader.setAttribute("class","msg_innerheader");
-			name.setAttribute("class","name");
-			msg_body.setAttribute("class","msg_body");
-			time.setAttribute("class","time");
-			
-			if(tmp.from && tmp.from.id) pic.src="http://graph.facebook.com/"+tmp.from.id+"/picture";
-			else pic.src="http://static.ak.fbcdn.net/rsrc.php/z5HB7/hash/ecyu2wwn.gif";
-			name.target="_blank";
-			if(tmp.from && tmp.from.id) name.href="http://www.facebook.com/profile.php?id="+tmp.from.id;
-			if(tmp.from && tmp.from.name) name.textContent=tmp.from.name;
-			else name.textContent="Facebook User";
-			if(tmp.subject && tmp.subject.length>0)
+		var tmp=obj;
+		var msg_header=document.createElement("div");
+		var pic=document.createElement("img");
+		var msg_innerheader=document.createElement("div");
+		var name=document.createElement("a");
+		var space=document.createTextNode(" ");
+		var msg_body=document.createElement("span");
+		var time=document.createElement("span");
+		msg_header.setAttribute("class","msg_header");
+		pic.setAttribute("class","pic");
+		msg_innerheader.setAttribute("class","msg_innerheader");
+		name.setAttribute("class","name");
+		msg_body.setAttribute("class","msg_body");
+		time.setAttribute("class","time");
+		
+		if(tmp.from && tmp.from.id) pic.src="http://graph.facebook.com/"+tmp.from.id+"/picture";
+		else pic.src="http://static.ak.fbcdn.net/rsrc.php/z5HB7/hash/ecyu2wwn.gif";
+		name.target="_blank";
+		if(tmp.from && tmp.from.id) name.href="http://www.facebook.com/profile.php?id="+tmp.from.id;
+		if(tmp.from && tmp.from.name) name.textContent=tmp.from.name;
+		else name.textContent="Facebook User";
+		if(tmp.subject && tmp.subject.length>0)
+		{
+			var subject=document.createElement("b");
+			subject.style.display="block";
+			subject.textContent=tmp.subject;
+			msg_body.appendChild(subject);
+			var msgtxt=get_msg(tmp);
+			if(msgtxt)
 			{
-				var subject=document.createElement("b");
-				subject.style.display="block";
-				subject.textContent=tmp.subject;
-				msg_body.appendChild(subject);
-				var msgtxt=get_msg(tmp);
-				if(msgtxt)
-				{
-					var msg=document.createElement("div");
-					msg.textContent=msgtxt;
-					msg_body.appendChild(msg);
-				}
+				var msg=document.createElement("div");
+				msg.textContent=msgtxt;
+				msg_body.appendChild(msg);
 			}
-			else
+		}
+		else
+		{
+			var msgtxt=get_msg(tmp);
+			if(msgtxt) msg_body.textContent=msgtxt;
+		}
+		//photo attachment
+		if("type" in obj && obj.type=="photo" && "object_id" in obj) {
+			var tmp_a=document.createElement("a");
+			var img=document.createElement("img");
+			tmp_a.__photoid=img.__photoid=obj.object_id;
+			tmp_a.display="inline-block";
+			tmp_a.appendChild(img);
+			msg_body.appendChild(document.createElement("div"));
+			msg_body.appendChild(tmp_a);
+		}
+		
+		var id1=tmp.id.split("_");
+		time.innerHTML="<nobr>(<a href=\"http://facebook.com/"+id1[0]
+			+"/posts/"+id1[1]+"\">"+tmp.id+"</a>)</nobr> <nobr>"+tmp.updated_time+"</nobr>";
+		
+		msg_header.appendChild(pic);
+		msg_header.appendChild(msg_innerheader);
+		msg_innerheader.appendChild(name);
+		
+		var t;
+		var l2;
+		if((t=tmp.to) && (t=t.data) && (l2=t.length)>0)
+		{
+			var arrow=document.createElement("span");
+			arrow.setAttribute("class","arrow");
+			msg_innerheader.appendChild(arrow);
+			for(i2=0;i2<l2;i2++)
 			{
-				var msgtxt=get_msg(tmp);
-				if(msgtxt) msg_body.textContent=msgtxt;
-			}
-			time.innerHTML="<nobr>("+tmp.id+")</nobr> <nobr>"+tmp.updated_time+"</nobr>";
-			
-			msg_header.appendChild(pic);
-			msg_header.appendChild(msg_innerheader);
-			msg_innerheader.appendChild(name);
-			
-			var t;
-			var l2;
-			if((t=tmp.to) && (t=t.data) && (l2=t.length)>0)
-			{
-				var arrow=document.createElement("span");
-				arrow.setAttribute("class","arrow");
-				msg_innerheader.appendChild(arrow);
-				for(i2=0;i2<l2;i2++)
+				if(t[i2]==null || t[i2].id==null || tmp.from==null || tmp.from.id==null || l2==1 || (t[i2].id!=tmp.from.id))
 				{
-					if(t[i2]==null || t[i2].id==null || tmp.from==null || tmp.from.id==null || l2==1 || (t[i2].id!=tmp.from.id))
+					if(i2!=0)
 					{
-						if(i2!=0)
-						{
-							var comma=document.createTextNode(", ");
-							msg_innerheader.appendChild(comma);
-						}
-						name=document.createElement("a");
-						name.setAttribute("class","name");
-					       
-						name.target="_blank";
-						if(t[i2] && t[i2].id) name.href="http://www.facebook.com/profile.php?id="+t[i2].id;
-						if(t[i2] && t[i2].name) name.textContent=t[i2].name;
-						else name.textContent="Facebook User";
-					       
-						msg_innerheader.appendChild(name);
+						var comma=document.createTextNode(", ");
+						msg_innerheader.appendChild(comma);
 					}
+					name=document.createElement("a");
+					name.setAttribute("class","name");
+					   
+					name.target="_blank";
+					if(t[i2] && t[i2].id) name.href="http://www.facebook.com/profile.php?id="+t[i2].id;
+					if(t[i2] && t[i2].name) name.textContent=t[i2].name;
+					else name.textContent="Facebook User";
+					   
+					msg_innerheader.appendChild(name);
 				}
 			}
-			
-			msg_innerheader.appendChild(space);
-			msg_innerheader.appendChild(msg_body);
-			
-			//picture(if any)
-			var pic=getLargestPicture(tmp);
-			if(pic) {
-				var img=document.createElement("img");
-				img.setAttribute("class","fbpic");
-				var img_a=document.createElement("a");
-				img_a.target="_blank";
-				img_a.href=img.src=path+tmp.id+"."+pic[0];
-				img_a.appendChild(img);
-				msg_innerheader.appendChild(img_a);
-			}
-			
-			msg_innerheader.appendChild(time);
-			
-			var c;
-			if((c=tmp.comments) && (c=c.data) && (l2=c.length)>0)
+		}
+		
+		msg_innerheader.appendChild(space);
+		msg_innerheader.appendChild(msg_body);
+		
+		//picture(if any)
+		var pic=getLargestPicture(tmp);
+		if(pic) {
+			var img=document.createElement("img");
+			img.setAttribute("class","fbpic");
+			var img_a=document.createElement("a");
+			img_a.target="_blank";
+			img_a.href=img.src=path+tmp.id+"."+pic[0];
+			img_a.appendChild(img);
+			msg_innerheader.appendChild(img_a);
+		}
+		
+		msg_innerheader.appendChild(time);
+		
+		var c;
+		if((c=tmp.comments) && (c=c.data) && (l2=c.length)>0)
+		{
+			var comment0_id=tmp.id+"_0";
+			var comments=document.createElement("div");
+			comments.setAttribute("class","comments");
+			if(c[l2-1].id!=comment0_id && tmp.comments.paging)
 			{
-				var comment0_id=tmp.id+"_0";
-				var comments=document.createElement("div");
-				comments.setAttribute("class","comments");
-				if(c[l2-1].id!=comment0_id && tmp.comments.paging)
+				var comment=document.createElement("div");
+				var a=document.createElement("a");
+				comment.setAttribute("class","comment");
+				a.setAttribute("class","name");
+				
+				a.href=tmp.comments.paging.next;
+				a.textContent="View previous messages("+c[l2-1].id.substring(c[l2-1].id.indexOf("_")+1)+" left)";
+				comment.appendChild(a);
+				comments.appendChild(comment);
+			}
+			for(i2=0;i2<l2;i2++)
+			{
+				var tmp2=c[i2];
+				if(tmp2.id==comment0_id)
+				{
+					time.textContent=tmp2.created_time;
+				}
+				else
 				{
 					var comment=document.createElement("div");
-					var a=document.createElement("a");
+					var comment_header=document.createElement("div");
+					var comment_pic=document.createElement("img");
+					var comment_innerheader=document.createElement("div");
+					var comment_name=document.createElement("a");
+					var comment_space=document.createTextNode(" ");
+					var comment_body=document.createElement("span");
+					var comment_time=document.createElement("span");
 					comment.setAttribute("class","comment");
-					a.setAttribute("class","name");
-					
-					a.href=tmp.comments.paging.next;
-					a.textContent="View previous messages("+c[l2-1].id.substring(c[l2-1].id.indexOf("_")+1)+" left)";
-					comment.appendChild(a);
+					comment_header.setAttribute("class","comment_header");
+					comment_pic.setAttribute("class","comment_pic");
+					comment_innerheader.setAttribute("class","comment_innerheader");
+					comment_name.setAttribute("class","name");
+					comment_body.setAttribute("class","comment_body");
+					comment_time.setAttribute("class","time");
+					   
+					if(tmp2.from && tmp2.from.id) comment_pic.src="http://graph.facebook.com/"+tmp2.from.id+"/picture";
+					else comment_pic.src="http://static.ak.fbcdn.net/rsrc.php/z5HB7/hash/ecyu2wwn.gif";
+					comment_name.target="_blank";
+					if(tmp2.from && tmp2.from.id) comment_name.href="http://www.facebook.com/profile.php?id="+tmp2.from.id;
+					if(tmp2.from && tmp2.from.name) comment_name.textContent=tmp2.from.name;
+					else comment_name.textContent="Facebook User";
+					comment_body.textContent=tmp2.message;
+					comment_time.textContent=tmp2.created_time;
+					   
+					comment_header.appendChild(comment_pic);
+					comment_header.appendChild(comment_innerheader);
+					comment_innerheader.appendChild(comment_name);
+					comment_innerheader.appendChild(comment_space);
+					comment_innerheader.appendChild(comment_body);
+					comment_innerheader.appendChild(comment_time);
+					comment.appendChild(comment_header);
 					comments.appendChild(comment);
 				}
-				for(i2=0;i2<l2;i2++)
-				{
-					var tmp2=c[i2];
-					if(tmp2.id==comment0_id)
-					{
-						time.textContent=tmp2.created_time;
-					}
-					else
-					{
-						var comment=document.createElement("div");
-						var comment_header=document.createElement("div");
-						var comment_pic=document.createElement("img");
-						var comment_innerheader=document.createElement("div");
-						var comment_name=document.createElement("a");
-						var comment_space=document.createTextNode(" ");
-						var comment_body=document.createElement("span");
-						var comment_time=document.createElement("span");
-						comment.setAttribute("class","comment");
-						comment_header.setAttribute("class","comment_header");
-						comment_pic.setAttribute("class","comment_pic");
-						comment_innerheader.setAttribute("class","comment_innerheader");
-						comment_name.setAttribute("class","name");
-						comment_body.setAttribute("class","comment_body");
-						comment_time.setAttribute("class","time");
-					       
-						if(tmp2.from && tmp2.from.id) comment_pic.src="http://graph.facebook.com/"+tmp2.from.id+"/picture";
-						else comment_pic.src="http://static.ak.fbcdn.net/rsrc.php/z5HB7/hash/ecyu2wwn.gif";
-						comment_name.target="_blank";
-						if(tmp2.from && tmp2.from.id) comment_name.href="http://www.facebook.com/profile.php?id="+tmp2.from.id;
-						if(tmp2.from && tmp2.from.name) comment_name.textContent=tmp2.from.name;
-						else comment_name.textContent="Facebook User";
-						comment_body.textContent=tmp2.message;
-						comment_time.textContent=tmp2.created_time;
-					       
-						comment_header.appendChild(comment_pic);
-						comment_header.appendChild(comment_innerheader);
-						comment_innerheader.appendChild(comment_name);
-						comment_innerheader.appendChild(comment_space);
-						comment_innerheader.appendChild(comment_body);
-						comment_innerheader.appendChild(comment_time);
-						comment.appendChild(comment_header);
-						comments.appendChild(comment);
-					}
-				}
-				msg_innerheader.appendChild(comments);
 			}
-			return msg_header;
+			msg_innerheader.appendChild(comments);
+		}
+		return msg_header;
 	}
 	
 	</script>
@@ -249,6 +262,9 @@
 			font-weight:normal;
 			margin-bottom: 2px;
 		}
+		.msg_body img {
+			margin-top: 8px;
+		}
 		.comment_body
 		{
 			color: black;
@@ -277,6 +293,10 @@
 	padding-left: 5px;
 	padding-right: 0px;
 	padding-top: 5px;
+		}
+		a {
+			color: #3B5998;
+			text-decoration: none;
 		}
 		a.name
 		{
@@ -323,23 +343,71 @@
 	var l=qs("l");
 	if(l && l.substring(l.length-1)!="/")
 		l+="/";
+	var u=path;
+	if(l)u+=l;
+	function displayPhoto(e,obj) {
+		var pic=getLargestPicture(obj);
+		if(pic) {
+			e.src=path+obj.id+"."+pic[0]+".th";
+		}
+	}
+	function processImages(e) {
+		var elements=e.getElementsByTagName("img");
+		for(var i=0;i<elements.length;i++) {
+			var img=elements[i];
+			if("__photoid" in img) {
+				//some old dumps do not have the photo json object properly dumped by dumpposts.js,
+				//so hardcode ".images.0" for now
+				/*
+				new Ajax.Request(path+img.__photoid, {
+					onComplete: function(response) {
+						var obj=JSON.parse(response.responseText);
+						alert(response.responseText);
+						try {
+							displayPhoto(img,obj);
+						} catch(ex){alert(ex.toString());}
+					},
+					method: "get"
+				});*/
+				img.src=path+img.__photoid+".images.0.th";
+			}
+		}
+		elements=e.getElementsByTagName("a");
+		for(var i=0;i<elements.length;i++) {
+			var a=elements[i];
+			if("__photoid" in a) a.href="cpp/p.cppsp?i=../"+encodeURIComponent(path+a.__photoid+".images.0");
+		}
+	}
 	function show_page(start)
 	{
+		cur_items={};
 		var pagesize=20;
 		var d=document.getElementById("content");
 		d.innerHTML="";
 		var e=start+pagesize;
 		if(window.a.length<e)e=window.a.length;
 		for(var i=start;i<e;i++) {
-			new Ajax.Request(u+a[i], {
-				onComplete: function(response) {
-					var obj=JSON.parse(response.responseText);
-					try {
-						d.appendChild(displayPost(obj));
-					} catch(e){alert(e.toString());}
-				},
-				method: "get"
-			});
+			(function(i) {
+				new Ajax.Request(u+a[i], {
+					onComplete: function(response) {
+						var obj=JSON.parse(response.responseText);
+						try {
+							var e=displayPost(obj);
+							var b=false;
+							for(x in cur_items)
+								if(x>i) {
+									d.insertBefore(e,cur_items[x]);
+									b=true;
+									break;
+								}
+							if(!b) d.appendChild(e);
+							cur_items[i]=e;
+							processImages(d);
+						} catch(e){alert(e.toString());}
+					},
+					method: "get"
+				});
+			})(i);
 		}
 		
 		//show paging
@@ -359,8 +427,7 @@
 			p.appendChild(b);
 		}
 	}
-	var u=path;
-	if(l)u+=l;
+	
 	new Ajax.Request("cpp/ls.cppsp?p="+encodeURIComponent(u), {
 		onComplete: function(response) {
 			window.a=response.responseText.split("\n");
