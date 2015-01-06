@@ -17,7 +17,8 @@ void HTMLEncode(std::string& data) {
             case '\'': buffer.append("&apos;");      break;
             case '<':  buffer.append("&lt;");        break;
             case '>':  buffer.append("&gt;");        break;
-            default:   buffer.append(1, data[pos]); break;
+            case '\n':  buffer.append("<br />");     break;
+            default:   buffer.append(1, data[pos]);  break;
         }
     }
     data.swap(buffer);
@@ -52,18 +53,43 @@ void newPage(ofstream*& ofs, const char* table, int ii, PGresult *res1)
 	*ofs << "<html>\n<head><title>Table " << table
 		<< "</title></head>\n<body>\n<h1>Table "
 		<< table << " (from row #" << ii
-		<< ")</h1>\n<table border=\"1\">\n<tr>" << endl;
+		<< ")</h1>\n<table border=\"1\" style=\"width: 100%\">\n<tr>" << endl;
 	for(int ii=0;ii<cols1;ii++) {
 		*ofs << "<td>" << PQfname(res1, ii) << "</td>\n";
 	}
 	*ofs << "</tr>\n";
+}
+void doDumpTable(PGconn *conn,string table,string sqlappend) {
+	PGresult *res1=PQexec(conn,("select * from " + table + " "+sqlappend+" order by id desc").c_str());
+	int rows1=PQntuples(res1);
+	int cols1=PQnfields(res1);
+	
+	ofstream* ofs=NULL;
+	newPage(ofs, table.c_str(), 0, res1);
+	for(int ii=0;ii<rows1;ii++) {
+		if(ii % pagesize == 0 && ii!=0) {
+			newPage(ofs, table.c_str(), ii, res1);
+		}
+		*ofs << "<tr>\n";
+		for(int iii=0;iii<cols1;iii++) {
+			string s(PQgetvalue(res1, ii, iii));
+			HTMLEncode(s);
+			*ofs << "<td>" << s << "</td>" << endl;
+		}
+		*ofs << "</tr>" << endl;
+	}
+	if(ofs!=NULL) {
+		endPage(ofs, table.c_str(), rows1-1, res1);
+		delete ofs; ofs=NULL;
+	}
+	PQclear(res1);
 }
 
 int main(int argc, char** argv)
 {
 	
 	if(argc<3) {
-		cerr << "usage: " << argv[0] << " connectionstring schema" << endl;
+		cerr << "usage: " << argv[0] << " connectionstring schema [tablename [sqlappend]]" << endl;
 		return 1;
 	}
 	PGconn *conn;
@@ -72,6 +98,14 @@ int main(int argc, char** argv)
 		cerr << "connection error" << endl;
 		return 1;
 	}
+	if(argc>3) {
+		//dump one table only
+		string sqlappend;
+		if(argc>4) sqlappend=argv[4];
+		doDumpTable(conn,argv[3],sqlappend);
+		return 0;
+	}
+	
 	Oid oid=25/*TEXTOID*/;
 	int len=strlen(argv[2]);
 	int tmp_i=0;
@@ -87,31 +121,7 @@ int main(int argc, char** argv)
 		const char* table=PQgetvalue(res, i, 0/*col*/);
 		cerr << "dumping table " << table << endl;
 		index_ss << "<li><a href=\"t_" << table << "_0.htm\">" << table << "</a></li>" << endl;
-		
-		
-		PGresult *res1=PQexec(conn,("select * from " + string(table) + " order by id desc").c_str());
-		int rows1=PQntuples(res1);
-		int cols1=PQnfields(res1);
-		
-		ofstream* ofs=NULL;
-		newPage(ofs, table, 0, res1);
-		for(int ii=0;ii<rows1;ii++) {
-			if(ii % pagesize == 0 && ii!=0) {
-				newPage(ofs, table, ii, res1);
-			}
-			*ofs << "<tr>\n";
-			for(int iii=0;iii<cols1;iii++) {
-				string s(PQgetvalue(res1, ii, iii));
-				HTMLEncode(s);
-				*ofs << "<td>" << s << "</td>" << endl;
-			}
-			*ofs << "</tr>" << endl;
-		}
-		if(ofs!=NULL) {
-			endPage(ofs, table, rows1-1, res1);
-			delete ofs; ofs=NULL;
-		}
-		PQclear(res1);
+		doDumpTable(conn,string(table),"");
 	}
 	index_ss << "</ul>\n</body>\n</html>" << endl;
 }
