@@ -13,7 +13,7 @@ find -L "$TARGET"/include -type l -delete
 cp -a test/socketd_proxy.C "$TARGET"/
 cat >"$TARGET"/_makefile <<EOF
 OPTFLAGS := -Ofast -march=native -flto
-CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -funsigned-char -fwrapv -fno-delete-null-pointer-checks -fno-strict-aliasing -I./include \$(CFGFLAGS)
+CXXFLAGS := \$(OPTFLAGS) -Wall --std=c++0x -Wno-pmf-conversions -Wno-unused-variable -Wno-unused-function -funsigned-char -fwrapv -fno-delete-null-pointer-checks -fno-strict-aliasing -I./include \$(CFGFLAGS)
 CXX := g++
 all: cppsp_standalone libcpoll.so libcppsp.so socketd_bin socketd_cppsp socketd_proxy.so
 cppsp_standalone: 
@@ -87,8 +87,8 @@ os.execv(path+"/cppsp_standalone",[path+"/cppsp_standalone","-c","-fPIC","-c","-
 EOF
 cat >"$TARGET"/cppsp_clean <<EOF
 #!/bin/bash
-rm -f *.cppsp.C *.cppsp.so *.cppsp.txt *.cppsp.*.C *.cppsp.*.txt
-rm -f *.cppsm.C *.cppsm.so *.cppsm.txt *.cppsm.*.C *.cppsm.*.txt
+rm -f *.cppsp.C *.cppsp.so *.cppsp.txt *.cppsp.*.C *.cppsp.*.so *.cppsp.*.txt
+rm -f *.cppsm.C *.cppsm.so *.cppsm.txt *.cppsm.*.C *.cppsm.*.so *.cppsm.*.txt
 
 EOF
 cat >"$TARGET"/run_socketd_example <<EOF
