@@ -83,11 +83,12 @@ void load() override {
 	<%
 	auto it=request->form.find("act");
 	if(it!=request->form.end()) {
-		if((*it).second=="clear+cppsp+page+cache") {
+		string tmp=((*it).second).toSTDString();
+		if((*it).second=="clear cppsp page cache") {
 			cm->cleanCache(0);
-		} else if((*it).second=="clear+route+cache") {
+		} else if((*it).second=="clear route cache") {
 			server->cleanCache(0);
-		} else if((*it).second=="clear+all+caches") {
+		} else if((*it).second=="clear all caches") {
 			server->cleanCache(0);
 			cm->cleanCache(0);
 		}
@@ -136,6 +137,7 @@ void load() override {
 				<td title="reference count">RC</td>
 				<td>Load time</td>
 				<td>Last access</td>
+				<td>State</td>
 			</tr>
 		</thead>
 		<%
@@ -144,12 +146,14 @@ void load() override {
 			char buffer[256];
 			tm time1; localtime_r(&(*it).second->lastLoad.tv_sec,&time1);
 			strftime(buffer, sizeof(buffer), "%F %r", &time1);
+			const char* state=tmp->loaded?"loaded":"unloaded";
 			%>
 			<tr>
 				<td><%htmlEscape((*it).first,output);%></td>
 				<td><%=tmp->refCount%></td>
 				<td><%htmlEscape(buffer,output);%></td>
 				<td><%=int64_t(-dateDiff(cm->curTime,tmp->lastCheck)/1000)%> seconds ago</td>
+				<td class="s_<%=state%>"><%=state%></td>
 			</tr>
 			<%
 		}
