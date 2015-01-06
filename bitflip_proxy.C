@@ -22,8 +22,8 @@ int main(int argc, char** argv)
 	//no need to disable SIGHUP and SIGPIPE as cpoll does that automatically
 	Poll p;
 	Socket srvsock;
-	p.add(srvsock);
 	srvsock.bind(IPEndPoint(IPAddress(argv[1]),atoi(argv[2])));
+	p.add(srvsock);
 	struct conf {
 		IPEndPoint fwd;
 		bool r;
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 				char buf2[bufSize]; //remote -> local
 				bool rev;
 				handler(conf& cfg,Poll& p, HANDLE h, int d, int t, int pr)
-					:cfg(cfg),p(p),s(h,d,t,pr) {}
+					:cfg(cfg),p(p),s(h,d,t,pr),s2(d,t,pr) {}
 				void stop() { delete this; }
 				void closed(int i) { stop(); }
 				void transform(uint8_t* buf, int len) {
@@ -72,8 +72,8 @@ int main(int argc, char** argv)
 					write2(r);
 				}
 				
-				void write1(int i) { s2.send(buf1,i,0,Callback(&handler::write1cb,this)); }
-				void write2(int i) { s.send(buf2,i,0,Callback(&handler::write2cb,this)); }
+				void write1(int i) { s2.sendAll(buf1,i,0,Callback(&handler::write1cb,this)); }
+				void write2(int i) { s.sendAll(buf2,i,0,Callback(&handler::write2cb,this)); }
 				void write1cb(int r) {
 					if(r<=0) { stop(); return; }
 					read1();
