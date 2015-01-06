@@ -354,6 +354,7 @@ namespace socketd
 						}
 						break;
 					}
+					default: throw ParserException_internal(ct,"received invalid token type from parseConfig()");
 				}
 			});
 		if (state != 0) throw ParserException_internal("got EOF while searching for matching \"}\"");
