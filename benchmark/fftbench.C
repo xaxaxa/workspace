@@ -16,9 +16,11 @@ typedef fftw_complex fft_complex;
 class FFTBench: public Benchmark
 {
 public:
+	bool inverse;
 	int fftsize;
 	int iters;
 	fft_float* globalData;
+	fft_complex* globalData_c;
 	struct threadData
 	{
 		fft_float* data;
@@ -29,9 +31,15 @@ public:
 	
 	FFTBench(int fftsize, int iters):fftsize(fftsize),iters(iters) {
 		globalData=(fft_float*)FFTWFUNC(malloc)(fftsize*sizeof(fft_float));
+		globalData_c=(fft_complex*)FFTWFUNC(malloc)(complexSize()*sizeof(fft_complex));
 		for(int i=0;i<fftsize;i++) {
 			globalData[i]=drand48();
 		}
+		for(int i=0;i<complexSize();i++) {
+			globalData_c[i][0]=drand48();
+			globalData_c[i][1]=drand48();
+		}
+		inverse=false;
 	}
 	inline int complexSize() {
 		return fftsize/2+1;
@@ -42,9 +50,9 @@ public:
 			threads[i].data=(fft_float*)FFTWFUNC(malloc)(fftsize*sizeof(fft_float));
 			threads[i].data_c=(fft_complex*)FFTWFUNC(malloc)(complexSize()*sizeof(fft_complex));
 			threads[i].p1 = FFTWFUNC(plan_dft_r2c_1d)(fftsize, threads[i].data,
-				threads[i].data_c, FFTW_MEASURE);
+				threads[i].data_c, FFTW_ESTIMATE);
 			threads[i].p2 = FFTWFUNC(plan_dft_c2r_1d)(fftsize, threads[i].data_c,
-				threads[i].data, FFTW_MEASURE);
+				threads[i].data, FFTW_ESTIMATE);
 		}
 	}
 	void destroyThreads() {
@@ -59,15 +67,16 @@ public:
 		threadData& d=threads[th.threadIndex];
 		//double freq=1./2000;	//periods per sample
 		th.beginTiming();
-		for(int i=0;i<iters;i++) {
-			memcpy(d.data,globalData,sizeof(fft_float)*fftsize);
-			FFTWFUNC(execute)(d.p1);
-			double cs1=1.d/(double)complexSize();
-			for(int x=0;x<complexSize();x++) {
-				d.data_c[x][0]*=double(x)*cs1;
-				d.data_c[x][1]*=double(x)*cs1;
+		if(inverse) {
+			for(int i=0;i<iters;i++) {
+				memcpy(d.data_c,globalData_c,sizeof(fft_complex)*complexSize());
+				FFTWFUNC(execute)(d.p2);
 			}
-			FFTWFUNC(execute)(d.p2);
+		} else {
+			for(int i=0;i<iters;i++) {
+				memcpy(d.data,globalData,sizeof(fft_float)*fftsize);
+				FFTWFUNC(execute)(d.p1);
+			}
 		}
 		th.endTiming();
 	}
@@ -87,5 +96,7 @@ int main(int argc, char** argv) {
 	BenchmarkRunner br;
 	br.runs=atoi(argv[3]);
 	br.runDefaultTests(fftb,"FFT");
+	fftb.inverse=true;
+	br.runDefaultTests(fftb,"inverse FFT");
 }
 

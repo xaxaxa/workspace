@@ -25,7 +25,7 @@ public:
 		free(buf[1]);
 	}
 	double valueFunc(int64_t t, int64_t tCPU, void* v) override {
-		return (1000000000.d/double(tCPU))*iters*n/1024.d/1024.d;
+		return (1000000000./double(tCPU))*iters*n/1024./1024.;
 	}
 	string unit() override {
 		return "MiB/s";
