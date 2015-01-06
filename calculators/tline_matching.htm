@@ -1,0 +1,285 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function re_im(re,im) {
+	var a=new Object();
+	a.re=re;
+	a.im=im;
+	return a;
+}
+function mag_ang(mag,ang) {
+	return re_im(mag*Math.cos(ang),mag*Math.sin(ang));
+}
+function add(a,b) {
+	if(typeof(a)=="number") return re_im(b.re+a,b.im);
+	if(typeof(b)=="number") return re_im(a.re+b,a.im);
+	return re_im(a.re+b.re,a.im+b.im);
+}
+function sub(a,b) {
+	if(typeof(a)=="number") return re_im(a-b.re,-b.im);
+	if(typeof(b)=="number") return re_im(a.re-b,a.im);
+	return re_im(a.re-b.re,a.im-b.im);
+}
+function mult(a,b) {
+	if(typeof(a)=="number") return re_im(b.re*a,b.im*a);
+	if(typeof(b)=="number") return re_im(a.re*b,a.im*b);
+	return re_im(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+}
+function div(a,b) {
+	if(typeof(b)=="number") return re_im(a.re/b,a.im/b);
+	absb=mag2(b);
+	if(typeof(a)=="number") return re_im(b.re*a/absb,-b.im*a/absb);
+	return re_im((a.re*b.re+a.im*b.im)/absb,(b.re*a.im-b.im*a.re)/absb);
+}
+function conj(c) { return re_im(c.re,-c.im); }
+function mag2(c) { return Math.pow(c.re,2)+Math.pow(c.im,2); }
+function mag(c) { return Math.sqrt(mag2(c)); }
+function ang(c) { return Math.atan2(c.im,c.re); }
+function str(c) { return c.re.toString()+(c.im>=0?" + j":" - j")+Math.abs(c.im).toString(); }
+
+
+function to_refl(z) {
+	return div(sub(z,1),add(z,1));
+}
+function from_refl(r) {
+	return div(add(1,r),sub(1,r));
+}
+
+
+function cE(n) { return document.createElement(n); }
+
+function _getInputTD(text) {
+	var td=cE("td");
+	var inp=cE("input");
+	if(text!=null) td.textContent=text;
+	td.appendChild(inp);
+	td.inp=inp;
+	return td;
+}
+function generateForm(fields) {
+	var t=cE("table");
+	var tb=cE("tbody");
+	var fields2=new Object();
+	t.fields2=fields2;
+	for(x in fields) {
+		var f=fields[x];
+		var f2=new Object();
+		f2.type=f.type;
+		fields2[x]=f2;
+		var tr=cE("tr");
+		var td1=cE("td");
+		td1.textContent=f.dname;
+		tr.appendChild(td1);
+		switch(f.type) {
+			case "impedance":
+				f2.td_r=_getInputTD();
+				f2.td2=cE("td");
+				f2.td2.textContent=" + ";
+				f2.td_i=_getInputTD("j");
+				f2.td_ch=cE("td");
+				f2.ch=cE("input");
+				f2.ch.type="checkbox";
+				f2.label1=cE("label");
+				f2.label1.textContent="Admittance";
+				f2.td_ch.appendChild(f2.ch);
+				f2.td_ch.appendChild(f2.label1);
+				if("def" in f) {
+					f2.td_r.inp.value=f.def.re;
+					f2.td_i.inp.value=f.def.im;
+				}
+				f2.ch.__f2=f2;
+				f2.ch.onclick=function() {
+					var a=div(1,re_im(parseFloat(this.__f2.td_r.inp.value),
+						parseFloat(this.__f2.td_i.inp.value)));
+					if(isNaN(a.re) || isNaN(a.im)) return;
+					this.__f2.td_r.inp.value=Math.round(a.re*10000000)/10000000;
+					this.__f2.td_i.inp.value=Math.round(a.im*10000000)/10000000;
+				};
+				tr.appendChild(f2.td_r);
+				tr.appendChild(f2.td2);
+				tr.appendChild(f2.td_i);
+				tr.appendChild(f2.td_ch);
+				break;
+			case "number":
+				f2.td=_getInputTD();
+				if("def" in f) f2.td.inp.value=f.def;
+				tr.appendChild(f2.td);
+				break;
+			case "bool":
+				f2.td_ch=cE("td");
+				f2.ch=cE("input");
+				f2.ch.type="checkbox";
+				f2.td_ch.appendChild(f2.ch);
+				if("def" in f) f2.ch.checked=f.def;
+				tr.appendChild(f2.td_ch);
+				break;
+		}
+		tb.appendChild(tr);
+	}
+	t.appendChild(tb);
+	return t;
+}
+function getFormField(form,field) {
+	var f=form.fields2[field];
+	switch(f.type) {
+		case "impedance":
+			var c=re_im(parseFloat(f.td_r.inp.value),parseFloat(f.td_i.inp.value));
+			if(f.ch.checked) c=div(1,c);
+			return c;
+		case "number":
+			return parseFloat(f.td.inp.value);
+		case "bool":
+			return f.ch.checked;
+	}
+}
+function generateTable(data) {
+	var t=cE("table");
+	t.border="1";
+	var tb=cE("tbody");
+	for(var i=0;i<data.length;i++) {
+		var n=data[i][0];
+		var v=data[i][1];
+		var tr=cE("tr");
+		var td=cE("td");
+		td.textContent=n;
+		if(data[i].length<2) td.colspan=2;
+		tr.appendChild(td);
+		if(data[i].length>=2) {
+			td=cE("td");
+			td.textContent=v;
+			tr.appendChild(td);
+		}
+		tb.appendChild(tr);
+	}
+	t.appendChild(tb);
+	return t;
+}
+function calc1() {
+	clearResults("single_stub_r");
+	var frm=document.getElementById("single_stub_form");
+	var zin=getFormField(frm,"zin");
+	var zout=getFormField(frm,"zout");
+	var z01=getFormField(frm,"z01");
+	var z02=getFormField(frm,"z02");
+	var sc=getFormField(frm,"short");
+	
+	var inp_adm=div(z01,zin);
+	var gamma_out=to_refl(div(zout,z01));
+	
+	//calculate phase delay s.t. Re{Y}=Re{Yin}
+	var r_ang_cos=-(inp_adm.re-1+(inp_adm.re+1)*mag2(gamma_out))/(2*inp_adm.re*mag(gamma_out));
+	var r_ang=Math.acos(r_ang_cos);
+	if(r_ang_cos<-1 || r_ang_cos>1 || isNaN(r_ang_cos)) {
+		showResults("single_stub_r",[["Solution does not exist"]]);
+		return;
+	}
+	var theta1=ang(gamma_out)-r_ang;
+	var theta2=ang(gamma_out)+r_ang-2*Math.PI;
+
+	var f=function(theta) {
+		while(theta<0) theta+=2*Math.PI;
+		var L=theta/(4*Math.PI);
+		
+		//calculate stub length
+		var gamma=mult(gamma_out,mag_ang(1,-theta));
+		var susceptance=div(1,from_refl(gamma)).im/z01;
+		var L2=calcStub(re_im(0,(1.0/(susceptance+div(1,zin).im))/z02),sc?-1:1);
+		while(L2<0) L2+=2*Math.PI;
+		L2=L2/(4*Math.PI);
+		showResults("single_stub_r",[["L",Math.round(L*100000)/100000+"λ"],
+			["L2",Math.round(L2*100000)/100000+"λ"]]);
+	};
+	f(theta1);
+	f(theta2);
+}
+function calc2() {
+	clearResults("stub_z_r");
+	var frm=document.getElementById("stub_z_form");
+	var z0=getFormField(frm,"z0");
+	var len=getFormField(frm,"len");
+	var z=getFormField(frm,"z");
+	var gamma;
+	if(isNaN(z.re)||isNaN(z.re)) gamma=re_im(1,0);	//open circuit
+	else gamma=div(sub(z,z0),add(z,z0));
+	
+	gamma=mult(gamma,mag_ang(1,-4*Math.PI*len));
+	
+	var zin=div(add(1,gamma),sub(1,gamma));
+	zin=mult(zin,z0);
+	zin.re=Math.round(zin.re*10000)/10000;
+	zin.im=Math.round(zin.im*10000)/10000;
+	
+	var yin=div(sub(1,gamma),add(1,gamma));
+	yin=div(yin,z0);
+	yin.re=Math.round(yin.re*1000000)/1000000;
+	yin.im=Math.round(yin.im*1000000)/1000000;
+	
+	if(isNaN(zin.re)||isNaN(zin.im)) zin="∞";
+	else zin=str(zin);
+	if(isNaN(yin.re)||isNaN(yin.im)) yin="∞";
+	else yin=str(yin);
+	showResults("stub_z_r",[["Zin",zin],["Yin",yin]]);
+}
+//calculate length of an open or short circuited stub to get a given reactance
+//returns total phase delay (2*beta*L)
+function calcStub(Z,gamma_end) {
+	var gamma=div(sub(Z,1),mult(add(Z,1),gamma_end));
+	return -ang(gamma)-2*Math.PI;
+}
+function clearResults(id) {
+	var e=document.getElementById(id);
+	while (e.firstChild) e.removeChild(e.firstChild);
+}
+function showResults(id,data) {
+	var e=document.getElementById(id);
+	e.appendChild(generateTable(data));
+}
+</script>
+<style>
+
+input,input[type=text] {
+	width: 80px;
+	margin: 0px 5px;
+}
+input[type] {
+	width: inherit;
+}
+table {
+	display: inline-block;
+	margin-right: 10px;
+	margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+	<h3>Single stub matching</h3>
+	<img src="single_stub.png" />
+	<div id="single_stub"></div>
+	Solutions:
+	<div id="single_stub_r"></div>
+	<button type="button" onclick="calc1();">Calculate</button>
+	
+	<h3>Stub impedance calculator</h3>
+	<img src="stub_z.png" />
+	<div id="stub_z"></div>
+	Solutions:
+	<div id="stub_z_r"></div>
+	<button type="button" onclick="calc2();">Calculate</button>
+	<script>
+	var t=generateForm({"zin":{dname: "Zin", type:"impedance", def:re_im(0,0)},
+			"zout":{dname: "Zout", type:"impedance",def:re_im(0,0)},
+			"z01":{dname: "Z01", type:"number",def:50},
+			"z02":{dname: "Z02", type:"number",def:50},
+			"short":{dname: "Shorted stub", type:"bool",def:false}});
+	t.id="single_stub_form";
+	document.getElementById("single_stub").appendChild(t);
+	t=generateForm({"z0":{dname: "Z0", type:"number", def:50},
+			"z":{dname: "Z", type:"impedance", def:re_im(0,0)},
+			"len":{dname: "Length/λ", type:"number",def:0}});
+	t.id="stub_z_form";
+	document.getElementById("stub_z").appendChild(t);
+	</script>
+</body>
+</html>
