@@ -88,10 +88,10 @@ struct JoinStream
 		write2(r);
 	}
 	void write1(int i) {
-		s2->write(buf1to2, i, Callback(&JoinStream::write1cb, this));
+		s2->writeAll(buf1to2, i, Callback(&JoinStream::write1cb, this));
 	}
 	void write2(int i) {
-		s1->write(buf2to1, i, Callback(&JoinStream::write2cb, this));
+		s1->writeAll(buf2to1, i, Callback(&JoinStream::write2cb, this));
 	}
 	void write1cb(int r) {
 		if (r <= 0) {

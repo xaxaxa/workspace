@@ -176,32 +176,18 @@ struct iptsocks_connection: public virtual RGC::Object
 		}
 	}
 	~iptsocks_connection() {
-		if(incremented)
-		decrement_host(ep.address);
+		if(incremented) decrement_host(ep.address);
+	}
+	void shutdownCB(int e) {
+		release();
 	}
 	void from1to2(JoinStream& j, uint8_t* data, int& len) {
-		if (len <= 0) {
-			//WARN(1,"from1to2(): release(): before-ref-count: " << refCount);
-			delete this; return;
-			struct {
-				void operator()() {}
-			}tmpcb;
-			s2.shutdown(SHUT_RDWR,&tmpcb);
-			//s2.close(&tmpcb);
-			release();
-		}
+		if (len <= 0)
+			s2.shutdown(SHUT_RDWR,{&iptsocks_connection::shutdownCB,this});
 	}
 	void from2to1(JoinStream& j, uint8_t* data, int& len) {
-		if (len <= 0) {
-			//WARN(1,"from2to1(): release(): before-ref-count: " << refCount);
-			delete this; return;
-			struct {
-				void operator()() {}
-			}tmpcb;
-			//s1.close(&tmpcb);
-			s1.shutdown(SHUT_RDWR,&tmpcb);
-			release();
-		}
+		if (len <= 0)
+			s1.shutdown(SHUT_RDWR,{&iptsocks_connection::shutdownCB,this});
 	}
 	void socks_cb(Stream& s, exception* ex) {
 		if (ex != NULL) {
@@ -390,6 +376,8 @@ int main(int argc, char **argv) {
 			sss: if (!sr.eof) begin();
 		}
 		void begin() {
+			sw.write("iptsocks# ");
+			sw.flush();
 			sr.readLine(this);
 		}
 	} cmdcb { sr, sw };
