@@ -19,15 +19,10 @@
 	var fn_click=function()
 	{
 		var fn=this.textContent;
-		if(fn.indexOf(".")>-1) {
-			var ln=fn.substring(fn.lastIndexOf(".")+1);
-			if(ln in linktypes) {
-				window.location.href=linktypes[ln]+"?p="+encodeURIComponent(path)+"&l="+encodeURIComponent(fn);
-			}
-		}
-		
+		window.location.href=this.__viewer+"?p="+encodeURIComponent(path)+"&l="+encodeURIComponent(fn);
 	};
-	var linktypes={"photos":"viewphotos.htm","feed":"viewposts.htm","albums":"viewalbums.htm","tagged":"viewposts.htm"};
+	var linktypes={"photos":"viewphotos.htm","feed":"viewposts.htm","albums":"viewalbums.htm","tagged":"viewposts.htm",
+			"videos":"viewvideos.htm","videos.uploaded":"viewvideos.htm"};
 	new Ajax.Request("cpp/ls.cppsp?t=d&p="+encodeURIComponent(path), {
 		onComplete: function(response) {
 			var d=document.getElementById("content");
@@ -35,17 +30,17 @@
 			window.a.sort();
 			for(var i=0;i<window.a.length;i++){
 				var fn=window.a[i].trim();
-				if(fn.length>0 && fn.indexOf(".")>-1) {
-					//alert(fn);
-					var ln=fn.substring(fn.lastIndexOf(".")+1);
-					if(ln in linktypes) {
+				for(ln in linktypes) {
+					if((fn.length>ln.length+1) && fn.substring(fn.length-ln.length-1)=="."+ln) {
 						var sp=document.createElement("span");
 						sp.setAttribute("class","dirent");
 						sp.textContent=fn;
 						sp.onclick=fn_click;
+						sp.__viewer=linktypes[ln];
 						sp.__i=i;
 						sp.__fn=fn;
 						d.appendChild(sp);
+						break;
 					}
 				}
 			}

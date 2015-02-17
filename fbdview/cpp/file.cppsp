@@ -1,0 +1,63 @@
+<%@ class p %><%#
+#include <sys/uio.h>
+%><%$
+/*
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * */
+iovec iov[2];
+staticPage* sp;
+void doInit() {
+	sp=loadNestedStaticPage(request->queryString["f"]);
+	String data=sp->data;
+	sp->retain();
+	
+	Response& resp=*response;
+	int bufferL = resp.buffer.length();
+	response->addDefaultHeaders(server->host->curRFCTime, request->queryString["mime"]);
+	{
+		const char* tmph = "Content-Length: ";
+		int tmphL = strlen(tmph);
+		memcpy(resp.headers.d + resp.headers.len, tmph, tmphL);
+		resp.headers.len += tmphL;
+		resp.headers.len += itoa64(data.length(), resp.headers.d + resp.headers.len);
+		(resp.headers.d + resp.headers.len)[0] = '\r';
+		(resp.headers.d + resp.headers.len)[1] = '\n';
+		resp.headers.len += 2;
+		
+		StreamWriter sw(resp.buffer);
+		resp.serializeHeaders(sw);
+	}
+	iov[0]= {resp.buffer.data()+bufferL, (size_t)(resp.buffer.length()-bufferL)};
+	iov[1]= {data.data(), (size_t)data.length()};
+	resp.outputStream->writevAll(iov, data.length()<=0?1:2, { &p::writevCB, this });
+}
+
+void writevCB(int i) {
+	sp->release();
+	finalize();
+}
+
+static inline int itoa64(int64_t i, char* b) {
+	static char const digit[] = "0123456789";
+	char* p = b;
+	int l;
+	p += (l=((i==0?0:int(log10(i))) + 1));
+	*p = '\0';
+	do { //Move back, inserting digits as u go
+		*--p = digit[i % 10];
+		i = i / 10;
+	} while (i);
+	return l;
+}
+%>

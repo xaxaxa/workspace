@@ -112,8 +112,11 @@
 		if(pic) {
 			var img=document.createElement("img");
 			img.setAttribute("class","fbpic");
+			img.onerror=function() {
+				this.onerror=null;
+				this.src=path+tmp.id+".source";
+			};
 			var img_a=document.createElement("a");
-			img_a.target="_blank";
 			img_a.href=img.src=path+tmp.id+"."+pic[0];
 			img_a.appendChild(img);
 			msg_innerheader.appendChild(img_a);
@@ -370,6 +373,11 @@
 					method: "get"
 				});*/
 				img.src=path+img.__photoid+".images.0.th";
+				img.__p=path+img.__photoid;
+				img.onerror=function() {
+					this.onerror=null;
+					this.src=this.__p+".source";
+				};
 			}
 		}
 		elements=e.getElementsByTagName("a");

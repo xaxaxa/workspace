@@ -14,15 +14,8 @@
 		var e=document.getElementById("template").clone(true);
 		e.style.display="";
 		
-		//alert(e.getElementsByTagName("img").length);
-		//e.getElementsByTagName("img")[0].src="";
-		//alert(JSON.stringify(obj));
-		var pic=getLargestPicture(obj);
-		if(pic) {
-			//alert(pic);
-			e.getElementsByTagName("img")[0].src=path+obj.id+"."+pic[0]+".th";
-			e.href="cpp/file.cppsp?mime=image/jpeg&f=../"+encodeURIComponent(path+obj.id+"."+pic[0]);
-		}
+		e.getElementsByTagName("img")[0].src=path+obj.id+".picture";
+		e.href="cpp/file.cppsp?mime=video/mp4&f=../"+encodeURIComponent(path+obj.id+".source");
 		return e;
 	}
 	</script>
