@@ -138,6 +138,7 @@ function exists(id)
 }
 function download(url,fn)
 {
+	lib.print("downloading: "+url+" as "+fn);
 	return lib.download(url,fn,function(n){});
 }
 function saveObj(o)

@@ -5,7 +5,7 @@ if(!("profile" in this))
 	lib.print("'profile' undefined. "+help);
 	lib.exit();
 }
-dump("/"+profile+"/videos", function(o)
+var func=function(o)
 {
 	o.save();
 	var v=o.obj.source;
@@ -13,4 +13,10 @@ dump("/"+profile+"/videos", function(o)
 		var fn=o.obj.id.toString()+".source";
 		if(!exists(fn)) download(v,fn);
 	}
-},true);
+	if(o.obj.picture) {
+		var fn=o.obj.id.toString()+".picture";
+		if(!exists(fn)) download(o.obj.picture,fn);
+	}
+};
+dump("/"+profile+"/videos", func,true);
+dump("/"+profile+"/videos/uploaded", func,true);
