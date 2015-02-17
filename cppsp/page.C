@@ -178,18 +178,18 @@ namespace cppsp
 		tmpv.wait(st);
 		return Future<Page*>(&st->cb);
 	}
-	String Page::loadNestedStaticPage(String path) {
+	staticPage* Page::loadNestedStaticPage(String path) {
 		String tmp = mapRelativePath(path);
 		return server->loadStaticPage(tmp);
 	}
-	String Page::loadNestedStaticPageFromFile(String path) {
+	staticPage* Page::loadNestedStaticPageFromFile(String path) {
 		return server->loadStaticPageFromFile(path);
 	}
 	void Page::staticInclude(String path) {
-		this->response->output.write(loadNestedStaticPage(path));
+		this->response->output.write(loadNestedStaticPage(path)->data);
 	}
 	void Page::staticIncludeFromFile(String path) {
-		this->response->output.write(loadNestedStaticPageFromFile(path));
+		this->response->output.write(loadNestedStaticPageFromFile(path)->data);
 	}
 	void Page::_flushCB(Response& r) {
 		flushCB();
@@ -241,7 +241,7 @@ namespace cppsp
 	void Response::addDefaultHeaders(String time, String mime) {
 		statusCode = 200;
 		statusName = "OK";
-		const char* filler = "Content-Length: 0000000000\r\n";
+		const char* filler = "Content-Length: 000000000000\r\n";
 		int l = strlen(filler);
 		if (sendChunked) {
 			headers = cppsp::serializeHeaders(*sp, l + headersExtraSpace, String("Content-Type"), mime,
@@ -691,11 +691,11 @@ namespace cppsp
 	void Server::removeModule(ModuleInstance inst) {
 		return modules.removeModule(inst);
 	}
-	String Server::loadStaticPage(String path) {
-		return host->loadStaticPage(mapPath(path.toSTDString()))->data;
+	staticPage* Server::loadStaticPage(String path) {
+		return host->loadStaticPage(mapPath(path.toSTDString()));
 	}
-	String Server::loadStaticPageFromFile(String path) {
-		return host->loadStaticPage(path)->data;
+	staticPage* Server::loadStaticPageFromFile(String path) {
+		return host->loadStaticPage(path);
 	}
 	String Server::mapPath(String path, RGC::Allocator& a) {
 		String r = rootDir();

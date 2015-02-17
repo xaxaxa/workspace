@@ -583,11 +583,11 @@ namespace cppsp
 		/**
 		 Load static page from "path". path is relative to server root.
 		 */
-		virtual String loadStaticPage(String path);
+		virtual staticPage* loadStaticPage(String path);
 		/**
 		 Load static page from "path". path is absolute.
 		 */
-		virtual String loadStaticPageFromFile(String path);
+		virtual staticPage* loadStaticPageFromFile(String path);
 		/**
 		 Given a path relative to the server root, returns the absolute path.
 		 */
@@ -704,11 +704,11 @@ namespace cppsp
 		/**
 		 Load static page from "path". path is relative to the current page.
 		 */
-		String loadNestedStaticPage(String path);
+		staticPage* loadNestedStaticPage(String path);
 		/**
 		 Load static page from "path". path is absolute.
 		 */
-		String loadNestedStaticPageFromFile(String path);
+		staticPage* loadNestedStaticPageFromFile(String path);
 		//perform SSI from "path". path is relative to the current page.
 		void staticInclude(String path);
 		//perform SSI from "path". path is absolute.
@@ -732,7 +732,8 @@ namespace cppsp
 		void prepareResponse() {
 			response->addDefaultHeaders(server->host->curRFCTime, server->defaultMime);
 		}
-		virtual void preRespond() {}
+		virtual void preRespond() {
+		}
 		virtual void startResponse();
 		void initCB() {
 			preRespond();
