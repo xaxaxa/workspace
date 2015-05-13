@@ -2,7 +2,7 @@
 import os,sys,time,subprocess,random,select;
 
 if len(sys.argv)<2:
-	print "usage: "+sys.argv[0]+" ssh_command";
+	print "usage: "+sys.argv[0]+" ssh_command [cat|CUSTOM_COMMAND]";
 	exit(1);
 
 
@@ -21,7 +21,9 @@ def checkAlive(p,timeout):
 	R,W,X=select.select([p.stdout],[],[],timeout);
 	if len(R)>=1:
 		while True:
-			if len(os.read(p.stdout.fileno(),1024))==0: raise RuntimeError("checkAlive: got EOF");
+			if len(os.read(p.stdout.fileno(),1024))==0:
+				p.kill();
+				raise RuntimeError("checkAlive: got EOF");
 			R,W,X=select.select([p.stdout],[],[],timeout);
 			if len(R)==0: break;
 		return True;
@@ -29,12 +31,11 @@ def checkAlive(p,timeout):
 
 while True:
 	try:
-		p=subprocess.Popen(sys.argv[1:]+["cat"], stdout=subprocess.PIPE,stdin=subprocess.PIPE);
+		p=subprocess.Popen(sys.argv[1:], stdout=subprocess.PIPE,stdin=subprocess.PIPE);
 		print "started ssh";
 		if not checkAlive(p,CONNECT_WAIT):
 			p.kill();
 			print "initial ping timed out";
-			time.sleep(RECONNECT_WAIT);
 			continue;
 		pingFailCnt=0;
 		while True:
@@ -49,7 +50,7 @@ while True:
 					p.kill();
 					print "ping max fail count exceeded";
 					break;
-	except RuntimeError:
+	except:
 		print "exception occurred";
 		time.sleep(EXCEPTION_WAIT);
 
