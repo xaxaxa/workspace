@@ -1,15 +1,11 @@
 workspace
 =========
-note: if you're looking for cppsp, it's downloadable as a source tarball from https://sourceforge.net/projects/cpollcppsp/files/
 
-all the code i've ever written since grade 11; also includes some forward-ported code from grades 8 and 9.
+All the code i've ever written since grade 11; also includes some forward-ported code from grades 8 and 9.
 
-all source code in this repository are licensed under GPLv3 unless otherwise specified.
+All source code in this repository are licensed under GPLv2 unless otherwise specified.
 
-the workspace layout is currently quite messy; there are a lot of miscellaneous stuff, and projects I've never had time to work on.
-
-
-the most interesting things and finished projects in there are:
+the most interesting things and finished projects in here are:
   * cpoll - epoll based asynchronous socket I/O library
   * dedup - simple file deduplicator
   * tcpsdump - like tcpdump, but extracts tcp streams instead of individual packets
