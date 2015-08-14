@@ -16,8 +16,8 @@ the most interesting things and finished projects in here are:
   * jackfft - a JACK audio based FFT filtering application (similar to jamin, but with adjustable FFT size and much lower cpu consumption)
   * nc.xaxaxa.C - my own version of netcat
 
-All of the above projects should be compilable and usable.
-To compile a project, first create the output directories:
-mkdir -p bin lib
-Then, type "make bin/EXECUTABLENAME"
-For a list of make targets, consult the makefile in the root directory.
+All of the above projects should be compilable and usable.  
+To compile a project, first create the output directories:  
+mkdir -p bin lib  
+Then, type "make bin/EXECUTABLENAME"  
+For a list of make targets, consult the makefile in the root directory.  
