@@ -17,9 +17,9 @@ the most interesting things and finished projects in here are:
   * nc.xaxaxa.C - my own version of netcat
 
 All of the above projects should be compilable and usable.  
-To compile a project, first create the output directories:  
+To compile a project, first create the output directories (in the root directory):  
 ```
 mkdir -p bin lib
 ```
-Then, type "make bin/EXECUTABLENAME"  
+Then, type "make bin/EXECUTABLENAME".  
 For a list of make targets, consult the makefile in the root directory.  
