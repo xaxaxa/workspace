@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
 					if((tmpv=getvalue())==NULL)throw logic_error("-e(mapping_end_address) requires a value");
 					iptsocks_params.end_addr=tmpv;
 				}
-				else if(strcmp(name,"h")==0)
+				else
 				{
 					cout << "usage: " << argv[0] << " [-p tcp_port] [-d dns_port] [-s mapping_start_address] [-e mapping_end_address] [socks_host] [socks_port]" << endl;
 					exit(0);
