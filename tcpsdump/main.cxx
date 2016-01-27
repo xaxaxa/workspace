@@ -57,6 +57,10 @@ EventQueue<Buffer> q;
 void* processorThread(void* v);
 int main(int argc, char **argv)
 {
+	if(argc<2) {
+		cerr << "usage: " << argv[0] << " IFACE\nor: " << argv[0] << " -f FILE.cap\n";
+		return 1;
+	}
 	//printHex("asdfg ",6);
 	char errbuf[PCAP_ERRBUF_SIZE];
 	//bool offline=false;

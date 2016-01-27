@@ -47,6 +47,67 @@ function from_refl(r) {
 	return div(add(1,r),sub(1,r));
 }
 
+//returns [num, unitStr]
+function normalizeSI(x) {
+	if(x>=1e24) return [x/1e24,"Y"];
+	if(x>=1e21) return [x/1e21,"Z"];
+	if(x>=1e18) return [x/1e18,"E"];
+	if(x>=1e15) return [x/1e15,"P"];
+	if(x>=1e12) return [x/1e12,"T"];
+	if(x>=1e9) return [x/1e9,"G"];
+	if(x>=1e6) return [x/1e6,"M"];
+	if(x>=1e3) return [x/1e3,"k"];
+	if(x>=1e0) return [x,""];
+	if(x>=1e-3) return [x*1e3,"m"];
+	if(x>=1e-6) return [x*1e6,"μ"];
+	if(x>=1e-9) return [x*1e9,"n"];
+	if(x>=1e-12) return [x*1e12,"p"];
+	if(x>=1e-15) return [x*1e15,"f"];
+	if(x>=1e-18) return [x*1e18,"a"];
+	if(x>=1e-21) return [x*1e21,"z"];
+	return [x*1e24,"y"];
+}
+function strSI(x) {
+	tmp=normalizeSI(x);
+	return (parseInt(tmp[0]*100)/100).toString()+" "+tmp[1];
+}
+function formatNumber(x) {
+	if(x>1e20 || x<-1e20 || !isFinite(x)) return "∞ ";
+	if(x<1e-20 && x>-1e-20) return "0 ";
+	return strSI(x);
+}
+//freq is in Hz
+function impedanceCStr(z,freq) {
+	var s=formatNumber(z.re)+"Ω + ";
+	if(z.re<1e-9 && z.re>-1e-9) s="";
+	if(z.im>0) {
+		s+=strSI(z.im/(2*Math.PI*freq))+"H";
+	} else {
+		s+=strSI(-1.0/(z.im*2*Math.PI*freq))+"F";
+	}
+	return s;
+}
+function admittanceCStr(y,freq) {
+	var s=formatNumber(1.0/y.re)+"Ω || ";
+	if((1.0/y.re)>1e9 || (1.0/y.re)<-1e9 || y.re==0) s="";
+	if(y.im<0) {
+		s+=strSI(-1.0/(y.im*2*Math.PI*freq))+"H";
+	} else {
+		s+=strSI(y.im/(2*Math.PI*freq))+"F";
+	}
+	return s;
+}
+function impedanceStr(z) {
+	var freq=document.getElementById("s_t_freq").value;
+	if(isFinite(freq=parseInt(freq))) return str(z) + " ("+impedanceCStr(z,freq*1000000)+")";
+	return str(z);
+}
+function admittanceStr(y) {
+	var freq=document.getElementById("s_t_freq").value;
+	if(isFinite(freq=parseInt(freq))) return str(y) + " ("+admittanceCStr(y,freq*1000000)+")";
+	return str(y);
+}
+
 
 function cE(n) { return document.createElement(n); }
 
@@ -217,9 +278,9 @@ function calc2() {
 	yin.im=Math.round(yin.im*1000000)/1000000;
 	
 	if(isNaN(zin.re)||isNaN(zin.im)) zin="∞";
-	else zin=str(zin);
+	else zin=impedanceStr(zin);
 	if(isNaN(yin.re)||isNaN(yin.im)) yin="∞";
-	else yin=str(yin);
+	else yin=admittanceStr(yin);
 	showResults("stub_z_r",[["Zin",zin],["Yin",yin]]);
 }
 //calculate length of an open or short circuited stub to get a given reactance
@@ -251,22 +312,41 @@ table {
 	margin-right: 10px;
 	margin-bottom: 10px;
 }
+td {
+	vertical-align: top;
+}
 </style>
 </head>
 <body>
-	<h3>Single stub matching</h3>
-	<img src="single_stub.png" />
-	<div id="single_stub"></div>
-	Solutions:
-	<div id="single_stub_r"></div>
-	<button type="button" onclick="calc1();">Calculate</button>
+	<table>
+		<tr>
+			<td>
+				<h3>Single stub matching</h3>
+				<img src="single_stub.png" />
+				<div id="single_stub"></div>
+				Solutions:
+				<div id="single_stub_r"></div>
+				<button type="button" onclick="calc1();">Calculate</button>
+				
+				<h3>Stub impedance calculator</h3>
+				<img src="stub_z.png" />
+				<div id="stub_z"></div>
+				Solutions:
+				<div id="stub_z_r"></div>
+				<button type="button" onclick="calc2();">Calculate</button>
+			</td>
+			<td style="padding-left: 20px; border-left: solid 1px #ccc">
+				<h3>Settings</h3>
+				<table>
+					<tr>
+						<td>Frequency (MHz)</td>
+						<td><input id="s_t_freq" value="915" /></td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
 	
-	<h3>Stub impedance calculator</h3>
-	<img src="stub_z.png" />
-	<div id="stub_z"></div>
-	Solutions:
-	<div id="stub_z_r"></div>
-	<button type="button" onclick="calc2();">Calculate</button>
 	<script>
 	var t=generateForm({"zin":{dname: "Zin", type:"impedance", def:re_im(0,0)},
 			"zout":{dname: "Zout", type:"impedance",def:re_im(0,0)},
