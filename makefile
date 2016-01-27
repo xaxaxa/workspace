@@ -111,6 +111,8 @@ bin/jackfft_analyzer:
 	cp -af jackfft/jackfft_analyzer.ui bin/
 	$(CXX) jackfft/analyzer.C -o bin/jackfft_analyzer -lcpoll -lpthread -ljack -lfftw3 \
 	`pkg-config --cflags --libs gtkmm-3.0 glibmm-2.4 gdkmm-3.0 gthread-2.0` $(CFLAGS1)
+bin/jackfft_getfir:
+	$(CXX) jackfft/getfir.C -o bin/jackfft_getfir -lpthread -lfftw3 $(CFLAGS1)
 bin/jackrecord:
 	$(CXX) jackfft/jackrecord.C -o bin/jackrecord -lpthread -ljack $(CFLAGS1)
 bin/convolve:
