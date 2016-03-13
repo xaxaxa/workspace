@@ -20,8 +20,8 @@
 using namespace std;
 using namespace CryptoPP;
 
-int Open(const char* file, bool write) {
-	int fd=open(file,write?O_RDWR:O_RDONLY,0644);
+int Open(const char* file, int flags) {
+	int fd=open(file,flags,0644);
 	if(fd<0) throw runtime_error(string(strerror(errno))+": "+string(file));
 	return fd;
 }
@@ -41,8 +41,9 @@ void LoadKey(const char* file, RSA::PrivateKey& key)
     key.BERDecodePrivateKey(q,false,0); // last 2 params unused
 }
 void doDecode(const char* file, const string& outPath, RandomNumberGenerator& rng, PK_Decryptor& dec) {
-	int fd=Open(file,false);
+	int fd=Open(file,O_RDONLY);
 	string aeskey;
+	string fn=outPath+basename(file);
 	
 	
 	int keylen,ivlen;
@@ -61,9 +62,6 @@ void doDecode(const char* file, const string& outPath, RandomNumberGenerator& rn
 		char iv[ivlen];
 		Read(fd,iv,ivlen);
 		
-		string fn;
-		fn=outPath+basename(file);
-		
 		__gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::in);
 		istream is(&filebuf);
 		CBC_Mode<AES>::Decryption aes_dec((byte*)aeskey.data(),aeskey.length(),(byte*)iv);
@@ -72,9 +70,22 @@ void doDecode(const char* file, const string& outPath, RandomNumberGenerator& rn
 				new FileSink(fn.c_str(),true)
 			)
 		);
+		int outfd=Open(fn.c_str(),O_RDWR);
+		struct stat st;
+		struct timespec times[2];
+		if(fstat(fd,&st)<0) {
+			perror("fstat");
+			goto out1;
+		}
+		times[0]=st.st_atim;
+		times[1]=st.st_mtim;
+		if(futimens(outfd,times)<0) {
+			perror("futimens");
+		}
+	out1:
+		close(outfd);
 	}
-out:
-	close(fd);
+out:;
 }
 struct tInfo
 {
