@@ -74,7 +74,7 @@ bin/tmp1: tmp1.C cplib
 	$(CXX) tmp1.C -o bin/tmp1 -lcplib $(CFLAGS1)
 bin/tmp2: tmp2.C cplib
 	$(CXX) tmp2.C -o bin/tmp2 -lcplib $(CFLAGS1)
-bin/nc.xaxaxa: cpoll
+bin/nc.xaxaxa: cpoll nc.xaxaxa.C
 	$(CXX) nc.xaxaxa.C -o bin/nc.xaxaxa -lcpoll -lpthread $(CFLAGS1)
 bin/buffer: buffer.C cpoll
 	$(CXX) buffer.C -o bin/buffer -lcpoll -lpthread $(CFLAGS1)
