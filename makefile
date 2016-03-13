@@ -7,7 +7,8 @@ CXX := g++
 
 all: server123 termchat tmp1 tmp2 nc.xaxaxa email_extract tcpfuck bitflip_proxy \
 	generic_ui generic_struct cplib cpoll cppsp cppsp_standalone socketd_cppsp \
-	socketd fbdump http_simplebench buffer jackfft dedup benchmark tcpsdump
+	socketd fbdump http_simplebench buffer jackfft dedup benchmark tcpsdump \
+	iptsocks_new
 install: termchat_install nc.xaxaxa_install
 clean:
 	rm -rf termchat servertroll tmp tmp1 tmp2 nc.xaxaxa server123 lib/* bin/*
@@ -100,9 +101,9 @@ bin/cppsp_embedded_example: cppsp cpoll
 	$(CXX) cppsp_server/example_embedded.C -o bin/cppsp_embedded_example -lcpoll -lcppsp -ldl -lrt $(CFLAGS1)
 bin/socketd: cpoll
 	$(CXX) socketd/all.C -o bin/socketd -lcpoll -lrt -lpthread $(CFLAGS1)
-bin/tcpsdump:
+bin/tcpsdump: tcpsdump/main.cxx tcpsdump/tcpinterpreter.cxx
 	$(CXX) tcpsdump/main.cxx -o bin/tcpsdump -lpcap -lpthread $(CFLAGS1)
-bin/rmhttphdr: cplib
+bin/rmhttphdr: cplib tcpsdump/rmhttphdr.cxx
 	$(CXX) tcpsdump/rmhttphdr.cxx -o bin/rmhttphdr -lcplib -lpthread $(CFLAGS1)
 bin/jackfft: cplib cpoll bin/main2.ui
 	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3 -lSoundTouch \
@@ -111,6 +112,8 @@ bin/jackfft_analyzer:
 	cp -af jackfft/jackfft_analyzer.ui bin/
 	$(CXX) jackfft/analyzer.C -o bin/jackfft_analyzer -lcpoll -lpthread -ljack -lfftw3 \
 	`pkg-config --cflags --libs gtkmm-3.0 glibmm-2.4 gdkmm-3.0 gthread-2.0` $(CFLAGS1)
+bin/jackfft_getfir:
+	$(CXX) jackfft/getfir.C -o bin/jackfft_getfir -lpthread -lfftw3 $(CFLAGS1)
 bin/jackrecord:
 	$(CXX) jackfft/jackrecord.C -o bin/jackrecord -lpthread -ljack $(CFLAGS1)
 bin/convolve:
@@ -136,7 +139,7 @@ bin/fftsbench:
 	$(CXX) benchmark/fftsbench.C -o bin/fftsbench -lpthread /usr/local/lib/libffts.a $(CFLAGS1)
 bin/fibbench:
 	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
-bin/iptsocks_new: cpoll iptsocks_new/all.C
+bin/iptsocks_new: cpoll iptsocks_new/all.C iptsocks_new/main.C
 	$(CXX) iptsocks_new/all.C -o bin/iptsocks_new -lcpoll -lpthread $(CFLAGS1)
 bin/decode_aaaaa: test/decode_aaaaa.C
 	$(CXX) test/decode_aaaaa.C -o bin/decode_aaaaa -lpthread -lcryptopp $(CFLAGS1)

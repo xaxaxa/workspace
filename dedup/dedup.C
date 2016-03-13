@@ -222,6 +222,7 @@ void compareFiles(uint64_t filesize, uint64_t& br, const vector<openedFileItem>&
 			br+=expected_br;
 			sort(bufs.begin(), bufs.end(), compareBuffers);
 			
+			cur_queues.resize(0);
 			vector<openedFileItem> cur_queue;
 			uint8_t* cur_buffer=NULL;
 			for(auto it=bufs.begin();it!=bufs.end();it++) {
