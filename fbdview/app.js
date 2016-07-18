@@ -59,6 +59,9 @@
 	String.prototype.rtrim = function() {
 		return this.replace(/\s+$/,"");
 	}
+	String.prototype.endsWith = function(suffix) {
+		return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	};
 	function esc_str(s)
 	{
 		return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br />").replace(/\n\r/g, "<br />").replace(/\r/g, "<br />").replace(/\n/g, "<br />");

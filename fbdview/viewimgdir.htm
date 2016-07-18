@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; user-scalable=1;" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<title></title>
+	<script src="prototype.js"></script>
+	<script src="app.js"></script>
+	<link rel="stylesheet" type="text/css" href="common.css" media="screen" />
+	<script>
+	function displayItem(filename) {
+		var e=document.getElementById("template").clone(true);
+		e.style.display="";
+		e.id="";
+		
+		e.getElementsByTagName("img")[0].src=path+filename+".th";
+		e.href="cpp/file.cppsp?mime=image/jpeg&f=../"+encodeURIComponent(path+filename);
+		return e;
+	}
+	</script>
+	<style>
+	.pic_container {
+		display: inline-block;
+		position: relative;
+		width: 160px; height: 160px;
+		overflow: hidden;
+		margin: 1px; padding: 0px;
+		border: solid 1px #ccc;
+	}
+	.thumbnail {
+		position: absolute;
+		top: 0px; right: 0px;
+		bottom: 0px; left: 0px;
+		max-width:160px; max-height:160px; margin: auto;
+	}
+	#content {
+		border: none;
+		margin: 6px 4px; padding: 0px;
+		display: inline-block;
+		outline: none;
+		line-height: 0px;
+	}
+	</style>
+</head>
+<body>
+	<a id="template" style="display:none;"><div class="pic_container">
+			<img name="img" class="thumbnail" align="top" />
+	</div></a>
+	<div id="content" style=" cursor: default; "></div>
+	<div id="paging" style="margin: 10px 5px; cursor: default; "></div>
+	<script>
+	var path=qs("p");
+	if(!path)path="./";
+	else if(path.substring(path.length-1)!="/")path+="/";
+	
+	var imgExts=['jpg','png','asdfg'];
+	
+	var imgExts_={};
+	for(var i=0;i<imgExts.length;i++) {
+		imgExts_[imgExts[i]]=true;
+	}
+	
+	var pagesize=24;
+	var paging=[];
+	function show_paging()
+	{
+		var p=document.getElementById("paging");
+		p.innerHTML="";
+		var pages=Math.ceil(window.a.length/pagesize);
+		var tmpf1=function() {
+			show_page(this.__i*pagesize);
+			window.scrollTo(0,0);
+		};
+		paging=[];
+		for(var i=0;i<pages;i++) {
+			var b=document.createElement("span");
+			b.setAttribute("class","btn");
+			b.textContent=(i+1).toString();
+			b.onclick=tmpf1;
+			b.__i=i;
+			paging[i]=b;
+			//if(i==start/pagesize) b.setAttribute("class","btn btn_hover");
+			p.appendChild(b);
+		}
+	}
+	var last_page=null;
+	function set_page(page)
+	{
+		if(last_page!=null)
+			paging[last_page].setAttribute("class","btn");
+		last_page=page;
+		paging[page].setAttribute("class","btn btn_hover");
+		document.location.href="#"+page;
+	}
+	function show_page(start)
+	{
+		var d=document.getElementById("content");
+		d.innerHTML="";
+		var e=start+pagesize;
+		if(window.a.length<e)e=window.a.length;
+		for(var i=start;i<e;i++) {
+			var element=displayItem(window.a[i]);
+			d.appendChild(element);
+		}
+		
+		set_page(start/pagesize);
+	}
+	
+	new Ajax.Request("cpp/ls.cppsp?p="+encodeURIComponent(path), {
+		onComplete: function(response) {
+			var resp=response.responseText.split("\n");
+			var a=[];
+			for(var i=0;i<resp.length;i++) {
+				var arr=resp[i].split('.');
+				if(arr.length<2) continue;
+				var ext=arr[arr.length-1];
+				if(ext.toLowerCase() in imgExts_)
+					a.push(resp[i]);
+			}
+			window.a=a;
+			//for(var i=0;i<window.a.length;i++)
+			//	window.a[i]=parseInt(window.a[i]);
+			window.a.sort();
+			show_paging();
+			
+			if(document.location.hash!="") {
+				var curPage=parseInt(document.location.hash.substring(1));
+				show_page(curPage*pagesize);
+			} else show_page(0);
+		},
+		method: "get"
+	});
+	</script>
+</body>
+</html>

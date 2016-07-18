@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <stdexcept>
 #include <cppsp/common.H>
-#include <delegate.H>
+#include <cpoll/delegate.H>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
