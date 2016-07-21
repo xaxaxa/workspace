@@ -24,25 +24,39 @@
 	}
 	
 	.btn
-		{
-			display: inline-block;
-			background: #fff;
-			border: solid 1px #BCBCBC;
-			padding: 5px 6px;
-			margin: 5px 2px;
-			min-width: 32px;
-			text-align: center;
-		}
-		.btn:hover, .btn_hover
-		{
-			border: solid 1px #3333ff;
-		}
-		.btn:active
-		{
-			background: #dfdfdf;
-		}
-		.fbpic
-		{
-			max-width: 250px;
-			border: none;
-		}
+	{
+		display: inline-block;
+		background: #fff;
+		border: solid 1px #BCBCBC;
+		padding: 5px 6px;
+		margin: 5px 2px;
+		min-width: 32px;
+		text-align: center;
+	}
+	.btn:hover, .btn_hover
+	{
+		border: solid 1px #3333ff;
+	}
+	.btn:active
+	{
+		background: #dfdfdf;
+	}
+	.imgbtn {
+		display: inline-block;
+		background: #fff;
+		border: solid 1px #BCBCBC;
+		text-align: center;
+	}
+	.imgbtn:hover, .imgbtn_hover
+	{
+		border: solid 1px #3333ff;
+	}
+	.imgbtn:active
+	{
+		background: #dfdfdf;
+	}
+	.fbpic
+	{
+		max-width: 250px;
+		border: none;
+	}

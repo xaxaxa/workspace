@@ -10,6 +10,26 @@
 	<script src="prototype.js"></script>
 	<script src="app.js"></script>
 	<link rel="stylesheet" type="text/css" href="common.css" media="screen" />
+	<style>
+	.dirent2 {
+		display: block;
+		background: #fff;
+		border: solid 1px #BCBCBC;
+		padding: 5px 6px;
+		margin: 5px 2px;
+		min-width: 32px;
+		text-align: left;
+		line-height: 22px;
+	}
+	.imgbtn {
+		width: 16px;
+		height: 16px;
+		padding: 2px;
+		background-size: 16px;
+		background-position: center;
+		background-repeat: no-repeat;
+	}
+	</style>
 </head>
 <body>
 	<div id="content" style="margin: 8px 6px; cursor: default;"></div>
@@ -17,9 +37,14 @@
 	var path=qs("p");
 	if(!path)path="d/";
 	else if(path.substring(path.length-1)!="/")path+="/";
-	var fn_click=function()
+	var objdb_click=function()
 	{
-		window.location.href="viewobjdb.htm?p="+encodeURIComponent(path+this.textContent);
+		window.location.href="viewobjdb.htm?p="+encodeURIComponent(path+this.__filename);
+	};
+	var imgdir_click=function()
+	{
+		window.location.href="viewimgdir.htm?p="+encodeURIComponent(path+this.__filename);
+		return false;
 	};
 	new Ajax.Request("cpp/ls.cppsp?t=d&p="+encodeURIComponent(path), {
 		onComplete: function(response) {
@@ -29,11 +54,24 @@
 			for(var i=0;i<window.a.length;i++)
 				if(window.a[i].trim().length>0) {
 					var sp=document.createElement("span");
-					sp.setAttribute("class","dirent");
+					sp.setAttribute("class","dirent2");
 					sp.textContent=window.a[i];
-					sp.onclick=fn_click;
 					sp.__i=i;
 					d.appendChild(sp);
+					
+					var addButton=function(img, click_fn) {
+						var bt=document.createElement("span");
+						bt.setAttribute("class","imgbtn");
+						bt.style.float="right";
+						bt.style.verticalAlign="middle";
+						bt.style.marginLeft="8px";
+						bt.style.backgroundImage="url("+img+")";
+						bt.onclick=click_fn;
+						bt.__filename=window.a[i];
+						sp.appendChild(bt);
+					};
+					addButton("img/objdb.png", objdb_click);
+					addButton("img/imgdir.png", imgdir_click);
 				}
 		},
 		method: "get"
