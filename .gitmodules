@@ -1,0 +1,3 @@
+[submodule "cpoll"]
+	path = cpoll
+	url = https://github.com/xaxaxa/cpoll.git

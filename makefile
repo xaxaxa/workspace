@@ -166,9 +166,7 @@ lib/libcplib.so:
 	$(CXX) cplib/all.C -c -o lib/libcplib.o $(CFLAGS1)
 	ar rcs lib/libcplib.a lib/libcplib.o
 lib/libcpoll.so:
-	$(CXX) cpoll/all.C --shared -o lib/libcpoll.so $(CFLAGS1)
-	$(CXX) cpoll/all.C -c -o lib/libcpoll.o $(CFLAGS1)
-	ar rcs lib/libcpoll.a lib/libcpoll.o
+	$(CXX) cpoll/*.C --shared -o lib/libcpoll.so $(CFLAGS1) -lcurl
 lib/libcppsp.so:
 	$(CXX) cppsp/all.C --shared -o lib/libcppsp.so  -lcryptopp $(CFLAGS1)
 lib/libcplib.a:
@@ -178,3 +176,6 @@ lib/libcpoll.a:
 	$(CXX) cpoll/all.C -c -o lib/libcpoll.o $(CFLAGS1)
 	ar rcs lib/libcpoll.a lib/libcpoll.o
 
+
+cpoll/Makefile: cpoll/configure.ac cpoll/Makefile.in
+	cd cpoll && autoreconf && ./configure

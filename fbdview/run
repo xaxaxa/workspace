@@ -2,4 +2,8 @@
 #./socketdconf > socketd.conf
 #./lighttpdconf > lighttpd.conf
 #socketd socketd.conf
-cppsp_standalone -l 0.0.0.0:13000 -r $(pwd) -c -I../include/ -c -L../lib/ -t 1;
+while [ 1 ]; do
+	cppsp_standalone -l 0.0.0.0:13000 -r $(pwd) -c -I../include/ -c -L../lib/ -c -fPIC -t 1;
+	sleep 0.5;
+done;
+

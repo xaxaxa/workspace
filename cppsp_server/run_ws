@@ -1,3 +1,0 @@
-#!/bin/bash
-./run_application `pwd` -m /dir_list.cppsm "$@"
-
