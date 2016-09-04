@@ -153,6 +153,9 @@ bin/pg_html_dump: pg_html_dump.C
 	$(CXX) pg_html_dump.C -o bin/pg_html_dump -lpq $(CFLAGS1)
 bin/fbdview_gen_index: fbdview/gen_index.C
 	$(CXX) fbdview/gen_index.C -o bin/fbdview_gen_index -ljsoncpp -lcpoll -lpthread $(CFLAGS1)
+dsssgen: bin/dsssgen
+bin/dsssgen: test/dsssgen.C
+	$(CXX) test/dsssgen.C -o bin/dsssgen -lpthread -lcryptopp -lfftw3 -lfftw3_threads $(CFLAGS1)
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)

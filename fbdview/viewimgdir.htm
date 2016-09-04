@@ -87,11 +87,16 @@
 	var last_page=null;
 	function set_page(page)
 	{
-		if(last_page!=null)
+		if(last_page!=null) {
 			paging[last_page].setAttribute("class","btn");
+		}
 		last_page=page;
 		paging[page].setAttribute("class","btn btn_hover");
-		document.location.href="#"+page;
+		
+		var newHash;
+		if(page==0) newHash="";
+		else newHash="#"+page;
+		if(newHash!=window.location.hash) window.location.hash=newHash;
 	}
 	function show_page(start)
 	{
@@ -106,6 +111,15 @@
 		
 		set_page(start/pagesize);
 	}
+	
+	window.onhashchange = function () {
+		if(document.location.hash!="") {
+			var page=parseInt(document.location.hash.substring(1));
+			if(page!=last_page) show_page(page*pagesize);
+		} else {
+			show_page(0);
+		}
+	};
 	
 	new Ajax.Request("cpp/ls.cppsp?p="+encodeURIComponent(path), {
 		onComplete: function(response) {
@@ -124,10 +138,7 @@
 			window.a.sort();
 			show_paging();
 			
-			if(document.location.hash!="") {
-				var curPage=parseInt(document.location.hash.substring(1));
-				show_page(curPage*pagesize);
-			} else show_page(0);
+			window.onhashchange();
 		},
 		method: "get"
 	});

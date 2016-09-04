@@ -5,6 +5,8 @@ All the code i've ever written since grade 11; also includes some forward-ported
 
 All source code in this repository are licensed under GPLv2 unless otherwise specified.
 
+**cppsp has been moved to its own repository: https://github.com/xaxaxa/cppsp**
+
 the most interesting things and finished projects in here are:
   * cpoll - epoll based asynchronous socket I/O library
   * dedup - simple file deduplicator
