@@ -102,7 +102,12 @@ void* thread(void* v) {
 	RSAES_OAEP_SHA_Decryptor dec(prk);
 	int x=inf->startIndex+inf->items;
 	for(int i=inf->startIndex;i<x;i++) {
-		doDecode(files[i].c_str(),outPath,inf->rng,dec);
+		try {
+			doDecode(files[i].c_str(),outPath,inf->rng,dec);
+		} catch(exception& ex) {
+			cout << "error processing file " << files[i] << ":" << endl;
+			cout << ex.what() << endl;
+		}
 	}
 	return NULL;
 }
