@@ -37,15 +37,6 @@
 	var path=qs("p");
 	if(!path)path="d/";
 	else if(path.substring(path.length-1)!="/")path+="/";
-	var objdb_click=function()
-	{
-		window.location.href="viewobjdb.htm?p="+encodeURIComponent(path+this.__filename);
-	};
-	var imgdir_click=function()
-	{
-		window.location.href="viewimgdir.htm?p="+encodeURIComponent(path+this.__filename);
-		return false;
-	};
 	new Ajax.Request("cpp/ls.cppsp?t=d&p="+encodeURIComponent(path), {
 		onComplete: function(response) {
 			var d=document.getElementById("content");
@@ -59,19 +50,21 @@
 					sp.__i=i;
 					d.appendChild(sp);
 					
-					var addButton=function(img, click_fn) {
-						var bt=document.createElement("span");
+					var addButton=function(img, urlprefix) {
+						var bt=document.createElement("a");
+						bt.target="_blank";
 						bt.setAttribute("class","imgbtn");
 						bt.style.float="right";
 						bt.style.verticalAlign="middle";
 						bt.style.marginLeft="8px";
 						bt.style.backgroundImage="url("+img+")";
-						bt.onclick=click_fn;
+						bt.href=urlprefix+"?p="+encodeURIComponent(path+window.a[i]);
 						bt.__filename=window.a[i];
 						sp.appendChild(bt);
 					};
-					addButton("img/objdb.png", objdb_click);
-					addButton("img/imgdir.png", imgdir_click);
+					addButton("img/folder.png", "viewindex.htm");
+					addButton("img/objdb.png", "viewobjdb.htm");
+					addButton("img/imgdir.png", "viewimgdir.htm");
 				}
 		},
 		method: "get"

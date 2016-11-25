@@ -32,14 +32,29 @@
 		margin: 5px 2px;
 		min-width: 32px;
 		text-align: center;
+		cursor: default;
 	}
-	.btn:hover, .btn_hover
+	.btn:not([disabled]):hover
 	{
-		border: solid 1px #3333ff;
+		border: solid 1px #777777;
+	}
+	.btn_selected {
+		border: solid 1px #3333ff !important;
 	}
 	.btn:active
 	{
 		background: #dfdfdf;
+	}
+	.btn[disabled]
+	{
+		color: #999;
+	}
+	.prevnext {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+		margin: 10px 2px 20px 2px;
+		padding: 10px 6px;
 	}
 	.imgbtn {
 		display: inline-block;

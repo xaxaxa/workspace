@@ -23,16 +23,17 @@
 	.pic_container {
 		display: inline-block;
 		position: relative;
-		width: 160px; height: 160px;
+		width: 115px; height: 115px;
 		overflow: hidden;
-		margin: 1px; padding: 0px;
-		border: solid 1px #ccc;
+		margin: -1px 0px 0px -1px; padding: 0px;
+		border: solid 1px #fff;
+		background-color: #eee;
 	}
 	.thumbnail {
 		position: absolute;
 		top: 0px; right: 0px;
 		bottom: 0px; left: 0px;
-		max-width:160px; max-height:160px; margin: auto;
+		max-width:115px; max-height:115px; margin: auto;
 	}
 	#content {
 		border: none;
@@ -41,27 +42,36 @@
 		outline: none;
 		line-height: 0px;
 	}
+	.pagingcontainer {
+		margin: 10px 5px;
+	}
 	</style>
 </head>
 <body>
-	<a id="template" style="display:none;"><div class="pic_container">
+	<div class="pagingcontainer">
+		<button type="button" class="btn prevnext" id="paging_prev" onclick="do_show_page(curr_page-1);">Previous</button>
+	</div>
+	<a id="template" style="display:none;" target="_blank"><div class="pic_container">
 			<img name="img" class="thumbnail" align="top" />
 	</div></a>
-	<div id="content" style=" cursor: default; "></div>
-	<div id="paging" style="margin: 10px 5px; cursor: default; "></div>
+	<div id="content" style="cursor: default; "></div>
+	<div class="pagingcontainer">
+		<button type="button" class="btn prevnext" id="paging_next" onclick="do_show_page(curr_page+1);">Next</button>
+		<div id="paging"></div>
+	</div>
 	<script>
 	var path=qs("p");
 	if(!path)path="./";
 	else if(path.substring(path.length-1)!="/")path+="/";
 	
-	var imgExts=['jpg','png','asdfg'];
+	var imgExts=['jpg','png','asdfg','webp'];
 	
 	var imgExts_={};
 	for(var i=0;i<imgExts.length;i++) {
 		imgExts_[imgExts[i]]=true;
 	}
 	
-	var pagesize=24;
+	var pagesize=3*30;
 	var paging=[];
 	function show_paging()
 	{
@@ -69,8 +79,7 @@
 		p.innerHTML="";
 		var pages=Math.ceil(window.a.length/pagesize);
 		var tmpf1=function() {
-			show_page(this.__i*pagesize);
-			window.scrollTo(0,0);
+			do_show_page(this.__i);
 		};
 		paging=[];
 		for(var i=0;i<pages;i++) {
@@ -84,22 +93,29 @@
 			p.appendChild(b);
 		}
 	}
-	var last_page=null;
+	var curr_page=null;
 	function set_page(page)
 	{
-		if(last_page!=null) {
-			paging[last_page].setAttribute("class","btn");
+		if(curr_page!=null) {
+			paging[curr_page].setAttribute("class","btn");
 		}
-		last_page=page;
-		paging[page].setAttribute("class","btn btn_hover");
+		curr_page=page;
+		paging[page].setAttribute("class","btn btn_selected");
+		
+		var prev=document.getElementById("paging_prev");
+		var next=document.getElementById("paging_next");
+
+		prev.disabled = (page==0);
+		next.disabled = (page==paging.length-1);
 		
 		var newHash;
 		if(page==0) newHash="";
 		else newHash="#"+page;
 		if(newHash!=window.location.hash) window.location.hash=newHash;
 	}
-	function show_page(start)
+	function show_page(page)
 	{
+		var start=page*pagesize;
 		var d=document.getElementById("content");
 		d.innerHTML="";
 		var e=start+pagesize;
@@ -108,14 +124,38 @@
 			var element=displayItem(window.a[i]);
 			d.appendChild(element);
 		}
-		
-		set_page(start/pagesize);
+		set_page(page);
+	}
+	// jump to a specific page, initiated by the user
+	function do_show_page(page) {
+		show_page(page);
+		window.scrollTo(0,0);
+	}
+	
+	function isNumeric(n) {
+	  return !isNaN(parseFloat(n)) && isFinite(n);
+	}
+
+	function sort_filenames(a) {
+		var numericItems=[];
+		var otherItems=[];
+		for(var i=0;i<a.length;i++) {
+			var arr=a[i].split('.');
+			if(arr.length<=2 && isNumeric(arr[0]))
+				numericItems.push([parseFloat(arr[0]),a[i]]);
+			else otherItems.push(a[i]);
+		}
+		numericItems.sort(function(a,b) {return a[0]-b[0];});
+		otherItems.sort();
+		for(var i=0;i<numericItems.length;i++)
+			numericItems[i]=numericItems[i][1];
+		return numericItems.concat(otherItems);
 	}
 	
 	window.onhashchange = function () {
 		if(document.location.hash!="") {
 			var page=parseInt(document.location.hash.substring(1));
-			if(page!=last_page) show_page(page*pagesize);
+			if(page!=curr_page) show_page(page);
 		} else {
 			show_page(0);
 		}
@@ -132,10 +172,10 @@
 				if(ext.toLowerCase() in imgExts_)
 					a.push(resp[i]);
 			}
-			window.a=a;
+			window.a=sort_filenames(a);
 			//for(var i=0;i<window.a.length;i++)
 			//	window.a[i]=parseInt(window.a[i]);
-			window.a.sort();
+			window.a.reverse();
 			show_paging();
 			
 			window.onhashchange();
