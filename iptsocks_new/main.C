@@ -30,7 +30,7 @@
 #include <list>
 #include <tuple>
 #include <cpoll/cpoll.H>
-#include <rgc.H>
+#include <cpoll/rgc.H>
 #include "iptsocks.H"
 #include "socks5.H"
 #include <stdexcept>

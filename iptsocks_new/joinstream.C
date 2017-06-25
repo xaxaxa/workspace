@@ -19,7 +19,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * */
 #include <cpoll/cpoll.H>
-#include <delegate.H>
+#include <cpoll/delegate.H>
 using namespace CP;
 static const int JoinStream_bufSize = 1024 * 32;
 struct JoinStream

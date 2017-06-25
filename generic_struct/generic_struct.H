@@ -12,7 +12,7 @@
 #include <string>
 #include <functional>
 #include <stdint.h>
-#include <rgc.H>
+#include <cpoll/rgc.H>
 #include <dlfcn.h>
 #include <iostream>
 #include <vector>

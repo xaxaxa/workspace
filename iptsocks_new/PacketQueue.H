@@ -23,7 +23,7 @@
 #define PACKETQUEUE_H_
 #include <cpoll/cpoll.H>
 #include <queue>
-#include <delegate.H>
+#include <cpoll/delegate.H>
 using namespace std;
 
 namespace xaxaxa

@@ -22,7 +22,7 @@
 #ifndef SOCKS5_H_
 #define SOCKS5_H_
 #include <cpoll/cpoll.H>
-#include <delegate.H>
+#include <cpoll/delegate.H>
 using namespace CP;
 namespace SOCKS5
 {
