@@ -185,7 +185,7 @@ namespace xaxaxa
 		{
 		}
 	};
-	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2<NUMTYPE, jackfft_float>
+	template<class NUMTYPE>class FFTFilter: public OverlappedFilter2_new<NUMTYPE, jackfft_float>
 	{
 	public:
 		//fftw_plan p1, p2;
@@ -213,7 +213,7 @@ namespace xaxaxa
 		}
 		
 		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding1, Int padding2, UInt FFTSize):
-			OverlappedFilter2<NUMTYPE, jackfft_float>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
+			OverlappedFilter2_new<NUMTYPE, jackfft_float>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
 #ifdef CEPSTRUM
 		,fft2(ComplexSize())
 #endif
