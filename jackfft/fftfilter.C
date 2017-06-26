@@ -200,13 +200,6 @@ namespace xaxaxa
 		virtual void free_buffer(){fft_free(this->tmpbuffer);}
 		//struct timespec last_refreshed;
 		WindowedFFT fft;
-#ifdef CEPSTRUM
-		FFT fft2;
-		inline unsigned ComplexSize2()
-		{
-			return fft2.size_c;
-		}
-#endif
 		inline unsigned ComplexSize()
 		{
 			return fft.size_c;
@@ -214,127 +207,40 @@ namespace xaxaxa
 		
 		FFTFilter(unsigned buffersize, unsigned inbuffers, unsigned outbuffers, unsigned overlapcount, unsigned BuffersPerPeriod, int padding1, int padding2, unsigned FFTSize):
 			OverlappedFilter2_new<NUMTYPE, jackfft_float>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
-#ifdef CEPSTRUM
-		,fft2(ComplexSize())
-#endif
 		{
 			asdf=0;
-			//memset(&last_refreshed,0,sizeof(last_refreshed));
 			int l=ComplexSize();//((unsigned)(this->PeriodSize() / 2) + 1);
 			coefficients = new double[l];
 			
 			for(int i=0;i<l;i++)
 				coefficients[i] = 1.0;
 				
-#ifdef CEPSTRUM
-			coefficients2 = new double[ComplexSize2()];
-			for(int i=0;i<ComplexSize2();i++)
-				coefficients2[i] = 1.0;
-#endif
 			tmpcomplex=fft.Data_c;
 			lastSpectrum=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*l);
-			//tmpdouble = (double*)fft_malloc(sizeof(double)*buffersize);
-
-			//tmpcomplex = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
-			/*tmpcomplex2 = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
-
-			//cout << this->PeriodSize() << endl;
-			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
-			p2 = fftw_plan_dft_c2r_1d(this->PeriodSize(), tmpcomplex2, this->tmpbuffer, 0);
-			* */
 		}
 		~FFTFilter()
 		{
-			/*fftw_destroy_plan(p1);
-			fftw_destroy_plan(p2);
-			//fft_free(tmpdouble);*/
-			//fft_free(tmpcomplex);
-			//fft_free(tmpcomplex2);
 			fft_free(lastSpectrum);
 			delete[] coefficients;
-#ifdef CEPSTRUM
-			delete[] coefficients2;
-#endif
 		}
 
-		/*long long get_nsec(const timespec& t)
-		{
-			return t.tv_sec*1000000000+t.tv_nsec;
-		}*/
 		int asdf;
 
 		virtual void DoProcess()
 		{
-			int complexsize = ComplexSize();//(unsigned)(this->PeriodSize() / 2) + 1;
-			//asdf++;
-			//if(asdf>1)
-			//{
-			//fftw_execute(p1);
-			//cout << this->PeriodSize() << endl;
+			int complexsize = ComplexSize();
+			
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
 			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(jackfft_complex));
-#ifdef CEPSTRUM
-			for(unsigned i=0;i<complexsize;i++) {
-				auto sine=fft.Data_c[i][1];
-				auto cosine=fft.Data_c[i][0];
-				double amplitude=sqrt(sine*sine+cosine*cosine);
-				//double phase=atan2(cosine,sine);
-				if(amplitude<0.00001) //10^-5
-					fft2.Data[i]=-5;
-				else fft2.Data[i]=logf(amplitude)/M_LN10;
-				//fft2.Data[i]=amplitude;
-			}
-			fft2.Forward();
-			for(unsigned i=0;i<ComplexSize2();i++)
-			{
-				fft2.Data_c[i][0] = fft2.Data_c[i][0]*coefficients2[i];
-				fft2.Data_c[i][1] = fft2.Data_c[i][1]*coefficients2[i];
-			}
-			fft2.Reverse();
-			for(unsigned i=0;i<complexsize;i++) {
-				auto sine=fft.Data_c[i][1];
-				auto cosine=fft.Data_c[i][0];
-				double amplitude=pow(10,fft2.Data[i]/fft2.size);
-				double phase=atan2(cosine,sine);
-				fft.Data_c[i][1] = cos(phase)*amplitude;
-				fft.Data_c[i][0] = sin(phase)*amplitude;
-			}
-#endif
-			
-				//int shift=21;
-				/*for(unsigned i=0;i<complexsize;i++)
-				{
-					tmpcomplex[i][0] = tmpcomplex[i][0]*coefficients[i];
-					tmpcomplex[i][1] = tmpcomplex[i][1]*coefficients[i];
-				}*/
-				//asdf=0;
-			//}
-
-			//tmpcomplex[0][0]=0;
-			//tmpcomplex[0][1]=0;
-
-
-			/*for(unsigned i=(complexsize-1)/2+1;i<complexsize;i++)
-			{
-				tmpcomplex[i][0]=0;
-				tmpcomplex[i][1]=0;
-			}*/
-			//memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(jackfft_complex));
 			if(freq_scale==1.)
 			{
-				for(unsigned i=0;i<complexsize;i++)
+				for(int i=0;i<complexsize;i++)
 				{
 					fft.Data_c[i][0] = fft.Data_c[i][0]*coefficients[i];
 					fft.Data_c[i][1] = fft.Data_c[i][1]*coefficients[i];
 				}
 				goto trolled;
 			}
-			/*int skip=this->BuffersPerPeriod/this->overlapcount;
-			if(skip<1)skip=1;
-			unsigned overlapcount=this->BuffersPerPeriod/skip;
-			int skip_samples=this->PeriodSize()/overlapcount;*/
-
-			//for(int i=complexsize-1;i>=0;i--)
 			bool rev;
 			rev=freq_scale>1.;
 			for(int i=rev?int(complexsize)-1:0;rev?(i>=0):(i<int(complexsize));rev?i--:i++)
@@ -368,26 +274,11 @@ namespace xaxaxa
 				//phase=phase*((double)(M_PI*2));
 				phase=phase/((double)period2);
 				
-				//double phase=atan2(tmpcomplex[i][0],tmpcomplex[i][1]);
-				
-				//phase*=1.5;
-				//if(i==100)cout << phase << endl;
-				//else i2=i;
-				//fft.Data_c[i][0] = (fft.Data_c[i2][0]*(1.0-trololo) + fft.Data_c[i2+1][0]*trololo)*coefficients[i];
-				//fft.Data_c[i][1] = (fft.Data_c[i2][1]*(1.0-trololo) + fft.Data_c[i2+1][1]*trololo)*coefficients[i];
 				amplitude*=coefficients[i];
 				fft.Data_c[i][1] = cos(phase)*amplitude;
 				fft.Data_c[i][0] = sin(phase)*amplitude;
 			}
 		trolled:
-			//fftw_execute(p2);
-			/*int shift=50;
-			for(int i=complexsize-1-shift;i>=0;i--)
-			{
-				fft.Data_c[i+shift][0]=fft.Data_c[i][0]*coefficients[i+shift];
-				fft.Data_c[i+shift][1]=fft.Data_c[i][1]*coefficients[i+shift];
-			}*/
-			
 			jackfft_float* d=fft.Reverse(this->PeriodSize());
 			memcpy(this->tmpbuffer,d,sizeof(jackfft_float)*this->PeriodSize());
 			int ps=this->PeriodSize();
@@ -395,159 +286,6 @@ namespace xaxaxa
 				this->tmpbuffer[i] /= fft.size;
 		}
 	};
-	/*template<class NUMTYPE>class FFTTransform: public OverlappedFilter3<NUMTYPE, double>
-	{
-	public:
-		fftw_plan p1, p2;
-		//double* tmpdouble;
-		jackfft_complex* tmpcomplex;
-		//double* coefficients;
-		virtual void alloc_buffer(){this->tmpbuffer=(double*)fft_malloc(sizeof(double)*this->PeriodSize());}
-		virtual void free_buffer(){fft_free(this->tmpbuffer);}
-		FFTTransform(unsigned buffersize, unsigned inbuffers, unsigned outbuffers, unsigned overlapcount, unsigned BuffersPerPeriod): OverlappedFilter3<NUMTYPE, double>(buffersize, (buffersize*BuffersPerPeriod/2+1)*2, inbuffers, outbuffers, overlapcount, BuffersPerPeriod)
-		{
-			int l=((unsigned)(this->PeriodSize() / 2) + 1);
-			//tmpdouble = (double*)fft_malloc(sizeof(double)*buffersize);
-			tmpcomplex = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
-			//coefficients = new double[l];
-			//cout << this->PeriodSize() << endl;
-			p1 = fftw_plan_dft_r2c_1d(this->PeriodSize(), this->tmpbuffer, tmpcomplex, 0); //FFTW_UNALIGNED
-			//p2 = fftw_plan_dft_c2r_1d(this->PeriodSize(), tmpcomplex, this->tmpbuffer, 0);
-		}
-		~FFTTransform()
-		{
-			fftw_destroy_plan(p1);
-			//fftw_destroy_plan(p2);
-			//fft_free(tmpdouble);
-			fft_free(tmpcomplex);
-			//delete[] coefficients;
-		}
-		virtual unsigned OutputSize()
-		{
-			return (unsigned)(((this->PeriodSize() / 2) + 1) * 2);
-		}
-		virtual void DoProcess()
-		{
-			unsigned complexsize = (unsigned)(this->PeriodSize() / 2) + 1;
-			//apply window
-			auto ps=this->PeriodSize();
-			int w=ps/this->overlapcount;
-			int start=ps/2-w;//ps/2-(w/2)-(w/2);
-			int half=w/2;
-			int w2=w*2;
-			for(int i=0;i<ps;i++)
-			{
-				double a=0;
-				if(i>=start && i<=(start+w))
-					a=1.0-(abs(i - half) / (double)w);
-				this->tmpbuffer[i]*=a;
-			}
-
-			fftw_execute(p1);
-			int tmp=this->OutBuffer.BeginAppend();
-			if(tmp<0)return;
-			double* d=&this->OutBuffer.GetPointer(tmp);
-			memcpy(d,tmpcomplex,complexsize*sizeof(double)*2);
-			this->OutBuffer.EndAppend(tmp);
-		}
-	};
-	class FFTStream_f
-	{
-	public:
-		//double* phase;
-		double* buffer;
-		jackfft_complex* buffer_c;
-		double* buffer_out;
-		int size,size_c;
-		fftw_plan p1;
-		FFTStream_f(int size):size(size),size_c(size/2+1)
-		{
-			buffer=(double*)fft_malloc(sizeof(double)*size);
-			buffer_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
-			buffer_out=(double*)fft_malloc(sizeof(double)*size_c);
-			p1 = fftw_plan_dft_r2c_1d(size, buffer, buffer_c, 0); //FFTW_UNALIGNED
-			//p2 = fftw_plan_dft_c2r_1d(size, buffer_c, buffer, 0);
-		}
-		~FFTStream_f()
-		{
-			fftw_destroy_plan(p1);
-			fft_free(buffer);
-			fft_free(buffer_c);
-			fft_free(buffer_out);
-		}
-		double* Process()
-		{
-			int w=size/2;
-			for(int i=0;i<w;i++)
-			{
-				buffer[i]*=((double)i)/(w-1);
-			}
-			for(int i=size-w;i<size;i++)
-			{
-				buffer[i]*=((double)(i-(size-w)))/(w-1);
-			}
-			fftw_execute(p1);
-			for(int i=0;i<size_c;i++)
-			{
-				buffer_out[i]=sqrt(pow(buffer_c[i][0],2)+pow(buffer_c[i][1],2));
-			}
-			return buffer_out;
-		}
-	};
-
-	class FFTStream_r
-	{
-	public:
-		double* phase;
-		double* buffer;
-		jackfft_complex* buffer_c;
-		double* buffer_out;
-		int size,size_c;
-		fftw_plan p1;
-		FFTStream_r(int size):size(size),size_c(size/2+1)
-		{
-			buffer=(double*)fft_malloc(sizeof(double)*size);
-			buffer_c=(jackfft_complex*)fft_malloc(sizeof(jackfft_complex)*size_c);
-			phase=(double*)fft_malloc(sizeof(double)*size_c);
-			for(int i=0;i<size_c;i++)
-				phase[i]=100;
-			buffer_out=(double*)fft_malloc(sizeof(double)*size);
-			//p1 = fftw_plan_dft_r2c_1d(size, buffer, buffer_c, 0); //FFTW_UNALIGNED
-			p1 = fftw_plan_dft_c2r_1d(size, buffer_c, buffer_out, 0);
-		}
-		~FFTStream_r()
-		{
-			fftw_destroy_plan(p1);
-			fft_free(buffer);
-			fft_free(buffer_c);
-			fft_free(phase);
-			fft_free(buffer_out);
-		}
-		double* Process()
-		{
-			for(int i=0;i<size_c;i++)
-			{
-				if(i==0||i==size_c-1)
-				{
-					buffer_c[i][0]=this->buffer[i];
-					continue;
-				}
-				double phase=this->phase[i];
-				double amplitude=this->buffer[i];
-				//sine
-				buffer_c[i][0]=cos(phase)*amplitude;
-				//cosine
-				buffer_c[i][1]=sin(phase)*amplitude;
-
-				//double period=1/freq;
-				//this->phase[i]=phase;
-			}
-			fftw_execute(p1);
-			for(int i=0;i<size;i++)
-				buffer_out[i]/=size;
-			return buffer_out;
-		}
-	};*/
 };
 
 
