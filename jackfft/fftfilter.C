@@ -168,7 +168,7 @@ namespace xaxaxa
 		}
 		void Forward(jackfft_float* data, int length)
 		{
-			if(length>size)throw Exception("data length exceeds fft size");
+			if(length>size) throw std::logic_error("WindowedFFT::Forward(): data length exceeds fft size");
 			int s=size/2-ceil((double)length/2);
 			memset(Data,0,size*sizeof(jackfft_float));
 			memcpy(Data+s,data,length*sizeof(jackfft_float));
@@ -176,7 +176,7 @@ namespace xaxaxa
 		}
 		jackfft_float* Reverse(int length)
 		{
-			if(length>size)throw Exception("data length exceeds fft size");
+			if(length>size) throw std::logic_error("WindowedFFT::Reverse(): data length exceeds fft size");
 			int s=size/2-ceil((double)length/2);
 			fft.Reverse();
 			return Data+s;
@@ -202,17 +202,17 @@ namespace xaxaxa
 		WindowedFFT fft;
 #ifdef CEPSTRUM
 		FFT fft2;
-		inline UInt ComplexSize2()
+		inline unsigned ComplexSize2()
 		{
 			return fft2.size_c;
 		}
 #endif
-		inline UInt ComplexSize()
+		inline unsigned ComplexSize()
 		{
 			return fft.size_c;
 		}
 		
-		FFTFilter(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod, Int padding1, Int padding2, UInt FFTSize):
+		FFTFilter(unsigned buffersize, unsigned inbuffers, unsigned outbuffers, unsigned overlapcount, unsigned BuffersPerPeriod, int padding1, int padding2, unsigned FFTSize):
 			OverlappedFilter2_new<NUMTYPE, jackfft_float>(buffersize, inbuffers, outbuffers, overlapcount, BuffersPerPeriod, padding1, padding2),freq_scale(1.0),fft(FFTSize)
 #ifdef CEPSTRUM
 		,fft2(ComplexSize())
@@ -220,15 +220,15 @@ namespace xaxaxa
 		{
 			asdf=0;
 			//memset(&last_refreshed,0,sizeof(last_refreshed));
-			Int l=ComplexSize();//((UInt)(this->PeriodSize() / 2) + 1);
+			int l=ComplexSize();//((unsigned)(this->PeriodSize() / 2) + 1);
 			coefficients = new double[l];
 			
-			for(Int i=0;i<l;i++)
+			for(int i=0;i<l;i++)
 				coefficients[i] = 1.0;
 				
 #ifdef CEPSTRUM
 			coefficients2 = new double[ComplexSize2()];
-			for(Int i=0;i<ComplexSize2();i++)
+			for(int i=0;i<ComplexSize2();i++)
 				coefficients2[i] = 1.0;
 #endif
 			tmpcomplex=fft.Data_c;
@@ -265,7 +265,7 @@ namespace xaxaxa
 
 		virtual void DoProcess()
 		{
-			Int complexsize = ComplexSize();//(UInt)(this->PeriodSize() / 2) + 1;
+			int complexsize = ComplexSize();//(unsigned)(this->PeriodSize() / 2) + 1;
 			//asdf++;
 			//if(asdf>1)
 			//{
@@ -274,7 +274,7 @@ namespace xaxaxa
 			fft.Forward(this->tmpbuffer,this->PeriodSize());
 			memcpy(lastSpectrum,fft.Data_c,ComplexSize()*sizeof(jackfft_complex));
 #ifdef CEPSTRUM
-			for(UInt i=0;i<complexsize;i++) {
+			for(unsigned i=0;i<complexsize;i++) {
 				auto sine=fft.Data_c[i][1];
 				auto cosine=fft.Data_c[i][0];
 				double amplitude=sqrt(sine*sine+cosine*cosine);
@@ -285,13 +285,13 @@ namespace xaxaxa
 				//fft2.Data[i]=amplitude;
 			}
 			fft2.Forward();
-			for(UInt i=0;i<ComplexSize2();i++)
+			for(unsigned i=0;i<ComplexSize2();i++)
 			{
 				fft2.Data_c[i][0] = fft2.Data_c[i][0]*coefficients2[i];
 				fft2.Data_c[i][1] = fft2.Data_c[i][1]*coefficients2[i];
 			}
 			fft2.Reverse();
-			for(UInt i=0;i<complexsize;i++) {
+			for(unsigned i=0;i<complexsize;i++) {
 				auto sine=fft.Data_c[i][1];
 				auto cosine=fft.Data_c[i][0];
 				double amplitude=pow(10,fft2.Data[i]/fft2.size);
@@ -302,7 +302,7 @@ namespace xaxaxa
 #endif
 			
 				//int shift=21;
-				/*for(UInt i=0;i<complexsize;i++)
+				/*for(unsigned i=0;i<complexsize;i++)
 				{
 					tmpcomplex[i][0] = tmpcomplex[i][0]*coefficients[i];
 					tmpcomplex[i][1] = tmpcomplex[i][1]*coefficients[i];
@@ -314,7 +314,7 @@ namespace xaxaxa
 			//tmpcomplex[0][1]=0;
 
 
-			/*for(UInt i=(complexsize-1)/2+1;i<complexsize;i++)
+			/*for(unsigned i=(complexsize-1)/2+1;i<complexsize;i++)
 			{
 				tmpcomplex[i][0]=0;
 				tmpcomplex[i][1]=0;
@@ -322,22 +322,22 @@ namespace xaxaxa
 			//memcpy(tmpcomplex,fft.Data_c,complexsize*sizeof(jackfft_complex));
 			if(freq_scale==1.)
 			{
-				for(UInt i=0;i<complexsize;i++)
+				for(unsigned i=0;i<complexsize;i++)
 				{
 					fft.Data_c[i][0] = fft.Data_c[i][0]*coefficients[i];
 					fft.Data_c[i][1] = fft.Data_c[i][1]*coefficients[i];
 				}
 				goto trolled;
 			}
-			/*Int skip=this->BuffersPerPeriod/this->overlapcount;
+			/*int skip=this->BuffersPerPeriod/this->overlapcount;
 			if(skip<1)skip=1;
-			UInt overlapcount=this->BuffersPerPeriod/skip;
-			Int skip_samples=this->PeriodSize()/overlapcount;*/
+			unsigned overlapcount=this->BuffersPerPeriod/skip;
+			int skip_samples=this->PeriodSize()/overlapcount;*/
 
-			//for(Int i=complexsize-1;i>=0;i--)
+			//for(int i=complexsize-1;i>=0;i--)
 			bool rev;
 			rev=freq_scale>1.;
-			for(Int i=rev?Int(complexsize)-1:0;rev?(i>=0):(i<Int(complexsize));rev?i--:i++)
+			for(int i=rev?int(complexsize)-1:0;rev?(i>=0):(i<int(complexsize));rev?i--:i++)
 			{
 				int i2;
 				//if(i>50)
@@ -382,7 +382,7 @@ namespace xaxaxa
 		trolled:
 			//fftw_execute(p2);
 			/*int shift=50;
-			for(Int i=complexsize-1-shift;i>=0;i--)
+			for(int i=complexsize-1-shift;i>=0;i--)
 			{
 				fft.Data_c[i+shift][0]=fft.Data_c[i][0]*coefficients[i+shift];
 				fft.Data_c[i+shift][1]=fft.Data_c[i][1]*coefficients[i+shift];
@@ -390,8 +390,8 @@ namespace xaxaxa
 			
 			jackfft_float* d=fft.Reverse(this->PeriodSize());
 			memcpy(this->tmpbuffer,d,sizeof(jackfft_float)*this->PeriodSize());
-			Int ps=this->PeriodSize();
-			for(Int i=0;i<ps;i++)
+			int ps=this->PeriodSize();
+			for(int i=0;i<ps;i++)
 				this->tmpbuffer[i] /= fft.size;
 		}
 	};
@@ -404,9 +404,9 @@ namespace xaxaxa
 		//double* coefficients;
 		virtual void alloc_buffer(){this->tmpbuffer=(double*)fft_malloc(sizeof(double)*this->PeriodSize());}
 		virtual void free_buffer(){fft_free(this->tmpbuffer);}
-		FFTTransform(UInt buffersize, UInt inbuffers, UInt outbuffers, UInt overlapcount, UInt BuffersPerPeriod): OverlappedFilter3<NUMTYPE, double>(buffersize, (buffersize*BuffersPerPeriod/2+1)*2, inbuffers, outbuffers, overlapcount, BuffersPerPeriod)
+		FFTTransform(unsigned buffersize, unsigned inbuffers, unsigned outbuffers, unsigned overlapcount, unsigned BuffersPerPeriod): OverlappedFilter3<NUMTYPE, double>(buffersize, (buffersize*BuffersPerPeriod/2+1)*2, inbuffers, outbuffers, overlapcount, BuffersPerPeriod)
 		{
-			Int l=((UInt)(this->PeriodSize() / 2) + 1);
+			int l=((unsigned)(this->PeriodSize() / 2) + 1);
 			//tmpdouble = (double*)fft_malloc(sizeof(double)*buffersize);
 			tmpcomplex = (jackfft_complex*)fft_malloc(sizeof(jackfft_complex) * l);
 			//coefficients = new double[l];
@@ -422,13 +422,13 @@ namespace xaxaxa
 			fft_free(tmpcomplex);
 			//delete[] coefficients;
 		}
-		virtual UInt OutputSize()
+		virtual unsigned OutputSize()
 		{
-			return (UInt)(((this->PeriodSize() / 2) + 1) * 2);
+			return (unsigned)(((this->PeriodSize() / 2) + 1) * 2);
 		}
 		virtual void DoProcess()
 		{
-			UInt complexsize = (UInt)(this->PeriodSize() / 2) + 1;
+			unsigned complexsize = (unsigned)(this->PeriodSize() / 2) + 1;
 			//apply window
 			auto ps=this->PeriodSize();
 			int w=ps/this->overlapcount;

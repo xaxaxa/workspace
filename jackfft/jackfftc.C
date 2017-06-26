@@ -36,13 +36,13 @@ int process (jack_nframes_t length, void *arg)
 
 		filt[i]->Process(in, out, length);
 		//filt[i]->GetData(out, length);
-		/*Int a;
+		/*int a;
 		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
 		{
 			//cout << a << endl;
 			((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.EndDequeue(a);
 		}*/
-		//for(UInt i=0;i<length;i++)
+		//for(unsigned i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
 	return 0;
@@ -108,7 +108,7 @@ double scale_value_r(double x)
 	else return x+1.0;
 }
 
-void load(Stream& fs, double* coeff, UInt coeffs)
+void load(Stream& fs, double* coeff, unsigned coeffs)
 {
 	try
 	{
@@ -118,20 +118,20 @@ void load(Stream& fs, double* coeff, UInt coeffs)
 			double freq; double val;
 		} buf;
 		Buffer b(&buf,sizeof(buf));
-		UInt i1=0;
+		unsigned i1=0;
 		double last_v=0.5;
 		while(fs.Read(b)>=b.Length)
 		{
 			//cout << buf.freq << endl;
-			UInt i2=(UInt)round(((double)buf.freq/(srate/2))*coeffs);
+			unsigned i2=(unsigned)round(((double)buf.freq/(srate/2))*coeffs);
 			//cout << i2 << endl;
 			if(i2>coeffs)break;
-			for(UInt i=i1;i<i2;i++)
+			for(unsigned i=i1;i<i2;i++)
 				coeff[i]=last_v*(i2-i)/(i2-i1)+buf.val*(i-i1)/(i2-i1);
 			i1=i2;
 			last_v=buf.val;
 		}
-		for(UInt i=i1;i<coeffs;i++)
+		for(unsigned i=i1;i<coeffs;i++)
 			coeff[i]=last_v;
 	}
 	catch(Exception& ex)
@@ -149,7 +149,7 @@ int main (int argc, char *argv[])
 	FileStream fs(File(argv[1],O_RDONLY));
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
-	for(UInt i=0;i<CHANNELS;i++)
+	for(unsigned i=0;i<CHANNELS;i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* trololo=new FFTFilter<jack_default_audio_sample_t>
 		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	paddingL,paddingR,	fftsize
@@ -170,10 +170,10 @@ int main (int argc, char *argv[])
 	printf ("engine sample rate: %u\n", srate=jack_get_sample_rate (client));
 
 	FFTFilter<jack_default_audio_sample_t>* tmpf=(FFTFilter<jack_default_audio_sample_t>*)filt[0];
-	UInt complexsize = (UInt)(tmpf->PeriodSize() / 2) + 1;
+	unsigned complexsize = (unsigned)(tmpf->PeriodSize() / 2) + 1;
 	load(fs,tmpf->coefficients,complexsize);
 	fs.Close();
-	for(UInt i=1;i<CHANNELS;i++)
+	for(unsigned i=1;i<CHANNELS;i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* f=(FFTFilter<jack_default_audio_sample_t>*)filt[i];
 		memcpy(f->coefficients,tmpf->coefficients,sizeof(double)*complexsize);

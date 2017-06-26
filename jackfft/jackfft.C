@@ -23,6 +23,7 @@
 #define WARNLEVEL 3
 #define cplib_glib_wrappers
 #define JACKFFT_USE_SOUNDTOUCH
+#define _GLIBCXX_USE_CXX11_ABI 1
 
 #include <iostream>
 #include <jack/jack.h>
@@ -47,6 +48,8 @@ using namespace std;
 #define rmb() /*AO_nop_read()*/
 #define wmb() /*AO_nop_write()*/
 
+
+bool jackfftPrintWarnings = true;
 
 vector<jack_port_t *> inputs;
 vector<jack_port_t *> outputs;
@@ -232,13 +235,13 @@ int process(jack_nframes_t length, void *arg)
 			}
 		}
 		filt[i]->Process(in, out, length);
-		/*Int a;
+		/*int a;
 		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
 		{
 			//cout << a << endl;
 			((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.EndDequeue(a);
 		}*/
-		//for(UInt i=0;i<length;i++)
+		//for(unsigned i=0;i<length;i++)
 		//	out[i] = in[i];
 	}
 	
@@ -319,7 +322,7 @@ void* thread1(void* v)
 			{
 				if(filt[ii] == NULL)continue;
 				auto fftf=((FFTFilter<jack_default_audio_sample_t>*)filt[ii]);
-				UInt complexsize = fftf->ComplexSize();
+				unsigned complexsize = fftf->ComplexSize();
 				
 				int eqpoints=spectrum2?SPECTRUM2_POINTS:EQ_POINTS;
 				if(c2->datalen!=eqpoints) {
@@ -336,7 +339,7 @@ void* thread1(void* v)
 				else
 					for(decltype(c2->datalen) i = 0; i < c2->datalen; i++)
 					{
-						UInt complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
+						unsigned complex_index = scale_freq((double)i / (c2->datalen - 1)) * (complexsize - 1);
 						c2->data[i] += complex_to_real(data[complex_index]) / complexsize / inputs.size() * 100;
 					}
 				//
@@ -363,51 +366,51 @@ void jack_shutdown(void *arg)
 {
 	exit(1);
 }
-//UInt pb_size=0;
+//unsigned pb_size=0;
 //Gtk::ProgressBar* pb;
-//UInt freqs = 50;
+//unsigned freqs = 50;
 
 void update_fft(FFTFilter<jack_default_audio_sample_t>** filt2 = NULL)
 {
 	if(filt2 != NULL)
 	{
-		for(UInt i = 0; i < CHANNELS; i++)
+		for(unsigned i = 0; i < CHANNELS; i++)
 		{
 			if(filt2[i] == NULL)continue;
 			auto f = filt2[i];
-			UInt complexsize = f->ComplexSize();
-			for(UInt n = 0; n < complexsize; n++)
+			unsigned complexsize = f->ComplexSize();
+			for(unsigned n = 0; n < complexsize; n++)
 				f->coefficients[n] = scale_value(c->GetPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
 		}
 		return;
 	}
-	for(UInt i = 0; i < CHANNELS; i++)
+	for(unsigned i = 0; i < CHANNELS; i++)
 	{
 		auto f = (FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
-		UInt complexsize = f->ComplexSize();
-		for(UInt n = 0; n < complexsize; n++)
+		unsigned complexsize = f->ComplexSize();
+		for(unsigned n = 0; n < complexsize; n++)
 			f->coefficients[n] = scale_value(c->GetPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
 	}
 }
-void on_change(void* user, UInt i1, UInt i2)
+void on_change(void* user, unsigned i1, unsigned i2)
 {
 	EQControl* c = (EQControl*)user;
-	for(UInt i = 0; i < CHANNELS; i++)
+	for(unsigned i = 0; i < CHANNELS; i++)
 	{
 		auto f = (FFTFilter<jack_default_audio_sample_t>*)(filt[i]);
 #ifdef CEPSTRUM
-		UInt complexsize = c==c_eq2?f->ComplexSize2():f->ComplexSize();
+		unsigned complexsize = c==c_eq2?f->ComplexSize2():f->ComplexSize();
 #else
-		UInt complexsize = f->ComplexSize();
+		unsigned complexsize = f->ComplexSize();
 #endif
 		//complexsize /= 5;
-		UInt min_index = floor(scale_freq((double)i1 / EQ_POINTS) * (double)complexsize);
-		UInt max_index = ceil(scale_freq((double)i2 / EQ_POINTS) * (double)complexsize);
+		unsigned min_index = floor(scale_freq((double)i1 / EQ_POINTS) * (double)complexsize);
+		unsigned max_index = ceil(scale_freq((double)i2 / EQ_POINTS) * (double)complexsize);
 		//cout << "i1="<<i1<<"; i2="<<i2<<"; scale_freq="<<scale_freq((double)i1/EQ_POINTS)<<endl;
 		//cout << "min_index="<<min_index<<"; max_index="<<max_index<<endl;
-		UInt max_n = floor(max_index);
+		unsigned max_n = floor(max_index);
 		if(max_n > complexsize)max_n = complexsize;
-		for(UInt n = min_index; n < max_n; n++)
+		for(unsigned n = min_index; n < max_n; n++)
 		{
 			double tmp = (c->GetPoint(scale_freq_r((double)n / complexsize) * EQ_POINTS) * 2.0);
 			//cout << c->GetPoint(scale_freq_r((double)n/complexsize)*EQ_POINTS) << endl;
@@ -427,7 +430,7 @@ void on_mousemove(void* user, double i)
 	double freq = scale_freq(i / c->datalen) * srate / 2.0;
 	Gtk::Label* l;
 	b->get_widget("label1", l);
-	l->set_text(CONCAT((UInt)freq << " Hz").c_str());
+	l->set_text(CONCAT((unsigned)freq << " Hz").c_str());
 }
 
 void do_save(Stream& fs)
@@ -440,7 +443,7 @@ void do_save(Stream& fs)
 			double val;
 		} buf;
 		Buffer b(&buf, sizeof(buf));
-		for(UInt i = 0; i < EQ_POINTS; i++)
+		for(unsigned i = 0; i < EQ_POINTS; i++)
 		{
 			buf.freq = scale_freq((double)i / EQ_POINTS) * srate / 2;
 			buf.val = scale_value(c->GetPoint(i) * 2.0);
@@ -476,20 +479,20 @@ void do_load(Stream& fs)
 			double val;
 		} buf;
 		Buffer b(&buf, sizeof(buf));
-		UInt i1 = 0;
+		unsigned i1 = 0;
 		double last_v = 0.5;
 		while(fs.Read(b) >= b.Length)
 		{
 			//cout << buf.freq << endl;
-			UInt i2 = (UInt)round(scale_freq_r((double)buf.freq / (srate / 2)) * EQ_POINTS);
+			unsigned i2 = (unsigned)round(scale_freq_r((double)buf.freq / (srate / 2)) * EQ_POINTS);
 			//cout << i2 << endl;
 			if(i2 > EQ_POINTS)break;
-			for(UInt i = i1; i < i2; i++)
+			for(unsigned i = i1; i < i2; i++)
 				c->data[i] = scale_value_r(last_v * (i2 - i) / (i2 - i1) + buf.val * (i - i1) / (i2 - i1)) / 2.0;
 			i1 = i2;
 			last_v = buf.val;
 		}
-		for(UInt i = i1; i < EQ_POINTS; i++)
+		for(unsigned i = i1; i < EQ_POINTS; i++)
 			c->data[i] = scale_value_r(last_v) / 2.0;
 		c->queue_draw();
 		update_fft();
@@ -647,7 +650,7 @@ int main(int argc, char *argv[])
 	Util.ChDir(Util.GetDirFromPath(Util.GetProgramPath()));
 	//goto aaaaa;
 	//fft=rfftw_create_plan(8192,
-	for(UInt i = 0; i < CHANNELS; i++)
+	for(unsigned i = 0; i < CHANNELS; i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* trololo = new FFTFilter<jack_default_audio_sample_t>
 		//bs, inbuffers,	outbuffers,	overlap,buffersperperiod,	paddingL,paddingR,	fftsize
@@ -736,7 +739,7 @@ int main(int argc, char *argv[])
 	c_eq2->Change += EQControl::ChangeDelegate(&on_change, c_eq2);
 	c_eq2->MouseMove += EQControl::MouseDelegate(&on_mousemove, c_eq2);
 #endif
-	//UInt complexsize = (UInt)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
+	//unsigned complexsize = (unsigned)(((FFTFilter<jack_default_audio_sample_t>*)filt[0])->PeriodSize() / 2) + 1;
 
 
 	apply_label_workaround(label8);
@@ -752,7 +755,7 @@ int main(int argc, char *argv[])
 
 		FFTFilter<jack_default_audio_sample_t>** tmp;
 		tmp = new FFTFilter<jack_default_audio_sample_t>*[CHANNELS];
-		Int bs, overlap, bpp, padding1, padding2, fftsize;
+		int bs, overlap, bpp, padding1, padding2, fftsize;
 		Gtk::Entry* ent;
 		b->get_widget("t_bs", ent);
 		bs = atoi(ent->get_text().c_str());
@@ -766,7 +769,7 @@ int main(int argc, char *argv[])
 		padding2 = atoi(ent->get_text().c_str());
 		b->get_widget("t_fftsize", ent);
 		fftsize = atoi(ent->get_text().c_str());
-		Int buffers;
+		int buffers;
 		buffers = (bpp + padding1 + padding2) + 4;
 		for(int i = 0; i < CHANNELS; i++)
 		{
@@ -794,7 +797,7 @@ hhhhh:
 		b->get_widget("t_x", ent);
 		double x;
 		x = atof(ent->get_text().c_str());
-		for(Int i=0;i<EQ_POINTS;i++)
+		for(int i=0;i<EQ_POINTS;i++)
 		{
 			c->data[i]=scale_value_r(scale_value(c->data[i])*pow(2,x));
 		}
