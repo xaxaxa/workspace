@@ -54,13 +54,13 @@ namespace xaxaxa
 		{
 			PutData(data,length);
 			int tmp=GetData(data,length);
-			if(tmp<length) JACKFFT_WARN("buffer underflow: wanted %d samples, but got %d", length, tmp);
+			if(tmp<length) JACKFFT_WARN("buffer underflow: wanted %d samples, but got %d\n", length, tmp);
 		}
 		virtual void Process(const NUMTYPE* in, NUMTYPE* out, int length)
 		{
 			PutData(in,length);
 			int tmp=GetData(out,length);
-			if(tmp<length) JACKFFT_WARN("buffer underflow: wanted %d samples, but got %d", length, tmp);
+			if(tmp<length) JACKFFT_WARN("buffer underflow: wanted %d samples, but got %d\n", length, tmp);
 		}
 		BufferedFilter()
 		{
@@ -229,7 +229,7 @@ namespace xaxaxa
 			// add data to inBuffer
 			int bw=inBuffer.write(data, length);
 			if(bw!=length) {
-				JACKFFT_WARN("OverlappedFilter2_new: inBuffer overrun: attempt to write %d items, but buffer only has %d space left",
+				JACKFFT_WARN("OverlappedFilter2_new: inBuffer overrun: attempt to write %d items, but buffer only has %d space left\n",
 						length, bw);
 			}
 			processAvailableData();
