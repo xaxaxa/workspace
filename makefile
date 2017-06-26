@@ -1,7 +1,7 @@
 
 CFLAGS := -Ofast -march=native -ftree-vectorize
 CFLAGS1=-L`pwd`/lib -I`pwd`/include -Wall -Wno-pmf-conversions -funsigned-char -fwrapv -fno-delete-null-pointer-checks -fno-strict-aliasing \
-	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC -D_FILE_OFFSET_BITS=64 $(CFLAGS)
+	-Wno-unused-function -Wno-unused-variable --std=c++0x -fPIC -D_FILE_OFFSET_BITS=64 -D_GLIBCXX_USE_CXX11_ABI=1 $(CFLAGS)
 CC := gcc
 CXX := g++
 
@@ -105,9 +105,14 @@ bin/tcpsdump: tcpsdump/main.cxx tcpsdump/tcpinterpreter.cxx
 	$(CXX) tcpsdump/main.cxx -o bin/tcpsdump -lpcap -lpthread $(CFLAGS1)
 bin/rmhttphdr: cplib tcpsdump/rmhttphdr.cxx
 	$(CXX) tcpsdump/rmhttphdr.cxx -o bin/rmhttphdr -lcplib -lpthread $(CFLAGS1)
-bin/jackfft: cplib cpoll bin/main2.ui
-	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcpoll -lcplib -lpthread -ljack -lfftw3 -lSoundTouch \
+bin/jackfft_static: bin/main2.ui
+	$(CXX) jackfft/jackfft.C cpoll/cpoll.C cplib/all.C -o bin/jackfft_static -lpthread -ljack -lfftw3 -lSoundTouch \
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
+bin/jackfft: cplib bin/main2.ui
+	$(CXX) jackfft/jackfft.C -o bin/jackfft -lcplib -lpthread -ljack -lfftw3 -lSoundTouch \
+	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
+bin/jackfftc: jackfft/jackfftc.C
+	$(CXX) jackfft/jackfftc.C -o bin/jackfftc -lpthread -ljack -lfftw3 $(CFLAGS1)
 bin/jackfft_analyzer:
 	cp -af jackfft/jackfft_analyzer.ui bin/
 	$(CXX) jackfft/analyzer.C -o bin/jackfft_analyzer -lcpoll -lpthread -ljack -lfftw3 \
@@ -141,6 +146,8 @@ bin/fibbench:
 	$(CXX) benchmark/fibbench.C -o bin/fibbench -lpthread $(CFLAGS1)
 bin/iptsocks_new: cpoll iptsocks_new/all.C iptsocks_new/main.C
 	$(CXX) iptsocks_new/all.C -o bin/iptsocks_new -lcpoll -lpthread $(CFLAGS1)
+bin/tcpforward: cpoll iptsocks_new/tcpforward.C
+	$(CXX) iptsocks_new/tcpforward.C iptsocks_new/joinstream.C -o bin/tcpforward -lcpoll -lpthread $(CFLAGS1)
 bin/decode_aaaaa: test/decode_aaaaa.C
 	$(CXX) test/decode_aaaaa.C -o bin/decode_aaaaa -lpthread -lcryptopp $(CFLAGS1)
 bin/randomread: test/randomread.C
@@ -156,6 +163,19 @@ bin/fbdview_gen_index: fbdview/gen_index.C
 dsssgen: bin/dsssgen
 bin/dsssgen: test/dsssgen.C
 	$(CXX) test/dsssgen.C -o bin/dsssgen -lpthread -lcryptopp -lfftw3 -lfftw3_threads $(CFLAGS1)
+
+bin/vna_test1: vna/test1.C
+	$(CXX) vna/test1.C -o bin/vna_test1 -lpthread `pkg-config --cflags --libs gtkmm-3.0`
+	cp -a vna/vna.glade bin/
+
+bin/vna_test2: vna/test2.C
+	$(CXX) vna/test2.C -o bin/vna_test2 -lpthread `pkg-config --cflags --libs gtkmm-3.0`
+	cp -a vna/vna.glade bin/
+
+bin/test_backup: backup_tools/test_backup.C
+	$(CXX) backup_tools/test_backup.C -o bin/test_backup -lpthread -lcryptopp $(CFLAGS1)
+
+
 # library targets
 lib/libgeneric_ui.so:
 	$(CXX) generic_ui/all.C --shared -o lib/libgeneric_ui.so $(CFLAGS1)
@@ -173,7 +193,7 @@ lib/libcplib.a:
 	$(CXX) cplib/all.C -c -o lib/libcplib.o $(CFLAGS1)
 	ar rcs lib/libcplib.a lib/libcplib.o
 lib/libcpoll.a:
-	$(CXX) cpoll/all.C -c -o lib/libcpoll.o $(CFLAGS1)
+	$(CXX) cpoll/*.C -c -o lib/libcpoll.o $(CFLAGS1)
 	ar rcs lib/libcpoll.a lib/libcpoll.o
 
 
