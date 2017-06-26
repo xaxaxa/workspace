@@ -259,17 +259,23 @@ namespace xaxaxa
 				inBuffer.consume(stepLength);
 				DoProcess();
 				didprocess = true;
+
+				// subTmpBuffer is the portion of tmpbuffer that is to be blended
+				// to the output
+				FLOATTYPE* subTmpBuffer = tmpbuffer + paddingLeft;
+				int subTmpSize = periodLength;
+
 				// apply a triangular mask to tmpbuffer
 				int s=stepLength+1;
 				for(int i=0;i<stepLength;i++) {
-					tmpbuffer[i] *= double(i+1)/s;
-					tmpbuffer[tmpSize - stepLength + i] *= double(stepLength-i)/s;
+					subTmpBuffer[i] *= double(i+1)/s;
+					subTmpBuffer[subTmpSize - stepLength + i] *= double(stepLength-i)/s;
 				}
 
 				// put results in outBuffer
-				blend(tmpbuffer, tmpSize - stepLength);
-				int off = tmpSize - stepLength;
-				outBuffer.append(tmpbuffer + off, stepLength, off);
+				blend(subTmpBuffer, subTmpSize - stepLength);
+				int off = subTmpSize - stepLength;
+				outBuffer.append(subTmpBuffer + off, stepLength, off);
 				outBuffer.commit(stepLength);
 			}
 		}
