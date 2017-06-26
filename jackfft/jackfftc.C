@@ -6,10 +6,14 @@
 #include <sstream>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <sstream>
+#include <fstream>
+#include <unistd.h>
+
 #include "fftfilter.C"
-#include <cplib/cplib.hpp>
 
 using namespace std;
+bool jackfftPrintWarnings=true;
 vector<jack_port_t *> inputs;
 vector<jack_port_t *> outputs;
 #define CHANNELS 2
@@ -35,15 +39,6 @@ int process (jack_nframes_t length, void *arg)
 					jack_port_get_buffer (inputs[i], length);
 
 		filt[i]->Process(in, out, length);
-		//filt[i]->GetData(out, length);
-		/*int a;
-		while((a = ((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.BeginDequeue()) >= 0)
-		{
-			//cout << a << endl;
-			((FFTFilter<jack_default_audio_sample_t>*)filt[i])->OutBuffer.EndDequeue(a);
-		}*/
-		//for(unsigned i=0;i<length;i++)
-		//	out[i] = in[i];
 	}
 	return 0;
 }
@@ -55,88 +50,29 @@ void jack_shutdown (void *arg)
 {
 	exit (1);
 }
-inline double scale_freq(double x)
-{
-	x=pow(2,x*10);
-	x=x-1;
-	if(x<0)return 0;
-	return x/1024;
-}
-/*
- * y=5x^2
- *
- * y=((x*2)^2)/4
- * 4y=(2x)^2
- * sqrt(4y)=2x
- * sqrt(4y)/2=x
- * */
-inline double scale_freq_r(double x)
-{
-	//cout << x << " " << log2(x*256) << endl;
-	x=x*1024+1;
-	//if(x<1.0)return 0;
-	x=log2(x)/10;
-	//if(::isinf(x)||::isnan(x))return 0;
-	//cout << x << endl;
-	return x<0?-x:x;
-}
-double scale_value(double x)
-{
-	//return x*x;
-	double tmp = x - 1.0;
-	if(tmp<0)
-		return 1.0/(-tmp*19.0+1.0);
-	else return tmp*19.0+1.0;
-}
-/*
- * y=1/(-19x+1)
- * y(-19x+1)=1
- * -19x+1=1/y
- * -19x=1/y-1
- * x=-(1/y-1)/19
- * */
-double scale_value_r(double x)
-{
-	//return x*x;
-	//cout << x << endl;
-	if(x>1.0)x=(x-1.0)/19.0;
-	else x=(-((1/x)-1.0)/19.0);
 
-	if(std::isnan(x))return 1.0;
-	//else if(x>1.0)return 2.0;
-	//else if(x<-1.0)return 0.0;
-	else return x+1.0;
-}
 
-void load(Stream& fs, double* coeff, unsigned coeffs)
+void load(uint8_t* jfftFile, int jfftBytes, double* coeff, unsigned coeffs)
 {
-	try
-	{
-		//FileStream fs(File(fname.c_str(),O_RDONLY));
-		struct
-		{
-			double freq; double val;
-		} buf;
-		Buffer b(&buf,sizeof(buf));
-		unsigned i1=0;
-		double last_v=0.5;
-		while(fs.Read(b)>=b.Length)
-		{
-			//cout << buf.freq << endl;
-			unsigned i2=(unsigned)round(((double)buf.freq/(srate/2))*coeffs);
-			//cout << i2 << endl;
-			if(i2>coeffs)break;
-			for(unsigned i=i1;i<i2;i++)
-				coeff[i]=last_v*(i2-i)/(i2-i1)+buf.val*(i-i1)/(i2-i1);
-			i1=i2;
-			last_v=buf.val;
-		}
-		for(unsigned i=i1;i<coeffs;i++)
-			coeff[i]=last_v;
+	struct jfftEntry {
+		double freq; double val;
+	} *buf;
+	buf = (jfftEntry*) jfftFile;
+	int entries = jfftBytes/sizeof(jfftEntry);
+
+	unsigned i1=0;
+	double last_v=0.5;
+	for(int pos=0; pos<entries; pos++) {
+		unsigned i2=(unsigned)round(((double)buf[pos].freq/(srate/2))*coeffs);
+		//cout << i2 << endl;
+		if(i2>coeffs)break;
+		for(unsigned i=i1;i<i2;i++)
+			coeff[i]=last_v*(i2-i)/(i2-i1)+buf[pos].val*(i-i1)/(i2-i1);
+		i1=i2;
+		last_v=buf[pos].val;
 	}
-	catch(Exception& ex)
-	{
-	}
+	for(unsigned i=i1;i<coeffs;i++)
+		coeff[i]=last_v;
 }
 
 int main (int argc, char *argv[])
@@ -146,9 +82,11 @@ int main (int argc, char *argv[])
 		cout << "usage: " << argv[0] << " file.jfft" << endl;
 		return 0;
 	}
-	FileStream fs(File(argv[1],O_RDONLY));
-	//goto aaaaa;
-	//fft=rfftw_create_plan(8192,
+	ifstream jfftStream(argv[1]);
+	stringstream jfftBuffer;
+	jfftBuffer << jfftStream.rdbuf();
+	string jfft = jfftBuffer.str();
+	
 	for(unsigned i=0;i<CHANNELS;i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* trololo=new FFTFilter<jack_default_audio_sample_t>
@@ -171,8 +109,7 @@ int main (int argc, char *argv[])
 
 	FFTFilter<jack_default_audio_sample_t>* tmpf=(FFTFilter<jack_default_audio_sample_t>*)filt[0];
 	unsigned complexsize = (unsigned)(tmpf->PeriodSize() / 2) + 1;
-	load(fs,tmpf->coefficients,complexsize);
-	fs.Close();
+	load((uint8_t*)jfft.data(), jfft.length(), tmpf->coefficients,complexsize);
 	for(unsigned i=1;i<CHANNELS;i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* f=(FFTFilter<jack_default_audio_sample_t>*)filt[i];
