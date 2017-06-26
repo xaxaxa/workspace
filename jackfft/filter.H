@@ -85,6 +85,7 @@ namespace xaxaxa
 		// use a new buffer
 		void reset(T* buf, int size) {
 			buffer = buf;
+			memset(buf, 0, size*sizeof(T));
 			this->size = size;
 			wpos = rpos = 0;
 		}
@@ -214,16 +215,21 @@ namespace xaxaxa
 			paddingRight = buffersize * padding2;
 			stepLength = periodLength / overlapcount;
 
-			// output buffer size must be a multiple of the step length
-			if(((buffersize * outbuffers) % stepLength) != 0) {
-				throw std::logic_error("OverlappedFilter2_new: output buffer size must be a multiple of the step length");
-			}
+			// output buffer size must be a multiple of the step length [FIXME] (no longer the case)
+			//if(((buffersize * outbuffers) % stepLength) != 0) {
+			//	throw std::logic_error("OverlappedFilter2_new: output buffer size must be a multiple of the step length");
+			//}
 
 			inBuffer.reset(new FLOATTYPE[buffersize*inbuffers], buffersize*inbuffers);
 			outBuffer.reset(new FLOATTYPE[buffersize*outbuffers], buffersize*outbuffers);
 
 			alloc_buffer();
 			didprocess = false;
+		}
+		virtual ~OverlappedFilter2_new() {
+			free_buffer();
+			delete[] inBuffer.buffer;
+			delete[] outBuffer.buffer;
 		}
 		virtual void PutData(const NUMTYPE* data, int length) {
 			// add data to inBuffer
