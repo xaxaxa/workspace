@@ -29,7 +29,7 @@ int readAll(int fd, void* b, int len) {
 }
 
 int main(int argc, char** argv) {
-	const char *device = "plughw:CARD=PCH,DEV=0";
+	const char *device = "default";
 	int channels = 2;
 	int srate = 44100;
 	
@@ -54,13 +54,17 @@ int main(int argc, char** argv) {
 	
 	
 	if(argc<2) {
-		cerr << "usage: " << argv[0] << " file.jfft" << endl;
+		cerr << "usage: " << argv[0] << " file.jfft [device]" << endl;
 		return 1;
 	}
 	ifstream jfftStream(argv[1]);
 	stringstream jfftBuffer;
 	jfftBuffer << jfftStream.rdbuf();
 	string jfft = jfftBuffer.str();
+	
+	if(argc>2) {
+		device = argv[2];
+	}
 	
 	
 	if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
@@ -72,7 +76,7 @@ int main(int argc, char** argv) {
 	if(sizeof(jackfft_float) == 8) fmt = SND_PCM_FORMAT_FLOAT64_LE;
 	else fmt = SND_PCM_FORMAT_FLOAT_LE;
 	if ((err = snd_pcm_set_params(handle,
-								SND_PCM_FORMAT_FLOAT64_LE,
+								fmt,
 								SND_PCM_ACCESS_RW_NONINTERLEAVED,
 								channels,
 								srate,
