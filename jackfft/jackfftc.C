@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "fftfilter.C"
+#include "jfftfile.H"
 
 using namespace std;
 bool jackfftPrintWarnings=true;
@@ -51,30 +52,6 @@ void jack_shutdown (void *arg)
 	exit (1);
 }
 
-
-void load(uint8_t* jfftFile, int jfftBytes, double* coeff, unsigned coeffs)
-{
-	struct jfftEntry {
-		double freq; double val;
-	} *buf;
-	buf = (jfftEntry*) jfftFile;
-	int entries = jfftBytes/sizeof(jfftEntry);
-
-	unsigned i1=0;
-	double last_v=0.5;
-	for(int pos=0; pos<entries; pos++) {
-		unsigned i2=(unsigned)round(((double)buf[pos].freq/(srate/2))*coeffs);
-		//cout << i2 << endl;
-		if(i2>coeffs)break;
-		for(unsigned i=i1;i<i2;i++)
-			coeff[i]=last_v*(i2-i)/(i2-i1)+buf[pos].val*(i-i1)/(i2-i1);
-		i1=i2;
-		last_v=buf[pos].val;
-	}
-	for(unsigned i=i1;i<coeffs;i++)
-		coeff[i]=last_v;
-}
-
 int main (int argc, char *argv[])
 {
 	if(argc<2)
@@ -109,7 +86,7 @@ int main (int argc, char *argv[])
 
 	FFTFilter<jack_default_audio_sample_t>* tmpf=(FFTFilter<jack_default_audio_sample_t>*)filt[0];
 	unsigned complexsize = (unsigned)(tmpf->PeriodSize() / 2) + 1;
-	load((uint8_t*)jfft.data(), jfft.length(), tmpf->coefficients,complexsize);
+	loadjfft((uint8_t*)jfft.data(), jfft.length(), tmpf->coefficients,complexsize, srate);
 	for(unsigned i=1;i<CHANNELS;i++)
 	{
 		FFTFilter<jack_default_audio_sample_t>* f=(FFTFilter<jack_default_audio_sample_t>*)filt[i];
