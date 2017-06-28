@@ -21,6 +21,7 @@
  *
  */
 #include <stdexcept>
+#include <functional>
 
 #define __MIN(a,b) (((a)<(b))?(a):(b))
 #define JACKFFT_WARN(...) if(jackfftPrintWarnings) fprintf(stderr, __VA_ARGS__)
@@ -120,6 +121,24 @@ namespace xaxaxa
 			}
 			return len;
 		}
+		
+		// generic append; readFunc is used to copy data from the source "array" to the buffer
+		int append(std::function<void(T* dst, int off, int len)> readFunc, int len, int offset=0) {
+			if(len > (spaceLeft()-offset)) len = spaceLeft() - offset;
+			int wpos2 = (wpos + offset) % size;
+
+			// how much space between wpos and end of buffer
+			int len1 = size - wpos2;
+			if(len1 > len) len1 = len;
+			readFunc(buffer+wpos2, 0, len1);
+
+			// how much more items to copy
+			int len2 = len - len1;
+			if(len2 > 0) {
+				readFunc(buffer, len1, len2);
+			}
+			return len;
+		}
 
 		// commit len items, already appended, to buffer
 		void commit(int len) {
@@ -150,6 +169,12 @@ namespace xaxaxa
 			}
 			return len;
 		}
+		T* ncpeek(int& len) {
+			len = size - rpos;
+			if(len > length()) len = length();
+			return buffer + rpos;
+		}
+		
 		// remove len items from the buffer
 		void consume(int len) {
 			rpos = (rpos + len) % size;
@@ -238,7 +263,7 @@ namespace xaxaxa
 				JACKFFT_WARN("OverlappedFilter2_new: inBuffer overrun: attempt to write %d items, but buffer only has %d space left\n",
 						length, bw);
 			}
-			processAvailableData();
+			while(processAvailableData()) {}
 		}
 		virtual int GetData(NUMTYPE* out, int length) {
 			return outBuffer.read(out, length);
@@ -251,9 +276,9 @@ namespace xaxaxa
 			return tmpbufferSize();
 		}
 		// check if there is enough data in inBuffer to call DoProcess()
-		void processAvailableData() {
+		bool processAvailableData() {
 			int tmpSize = tmpbufferSize();
-			while(inBuffer.length() >= tmpSize) {
+			if(inBuffer.length() >= tmpSize) {
 				// copy data from inBuffer to tmpbuffer and process it
 				inBuffer.peek(tmpbuffer, tmpSize);
 				inBuffer.consume(stepLength);
@@ -277,7 +302,9 @@ namespace xaxaxa
 				int off = subTmpSize - stepLength;
 				outBuffer.append(subTmpBuffer + off, stepLength, off);
 				outBuffer.commit(stepLength);
+				return true;
 			}
+			return false;
 		}
 		// blend data into outBuffer
 		int blend(FLOATTYPE* data, int len) {

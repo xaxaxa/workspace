@@ -113,6 +113,8 @@ bin/jackfft: cplib bin/main2.ui
 	`pkg-config --cflags --libs gtkmm-2.4 glibmm-2.4 gdkmm-2.4 gthread-2.0` $(CFLAGS1)
 bin/jackfftc: jackfft/jackfftc.C
 	$(CXX) jackfft/jackfftc.C -o bin/jackfftc -lpthread -ljack -lfftw3 $(CFLAGS1)
+bin/aplay_jfft: jackfft/aplay_jfft.C
+	$(CXX) jackfft/aplay_jfft.C -o bin/aplay_jfft -lpthread -lfftw3 -lasound $(CFLAGS1)
 bin/jackfft_analyzer:
 	cp -af jackfft/jackfft_analyzer.ui bin/
 	$(CXX) jackfft/analyzer.C -o bin/jackfft_analyzer -lcpoll -lpthread -ljack -lfftw3 \

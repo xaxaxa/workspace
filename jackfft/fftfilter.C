@@ -22,6 +22,8 @@
  */
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <string.h>
+
 #ifdef JACKFFT_USE_FFTS
 	#include <ffts/ffts.h>
 #elif defined JACKFFT_USE_SIMPLEFFT
