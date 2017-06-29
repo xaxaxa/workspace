@@ -144,6 +144,13 @@ namespace xaxaxa
 		void commit(int len) {
 			wpos = (wpos+len) % size;
 		}
+
+		// undo commit
+		void uncommit(int len) {
+			if(len > length()) len = length();
+			wpos = (wpos-len+size) % size;
+		}
+
 		// append & commit len items
 		template<class T2>
 		int write(const T2* data, int len) {

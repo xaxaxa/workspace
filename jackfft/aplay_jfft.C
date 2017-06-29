@@ -34,13 +34,19 @@ int main(int argc, char** argv) {
 	int srate = 44100;
 	
 	int filterBufSize = 1024;
-	int filterInBuffers = 24;
-	int filterOutBuffers = 24;
 	int filterOverlap = 2;
-	int filterPeriod = 10;
+	int filterPeriod = 8;
 	int filterPaddingL = 4;
 	int filterPaddingR = 0;
+	int minBuffers = filterPeriod + filterPaddingL + filterPaddingR - 1;
+
+
+	int filterInBuffers = minBuffers+20;
+	int filterOutBuffers = filterInBuffers;
 	int filterFFTSize = 1024*16;
+	// if the source is sending data faster than it is being played and
+	// the buffer fills up, rewind by this many buffers to restore low latency
+	int filterOverrunRewindBuffers = 20;
 	int complexSize = filterFFTSize / 2 + 1;
 	
 	int stdinBufSize = 1024*channels;
@@ -109,13 +115,17 @@ int main(int argc, char** argv) {
 		
 		// de-interleave buf and append to filters' ring buffer
 		for(int i=0; i<channels; i++) {
-			filters[i]->inBuffer.append([&](jackfft_float* dst, int off, int len) {
+			int appended = filters[i]->inBuffer.append([&](jackfft_float* dst, int off, int len) {
 				int tmp=0;
 				for(int j=off*channels+i; j<stdinBufSize; j+=channels) {
 					dst[tmp++]=jackfft_float(buf[j])/sample_scale;
 				}
 			}, stdinBufSize/channels);
-			filters[i]->inBuffer.commit(stdinBufSize/channels);
+			filters[i]->inBuffer.commit(appended);
+			if(appended != stdinBufSize/channels) {
+				// buffer full; drop some data to restore low latency
+				filters[i]->inBuffer.uncommit(filterOverrunRewindBuffers*filterBufSize);
+			}
 		}
 		
 		// run filter and write to alsa until alsa queue is full
