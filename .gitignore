@@ -39,4 +39,4 @@ core.*
 /email_extract
 /workspace.tags
 *.d
-
+*node_modules*

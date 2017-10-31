@@ -1,0 +1,16 @@
+{
+  "name": "igdump",
+  "version": "0.0.0",
+  "description": "",
+  "main": "igdump.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node igdump.js"
+  },
+  "author": "xaxaxa",
+  "license": "GPLv2",
+  "dependencies": {
+    "instagram-private-api": "^0.6.0",
+    "sleep": "^5.1.1"
+  }
+}
