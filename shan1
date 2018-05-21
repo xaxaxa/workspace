@@ -1,0 +1,133 @@
+import java.io.*;
+
+public class LinkedList {
+public int num;
+public node front;
+
+//set front to null
+public void init() {
+    front = null;
+}
+
+//make a new node
+public node makeNode(int num) {
+    node newNode = new node();
+    newNode.data = num;
+    newNode.next = null;
+    return newNode;
+}
+
+//find the end of a list
+public node findTail(node front) {
+    node current = front;
+
+    while(current.next != null) {
+        current = current.next;
+    }
+    return current;
+}
+
+//find a specified node
+public node findSpot(node front, int num) {
+    node current = front;
+    boolean searching = true, found = false;
+
+    while((searching)&&(!found)) {
+        if(current == null) {
+            searching = false;
+        }
+        else if(current.data == num) {
+            found = true;
+        }
+        else {
+            current = current.next;
+        }
+    }
+    return current;
+}
+
+//delete a specified node
+public void deleteNode(node spot, node front) {
+    node current = spot, previous = front;
+
+    while(previous.next != current) {
+        previous = previous.next;
+    }
+    previous.next = current.next;
+}
+
+//add nodes to the end of a list
+public void add2Back(node front, int num) {
+    node tail;
+
+    if (front == null) {
+        front = makeNode(num);
+    }
+    else {
+        tail = findTail(front);
+        tail.next = makeNode(num);
+    }
+}
+
+//add nodes after a specified node
+public void addAfter(int num, node spot) {
+    node newNode;
+    newNode = makeNode(num);
+    newNode.next = spot.next;
+    spot.next = newNode;
+}
+
+//print out a list
+public void showList(node front) {
+    node current = front;
+
+    while(current != null){
+        System.out.println(current.data);
+        current = current.next;
+    }
+}
+
+public static void main(String [] args) throws IOException{
+    //make a new list and node
+    LinkedList newList = new LinkedList();
+    node newNode = new node();
+    //add data to the nodes in the list
+    for(int j = 1; j < 10; j++){
+        newList.add2Back(newNode, j);
+    }
+    //print out the list of nodes
+    System.out.println("Auto-generated node list");
+    newList.showList(newNode);
+
+    //ask the user how many nodes to make, make those nodes, and show them
+    System.out.println("Please enter how many nodes you would like made.");
+    BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in)) ;
+    String inputData = inputReader.readLine();
+    int listLength = Integer.parseInt(inputData);
+    LinkedList userList = new LinkedList();
+    node userNode = new node();
+    for(int j = 1; j < listLength; j++) {
+        userList.add2Back(userNode, j);
+    }
+    userList.showList(userNode);
+
+    //ask the user to add a new node to the list after a specified node
+    System.out.println("Please enter a number for a node and then choose a spot from the list to add after.");
+    BufferedReader inputReader2 = new BufferedReader(new InputStreamReader(System.in)) ;
+    String inputData2 = inputReader2.readLine();
+    BufferedReader inputReader3 = new BufferedReader(new InputStreamReader(System.in)) ;
+    String inputData3 = inputReader3.readLine();
+    int newNodeValue = Integer.parseInt(inputData2);
+    int nodeInList = Integer.parseInt(inputData3);
+    userList.addAfter(newNodeValue, userList.findSpot(userNode, nodeInList));
+    userList.showList(userNode);
+
+    //ask the user to delete a specified node
+    System.out.println("Please enter a node to delete.");
+    BufferedReader inputReader4 = new BufferedReader(new InputStreamReader(System.in)) ;
+    String inputData4 = inputReader4.readLine();
+    int nodeToDelete = Integer.parseInt(inputData4);
+    userList.deleteNode(userList.findSpot(userNode, nodeToDelete), userNode);
+    userList.showList(userNode);
+}
+}
